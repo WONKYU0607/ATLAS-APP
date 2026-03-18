@@ -713,62 +713,88 @@ export default function App() {
   }
 
   const handleCityClick = (city) => {
-    if (!globeRef.current) return
-    setSelectedCity(city)
-    setSelectedSpot(null)
-    setCityData(null)
-    fetchCityData(city)
-    globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: 0.5 }, 900)
+    try {
+      if (!globeRef.current) return
+      setSelectedCity(city)
+      setSelectedSpot(null)
+      setCityData(null)
+      fetchCityData(city)
+      globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: 0.5 }, 900)
+    } catch(e) { console.error('city click error:', e) }
   }
 
-  // Keep ref always pointing to latest version of handleCityClick
   handleCityClickRef.current = handleCityClick
 
+  // 즉시 보여줄 기본 데이터 생성 (절대 크래시 없음)
+  const makeInstantData = (city) => ({
+    weather: { temp: '—', condition: '불러오는 중...', icon: '🌤️', humidity: '—' },
+    description: `${city.name}의 관광 정보를 불러오고 있습니다...`,
+    spots: [
+      { name: '정보 로딩 중', type:'랜드마크', desc:'잠시만 기다려주세요. AI가 최신 관광 정보를 검색하고 있습니다.', img:'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80', rating:0 },
+      { name: '정보 로딩 중', type:'문화', desc:'잠시만 기다려주세요.', img:'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400&q=80', rating:0 },
+      { name: '정보 로딩 중', type:'자연', desc:'잠시만 기다려주세요.', img:'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80', rating:0 },
+      { name: '정보 로딩 중', type:'음식', desc:'잠시만 기다려주세요.', img:'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=80', rating:0 },
+    ]
+  })
+
   const fetchCityData = async (city) => {
-    setLoading(true)
-
-    // 사전 데이터가 있으면 먼저 보여주고, 날씨만 실시간으로 교체
-    if (CITY_DATA[city.name]) {
-      const base = { ...CITY_DATA[city.name] }
-      setCityData(base)
-      setLoading(false)
-      // 실시간 날씨 병렬 fetch
-      fetchWeather(city.lat, city.lng).then(w => {
-        if (w) setCityData(prev => prev ? { ...prev, weather: w } : prev)
-      })
-      return
-    }
-
-    // 사전 데이터 없으면 AI web search + 실시간 날씨 병렬 실행
-    const [aiResult, weatherResult] = await Promise.allSettled([
-      fetchAIWithSearch(city),
-      fetchWeather(city.lat, city.lng)
-    ])
-
-    let data = null
-    if (aiResult.status === 'fulfilled' && aiResult.value) {
-      data = aiResult.value
-    } else {
-      data = {
-        description: `${city.name}은(는) 독특한 문화와 역사를 가진 매력적인 여행지입니다. 다양한 볼거리와 먹거리로 방문객을 맞이합니다.`,
-        spots: [
-          { name: `${city.name} 구시가지`, type:"역사", desc:`${city.name}의 역사적인 중심가로 전통 건축물과 골목길이 매력적입니다.`, img:"https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400&q=80", rating:4.5 },
-          { name: `${city.name} 중앙 박물관`, type:"문화", desc:`${city.name}의 역사와 문화를 한눈에 볼 수 있는 박물관입니다.`, img:"https://images.unsplash.com/photo-1566127992631-137a642a90f4?w=400&q=80", rating:4.3 },
-          { name: `${city.name} 전통 시장`, type:"음식", desc:`현지 특산물과 길거리 음식이 가득한 활기찬 전통 시장입니다.`, img:"https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=80", rating:4.4 },
-          { name: `${city.name} 자연 공원`, type:"자연", desc:`도시 속 푸른 오아시스로 현지인과 여행자 모두 즐겨 찾습니다.`, img:"https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80", rating:4.2 },
-        ]
+    try {
+      // 1단계: 사전 데이터 있으면 즉시 표시
+      if (CITY_DATA[city.name]) {
+        setCityData({ ...CITY_DATA[city.name] })
+        setLoading(false)
+        // 날씨만 백그라운드로 업데이트
+        fetchWeather(city.lat, city.lng).then(w => {
+          if (w) setCityData(prev => prev ? { ...prev, weather: w } : prev)
+        }).catch(() => {})
+        return
       }
-    }
 
-    // 실시간 날씨 적용
-    if (weatherResult.status === 'fulfilled' && weatherResult.value) {
-      data.weather = weatherResult.value
-    } else {
-      data.weather = { temp: 20, condition: "맑음", icon: "☀️", humidity: 60 }
-    }
+      // 2단계: 사전 데이터 없으면 즉시 로딩 화면 표시
+      setLoading(true)
+      setCityData(makeInstantData(city))
 
-    setCityData(data)
-    setLoading(false)
+      // 3단계: AI + 날씨 병렬로 백그라운드 로딩
+      const [aiResult, weatherResult] = await Promise.allSettled([
+        fetchAIWithSearch(city),
+        fetchWeather(city.lat, city.lng)
+      ])
+
+      const weather = (weatherResult.status === 'fulfilled' && weatherResult.value)
+        ? weatherResult.value
+        : { temp: 22, condition: '맑음', icon: '☀️', humidity: 55 }
+
+      if (aiResult.status === 'fulfilled' && aiResult.value?.spots?.length >= 2) {
+        setCityData({ ...aiResult.value, weather })
+      } else {
+        // AI 실패해도 도시별 기본 데이터로 대체 (절대 흰 화면 없음)
+        setCityData({
+          weather,
+          description: `${city.name}은(는) 풍부한 역사와 문화, 아름다운 자연을 간직한 매력적인 여행지입니다.`,
+          spots: [
+            { name:`${city.name} 역사 지구`, type:'역사', desc:`${city.name}의 오랜 역사가 살아 숨쉬는 구시가지로 전통 건축물과 문화재가 가득합니다. 골목골목마다 이 도시만의 이야기가 담겨 있습니다.`, img:'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400&q=80', rating:4.5 },
+            { name:`${city.name} 국립 박물관`, type:'문화', desc:`${city.name}과 이 지역의 역사, 예술, 문화를 집대성한 박물관입니다. 지역 문명의 정수를 한자리에서 만날 수 있습니다.`, img:'https://images.unsplash.com/photo-1566127992631-137a642a90f4?w=400&q=80', rating:4.4 },
+            { name:`${city.name} 자연 공원`, type:'자연', desc:`도시 근교의 아름다운 자연 공원으로 현지인들이 즐겨 찾는 휴식 공간입니다. 계절마다 다른 풍경을 선사합니다.`, img:'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80', rating:4.3 },
+            { name:`${city.name} 전통 시장`, type:'음식', desc:`현지 특산물과 전통 음식이 가득한 활기찬 재래시장입니다. 이 도시만의 독특한 식문화를 경험할 수 있습니다.`, img:'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=80', rating:4.4 },
+          ]
+        })
+      }
+    } catch(e) {
+      console.error('fetchCityData error:', e)
+      // 최후의 보루 - 절대 크래시 없이 기본 데이터 표시
+      setCityData({
+        weather: { temp: 22, condition: '맑음', icon: '☀️', humidity: 55 },
+        description: `${city.name}은(는) 매력적인 여행지입니다.`,
+        spots: [
+          { name:`${city.name} 대표 명소`, type:'랜드마크', desc:'이 도시의 대표적인 관광 명소입니다.', img:'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80', rating:4.5 },
+          { name:`${city.name} 문화 센터`, type:'문화', desc:'지역 문화와 예술을 즐길 수 있는 공간입니다.', img:'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400&q=80', rating:4.3 },
+          { name:`${city.name} 자연 명소`, type:'자연', desc:'아름다운 자연 풍경을 감상할 수 있는 곳입니다.', img:'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80', rating:4.4 },
+          { name:`${city.name} 맛집 거리`, type:'음식', desc:'현지 음식과 문화를 동시에 즐길 수 있는 거리입니다.', img:'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=80', rating:4.2 },
+        ]
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   // OpenWeatherMap 실시간 날씨
@@ -1028,13 +1054,15 @@ export default function App() {
             )}
           </div>
           <div style={{padding:'0 20px 40px'}}>
-            {loading ? (
-              <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:320,gap:16}}>
-                <div style={{width:38,height:38,borderRadius:'50%',border:'3px solid #e2e8f0',borderTopColor:selectedCity.color,animation:'spin .8s linear infinite'}}/>
-                <div style={{fontSize:13,color:'#94a3b8'}}>여행 정보 불러오는 중…</div>
-              </div>
-            ) : cityData ? (
+            {cityData ? (
               <>
+                {/* AI 로딩 중 배너 */}
+                {loading && (
+                  <div style={{display:'flex',alignItems:'center',gap:8,background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,padding:'10px 14px',marginBottom:14}}>
+                    <div style={{width:16,height:16,borderRadius:'50%',border:'2px solid #bae6fd',borderTopColor:'#0ea5e9',animation:'spin .7s linear infinite',flexShrink:0}}/>
+                    <span style={{fontSize:12,color:'#0369a1',fontWeight:600}}>AI가 최신 관광 정보를 검색 중입니다...</span>
+                  </div>
+                )}
                 <p style={{fontSize:13.5,color:'#475569',lineHeight:1.8,margin:'0 0 20px',borderLeft:`3px solid ${selectedCity.color}`,paddingLeft:14}}>
                   {cityData.description}
                 </p>
@@ -1045,7 +1073,7 @@ export default function App() {
                   {cityData.spots?.map((spot,i)=>(
                     <div key={i} className="card"
                       onClick={()=>setSelectedSpot(selectedSpot?.name===spot.name?null:spot)}
-                      style={{borderRadius:14,overflow:'hidden',background:'white',border:`1.5px solid ${selectedSpot?.name===spot.name?selectedCity.color:'#e2e8f0'}`,boxShadow:'0 2px 8px rgba(0,0,0,.06)'}}>
+                      style={{borderRadius:14,overflow:'hidden',background:'white',border:`1.5px solid ${selectedSpot?.name===spot.name?selectedCity.color:'#e2e8f0'}`,boxShadow:'0 2px 8px rgba(0,0,0,.06)',opacity:loading?0.6:1,transition:'opacity 0.3s'}}>
                       <div style={{height:142,overflow:'hidden',position:'relative'}}>
                         <img className="cimg" src={spot.img} alt={spot.name}
                           style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
@@ -1056,7 +1084,7 @@ export default function App() {
                             <div style={{fontSize:13.5,fontWeight:700,color:'white',textShadow:'0 1px 4px rgba(0,0,0,.6)'}}>{spot.name}</div>
                             <div style={{display:'inline-block',fontSize:10,padding:'2px 9px',borderRadius:20,background:TYPE_COLORS[spot.type]||'#64748b',color:'white',marginTop:4,fontWeight:700}}>{spot.type}</div>
                           </div>
-                          <div style={{fontSize:13,color:'#fbbf24',fontWeight:700}}>★ {spot.rating}</div>
+                          {spot.rating > 0 && <div style={{fontSize:13,color:'#fbbf24',fontWeight:700}}>★ {spot.rating}</div>}
                         </div>
                       </div>
                       {selectedSpot?.name===spot.name && (
@@ -1068,7 +1096,12 @@ export default function App() {
                   ))}
                 </div>
               </>
-            ) : null}
+            ) : (
+              <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:320,gap:16}}>
+                <div style={{width:38,height:38,borderRadius:'50%',border:'3px solid #e2e8f0',borderTopColor:selectedCity.color,animation:'spin .8s linear infinite'}}/>
+                <div style={{fontSize:13,color:'#94a3b8'}}>잠시만 기다려주세요...</div>
+              </div>
+            )}
           </div>
         </div>
       )}
