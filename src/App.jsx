@@ -3,7 +3,7 @@ import Globe from 'globe.gl'
 
 // ── 국가별 주요 도시 데이터 ──────────────────────────────────────────────
 const COUNTRY_CITIES = {
-  "Korea, Republic of": [
+  "South Korea": [
     { name:"서울", lat:37.57, lng:126.98, emoji:"🏙️", color:"#e74c3c" },
     { name:"부산", lat:35.18, lng:129.07, emoji:"🌊", color:"#3498db" },
     { name:"제주", lat:33.50, lng:126.53, emoji:"🌺", color:"#2ecc71" },
@@ -245,7 +245,7 @@ const COUNTRY_CITIES = {
 
 // 국가명 한국어 매핑
 const COUNTRY_KO = {
-  "Korea, Republic of": "대한민국",
+  "South Korea": "대한민국",
   "Japan": "일본",
   "France": "프랑스",
   "United States of America": "미국",
@@ -499,78 +499,24 @@ export default function App() {
     })
   }, [])
 
-  // Add country name labels as HTML elements — supports Korean
+  // Render country labels + city pins together — always show labels regardless of selection
   useEffect(() => {
     if (!globeRef.current || countries.length === 0) return
     const globe = globeRef.current
 
-    const labelData = countries.map(feat => ({
+    const cities = selectedCountry ? (COUNTRY_CITIES[selectedCountry.properties.NAME] || []) : []
+
+    // Always build country label items
+    const labelItems = countries.map(feat => ({
       lat: feat.properties.LABEL_Y || 0,
       lng: feat.properties.LABEL_X || 0,
       name: COUNTRY_KO[feat.properties.NAME] || feat.properties.NAME,
       nameEn: feat.properties.NAME,
+      _type: 'label',
     })).filter(d => d.lat !== 0 || d.lng !== 0)
 
-    // Remove old 3D labels
-    globe.labelsData([])
-
-    // Use htmlElementsData for country name labels (supports Korean)
-    // We'll merge with city pins in the city pins useEffect
-    globe._countryLabels = labelData
-  }, [countries])
-
-  // Update polygons when countries loaded or hovered
-  useEffect(() => {
-    if (!globeRef.current || countries.length === 0) return
-    const globe = globeRef.current
-
-    globe
-      .polygonsData(countries)
-      .polygonCapColor(feat => {
-        const name = feat.properties.NAME
-        if (hoveredCountry === name) return 'rgba(255,200,50,0.6)'
-        if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.5)'
-        return COUNTRY_CITIES[name] ? 'rgba(34,197,94,0.15)' : 'rgba(200,220,180,0.12)'
-      })
-      .polygonSideColor(() => 'rgba(0,0,0,0.05)')
-      .polygonStrokeColor(() => 'rgba(255,255,255,0.25)')
-      .polygonAltitude(feat => {
-        const name = feat.properties.NAME
-        if (selectedCountry?.properties.NAME === name) return 0.02
-        if (hoveredCountry === name) return 0.015
-        return 0.005
-      })
-      .polygonLabel(feat => {
-        const name = feat.properties.NAME
-        const koName = COUNTRY_KO[name] || name
-        const hasCities = COUNTRY_CITIES[name]
-        return `
-          <div style="
-            background:rgba(15,23,42,0.92);
-            border-radius:10px;padding:8px 14px;
-            font-family:Pretendard,Inter,sans-serif;
-            box-shadow:0 4px 16px rgba(0,0,0,0.4);
-            border:1px solid rgba(255,255,255,0.15);
-          ">
-            <div style="font-size:15px;font-weight:700;color:white">${koName}</div>
-            ${hasCities ? `<div style="font-size:11px;color:#94a3b8;margin-top:2px">클릭하여 도시 탐색</div>` : ''}
-          </div>`
-      })
-      .onPolygonHover(feat => setHoveredCountry(feat ? feat.properties.NAME : null))
-      .onPolygonClick(feat => handleCountryClick(feat))
-  }, [countries, hoveredCountry, selectedCountry])
-
-  // Render country labels + city pins together as HTML elements (Korean support)
-  useEffect(() => {
-    if (!globeRef.current) return
-    const globe = globeRef.current
-    const cities = selectedCountry ? (COUNTRY_CITIES[selectedCountry.properties.NAME] || []) : []
-    const countryLabels = (!selectedCountry && globe._countryLabels) ? globe._countryLabels : []
-
-    // Build combined data: type 'label' or 'city'
-    const labelItems = countryLabels.map(d => ({ ...d, _type: 'label' }))
-    const cityItems  = cities.map(d => ({ ...d, _type: 'city' }))
-    const allItems   = [...labelItems, ...cityItems]
+    const cityItems = cities.map(d => ({ ...d, _type: 'city' }))
+    const allItems  = [...labelItems, ...cityItems]
 
     globe
       .htmlElementsData(allItems)
@@ -581,19 +527,19 @@ export default function App() {
         const el = document.createElement('div')
 
         if (d._type === 'label') {
-          // Country name label — always visible
           const hasCities = COUNTRY_CITIES[d.nameEn]
-          el.style.cssText = 'pointer-events:none;'
+          el.style.cssText = 'pointer-events:none;position:relative;'
           el.innerHTML = `
             <div style="
+              transform:translate(-50%,-50%);
               font-family:Pretendard,Inter,sans-serif;
-              font-size:${hasCities ? '13px' : '11px'};
-              font-weight:${hasCities ? '700' : '500'};
-              color:${hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)'};
-              text-shadow:0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7);
+              font-size:${hasCities ? '13px' : '10px'};
+              font-weight:${hasCities ? '700' : '400'};
+              color:${hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'};
+              text-shadow:0 1px 4px rgba(0,0,0,1), 0 0 10px rgba(0,0,0,0.8);
               white-space:nowrap;
               letter-spacing:0.3px;
-              transform:translate(-50%,-50%);
+              user-select:none;
             ">${d.name}</div>`
         } else {
           // City pin
@@ -602,33 +548,42 @@ export default function App() {
             cursor:pointer;transition:transform 0.2s;
             transform-origin:bottom center;
             transform:translateX(-50%);
+            position:relative;
+            z-index:10;
           `
           el.innerHTML = `
-            <div style="
-              background:rgba(255,255,255,0.95);
+            <div class="city-pill" style="
+              background:rgba(255,255,255,0.97);
               backdrop-filter:blur(8px);
               border-radius:20px;
-              padding:4px 12px;
-              box-shadow:0 3px 16px rgba(0,0,0,0.5);
+              padding:5px 13px;
+              box-shadow:0 4px 18px rgba(0,0,0,0.5);
               border:2px solid ${d.color};
               white-space:nowrap;
               font-family:Pretendard,Inter,sans-serif;
-              font-size:12px;
+              font-size:13px;
               font-weight:700;
               color:#0f172a;
               letter-spacing:-0.3px;
             ">${d.name}</div>
             <div style="width:2px;height:8px;background:${d.color};"></div>
             <div style="
-              width:10px;height:10px;border-radius:50%;
+              width:11px;height:11px;border-radius:50%;
               background:${d.color};
               border:2.5px solid white;
-              box-shadow:0 0 8px ${d.color};
+              box-shadow:0 0 10px ${d.color};
             "></div>
           `
-          el.addEventListener('mouseenter', () => { el.style.transform = 'translateX(-50%) scale(1.2)' })
-          el.addEventListener('mouseleave', () => { el.style.transform = 'translateX(-50%) scale(1)' })
-          el.addEventListener('click', () => handleCityClick(d))
+          el.addEventListener('mouseenter', () => {
+            el.style.transform = 'translateX(-50%) scale(1.18)'
+          })
+          el.addEventListener('mouseleave', () => {
+            el.style.transform = 'translateX(-50%) scale(1)'
+          })
+          el.addEventListener('click', (e) => {
+            e.stopPropagation()
+            handleCityClick(d)
+          })
         }
         return el
       })
@@ -636,27 +591,61 @@ export default function App() {
     globe.pointsData([])
   }, [selectedCountry, countries])
 
-  // Calculate bounding box altitude for country zoom
+  // Update polygons
+  useEffect(() => {
+    if (!globeRef.current || countries.length === 0) return
+    const globe = globeRef.current
+    globe
+      .polygonsData(countries)
+      .polygonCapColor(feat => {
+        const name = feat.properties.NAME
+        if (hoveredCountry === name) return 'rgba(255,220,50,0.55)'
+        if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.45)'
+        return COUNTRY_CITIES[name] ? 'rgba(34,197,94,0.12)' : 'rgba(200,220,180,0.08)'
+      })
+      .polygonSideColor(() => 'rgba(0,0,0,0.05)')
+      .polygonStrokeColor(() => 'rgba(255,255,255,0.2)')
+      .polygonAltitude(feat => {
+        const name = feat.properties.NAME
+        if (selectedCountry?.properties.NAME === name) return 0.02
+        if (hoveredCountry === name) return 0.012
+        return 0.003
+      })
+      .polygonLabel(feat => {
+        const name = feat.properties.NAME
+        const koName = COUNTRY_KO[name] || name
+        const hasCities = COUNTRY_CITIES[name]
+        return `<div style="background:rgba(15,23,42,0.92);border-radius:10px;padding:8px 14px;font-family:Pretendard,Inter,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);">
+          <div style="font-size:15px;font-weight:700;color:white">${koName}</div>
+          ${hasCities ? `<div style="font-size:11px;color:#94a3b8;margin-top:2px">클릭하여 도시 탐색</div>` : ''}
+        </div>`
+      })
+      .onPolygonHover(feat => setHoveredCountry(feat ? feat.properties.NAME : null))
+      .onPolygonClick(feat => handleCountryClick(feat))
+  }, [countries, hoveredCountry, selectedCountry])
+
+  // Calculate zoom altitude so country fills the screen
   const getCountryAltitude = (feat) => {
     try {
-      const coords = feat.geometry.coordinates
       let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180
       const processCoord = (c) => {
         if (Array.isArray(c[0])) { c.forEach(processCoord) }
-        else { minLat = Math.min(minLat, c[1]); maxLat = Math.max(maxLat, c[1]); minLng = Math.min(minLng, c[0]); maxLng = Math.max(maxLng, c[0]) }
+        else {
+          minLat = Math.min(minLat, c[1]); maxLat = Math.max(maxLat, c[1])
+          minLng = Math.min(minLng, c[0]); maxLng = Math.max(maxLng, c[0])
+        }
       }
-      processCoord(coords)
-      const latSpan = maxLat - minLat
-      const lngSpan = maxLng - minLng
-      const span = Math.max(latSpan, lngSpan)
-      // Map span to altitude: small country=0.5, large=2.5
-      if (span < 5) return 0.6
-      if (span < 15) return 0.9
-      if (span < 30) return 1.3
-      if (span < 60) return 1.8
-      if (span < 100) return 2.2
-      return 2.8
-    } catch { return 1.5 }
+      processCoord(feat.geometry.coordinates)
+      const span = Math.max(maxLat - minLat, maxLng - minLng)
+      if (span < 3)  return 0.25   // 싱가포르, 소국
+      if (span < 8)  return 0.35   // 한국, 그리스
+      if (span < 15) return 0.5    // 일본, 영국, 독일
+      if (span < 25) return 0.65   // 프랑스, 스페인, 이탈리아
+      if (span < 40) return 0.85   // 인도, 멕시코
+      if (span < 60) return 1.1    // 호주, 브라질
+      if (span < 100) return 1.5   // 미국
+      return 2.0                   // 러시아, 캐나다
+    } catch { return 0.8 }
   }
 
   const handleCountryClick = (feat) => {
