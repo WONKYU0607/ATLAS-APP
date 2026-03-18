@@ -10,9 +10,8 @@ export default async function handler(req, res) {
 
   try {
     const { prompt } = req.body
-    // gemini-2.0-flash: 무료, 안정적, thinking 없음 → JSON 파싱 안전
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -21,15 +20,19 @@ export default async function handler(req, res) {
           generationConfig: {
             temperature: 0.7,
             maxOutputTokens: 2048,
-            responseMimeType: 'application/json'
+            // thinking 비활성화 → 일반 텍스트만 반환
+            thinkingConfig: { thinkingBudget: 0 }
           }
         })
       }
     )
     const data = await response.json()
-    // 모든 텍스트 파트 합치기
+    // 모든 parts에서 텍스트만 합치기 (thinking 제외)
     const parts = data?.candidates?.[0]?.content?.parts || []
-    const text = parts.map(p => p.text || '').join('')
+    const text = parts
+      .filter(p => p.text && !p.thought) // thought 파트 제외
+      .map(p => p.text)
+      .join('')
     return res.status(200).json({ text })
   } catch (error) {
     return res.status(500).json({ error: error.message })
