@@ -499,7 +499,7 @@ export default function App() {
     })
   }, [])
 
-  // Add country labels once countries are loaded — always visible on globe
+  // Add country name labels as HTML elements — supports Korean
   useEffect(() => {
     if (!globeRef.current || countries.length === 0) return
     const globe = globeRef.current
@@ -511,17 +511,12 @@ export default function App() {
       nameEn: feat.properties.NAME,
     })).filter(d => d.lat !== 0 || d.lng !== 0)
 
-    globe
-      .labelsData(labelData)
-      .labelLat('lat')
-      .labelLng('lng')
-      .labelText('name')
-      .labelSize(d => COUNTRY_CITIES[d.nameEn] ? 1.6 : 1.1)
-      .labelColor(d => COUNTRY_CITIES[d.nameEn] ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.65)')
-      .labelDotRadius(0)
-      .labelAltitude(0.005)
-      .labelResolution(3)
-      .labelIncludeDot(false)
+    // Remove old 3D labels
+    globe.labelsData([])
+
+    // Use htmlElementsData for country name labels (supports Korean)
+    // We'll merge with city pins in the city pins useEffect
+    globe._countryLabels = labelData
   }, [countries])
 
   // Update polygons when countries loaded or hovered
@@ -565,55 +560,81 @@ export default function App() {
       .onPolygonClick(feat => handleCountryClick(feat))
   }, [countries, hoveredCountry, selectedCountry])
 
-  // Update city pins
+  // Render country labels + city pins together as HTML elements (Korean support)
   useEffect(() => {
     if (!globeRef.current) return
     const globe = globeRef.current
     const cities = selectedCountry ? (COUNTRY_CITIES[selectedCountry.properties.NAME] || []) : []
+    const countryLabels = (!selectedCountry && globe._countryLabels) ? globe._countryLabels : []
+
+    // Build combined data: type 'label' or 'city'
+    const labelItems = countryLabels.map(d => ({ ...d, _type: 'label' }))
+    const cityItems  = cities.map(d => ({ ...d, _type: 'city' }))
+    const allItems   = [...labelItems, ...cityItems]
 
     globe
-      .htmlElementsData(cities)
+      .htmlElementsData(allItems)
       .htmlLat(d => d.lat)
       .htmlLng(d => d.lng)
-      .htmlAltitude(0.02)
+      .htmlAltitude(d => d._type === 'city' ? 0.02 : 0.005)
       .htmlElement(d => {
         const el = document.createElement('div')
-        el.style.cssText = `
-          display:flex;flex-direction:column;align-items:center;
-          cursor:pointer;
-          transition:transform 0.2s;
-          transform-origin:bottom center;
-        `
-        el.innerHTML = `
-          <div style="
-            background:white;
-            border-radius:20px;
-            padding:4px 12px;
-            box-shadow:0 3px 16px rgba(0,0,0,0.4);
-            border:2px solid ${d.color};
-            white-space:nowrap;
-            font-family:Pretendard,Inter,sans-serif;
-            font-size:12px;
-            font-weight:700;
-            color:#0f172a;
-            letter-spacing:-0.3px;
-          ">${d.name}</div>
-          <div style="width:2px;height:8px;background:${d.color};"></div>
-          <div style="
-            width:10px;height:10px;border-radius:50%;
-            background:${d.color};
-            border:2px solid white;
-            box-shadow:0 0 6px ${d.color};
-          "></div>
-        `
-        el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.2)' })
-        el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)' })
-        el.addEventListener('click', () => handleCityClick(d))
+
+        if (d._type === 'label') {
+          // Country name label — always visible
+          const hasCities = COUNTRY_CITIES[d.nameEn]
+          el.style.cssText = 'pointer-events:none;'
+          el.innerHTML = `
+            <div style="
+              font-family:Pretendard,Inter,sans-serif;
+              font-size:${hasCities ? '13px' : '11px'};
+              font-weight:${hasCities ? '700' : '500'};
+              color:${hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)'};
+              text-shadow:0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7);
+              white-space:nowrap;
+              letter-spacing:0.3px;
+              transform:translate(-50%,-50%);
+            ">${d.name}</div>`
+        } else {
+          // City pin
+          el.style.cssText = `
+            display:flex;flex-direction:column;align-items:center;
+            cursor:pointer;transition:transform 0.2s;
+            transform-origin:bottom center;
+            transform:translateX(-50%);
+          `
+          el.innerHTML = `
+            <div style="
+              background:rgba(255,255,255,0.95);
+              backdrop-filter:blur(8px);
+              border-radius:20px;
+              padding:4px 12px;
+              box-shadow:0 3px 16px rgba(0,0,0,0.5);
+              border:2px solid ${d.color};
+              white-space:nowrap;
+              font-family:Pretendard,Inter,sans-serif;
+              font-size:12px;
+              font-weight:700;
+              color:#0f172a;
+              letter-spacing:-0.3px;
+            ">${d.name}</div>
+            <div style="width:2px;height:8px;background:${d.color};"></div>
+            <div style="
+              width:10px;height:10px;border-radius:50%;
+              background:${d.color};
+              border:2.5px solid white;
+              box-shadow:0 0 8px ${d.color};
+            "></div>
+          `
+          el.addEventListener('mouseenter', () => { el.style.transform = 'translateX(-50%) scale(1.2)' })
+          el.addEventListener('mouseleave', () => { el.style.transform = 'translateX(-50%) scale(1)' })
+          el.addEventListener('click', () => handleCityClick(d))
+        }
         return el
       })
 
     globe.pointsData([])
-  }, [selectedCountry])
+  }, [selectedCountry, countries])
 
   // Calculate bounding box altitude for country zoom
   const getCountryAltitude = (feat) => {
