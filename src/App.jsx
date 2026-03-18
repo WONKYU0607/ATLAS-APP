@@ -1,6 +1,40 @@
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 
+// ── 실제 관광지 사진 컴포넌트 (Wikipedia API) ─────────────────────────────
+function SpotImage({ name, fallback, className, style }) {
+  const [src, setSrc] = useState(null)
+  useEffect(() => {
+    setSrc(null)
+    // Wikipedia에서 관광지 실제 사진 검색
+    const title = encodeURIComponent(name)
+    fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${title}&prop=pageimages&format=json&pithumbsize=500&origin=*`)
+      .then(r => r.json())
+      .then(data => {
+        const pages = data?.query?.pages
+        if (!pages) return
+        const page = Object.values(pages)[0]
+        if (page?.thumbnail?.source) {
+          setSrc(page.thumbnail.source)
+        } else {
+          // 영어 검색 실패시 원본 fallback
+          setSrc(fallback)
+        }
+      })
+      .catch(() => setSrc(fallback))
+  }, [name])
+
+  return (
+    <img
+      className={className}
+      src={src || fallback}
+      alt={name}
+      style={style}
+      onError={e => { e.target.src = fallback; e.target.onerror = null }}
+    />
+  )
+}
+
 // ── 에러 바운더리 (흰 화면 방지) ─────────────────────────────────────────
 class ErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { hasError: false } }
@@ -514,7 +548,38 @@ const DEFAULT_CITY_DATA = (cityName) => ({
   ]
 })
 
-const TYPE_COLORS = {
+// 카테고리별 실제 작동하는 Unsplash 이미지 풀
+const IMG_POOL = {
+  "문화": [
+    "photo-1545569341-9eb8b30979d9","photo-1528360983277-13d401cdc186","photo-1538485399081-7191377e8241",
+    "photo-1558618666-fcd25c85cd64","photo-1524413840807-0c3cb6fa808d","photo-1499856871958-5b9627545d1a",
+  ],
+  "역사": [
+    "photo-1552832230-c0197dd311b5","photo-1539650116574-75c0c6d73f6e","photo-1467269204594-9661b134dd2b",
+    "photo-1548115184-bc6544d06a58","photo-1583623025817-d180a2221d0a","photo-1531572753322-ad063cecc140",
+  ],
+  "자연": [
+    "photo-1441974231531-c6227db76b6e","photo-1506905925346-21bda4d32df4","photo-1559827260-dc66d52bef19",
+    "photo-1476514525535-07fb3b4ae5f1","photo-1523428461295-92770e70d7ae","photo-1533104816931-20fa691ff6ca",
+  ],
+  "랜드마크": [
+    "photo-1511739001486-6bfe10ce785f","photo-1485738422979-f5c462d49f74","photo-1512453979798-5ea266f8880c",
+    "photo-1513635269975-59663e0ac1ad","photo-1506905925346-21bda4d32df4","photo-1534430480872-3498386e7856",
+  ],
+  "도시": [
+    "photo-1540959733332-eab4deabeeaf","photo-1477959858617-67f85cf4f1df","photo-1546436836-07a91091f160",
+    "photo-1480714378408-67cf0d13bc1b","photo-1449824913935-59a10b8d2000","photo-1502602898657-3e91760cbb34",
+  ],
+  "음식": [
+    "photo-1555396273-367ea4eb4db5","photo-1504674900247-0877df9cc836","photo-1567620905732-2d1ec7ab7445",
+    "photo-1414235077428-338989a2e8c0","photo-1540189549336-e6e99c3679fe","photo-1565299624946-b28f40a0ae38",
+  ],
+}
+const getImg = (type) => {
+  const pool = IMG_POOL[type] || IMG_POOL["랜드마크"]
+  const id = pool[Math.floor(Math.random() * pool.length)]
+  return `https://images.unsplash.com/${id}?w=400&q=80`
+}
   "문화":"#8b5cf6","자연":"#10b981","랜드마크":"#f59e0b",
   "도시":"#3b82f6","역사":"#f97316","음식":"#ec4899",
   Culture:"#8b5cf6",Nature:"#10b981",Landmark:"#f59e0b",
@@ -1097,13 +1162,12 @@ function App() {
                       onClick={()=>setSelectedSpot(selectedSpot?.name===spot.name?null:spot)}
                       style={{borderRadius:14,overflow:'hidden',background:'white',border:`1.5px solid ${selectedSpot?.name===spot.name?selectedCity.color:'#e2e8f0'}`,boxShadow:'0 2px 8px rgba(0,0,0,.06)',opacity:loading?0.6:1,transition:'opacity 0.3s'}}>
                       <div style={{height:142,overflow:'hidden',position:'relative'}}>
-                        <img className="cimg" src={spot.img} alt={spot.name}
+                        <SpotImage
+                          className="cimg"
+                          name={spot.name}
+                          fallback={spot.img || 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80'}
                           style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
-                          onError={e=>{
-                            const keywords = encodeURIComponent(spot.name)
-                            e.target.src = `https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80`
-                            e.target.onerror = null
-                          }}/>
+                        />
                         <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 55%)'}}/>
                         <div style={{position:'absolute',bottom:10,left:12,right:12,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
                           <div>
