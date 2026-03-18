@@ -580,6 +580,8 @@ const getImg = (type) => {
   const id = pool[Math.floor(Math.random() * pool.length)]
   return `https://images.unsplash.com/${id}?w=400&q=80`
 }
+
+const TYPE_COLORS = {
   "문화":"#8b5cf6","자연":"#10b981","랜드마크":"#f59e0b",
   "도시":"#3b82f6","역사":"#f97316","음식":"#ec4899",
   Culture:"#8b5cf6",Nature:"#10b981",Landmark:"#f59e0b",
