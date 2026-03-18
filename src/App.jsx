@@ -482,9 +482,12 @@ export default function App() {
       .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
       .showAtmosphere(true)
       .atmosphereColor('#4a90d9')
-      .atmosphereAltitude(0.12)
+      .atmosphereAltitude(0.15)
       .width(window.innerWidth)
       .height(window.innerHeight)
+
+    // 지구본 크기 키우기 - camera를 가깝게
+    globe.camera().position.z = 280
 
     globe.controls().autoRotate = true
     globe.controls().autoRotateSpeed = 0.4
@@ -496,7 +499,7 @@ export default function App() {
     })
   }, [])
 
-  // Add country labels once countries are loaded
+  // Add country labels once countries are loaded — always visible on globe
   useEffect(() => {
     if (!globeRef.current || countries.length === 0) return
     const globe = globeRef.current
@@ -513,12 +516,12 @@ export default function App() {
       .labelLat('lat')
       .labelLng('lng')
       .labelText('name')
-      .labelSize(d => COUNTRY_CITIES[d.nameEn] ? 1.4 : 1.0)
-      .labelColor(d => COUNTRY_CITIES[d.nameEn] ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.6)')
-      .labelDotRadius(d => COUNTRY_CITIES[d.nameEn] ? 0 : 0)
-      .labelAltitude(0.01)
+      .labelSize(d => COUNTRY_CITIES[d.nameEn] ? 1.6 : 1.1)
+      .labelColor(d => COUNTRY_CITIES[d.nameEn] ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.65)')
+      .labelDotRadius(0)
+      .labelAltitude(0.005)
       .labelResolution(3)
-      .labelTypeFace(null)
+      .labelIncludeDot(false)
   }, [countries])
 
   // Update polygons when countries loaded or hovered
@@ -562,58 +565,53 @@ export default function App() {
       .onPolygonClick(feat => handleCountryClick(feat))
   }, [countries, hoveredCountry, selectedCountry])
 
-  // Update city pins — use htmlElementsData for rich pin design
+  // Update city pins
   useEffect(() => {
     if (!globeRef.current) return
     const globe = globeRef.current
     const cities = selectedCountry ? (COUNTRY_CITIES[selectedCountry.properties.NAME] || []) : []
 
-    // Use HTML elements for beautiful pins with city name labels
     globe
       .htmlElementsData(cities)
-      .htmlLat('lat')
-      .htmlLng('lng')
-      .htmlAltitude(0.04)
+      .htmlLat(d => d.lat)
+      .htmlLng(d => d.lng)
+      .htmlAltitude(0.02)
       .htmlElement(d => {
         const el = document.createElement('div')
         el.style.cssText = `
           display:flex;flex-direction:column;align-items:center;
-          cursor:pointer;transform-origin:bottom center;
+          cursor:pointer;
           transition:transform 0.2s;
+          transform-origin:bottom center;
         `
         el.innerHTML = `
           <div style="
             background:white;
-            border-radius:12px;
-            padding:5px 10px;
-            display:flex;align-items:center;gap:6px;
-            box-shadow:0 4px 20px rgba(0,0,0,0.35);
+            border-radius:20px;
+            padding:4px 12px;
+            box-shadow:0 3px 16px rgba(0,0,0,0.4);
             border:2px solid ${d.color};
             white-space:nowrap;
             font-family:Pretendard,Inter,sans-serif;
-          ">
-            <span style="font-size:16px">${d.emoji}</span>
-            <span style="font-size:12px;font-weight:700;color:#0f172a">${d.name}</span>
-          </div>
-          <div style="
-            width:2px;height:10px;
-            background:${d.color};
-            border-radius:0 0 2px 2px;
-          "></div>
+            font-size:12px;
+            font-weight:700;
+            color:#0f172a;
+            letter-spacing:-0.3px;
+          ">${d.name}</div>
+          <div style="width:2px;height:8px;background:${d.color};"></div>
           <div style="
             width:10px;height:10px;border-radius:50%;
             background:${d.color};
-            box-shadow:0 0 8px ${d.color}99;
             border:2px solid white;
+            box-shadow:0 0 6px ${d.color};
           "></div>
         `
-        el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.15)' })
+        el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.2)' })
         el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)' })
         el.addEventListener('click', () => handleCityClick(d))
         return el
       })
 
-    // Keep pointsData empty (using htmlElements instead)
     globe.pointsData([])
   }, [selectedCountry])
 
