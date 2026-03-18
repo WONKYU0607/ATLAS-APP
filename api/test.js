@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   }
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -16,11 +16,11 @@ export default async function handler(req, res) {
       }
     )
     const data = await response.json()
-    // 전체 응답 반환
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
     return res.status(200).json({ 
-      fullResponse: data,
-      text: data?.candidates?.[0]?.content?.parts?.[0]?.text || '없음',
-      status: response.status
+      status: text ? '✅ 성공' : '❌ 응답 없음',
+      text,
+      fullResponse: data
     })
   } catch (e) {
     return res.status(200).json({ error: e.message })
