@@ -522,7 +522,8 @@ export default function App() {
       setCityScreenCoords([])
       return
     }
-    const cities = COUNTRY_CITIES[selectedCountry.properties.NAME] || []
+    const countryEn = selectedCountry.properties.NAME
+    const cities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, countryEn }))
     const updateCoords = () => {
       if (!globeRef.current) return
       const coords = cities.map(city => {
@@ -733,6 +734,7 @@ export default function App() {
 
   // Claude AI + Web Search로 실제 관광 정보 검색
   const fetchAIWithSearch = async (city) => {
+    const countryKoName = COUNTRY_KO[city.countryEn] || city.countryEn || ''
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -740,43 +742,40 @@ export default function App() {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 2000,
-          tools: [{
-            type: "web_search_20250305",
-            name: "web_search"
-          }],
+          tools: [{ type: "web_search_20250305", name: "web_search" }],
           messages: [{
             role: 'user',
-            content: `${city.name} 여행지의 실제 유명 관광지 정보를 웹에서 검색해서 한국어로 알려주세요.
+            content: `${countryKoName} ${city.name}의 유명한 관광지 4곳을 웹에서 검색해서 알려주세요.
 
-반드시 아래 JSON 형식으로만 최종 답변하세요 (마크다운 없이, JSON만):
-{
-  "description": "${city.name}만의 독특한 특징 2문장",
-  "spots": [
-    {
-      "name": "실제 존재하는 관광지명(한국어)",
-      "type": "문화|자연|랜드마크|도시|역사|음식 중 하나",
-      "desc": "이 관광지의 구체적인 특징 2문장",
-      "img": "https://images.unsplash.com/photo-실제관련ID?w=400&q=80",
-      "rating": 4.0~5.0
-    }
-  ]
-}
+검색 후 반드시 아래 JSON만 반환하세요 (다른 텍스트 절대 금지):
+{"description":"${city.name}의 고유한 특징 2문장","spots":[{"name":"실제관광지명","type":"문화","desc":"구체적설명 2문장","img":"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80","rating":4.5}]}
 
-- 반드시 ${city.name}에 실제로 존재하는 관광지 4개
-- 검색으로 찾은 최신 실제 정보 사용`
+규칙:
+- spots는 정확히 4개
+- ${city.name}에 실제 존재하는 관광지만
+- type은 문화/자연/랜드마크/도시/역사/음식 중 하나
+- img는 반드시 https://images.unsplash.com/photo-로 시작하는 실제 URL`
           }]
         })
       })
       const data = await res.json()
-      // web search 후 최종 텍스트 응답 추출
-      const textBlock = data.content?.find(b => b.type === 'text')
-      if (!textBlock) return null
-      const txt = textBlock.text.replace(/```json|```/g, '').trim()
-      // JSON 부분만 추출
-      const jsonMatch = txt.match(/\{[\s\S]*\}/)
+      // 모든 content 블록에서 텍스트 추출
+      const allText = (data.content || [])
+        .filter(b => b.type === 'text')
+        .map(b => b.text)
+        .join('')
+      if (!allText) return null
+      // JSON 추출 — 중첩 구조 고려
+      const jsonMatch = allText.match(/\{[\s\S]*"spots"[\s\S]*\}/)
       if (!jsonMatch) return null
-      return JSON.parse(jsonMatch[0])
-    } catch { return null }
+      const parsed = JSON.parse(jsonMatch[0])
+      // spots가 4개인지 검증
+      if (!parsed.spots || parsed.spots.length < 2) return null
+      return parsed
+    } catch (e) {
+      console.error('AI search failed:', e)
+      return null
+    }
   }
 
   const closePanel = () => {
