@@ -1096,7 +1096,7 @@ ${cityName}에 실제 존재하는 관광지명으로 채울것. type은 문화/
                       onClick={()=>setSelectedSpot(selectedSpot?.name===spot.name?null:spot)}
                       style={{borderRadius:14,overflow:'hidden',background:'white',border:`1.5px solid ${selectedSpot?.name===spot.name?selectedCity.color:'#e2e8f0'}`,boxShadow:'0 2px 8px rgba(0,0,0,.06)',opacity:loading?0.6:1,transition:'opacity 0.3s'}}>
                       <div style={{height:142,overflow:'hidden',position:'relative'}}>
-                        <img className="cimg" src={spot.img} alt={spot.name}
+                        <img className="cimg" src={`https://source.unsplash.com/400x300/?${encodeURIComponent(spot.name + ' ' + (spot.type||'travel'))}`} alt={spot.name}
                           style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
                           onError={e=>e.target.src='https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80'}/>
                         <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 55%)'}}/>
