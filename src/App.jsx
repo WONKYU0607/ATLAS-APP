@@ -846,33 +846,34 @@ function App() {
   // Gemini AI로 도시별 실제 관광 정보 생성
   const fetchAIWithSearch = async (city) => {
     const countryKoName = COUNTRY_KO[city.countryEn] || city.countryEn || ''
+    const cityName = city.name || ''
+    if (!cityName) return null
     try {
-      const prompt = `${countryKoName} ${city.name}의 실제 유명 관광지 4곳 정보를 JSON으로만 답하세요. 다른 텍스트 없이 JSON만:
-
-{"description":"${city.name}만의 고유한 특징 2문장","spots":[{"name":"실제관광지명","type":"문화","desc":"이 관광지만의 구체적 특징과 볼거리 2문장","img":"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80","rating":4.5,"openTime":"09:00~18:00","price":"무료"},{"name":"관광지명2","type":"자연","desc":"설명","img":"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80","rating":4.7,"openTime":"24시간","price":"무료"},{"name":"관광지명3","type":"역사","desc":"설명","img":"https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400&q=80","rating":4.3,"openTime":"09:00~17:00","price":"성인 15,000원"},{"name":"관광지명4","type":"랜드마크","desc":"설명","img":"https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=400&q=80","rating":4.6,"openTime":"10:00~21:00","price":"성인 20,000원"}]}
-
-중요:
-- ${city.name}에 실제 존재하는 관광지로 채울 것
-- openTime: 실제 운영 시간
-- price: 실제 입장료 (무료면 "무료", 유료면 실제 금액)
-- type은 문화/자연/랜드마크/도시/역사/음식 중 하나
-- JSON만 반환, 다른 텍스트 절대 금지`
+      const prompt = `${countryKoName} ${cityName}의 실제 유명 관광지 4곳을 JSON으로만 반환. 설명 없이 JSON만:
+{"description":"${cityName}의 특징 2문장","spots":[{"name":"실제관광지명","type":"문화","desc":"설명 2문장","img":"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80","rating":4.5,"openTime":"09:00~18:00","price":"무료"},{"name":"실제관광지명2","type":"자연","desc":"설명 2문장","img":"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80","rating":4.7,"openTime":"24시간","price":"무료"},{"name":"실제관광지명3","type":"역사","desc":"설명 2문장","img":"https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400&q=80","rating":4.3,"openTime":"09:00~17:00","price":"성인 10,000원"},{"name":"실제관광지명4","type":"랜드마크","desc":"설명 2문장","img":"https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=400&q=80","rating":4.6,"openTime":"10:00~21:00","price":"무료"}]}
+${cityName}에 실제 존재하는 관광지명으로 채울것. type은 문화/자연/랜드마크/도시/역사/음식 중 하나.`
 
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt })
       })
+      if (!res.ok) return null
       const data = await res.json()
       if (!data.text) return null
-      const txt = data.text.replace(/```json|```/g, '').trim()
-      const jsonMatch = txt.match(/\{[\s\S]*"spots"[\s\S]*\}/)
-      if (!jsonMatch) return null
-      const parsed = JSON.parse(jsonMatch[0])
+
+      // JSON 파싱 - 여러 방법 시도
+      let txt = data.text.replace(/```json|```/g, '').trim()
+      // 첫 { 부터 마지막 } 까지 추출
+      const start = txt.indexOf('{')
+      const end = txt.lastIndexOf('}')
+      if (start === -1 || end === -1) return null
+      const jsonStr = txt.slice(start, end + 1)
+      const parsed = JSON.parse(jsonStr)
       if (!parsed.spots || parsed.spots.length < 2) return null
       return parsed
     } catch (e) {
-      console.error('AI failed:', e)
+      console.error('AI failed for', cityName, ':', e.message)
       return null
     }
   }
