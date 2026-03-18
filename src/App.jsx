@@ -418,16 +418,8 @@ const COUNTRY_KO = {
   "Suriname": "수리남",
 }
 
-// 관광 데이터 (주요 도시)
-const CITY_DATA = {
-  "서울": { weather:{temp:15,condition:"맑음",icon:"☀️",humidity:58}, description:"서울은 600년 조선왕조의 역사와 K-팝 문화, 첨단 기술이 공존하며 아시아에서 가장 흥미로운 음식 문화를 자랑합니다.", spots:[{name:"경복궁",type:"역사",desc:"조선 5대 궁궐 중 가장 웅장한 궁으로, 14세기의 영광을 되찾아 매시간 수문장 교대식이 펼쳐집니다.",img:"https://images.unsplash.com/photo-1548115184-bc6544d06a58?w=400&q=80",rating:4.8},{name:"북촌 한옥마을",type:"문화",desc:"궁궐 사이에 자리한 전통 한옥 박물관 같은 마을로, 조선시대 서울의 모습을 고스란히 간직하고 있습니다.",img:"https://images.unsplash.com/photo-1538485399081-7191377e8241?w=400&q=80",rating:4.7},{name:"N서울타워",type:"랜드마크",desc:"남산 정상에 우뚝 선 상징적인 타워로, 서울의 광활한 도시 풍경을 360도로 감상할 수 있습니다.",img:"https://images.unsplash.com/photo-1601621915196-2621bfb0cd6e?w=400&q=80",rating:4.6},{name:"명동",type:"도시",desc:"최신 K-뷰티 브랜드와 떡볶이, 호떡 등 길거리 음식이 공존하는 서울 최대의 쇼핑 명소입니다.",img:"https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=400&q=80",rating:4.5}]},
-  "도쿄": { weather:{temp:18,condition:"구름 조금",icon:"⛅",humidity:65}, description:"도쿄는 초현대적 고층 빌딩과 고즈넉한 사찰이 공존하는 도시로, 전통과 혁신이 아름답게 어우러집니다.", spots:[{name:"센소지 사원",type:"문화",desc:"645년에 건립된 도쿄에서 가장 오래된 불교 사원입니다.",img:"https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=400&q=80",rating:4.8},{name:"시부야 교차로",type:"도시",desc:"한 번에 3,000명이 동시에 건너는 세계에서 가장 바쁜 횡단보도입니다.",img:"https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&q=80",rating:4.7},{name:"후지산",type:"자연",desc:"해발 3,776m의 일본 상징적인 성스러운 화산입니다.",img:"https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=400&q=80",rating:5.0},{name:"신주쿠 교엔",type:"자연",desc:"프랑스식, 영국식, 일본식 정원이 조화롭게 어우러진 국립 정원입니다.",img:"https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?w=400&q=80",rating:4.6}]},
-  "파리": { weather:{temp:14,condition:"흐림",icon:"☁️",humidity:78}, description:"빛의 도시 파리는 낭만적인 거리, 세계적 수준의 박물관, 최고의 요리로 방문객을 매혹시킵니다.", spots:[{name:"에펠탑",type:"랜드마크",desc:"1889년 세계박람회를 위해 건설된 구스타브 에펠의 철제 걸작입니다.",img:"https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=400&q=80",rating:4.9},{name:"루브르 박물관",type:"문화",desc:"모나리자를 포함해 38만 점 이상의 작품을 소장한 세계 최대의 미술관입니다.",img:"https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=400&q=80",rating:4.8},{name:"베르사유 궁전",type:"역사",desc:"웅장한 거울의 방과 완벽하게 가꾸어진 정원을 자랑하는 왕실 궁전입니다.",img:"https://images.unsplash.com/photo-1584255014406-2a68ea38e48c?w=400&q=80",rating:4.7},{name:"몽마르트르",type:"문화",desc:"사크레쾨르 대성당과 예술가들의 작업실로 가득한 보헤미안 언덕 마을입니다.",img:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=80",rating:4.6}]},
-  "뉴욕": { weather:{temp:12,condition:"맑음",icon:"☀️",humidity:55}, description:"잠들지 않는 도시 뉴욕은 금융, 패션, 예술의 글로벌 수도입니다.", spots:[{name:"센트럴파크",type:"자연",desc:"맨해튼 한복판에 자리한 843에이커의 도시 속 오아시스입니다.",img:"https://images.unsplash.com/photo-1534430480872-3498386e7856?w=400&q=80",rating:4.8},{name:"자유의 여신상",type:"랜드마크",desc:"1886년부터 뉴욕항을 지켜온 자유와 민주주의의 상징입니다.",img:"https://images.unsplash.com/photo-1485738422979-f5c462d49f74?w=400&q=80",rating:4.7},{name:"타임스퀘어",type:"도시",desc:"거대한 LED 전광판과 브로드웨이 극장이 빛나는 세계의 교차로입니다.",img:"https://images.unsplash.com/photo-1546436836-07a91091f160?w=400&q=80",rating:4.5},{name:"브루클린 브릿지",type:"랜드마크",desc:"1883년에 완공된 공학의 걸작으로 맨해튼 스카이라인을 배경으로 한 산책로입니다.",img:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",rating:4.8}]},
-  "시드니": { weather:{temp:22,condition:"맑음",icon:"☀️",humidity:62}, description:"호주의 항구 도시 시드니는 세계적인 오페라 하우스와 황금빛 해변으로 빛납니다.", spots:[{name:"시드니 오페라 하우스",type:"랜드마크",desc:"요른 우촌의 건축 걸작이자 유네스코 세계문화유산입니다.",img:"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80",rating:5.0},{name:"본다이 비치",type:"자연",desc:"호주에서 가장 유명한 해변으로 세계적 수준의 서핑을 즐길 수 있습니다.",img:"https://images.unsplash.com/photo-1523428461295-92770e70d7ae?w=400&q=80",rating:4.8},{name:"더 록스",type:"역사",desc:"자갈길과 식민지 건축, 활기찬 주말 마켓이 매력적인 역사 지구입니다.",img:"https://images.unsplash.com/photo-1624138784614-87fd1b6528f8?w=400&q=80",rating:4.5},{name:"블루 마운틴",type:"자연",desc:"유칼립투스 숲과 웅장한 세 자매 바위로 유명한 유네스코 세계자연유산입니다.",img:"https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&q=80",rating:4.9}]},
-  "두바이": { weather:{temp:32,condition:"맑음",icon:"☀️",humidity:40}, description:"사막 위에 솟아오른 두바이는 세계 최고층 빌딩과 인공 섬, 놀라운 럭셔리를 선사합니다.", spots:[{name:"부르즈 칼리파",type:"랜드마크",desc:"높이 828m의 세계 최고층 건물로 사막과 아라비아만의 전망을 제공합니다.",img:"https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80",rating:4.9},{name:"두바이 크릭",type:"문화",desc:"전통 목선이 오가는 두바이의 역사적인 심장부입니다.",img:"https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=400&q=80",rating:4.6},{name:"팜 주메이라",type:"도시",desc:"아라비아만으로 뻗어나간 야심찬 인공 야자수 섬입니다.",img:"https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=400&q=80",rating:4.7},{name:"사막 사파리",type:"자연",desc:"황금빛 모래 언덕에서 낙타 타기와 베두인 캠프 만찬을 즐기는 경험입니다.",img:"https://images.unsplash.com/photo-1509116-2f2b21c14dc5?w=400&q=80",rating:4.8}]},
-  "런던": { weather:{temp:11,condition:"흐림",icon:"☁️",humidity:80}, description:"런던은 왕실의 전통과 첨단 문화, 세계적인 랜드마크가 공존하는 세계 도시입니다.", spots:[{name:"런던 타워",type:"역사",desc:"템즈강변의 1,000년 된 요새로 왕관 보석의 보관소입니다.",img:"https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400&q=80",rating:4.7},{name:"대영 박물관",type:"문화",desc:"200만 년에 걸친 인류 역사를 담은 800만 점의 유물을 소장한 박물관입니다.",img:"https://images.unsplash.com/photo-1560086951-58f95f58d2e0?w=400&q=80",rating:4.8},{name:"하이드 파크",type:"자연",desc:"350에이커 규모의 왕립 공원으로 연사의 코너와 여름 콘서트가 유명합니다.",img:"https://images.unsplash.com/photo-1543722530-d2c3201371e7?w=400&q=80",rating:4.6},{name:"코번트 가든",type:"도시",desc:"세계적 수준의 거리 공연자와 부티크 숍, 훌륭한 레스토랑이 모인 광장입니다.",img:"https://images.unsplash.com/photo-1587831990711-23ca6441447b?w=400&q=80",rating:4.5}]},
-}
+// 모든 도시 AI로 생성 (사전 데이터 없음)
+const CITY_DATA = {}
 
 const DEFAULT_CITY_DATA = (cityName) => ({
   weather:{temp:Math.floor(Math.random()*20)+10,condition:"구름 조금",icon:"⛅",humidity:Math.floor(Math.random()*40)+45},
@@ -635,6 +627,14 @@ export default function App() {
   const handleCountryClick = (feat) => {
     if (!feat || !globeRef.current) return
     const globe = globeRef.current
+    const clickedName = feat.properties.NAME
+
+    // 같은 나라 다시 클릭하면 원상복구
+    if (selectedCountry?.properties.NAME === clickedName) {
+      closeCountry()
+      return
+    }
+
     setSelectedCountry(feat)
     setSelectedCity(null)
     setCityData(null)
@@ -732,7 +732,7 @@ export default function App() {
     } catch { return null }
   }
 
-  // Claude AI + Web Search로 실제 관광 정보 검색
+  // Claude AI로 도시별 실제 관광 정보 생성 (web_search 제거 - 파싱 안정성)
   const fetchAIWithSearch = async (city) => {
     const countryKoName = COUNTRY_KO[city.countryEn] || city.countryEn || ''
     try {
@@ -741,39 +741,27 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 2000,
-          tools: [{ type: "web_search_20250305", name: "web_search" }],
+          max_tokens: 1500,
           messages: [{
             role: 'user',
-            content: `${countryKoName} ${city.name}의 유명한 관광지 4곳을 웹에서 검색해서 알려주세요.
+            content: `${countryKoName} ${city.name}의 실제 유명 관광지 4곳 정보를 JSON으로만 답하세요. 다른 텍스트 없이 JSON만:
 
-검색 후 반드시 아래 JSON만 반환하세요 (다른 텍스트 절대 금지):
-{"description":"${city.name}의 고유한 특징 2문장","spots":[{"name":"실제관광지명","type":"문화","desc":"구체적설명 2문장","img":"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80","rating":4.5}]}
+{"description":"${city.name}만의 고유한 특징 2문장","spots":[{"name":"관광지명","type":"문화","desc":"이 관광지만의 구체적 특징 2문장","img":"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80","rating":4.5},{"name":"관광지명2","type":"자연","desc":"설명","img":"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80","rating":4.7},{"name":"관광지명3","type":"역사","desc":"설명","img":"https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400&q=80","rating":4.3},{"name":"관광지명4","type":"랜드마크","desc":"설명","img":"https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=400&q=80","rating":4.6}]}
 
-규칙:
-- spots는 정확히 4개
-- ${city.name}에 실제 존재하는 관광지만
-- type은 문화/자연/랜드마크/도시/역사/음식 중 하나
-- img는 반드시 https://images.unsplash.com/photo-로 시작하는 실제 URL`
+중요: 위 형식 그대로 ${city.name}의 실제 관광지로 채워서 JSON만 반환. type은 문화/자연/랜드마크/도시/역사/음식 중 하나.`
           }]
         })
       })
       const data = await res.json()
-      // 모든 content 블록에서 텍스트 추출
-      const allText = (data.content || [])
-        .filter(b => b.type === 'text')
-        .map(b => b.text)
-        .join('')
-      if (!allText) return null
-      // JSON 추출 — 중첩 구조 고려
-      const jsonMatch = allText.match(/\{[\s\S]*"spots"[\s\S]*\}/)
+      if (!data.content || !data.content[0]) return null
+      const txt = data.content[0].text.replace(/```json|```/g, '').trim()
+      const jsonMatch = txt.match(/\{[\s\S]*"spots"[\s\S]*\}/)
       if (!jsonMatch) return null
       const parsed = JSON.parse(jsonMatch[0])
-      // spots가 4개인지 검증
       if (!parsed.spots || parsed.spots.length < 2) return null
       return parsed
     } catch (e) {
-      console.error('AI search failed:', e)
+      console.error('AI failed:', e)
       return null
     }
   }
