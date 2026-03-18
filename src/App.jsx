@@ -850,8 +850,13 @@ function App() {
     if (!cityName) return null
     try {
       const prompt = `${countryKoName} ${cityName}의 실제 유명 관광지 4곳을 JSON으로만 반환. 설명 없이 JSON만:
-{"description":"${cityName}의 특징 2문장","spots":[{"name":"실제관광지명","type":"문화","desc":"설명 2문장","img":"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80","rating":4.5,"openTime":"09:00~18:00","price":"무료"},{"name":"실제관광지명2","type":"자연","desc":"설명 2문장","img":"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80","rating":4.7,"openTime":"24시간","price":"무료"},{"name":"실제관광지명3","type":"역사","desc":"설명 2문장","img":"https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400&q=80","rating":4.3,"openTime":"09:00~17:00","price":"성인 10,000원"},{"name":"실제관광지명4","type":"랜드마크","desc":"설명 2문장","img":"https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=400&q=80","rating":4.6,"openTime":"10:00~21:00","price":"무료"}]}
-${cityName}에 실제 존재하는 관광지명으로 채울것. type은 문화/자연/랜드마크/도시/역사/음식 중 하나.`
+{"description":"${cityName}의 특징 2문장","spots":[
+{"name":"실제관광지명","type":"문화","desc":"설명 2문장","img":"https://images.unsplash.com/photo-1548115184-bc6544d06a58?w=400&q=80","rating":4.5,"openTime":"09:00~18:00","price":"무료"},
+{"name":"실제관광지명2","type":"자연","desc":"설명 2문장","img":"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80","rating":4.7,"openTime":"24시간","price":"무료"},
+{"name":"실제관광지명3","type":"역사","desc":"설명 2문장","img":"https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400&q=80","rating":4.3,"openTime":"09:00~17:00","price":"성인 10,000원"},
+{"name":"실제관광지명4","type":"랜드마크","desc":"설명 2문장","img":"https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=400&q=80","rating":4.6,"openTime":"10:00~21:00","price":"무료"}
+]}
+조건: ${cityName}에 실제 존재하는 관광지명으로 채울것. img는 각 관광지와 관련된 다른 Unsplash photo ID로 채울것 (photo-XXXXXXXXXX 부분을 서로 다르게). type은 문화/자연/랜드마크/도시/역사/음식 중 하나.`
 
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -861,15 +866,11 @@ ${cityName}에 실제 존재하는 관광지명으로 채울것. type은 문화/
       if (!res.ok) return null
       const data = await res.json()
       if (!data.text) return null
-
-      // JSON 파싱 - 여러 방법 시도
       let txt = data.text.replace(/```json|```/g, '').trim()
-      // 첫 { 부터 마지막 } 까지 추출
       const start = txt.indexOf('{')
       const end = txt.lastIndexOf('}')
       if (start === -1 || end === -1) return null
-      const jsonStr = txt.slice(start, end + 1)
-      const parsed = JSON.parse(jsonStr)
+      const parsed = JSON.parse(txt.slice(start, end + 1))
       if (!parsed.spots || parsed.spots.length < 2) return null
       return parsed
     } catch (e) {
@@ -1096,9 +1097,13 @@ ${cityName}에 실제 존재하는 관광지명으로 채울것. type은 문화/
                       onClick={()=>setSelectedSpot(selectedSpot?.name===spot.name?null:spot)}
                       style={{borderRadius:14,overflow:'hidden',background:'white',border:`1.5px solid ${selectedSpot?.name===spot.name?selectedCity.color:'#e2e8f0'}`,boxShadow:'0 2px 8px rgba(0,0,0,.06)',opacity:loading?0.6:1,transition:'opacity 0.3s'}}>
                       <div style={{height:142,overflow:'hidden',position:'relative'}}>
-                        <img className="cimg" src={`https://source.unsplash.com/400x300/?${encodeURIComponent(spot.name + ' ' + (spot.type||'travel'))}`} alt={spot.name}
+                        <img className="cimg" src={spot.img} alt={spot.name}
                           style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
-                          onError={e=>e.target.src='https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80'}/>
+                          onError={e=>{
+                            const keywords = encodeURIComponent(spot.name)
+                            e.target.src = `https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80`
+                            e.target.onerror = null
+                          }}/>
                         <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 55%)'}}/>
                         <div style={{position:'absolute',bottom:10,left:12,right:12,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
                           <div>
