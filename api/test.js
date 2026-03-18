@@ -1,10 +1,7 @@
 export default async function handler(req, res) {
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY
   if (!GEMINI_API_KEY) {
-    return res.status(200).json({ 
-      status: '❌ 실패', 
-      message: 'GEMINI_API_KEY 환경변수가 없습니다. Vercel Settings → Environment Variables에서 추가해주세요!' 
-    })
+    return res.status(200).json({ status: '❌ 키 없음' })
   }
   try {
     const response = await fetch(
@@ -12,13 +9,20 @@ export default async function handler(req, res) {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: '안녕하세요! 한 문장으로 답해주세요.' }] }] })
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: '서울의 유명 관광지 한 곳만 알려줘' }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 200 }
+        })
       }
     )
     const data = await response.json()
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '응답 없음'
-    return res.status(200).json({ status: '✅ 성공', message: 'Gemini API 연결 정상!', response: text })
+    // 전체 응답 반환
+    return res.status(200).json({ 
+      fullResponse: data,
+      text: data?.candidates?.[0]?.content?.parts?.[0]?.text || '없음',
+      status: response.status
+    })
   } catch (e) {
-    return res.status(200).json({ status: '❌ 실패', message: e.message })
+    return res.status(200).json({ error: e.message })
   }
 }
