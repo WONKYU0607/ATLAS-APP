@@ -1,5 +1,22 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
+
+// ── 에러 바운더리 (흰 화면 방지) ─────────────────────────────────────────
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { hasError: false } }
+  static getDerivedStateFromError() { return { hasError: true } }
+  componentDidCatch(e) { console.error('App error caught:', e) }
+  render() {
+    if (this.state.hasError) return (
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100vh',background:'#0f172a',color:'white',fontFamily:'Inter,sans-serif',gap:16}}>
+        <div style={{fontSize:32}}>⚠️</div>
+        <div style={{fontSize:18,fontWeight:700}}>잠시 오류가 발생했어요</div>
+        <button onClick={()=>window.location.reload()} style={{background:'#3b82f6',color:'white',border:'none',borderRadius:10,padding:'10px 24px',cursor:'pointer',fontSize:14,fontWeight:600}}>새로고침</button>
+      </div>
+    )
+    return this.props.children
+  }
+}
 
 // ── 국가별 주요 도시 데이터 ──────────────────────────────────────────────
 const COUNTRY_CITIES = {
@@ -504,7 +521,7 @@ const TYPE_COLORS = {
   Urban:"#3b82f6",History:"#f97316",Food:"#ec4899"
 }
 
-export default function App() {
+function App() {
   const globeContainerRef = useRef(null)
   const globeRef = useRef(null)
   const handleCityClickRef = useRef(null)  // ref to always-fresh click handler
@@ -741,7 +758,10 @@ export default function App() {
     try {
       // 1단계: 사전 데이터 있으면 즉시 표시
       if (CITY_DATA[city.name]) {
-        setCityData({ ...CITY_DATA[city.name] })
+        const base = { ...CITY_DATA[city.name] }
+        // weather 없으면 기본값 추가
+        if (!base.weather) base.weather = { temp: '—', condition: '날씨 로딩 중', icon: '🌤️', humidity: '—' }
+        setCityData(base)
         setLoading(false)
         // 날씨만 백그라운드로 업데이트
         fetchWeather(city.lat, city.lng).then(w => {
@@ -1035,24 +1055,24 @@ export default function App() {
             <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
               <div>
                 <div style={{fontSize:11,color:'#94a3b8',letterSpacing:'2px',textTransform:'uppercase',marginBottom:4}}>
-                  {selectedCity.emoji} {countryKo}
+                  {selectedCity?.emoji || '📍'} {countryKo}
                 </div>
-                <div style={{fontSize:26,fontWeight:800,letterSpacing:'-.5px',color:'#0f172a'}}>{selectedCity.name}</div>
+                <div style={{fontSize:26,fontWeight:800,letterSpacing:'-.5px',color:'#0f172a'}}>{selectedCity?.name || ''}</div>
               </div>
               <button onClick={closePanel}
                 style={{background:'#f1f5f9',border:'1.5px solid #e2e8f0',color:'#64748b',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
                 onMouseEnter={e=>e.currentTarget.style.background='#e2e8f0'}
                 onMouseLeave={e=>e.currentTarget.style.background='#f1f5f9'}>✕</button>
             </div>
-            {cityData && !loading && (
+            {cityData?.weather && !loading && (
               <div style={{display:'flex',alignItems:'center',gap:12,background:'#f8fafc',borderRadius:12,padding:'11px 14px',border:'1.5px solid #e2e8f0'}}>
-                <span style={{fontSize:28}}>{cityData.weather.icon}</span>
+                <span style={{fontSize:28}}>{cityData.weather.icon || '🌤️'}</span>
                 <div>
-                  <div style={{fontSize:20,fontWeight:700,color:'#0f172a'}}>{cityData.weather.temp}°C</div>
-                  <div style={{fontSize:11,color:'#94a3b8'}}>{cityData.weather.condition}</div>
+                  <div style={{fontSize:20,fontWeight:700,color:'#0f172a'}}>{cityData.weather.temp !== undefined ? `${cityData.weather.temp}°C` : '—'}</div>
+                  <div style={{fontSize:11,color:'#94a3b8'}}>{cityData.weather.condition || ''}</div>
                 </div>
                 <div style={{marginLeft:'auto',textAlign:'right'}}>
-                  <div style={{fontSize:13,color:'#475569'}}>💧 {cityData.weather.humidity}%</div>
+                  <div style={{fontSize:13,color:'#475569'}}>💧 {cityData.weather.humidity !== undefined ? `${cityData.weather.humidity}%` : '—'}</div>
                   <div style={{fontSize:11,color:'#94a3b8'}}>습도</div>
                 </div>
               </div>
@@ -1117,7 +1137,7 @@ export default function App() {
               </>
             ) : (
               <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:320,gap:16}}>
-                <div style={{width:38,height:38,borderRadius:'50%',border:'3px solid #e2e8f0',borderTopColor:selectedCity.color,animation:'spin .8s linear infinite'}}/>
+                <div style={{width:38,height:38,borderRadius:'50%',border:'3px solid #e2e8f0',borderTopColor:(selectedCity?.color||'#3b82f6'),animation:'spin .8s linear infinite'}}/>
                 <div style={{fontSize:13,color:'#94a3b8'}}>잠시만 기다려주세요...</div>
               </div>
             )}
@@ -1126,4 +1146,8 @@ export default function App() {
       )}
     </div>
   )
+}
+
+export default function AppWithBoundary() {
+  return <ErrorBoundary><App /></ErrorBoundary>
 }
