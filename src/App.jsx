@@ -496,6 +496,31 @@ export default function App() {
     })
   }, [])
 
+  // Add country labels once countries are loaded
+  useEffect(() => {
+    if (!globeRef.current || countries.length === 0) return
+    const globe = globeRef.current
+
+    const labelData = countries.map(feat => ({
+      lat: feat.properties.LABEL_Y || 0,
+      lng: feat.properties.LABEL_X || 0,
+      name: COUNTRY_KO[feat.properties.NAME] || feat.properties.NAME,
+      nameEn: feat.properties.NAME,
+    })).filter(d => d.lat !== 0 || d.lng !== 0)
+
+    globe
+      .labelsData(labelData)
+      .labelLat('lat')
+      .labelLng('lng')
+      .labelText('name')
+      .labelSize(d => COUNTRY_CITIES[d.nameEn] ? 1.4 : 1.0)
+      .labelColor(d => COUNTRY_CITIES[d.nameEn] ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.6)')
+      .labelDotRadius(d => COUNTRY_CITIES[d.nameEn] ? 0 : 0)
+      .labelAltitude(0.01)
+      .labelResolution(3)
+      .labelTypeFace(null)
+  }, [countries])
+
   // Update polygons when countries loaded or hovered
   useEffect(() => {
     if (!globeRef.current || countries.length === 0) return
@@ -537,32 +562,83 @@ export default function App() {
       .onPolygonClick(feat => handleCountryClick(feat))
   }, [countries, hoveredCountry, selectedCountry])
 
-  // Update city pins
+  // Update city pins — use htmlElementsData for rich pin design
   useEffect(() => {
     if (!globeRef.current) return
     const globe = globeRef.current
     const cities = selectedCountry ? (COUNTRY_CITIES[selectedCountry.properties.NAME] || []) : []
 
+    // Use HTML elements for beautiful pins with city name labels
     globe
-      .pointsData(cities)
-      .pointLat('lat')
-      .pointLng('lng')
-      .pointColor(d => d.color)
-      .pointAltitude(0.04)
-      .pointRadius(0.6)
-      .pointLabel(d => `
-        <div style="
-          background:white;border-radius:10px;padding:8px 12px;
-          font-family:Pretendard,Inter,sans-serif;
-          box-shadow:0 4px 16px rgba(0,0,0,0.3);
-          border-left:3px solid ${d.color};
-        ">
-          <div style="font-size:20px">${d.emoji}</div>
-          <div style="font-size:14px;font-weight:700;color:#0f172a">${d.name}</div>
-          <div style="font-size:11px;color:#64748b">클릭하여 관광 정보 보기</div>
-        </div>`)
-      .onPointClick(d => handleCityClick(d))
+      .htmlElementsData(cities)
+      .htmlLat('lat')
+      .htmlLng('lng')
+      .htmlAltitude(0.04)
+      .htmlElement(d => {
+        const el = document.createElement('div')
+        el.style.cssText = `
+          display:flex;flex-direction:column;align-items:center;
+          cursor:pointer;transform-origin:bottom center;
+          transition:transform 0.2s;
+        `
+        el.innerHTML = `
+          <div style="
+            background:white;
+            border-radius:12px;
+            padding:5px 10px;
+            display:flex;align-items:center;gap:6px;
+            box-shadow:0 4px 20px rgba(0,0,0,0.35);
+            border:2px solid ${d.color};
+            white-space:nowrap;
+            font-family:Pretendard,Inter,sans-serif;
+          ">
+            <span style="font-size:16px">${d.emoji}</span>
+            <span style="font-size:12px;font-weight:700;color:#0f172a">${d.name}</span>
+          </div>
+          <div style="
+            width:2px;height:10px;
+            background:${d.color};
+            border-radius:0 0 2px 2px;
+          "></div>
+          <div style="
+            width:10px;height:10px;border-radius:50%;
+            background:${d.color};
+            box-shadow:0 0 8px ${d.color}99;
+            border:2px solid white;
+          "></div>
+        `
+        el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.15)' })
+        el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)' })
+        el.addEventListener('click', () => handleCityClick(d))
+        return el
+      })
+
+    // Keep pointsData empty (using htmlElements instead)
+    globe.pointsData([])
   }, [selectedCountry])
+
+  // Calculate bounding box altitude for country zoom
+  const getCountryAltitude = (feat) => {
+    try {
+      const coords = feat.geometry.coordinates
+      let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180
+      const processCoord = (c) => {
+        if (Array.isArray(c[0])) { c.forEach(processCoord) }
+        else { minLat = Math.min(minLat, c[1]); maxLat = Math.max(maxLat, c[1]); minLng = Math.min(minLng, c[0]); maxLng = Math.max(maxLng, c[0]) }
+      }
+      processCoord(coords)
+      const latSpan = maxLat - minLat
+      const lngSpan = maxLng - minLng
+      const span = Math.max(latSpan, lngSpan)
+      // Map span to altitude: small country=0.5, large=2.5
+      if (span < 5) return 0.6
+      if (span < 15) return 0.9
+      if (span < 30) return 1.3
+      if (span < 60) return 1.8
+      if (span < 100) return 2.2
+      return 2.8
+    } catch { return 1.5 }
+  }
 
   const handleCountryClick = (feat) => {
     if (!feat || !globeRef.current) return
@@ -571,13 +647,12 @@ export default function App() {
     setSelectedCity(null)
     setCityData(null)
 
-    // Get country centroid
-    const coords = feat.properties
     const lat = feat.properties.LABEL_Y || 0
     const lng = feat.properties.LABEL_X || 0
+    const altitude = getCountryAltitude(feat)
 
     globe.controls().autoRotate = false
-    globe.pointOfView({ lat, lng, altitude: 1.8 }, 1200)
+    globe.pointOfView({ lat, lng, altitude }, 1300)
   }
 
   const handleCityClick = (city) => {
