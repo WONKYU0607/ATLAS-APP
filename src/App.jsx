@@ -500,14 +500,33 @@ export default function App() {
     })
   }, [])
 
-  // Render country labels + city pins together — always show labels regardless of selection
+  // Convert globe lat/lng to screen x/y for React overlay pins
+  const [cityScreenCoords, setCityScreenCoords] = useState([])
+
+  useEffect(() => {
+    if (!globeRef.current || !selectedCountry) {
+      setCityScreenCoords([])
+      return
+    }
+    const cities = COUNTRY_CITIES[selectedCountry.properties.NAME] || []
+    const updateCoords = () => {
+      if (!globeRef.current) return
+      const coords = cities.map(city => {
+        const sc = globeRef.current.getScreenCoords(city.lat, city.lng, 0.02)
+        return { ...city, sx: sc?.x, sy: sc?.y, visible: sc != null }
+      })
+      setCityScreenCoords(coords)
+    }
+    updateCoords()
+    const id = setInterval(updateCoords, 30)
+    return () => clearInterval(id)
+  }, [selectedCountry])
+
+  // Country labels via htmlElementsData (no click needed, just display)
   useEffect(() => {
     if (!globeRef.current || countries.length === 0) return
     const globe = globeRef.current
 
-    const cities = selectedCountry ? (COUNTRY_CITIES[selectedCountry.properties.NAME] || []) : []
-
-    // Always build country label items
     const labelItems = countries.map(feat => ({
       lat: feat.properties.LABEL_Y || 0,
       lng: feat.properties.LABEL_X || 0,
@@ -516,81 +535,30 @@ export default function App() {
       _type: 'label',
     })).filter(d => d.lat !== 0 || d.lng !== 0)
 
-    const cityItems = cities.map(d => ({ ...d, _type: 'city' }))
-    const allItems  = [...labelItems, ...cityItems]
-
     globe
-      .htmlElementsData(allItems)
+      .htmlElementsData(labelItems)
       .htmlLat(d => d.lat)
       .htmlLng(d => d.lng)
-      .htmlAltitude(d => d._type === 'city' ? 0.02 : 0.005)
+      .htmlAltitude(0.005)
       .htmlElement(d => {
         const el = document.createElement('div')
-
-        if (d._type === 'label') {
-          const hasCities = COUNTRY_CITIES[d.nameEn]
-          el.style.cssText = 'pointer-events:none;position:relative;'
-          el.innerHTML = `
-            <div style="
-              transform:translate(-50%,-50%);
-              font-family:Pretendard,Inter,sans-serif;
-              font-size:${hasCities ? '13px' : '10px'};
-              font-weight:${hasCities ? '700' : '400'};
-              color:${hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'};
-              text-shadow:0 1px 4px rgba(0,0,0,1), 0 0 10px rgba(0,0,0,0.8);
-              white-space:nowrap;
-              letter-spacing:0.3px;
-              user-select:none;
-            ">${d.name}</div>`
-        } else {
-          // City pin
-          el.style.cssText = `
-            display:flex;flex-direction:column;align-items:center;
-            cursor:pointer;transition:transform 0.2s;
-            transform-origin:bottom center;
-            transform:translateX(-50%);
-            position:relative;
-            z-index:10;
-          `
-          el.innerHTML = `
-            <div class="city-pill" style="
-              background:rgba(255,255,255,0.97);
-              backdrop-filter:blur(8px);
-              border-radius:20px;
-              padding:5px 13px;
-              box-shadow:0 4px 18px rgba(0,0,0,0.5);
-              border:2px solid ${d.color};
-              white-space:nowrap;
-              font-family:Pretendard,Inter,sans-serif;
-              font-size:13px;
-              font-weight:700;
-              color:#0f172a;
-              letter-spacing:-0.3px;
-            ">${d.name}</div>
-            <div style="width:2px;height:8px;background:${d.color};"></div>
-            <div style="
-              width:11px;height:11px;border-radius:50%;
-              background:${d.color};
-              border:2.5px solid white;
-              box-shadow:0 0 10px ${d.color};
-            "></div>
-          `
-          el.addEventListener('mouseenter', () => {
-            el.style.transform = 'translateX(-50%) scale(1.18)'
-          })
-          el.addEventListener('mouseleave', () => {
-            el.style.transform = 'translateX(-50%) scale(1)'
-          })
-          el.addEventListener('click', (e) => {
-            e.stopPropagation()
-            handleCityClickRef.current && handleCityClickRef.current(d)
-          })
-        }
+        const hasCities = COUNTRY_CITIES[d.nameEn]
+        el.style.cssText = 'pointer-events:none;'
+        el.innerHTML = `<div style="
+          transform:translate(-50%,-50%);
+          font-family:Pretendard,Inter,sans-serif;
+          font-size:${hasCities ? '13px' : '10px'};
+          font-weight:${hasCities ? '700' : '400'};
+          color:${hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'};
+          text-shadow:0 1px 4px rgba(0,0,0,1),0 0 10px rgba(0,0,0,0.8);
+          white-space:nowrap;
+          user-select:none;
+        ">${d.name}</div>`
         return el
       })
 
     globe.pointsData([])
-  }, [selectedCountry, countries])
+  }, [countries])
 
   // Update polygons
   useEffect(() => {
@@ -743,6 +711,50 @@ export default function App() {
 
       {/* Globe */}
       <div ref={globeContainerRef} style={{position:'absolute',inset:0,zIndex:0}}/>
+
+      {/* ── React overlay city pins ── */}
+      {cityScreenCoords.filter(c => c.visible && c.sx > 0 && c.sy > 0).map((city, i) => (
+        <div key={i}
+          onClick={() => handleCityClick(city)}
+          style={{
+            position:'absolute',
+            left: city.sx,
+            top: city.sy,
+            transform:'translate(-50%, -100%)',
+            zIndex: 500,
+            cursor:'pointer',
+            display:'flex',
+            flexDirection:'column',
+            alignItems:'center',
+            transition:'transform 0.15s',
+            pointerEvents:'all',
+          }}
+          onMouseEnter={e => e.currentTarget.style.transform='translate(-50%,-100%) scale(1.15)'}
+          onMouseLeave={e => e.currentTarget.style.transform='translate(-50%,-100%) scale(1)'}
+        >
+          <div style={{
+            background:'rgba(255,255,255,0.97)',
+            backdropFilter:'blur(8px)',
+            borderRadius:20,
+            padding:'5px 13px',
+            boxShadow:'0 4px 18px rgba(0,0,0,0.5)',
+            border:`2px solid ${city.color}`,
+            whiteSpace:'nowrap',
+            fontFamily:'Pretendard,Inter,sans-serif',
+            fontSize:13,
+            fontWeight:700,
+            color:'#0f172a',
+            letterSpacing:'-0.3px',
+          }}>{city.name}</div>
+          <div style={{width:2,height:8,background:city.color}}/>
+          <div style={{
+            width:11,height:11,borderRadius:'50%',
+            background:city.color,
+            border:'2.5px solid white',
+            boxShadow:`0 0 10px ${city.color}`,
+          }}/>
+        </div>
+      ))}
 
       {/* Header */}
       <div style={{
