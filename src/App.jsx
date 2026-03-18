@@ -843,34 +843,29 @@ function App() {
     } catch { return null }
   }
 
-  // Claude AI로 도시별 실제 관광 정보 생성 (Vercel 서버리스 프록시 사용)
+  // Gemini AI로 도시별 실제 관광 정보 생성
   const fetchAIWithSearch = async (city) => {
     const countryKoName = COUNTRY_KO[city.countryEn] || city.countryEn || ''
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 2000,
-          messages: [{
-            role: 'user',
-            content: `${countryKoName} ${city.name}의 실제 유명 관광지 4곳 정보를 JSON으로만 답하세요. 다른 텍스트 없이 JSON만:
+      const prompt = `${countryKoName} ${city.name}의 실제 유명 관광지 4곳 정보를 JSON으로만 답하세요. 다른 텍스트 없이 JSON만:
 
 {"description":"${city.name}만의 고유한 특징 2문장","spots":[{"name":"실제관광지명","type":"문화","desc":"이 관광지만의 구체적 특징과 볼거리 2문장","img":"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80","rating":4.5,"openTime":"09:00~18:00","price":"무료"},{"name":"관광지명2","type":"자연","desc":"설명","img":"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80","rating":4.7,"openTime":"24시간","price":"무료"},{"name":"관광지명3","type":"역사","desc":"설명","img":"https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400&q=80","rating":4.3,"openTime":"09:00~17:00","price":"성인 15,000원"},{"name":"관광지명4","type":"랜드마크","desc":"설명","img":"https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=400&q=80","rating":4.6,"openTime":"10:00~21:00","price":"성인 20,000원"}]}
 
 중요:
 - ${city.name}에 실제 존재하는 관광지로 채울 것
 - openTime: 실제 운영 시간
-- price: 실제 입장료 (무료면 "무료", 유료면 금액 표기)
+- price: 실제 입장료 (무료면 "무료", 유료면 실제 금액)
 - type은 문화/자연/랜드마크/도시/역사/음식 중 하나
 - JSON만 반환, 다른 텍스트 절대 금지`
-          }]
-        })
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
       })
       const data = await res.json()
-      if (!data.content || !data.content[0]) return null
-      const txt = data.content[0].text.replace(/```json|```/g, '').trim()
+      if (!data.text) return null
+      const txt = data.text.replace(/```json|```/g, '').trim()
       const jsonMatch = txt.match(/\{[\s\S]*"spots"[\s\S]*\}/)
       if (!jsonMatch) return null
       const parsed = JSON.parse(jsonMatch[0])
