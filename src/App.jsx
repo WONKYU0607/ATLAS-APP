@@ -450,6 +450,7 @@ const TYPE_COLORS = {
 export default function App() {
   const globeContainerRef = useRef(null)
   const globeRef = useRef(null)
+  const handleCityClickRef = useRef(null)  // ref to always-fresh click handler
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [selectedCity, setSelectedCity] = useState(null)
@@ -582,7 +583,7 @@ export default function App() {
           })
           el.addEventListener('click', (e) => {
             e.stopPropagation()
-            handleCityClick(d)
+            handleCityClickRef.current && handleCityClickRef.current(d)
           })
         }
         return el
@@ -669,8 +670,11 @@ export default function App() {
     setSelectedSpot(null)
     setCityData(null)
     fetchCityData(city)
-    globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: 0.8 }, 900)
+    globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: 0.5 }, 900)
   }
+
+  // Keep ref always pointing to latest version of handleCityClick
+  handleCityClickRef.current = handleCityClick
 
   const fetchCityData = async (city) => {
     setLoading(true)
