@@ -2499,87 +2499,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showDrop, setShowDrop] = useState(false)
   const [hoveredCountry, setHoveredCountry] = useState(null)
-  const [tripItems, setTripItems] = useState([]) // 여행 계획 아이템
-  const [showTrip, setShowTrip] = useState(false) // 여행 계획 패널 표시
-  const [dragItem, setDragItem] = useState(null) // 드래그 중인 아이템 ID
-  const [tripAddTarget, setTripAddTarget] = useState(null) // {spot, city} 일정 추가 팝업
 
-  // 오늘 날짜 기본값
-  const todayStr = new Date().toISOString().split('T')[0]
-
-  // 여행 계획에 관광지 추가/제거
-  const addToTrip = (spot, city) => {
-    const id = `${city.name}-${spot.name}`
-    if (tripItems.find(t => t.id === id)) {
-      // 이미 있으면 제거
-      setTripItems(prev => prev.filter(t => t.id !== id))
-      setTripAddTarget(null)
-    } else {
-      // 없으면 팝업 열기
-      setTripAddTarget({ spot, city, id })
-    }
-  }
-  // 특정 날짜에 추가
-  const addToTripDate = (date) => {
-    if (!tripAddTarget) return
-    const { spot, city, id } = tripAddTarget
-    setTripItems(prev => [...prev, {
-      id, spotName: spot.name, cityName: city.name,
-      countryKo: city.countryKo || COUNTRY_KO[city.countryEn] || '',
-      lat: city.lat, lng: city.lng,
-      type: spot.type, price: spot.price || '',
-      emoji: city.emoji, color: city.color,
-      date,
-    }])
-    setTripAddTarget(null)
-  }
-  const isTripItem = (spot, city) => tripItems.some(t => t.id === `${city?.name}-${spot.name}`)
-  const updateTripDate = (id, date) => {
-    setTripItems(prev => prev.map(t => t.id === id ? { ...t, date } : t))
-  }
-  // DAY 헤더의 날짜를 변경하면 그 날짜의 모든 아이템 이동
-  const updateGroupDate = (oldDate, newDate) => {
-    if (oldDate === newDate) return
-    setTripItems(prev => prev.map(t => t.date === oldDate ? { ...t, date: newDate } : t))
-  }
-  const removeTrip = (id) => setTripItems(prev => prev.filter(t => t.id !== id))
-  // 드래그 아이템을 특정 날짜로 이동
-  const dropToDate = (targetDate) => {
-    if (!dragItem) return
-    setTripItems(prev => prev.map(t => t.id === dragItem ? { ...t, date: targetDate } : t))
-    setDragItem(null)
-  }
-
-  // 날짜순 정렬된 아이템
-  const sortedTrip = [...tripItems].sort((a, b) => a.date.localeCompare(b.date))
-  // 날짜별 그룹핑
-  const tripByDate = sortedTrip.reduce((acc, item) => {
-    const d = item.date
-    if (!acc[d]) acc[d] = []
-    acc[d].push(item)
-    return acc
-  }, {})
-  const tripDates = Object.keys(tripByDate).sort()
-
-  // 예산 추정
-  const parseBudget = (priceStr) => {
-    if (!priceStr || priceStr === '무료') return 0
-    const nums = priceStr.match(/[\d,]+/g)
-    if (!nums) return 0
-    return parseInt(nums[0].replace(/,/g, '')) || 0
-  }
-  const totalBudget = tripItems.reduce((sum, t) => sum + parseBudget(t.price), 0)
-
-  // 날짜 포맷
-  const formatDate = (dateStr) => {
-    const d = new Date(dateStr + 'T00:00:00')
-    const days = ['일','월','화','수','목','금','토']
-    return `${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`
-  }
-  // 여행 기간 계산
-  const tripDuration = tripDates.length >= 2
-    ? Math.ceil((new Date(tripDates[tripDates.length-1]) - new Date(tripDates[0])) / 86400000) + 1
-    : tripDates.length
 
   // Load world GeoJSON (110m 경량 + 폴리곤 구멍 제거 → 빠른 렌더링, 빈 공간 없음)
   useEffect(() => {
@@ -2751,36 +2671,6 @@ function App() {
       .onPolygonClick(feat => handleCountryClick(feat))
   }, [countries, hoveredCountry, selectedCountry])
 
-  // ── 여행 경로 표시 (실선 고정 경로) ──────────────────────────
-  useEffect(() => {
-    if (!globeRef.current) return
-    const globe = globeRef.current
-    if (sortedTrip.length < 2) {
-      globe.arcsData([])
-      return
-    }
-    const arcs = []
-    const seen = new Set()
-    for (let i = 0; i < sortedTrip.length - 1; i++) {
-      const from = sortedTrip[i], to = sortedTrip[i+1]
-      if (from.cityName === to.cityName) continue
-      const key = `${from.cityName}-${to.cityName}`
-      if (seen.has(key)) continue
-      seen.add(key)
-      arcs.push({
-        startLat: from.lat, startLng: from.lng,
-        endLat: to.lat, endLng: to.lng,
-      })
-    }
-    globe
-      .arcsData(arcs)
-      .arcColor(() => ['#f97316', '#f97316'])
-      .arcStroke(0.8)
-      .arcDashLength(1)
-      .arcDashGap(0)
-      .arcDashAnimateTime(0)
-      .arcAltitude(0.01)
-  }, [tripItems])
 
   // 국가별 최적 줌 레벨 (수동 튜닝)
   const COUNTRY_ZOOM = {
@@ -3146,179 +3036,13 @@ function App() {
       )}
 
       {/* Hint */}
-      {!selectedCountry && !showTrip && (
+      {!selectedCountry && (
         <div style={{position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:1000,background:'rgba(255,255,255,.9)',backdropFilter:'blur(12px)',border:'1.5px solid rgba(255,255,255,.5)',borderRadius:40,padding:'9px 20px',fontSize:12,color:'#475569',whiteSpace:'nowrap',boxShadow:'0 4px 20px rgba(0,0,0,.2)',pointerEvents:'none'}}>
           ✦ 나라를 클릭하면 도시 핀이 나타납니다 · 드래그로 지구 회전
         </div>
       )}
 
-      {/* ── 여행 계획 플로팅 버튼 ── */}
-      <button
-        onClick={() => setShowTrip(!showTrip)}
-        style={{
-          position:'absolute',bottom:24,left:24,zIndex:1200,
-          display:'flex',alignItems:'center',gap:8,
-          background: showTrip ? '#0f172a' : 'linear-gradient(135deg,#2563eb,#7c3aed)',
-          color:'white',border:'none',borderRadius:30,
-          padding:'12px 20px',cursor:'pointer',
-          fontSize:13,fontWeight:700,
-          boxShadow:'0 4px 20px rgba(37,99,235,0.4)',
-          transition:'all .3s',
-        }}
-      >
-        <span style={{fontSize:18}}>{showTrip ? '✕' : '🗺️'}</span>
-        {showTrip ? '닫기' : `여행 계획${tripItems.length > 0 ? ` (${tripItems.length})` : ''}`}
-      </button>
 
-      {/* ── 여행 계획 패널 (날짜별 일정) ── */}
-      {showTrip && (
-        <div style={{
-          position:'absolute',bottom:0,left:0,right: selectedCity ? 420 : 0,
-          zIndex:1100,maxHeight:'60vh',
-          background:'rgba(255,255,255,0.98)',backdropFilter:'blur(16px)',
-          borderTop:'1.5px solid #e2e8f0',borderRadius:'20px 20px 0 0',
-          boxShadow:'0 -8px 40px rgba(0,0,0,0.15)',
-          overflowY:'auto',
-          animation:'tripIn .35s cubic-bezier(.16,1,.3,1)',
-        }}>
-          <style>{`@keyframes tripIn{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
-
-          {/* 헤더 */}
-          <div style={{position:'sticky',top:0,background:'rgba(255,255,255,0.98)',backdropFilter:'blur(16px)',padding:'18px 24px 14px',borderBottom:'1px solid #f1f5f9',zIndex:2}}>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <div>
-                <div style={{fontSize:18,fontWeight:800,color:'#0f172a'}}>🗺️ 나의 여행 일정</div>
-                <div style={{fontSize:11,color:'#94a3b8',marginTop:2}}>
-                  {tripItems.length > 0
-                    ? `${tripDuration > 0 ? `${tripDuration}일` : ''} · ${[...new Set(tripItems.map(t=>t.cityName))].length}개 도시 · ${tripItems.length}곳`
-                    : '관광지 카드의 + 버튼으로 추가하세요'}
-                </div>
-              </div>
-              {tripItems.length > 0 && (
-                <div style={{textAlign:'right'}}>
-                  <div style={{fontSize:10,color:'#94a3b8'}}>예상 입장료</div>
-                  <div style={{fontSize:17,fontWeight:800,color:'#2563eb'}}>
-                    {totalBudget > 0 ? `₩${totalBudget.toLocaleString()}~` : '무료'}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {tripItems.length === 0 ? (
-            <div style={{padding:'50px 24px',textAlign:'center'}}>
-              <div style={{fontSize:48,marginBottom:12}}>✈️</div>
-              <div style={{fontSize:14,color:'#64748b',lineHeight:1.7}}>
-                아직 추가된 관광지가 없어요<br/>
-                도시를 탐색하고 관광지 카드의<br/>
-                <strong>+ 버튼</strong>을 눌러 추가해보세요!
-              </div>
-            </div>
-          ) : (
-            <div style={{padding:'6px 20px 80px'}}>
-              {/* 날짜별 그룹 */}
-              {tripDates.map((date, di) => (
-                <div key={date} style={{marginTop:16}}
-                  onDragOver={e => { e.preventDefault(); e.currentTarget.style.background='rgba(37,99,235,0.04)' }}
-                  onDragLeave={e => { e.currentTarget.style.background='transparent' }}
-                  onDrop={e => { e.preventDefault(); e.currentTarget.style.background='transparent'; dropToDate(date) }}
-                >
-                  {/* DAY 헤더 + 날짜 선택 */}
-                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
-                    <div style={{
-                      background:'linear-gradient(135deg,#2563eb,#7c3aed)',
-                      color:'white',borderRadius:10,padding:'6px 12px',
-                      fontSize:13,fontWeight:700,whiteSpace:'nowrap',
-                      boxShadow:'0 2px 8px rgba(37,99,235,0.25)',
-                    }}>
-                      DAY {di+1}
-                    </div>
-                    {/* 클릭하면 달력 열리는 날짜 버튼 */}
-                    <label style={{position:'relative',display:'inline-flex',alignItems:'center',gap:6,
-                      background:'white',borderRadius:10,padding:'6px 14px',
-                      border:'1.5px solid #e2e8f0',cursor:'pointer',
-                      fontSize:13,fontWeight:600,color:'#334155',
-                      boxShadow:'0 1px 4px rgba(0,0,0,0.06)',
-                    }}>
-                      <span>📅</span>
-                      <span>{formatDate(date)}</span>
-                      <input type="date" value={date}
-                        onChange={e => { if (e.target.value) updateGroupDate(date, e.target.value) }}
-                        style={{position:'absolute',inset:0,width:'100%',height:'100%',opacity:0,cursor:'pointer',fontSize:16}}
-                      />
-                    </label>
-                    <div style={{flex:1,height:1,background:'#e2e8f0'}}/>
-                    <div style={{fontSize:10,color:'#94a3b8'}}>{tripByDate[date].length}곳</div>
-                  </div>
-
-                  {/* 해당 날짜의 관광지 (드래그 가능) */}
-                  {tripByDate[date].map((item, ii) => (
-                    <div key={item.id}
-                      draggable
-                      onDragStart={() => setDragItem(item.id)}
-                      onDragEnd={() => setDragItem(null)}
-                      style={{
-                        display:'flex',gap:10,marginBottom:6,marginLeft:4,
-                        opacity: dragItem === item.id ? 0.4 : 1,
-                        transition:'opacity .15s',
-                      }}
-                    >
-                      {/* 드래그 핸들 + 타임라인 도트 */}
-                      <div style={{display:'flex',flexDirection:'column',alignItems:'center',width:20,flexShrink:0,paddingTop:6,cursor:'grab'}}>
-                        <div style={{fontSize:8,color:'#94a3b8',lineHeight:1,marginBottom:2,letterSpacing:1}}>⠿</div>
-                        <div style={{width:8,height:8,borderRadius:'50%',background:item.color||'#3b82f6',boxShadow:`0 0 0 2px ${item.color||'#3b82f6'}22`}}/>
-                        {ii < tripByDate[date].length-1 && <div style={{flex:1,width:1,background:'#e2e8f0',minHeight:16}}/>}
-                      </div>
-                      {/* 카드 */}
-                      <div style={{flex:1,background:'white',borderRadius:10,padding:'8px 11px',border:'1px solid #e2e8f0',boxShadow:'0 1px 3px rgba(0,0,0,0.04)'}}>
-                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:6}}>
-                          <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontSize:12.5,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.emoji} {item.spotName}</div>
-                            <div style={{fontSize:10,color:'#94a3b8',marginTop:1}}>{item.cityName}</div>
-                          </div>
-                          <div style={{display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
-                            {item.price && item.price !== '무료' && <span style={{fontSize:9,color:'#16a34a',fontWeight:600}}>🎫 {item.price}</span>}
-                            <button onClick={() => removeTrip(item.id)}
-                              style={{width:20,height:20,borderRadius:5,border:'1px solid #fecaca',background:'#fef2f2',cursor:'pointer',fontSize:8,color:'#ef4444',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-
-              {/* 요약 */}
-              <div style={{background:'linear-gradient(135deg,#eff6ff,#f5f3ff)',borderRadius:14,padding:'14px 16px',marginTop:16,border:'1px solid #dbeafe'}}>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:6}}>
-                  <div style={{textAlign:'center',padding:'4px'}}>
-                    <div style={{fontSize:18,fontWeight:800,color:'#2563eb'}}>{tripDuration || 0}</div>
-                    <div style={{fontSize:10,color:'#64748b'}}>일간</div>
-                  </div>
-                  <div style={{textAlign:'center',padding:'4px'}}>
-                    <div style={{fontSize:18,fontWeight:800,color:'#7c3aed'}}>{[...new Set(tripItems.map(t=>t.cityName))].length}</div>
-                    <div style={{fontSize:10,color:'#64748b'}}>도시</div>
-                  </div>
-                  <div style={{textAlign:'center',padding:'4px'}}>
-                    <div style={{fontSize:18,fontWeight:800,color:'#0f172a'}}>{tripItems.length}</div>
-                    <div style={{fontSize:10,color:'#64748b'}}>관광지</div>
-                  </div>
-                </div>
-              </div>
-
-              <button onClick={() => setTripItems([])}
-                style={{width:'100%',marginTop:10,padding:'9px',background:'#fef2f2',color:'#ef4444',border:'1px solid #fecaca',borderRadius:10,cursor:'pointer',fontSize:12,fontWeight:600}}>
-                🗑 전체 삭제
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 팝업 닫기 오버레이 */}
-      {tripAddTarget && (
-        <div onClick={() => setTripAddTarget(null)} style={{position:'fixed',inset:0,zIndex:99}}/>
-      )}
 
       {/* Side Panel */}
       {selectedCity && (
@@ -3396,21 +3120,7 @@ function App() {
                                   style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
                                 />
                                 <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 55%)'}}/>
-                                {/* 여행 추가 버튼 */}
-                                <button
-                                  onClick={e => { e.stopPropagation(); addToTrip(spot, selectedCity) }}
-                                  style={{
-                                    position:'absolute',top:8,right:8,
-                                    width:32,height:32,borderRadius:'50%',border:'none',
-                                    background: isTripItem(spot, selectedCity) ? '#ef4444' : 'rgba(255,255,255,0.93)',
-                                    color: isTripItem(spot, selectedCity) ? 'white' : '#475569',
-                                    fontSize:16,cursor:'pointer',fontWeight:700,
-                                    display:'flex',alignItems:'center',justifyContent:'center',
-                                    boxShadow:'0 2px 8px rgba(0,0,0,0.3)',
-                                  }}
-                                >
-                                  {isTripItem(spot, selectedCity) ? '✓' : '+'}
-                                </button>
+
                                 <div style={{position:'absolute',bottom:10,left:12,right:12,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
                                   <div>
                                     <div style={{fontSize:13.5,fontWeight:700,color:'white',textShadow:'0 1px 4px rgba(0,0,0,.6)'}}>{spot.name}</div>
@@ -3419,35 +3129,7 @@ function App() {
                                   {spot.rating > 0 && <div style={{fontSize:13,color:'#fbbf24',fontWeight:700}}>★ {spot.rating}</div>}
                                 </div>
                               </div>
-                              {/* 날짜 선택 팝업 (카드 밖에서 렌더링 → 짤림 방지) */}
-                              {tripAddTarget?.id === `${selectedCity?.name}-${spot.name}` && (
-                                <div onClick={e => e.stopPropagation()} style={{
-                                  background:'#f8fafc',borderRadius:0,padding:'10px 14px',
-                                  borderBottom:'1px solid #e2e8f0',
-                                }}>
-                                  <div style={{fontSize:11,fontWeight:700,color:'#64748b',marginBottom:8}}>📅 일정에 추가</div>
-                                  <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-                                    {tripDates.map((d, di) => (
-                                      <button key={d} onClick={() => addToTripDate(d)}
-                                        style={{padding:'6px 12px',border:'1.5px solid #e2e8f0',background:'white',borderRadius:10,cursor:'pointer',fontSize:11,fontWeight:600,color:'#1e293b',display:'flex',alignItems:'center',gap:6}}
-                                        onMouseEnter={e=>e.currentTarget.style.borderColor='#2563eb'}
-                                        onMouseLeave={e=>e.currentTarget.style.borderColor='#e2e8f0'}
-                                      >
-                                        <span style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',color:'white',borderRadius:5,padding:'1px 6px',fontSize:9,fontWeight:700}}>D{di+1}</span>
-                                        {formatDate(d)}
-                                      </button>
-                                    ))}
-                                    {/* 새 날짜 - 글씨 클릭하면 달력 열림 */}
-                                    <label style={{padding:'6px 12px',border:'1.5px dashed #c7d2fe',background:'#eff6ff',borderRadius:10,cursor:'pointer',fontSize:11,fontWeight:700,color:'#2563eb',display:'flex',alignItems:'center',gap:4,position:'relative'}}>
-                                      ＋ 새 날짜
-                                      <input type="date" value={todayStr}
-                                        onChange={e => { if (e.target.value) addToTripDate(e.target.value) }}
-                                        style={{position:'absolute',inset:0,width:'100%',height:'100%',opacity:0,cursor:'pointer',fontSize:16}}
-                                      />
-                                    </label>
-                                  </div>
-                                </div>
-                              )}
+
                               {selectedSpot?.name===spot.name && (
                                 <div style={{padding:'12px 14px',borderTop:`1px solid ${(selectedCity?.color||'#3b82f6')}22`,background:`${selectedCity?.color||'#3b82f6'}07`}}>
                                   <p style={{fontSize:12.5,color:'#475569',lineHeight:1.75,marginBottom:10}}>{spot.desc}</p>
