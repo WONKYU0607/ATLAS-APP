@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 
-// ── 실제 관광지 사진 (Wikipedia API) ────────────────────────────────────
+// ── 실제 관광지 사진 (Wikipedia API + Search 폴백) ─────────────────────
 function SpotImage({ wikiTitle, spotName, fallback, className, style, alt }) {
   const [src, setSrc] = useState(null)
 
@@ -11,6 +11,7 @@ function SpotImage({ wikiTitle, spotName, fallback, className, style, alt }) {
     const keyword = wikiTitle || spotName || ''
     if (!keyword) { setSrc(fallback); return }
 
+    // 정확한 제목으로 이미지 조회
     const tryWiki = async (title) => {
       try {
         const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=600&origin=*`)
@@ -20,8 +21,21 @@ function SpotImage({ wikiTitle, spotName, fallback, className, style, alt }) {
       } catch { return null }
     }
 
+    // 키워드로 Wikipedia 검색 후 첫 결과의 이미지 조회
+    const searchWiki = async (query) => {
+      try {
+        const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=3&prop=pageimages&format=json&pithumbsize=600&origin=*`)
+        const data = await res.json()
+        const pages = Object.values(data?.query?.pages || {})
+        for (const page of pages) {
+          if (page?.thumbnail?.source) return page.thumbnail.source
+        }
+        return null
+      } catch { return null }
+    }
+
     const loadImage = async () => {
-      // 1차: wikiTitle 그대로 검색
+      // 1차: wikiTitle 정확한 제목 검색
       let img = await tryWiki(keyword)
       if (!cancelled && img) { setSrc(img); return }
 
@@ -32,7 +46,7 @@ function SpotImage({ wikiTitle, spotName, fallback, className, style, alt }) {
         if (!cancelled && img) { setSrc(img); return }
       }
 
-      // 3차: spotName 으로 시도 (wikiTitle과 다를 경우)
+      // 3차: spotName으로 시도
       if (spotName && spotName !== keyword) {
         const enSpot = spotName.replace(/[가-힣]+/g, '').trim()
         if (enSpot) {
@@ -40,6 +54,11 @@ function SpotImage({ wikiTitle, spotName, fallback, className, style, alt }) {
           if (!cancelled && img) { setSrc(img); return }
         }
       }
+
+      // 4차: Wikipedia 검색 API로 관련 문서 이미지 찾기
+      const searchQuery = (wikiTitle || '') + ' ' + (spotName || '')
+      img = await searchWiki(searchQuery.trim())
+      if (!cancelled && img) { setSrc(img); return }
 
       // 최종 fallback
       if (!cancelled) setSrc(fallback)
@@ -784,9 +803,9 @@ const CITY_DATA = {
 ]},
 "수원": { description:"수원은 정조대왕의 효심이 담긴 화성과 최첨단 삼성 캠퍼스가 공존하는 역사·기술 도시입니다. 유네스코 세계문화유산 수원화성은 한국 성곽 건축의 백미입니다.", spots:[
   {name:"수원화성", wikiTitle:"Hwaseong Fortress", type:"역사", desc:"정조대왕이 아버지 사도세자를 위해 축조한 유네스코 세계문화유산 성곽입니다. 5.7km 성곽길을 따라 걸으며 48개의 시설물을 감상할 수 있습니다.", rating:4.8, openTime:"09:00~18:00", price:"성인 1,000원", website:"https://www.swcf.or.kr"},
-  {name:"화성행궁", wikiTitle:"Hwaseong Haenggung Palace", type:"역사", desc:"정조대왕이 수원 행차 시 머물던 임시 궁궐입니다. 국내 최대 규모의 행궁으로 화려한 건축미를 자랑합니다.", rating:4.6, openTime:"09:00~18:00", price:"성인 1,500원", website:"https://en.wikipedia.org/wiki/Hwaseong_Haenggung"},
+  {name:"화성행궁", wikiTitle:"Hwaseong Fortress", type:"역사", desc:"정조대왕이 수원 행차 시 머물던 임시 궁궐입니다. 국내 최대 규모의 행궁으로 화려한 건축미를 자랑합니다.", rating:4.6, openTime:"09:00~18:00", price:"성인 1,500원", website:"https://en.wikipedia.org/wiki/Hwaseong_Haenggung"},
   {name:"수원 통닭거리", wikiTitle:"Korean fried chicken", type:"음식", desc:"수원의 명물 왕갈비와 통닭을 맛볼 수 있는 먹자골목입니다. 40년 전통의 치킨 맛집들이 즐비합니다.", rating:4.4, openTime:"11:00~22:00", price:"무료", website:"https://en.wikipedia.org/wiki/Suwon"},
-  {name:"광교호수공원", wikiTitle:"Gwanggyo Lake Park", type:"자연", desc:"수원 광교 신도시에 조성된 대규모 호수공원으로 산책과 자전거 라이딩에 완벽합니다. 호수 위 커브 다리는 포토 스팟입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Suwon"},
+  {name:"광교호수공원", wikiTitle:"Suwon", type:"자연", desc:"수원 광교 신도시에 조성된 대규모 호수공원으로 산책과 자전거 라이딩에 완벽합니다. 호수 위 커브 다리는 포토 스팟입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Suwon"},
 ]},
 "광주": { description:"광주는 대한민국 민주주의의 성지이자 예술과 문화의 도시입니다. 광주 비엔날레와 무등산, 풍부한 미식 문화가 여행자를 매료시킵니다.", spots:[
   {name:"무등산", wikiTitle:"Mudeungsan", type:"자연", desc:"해발 1,187m의 광주 진산으로 국립공원으로 지정되어 있습니다. 주상절리대인 서석대와 입석대의 풍경이 장관입니다.", rating:4.6, openTime:"일출~일몰", price:"무료", website:"https://en.wikipedia.org/wiki/Mudeungsan"},
@@ -818,7 +837,7 @@ const CITY_DATA = {
 ]},
 "삿포로": { description:"삿포로는 홋카이도의 수도로 눈축제, 신선한 해산물, 라멘으로 세계적으로 유명합니다. 겨울 스키와 여름 라벤더 밭 등 사계절 다른 매력을 선사합니다.", spots:[
   {name:"삿포로 눈축제장(오도리 공원)", wikiTitle:"Sapporo Snow Festival", type:"문화", desc:"매년 2월 열리는 세계 3대 눈축제 중 하나로 거대한 눈·얼음 조각이 전시됩니다. 오도리 공원을 중심으로 1.5km에 걸쳐 펼쳐집니다.", rating:4.8, openTime:"24시간(공원)", price:"무료", website:"https://www.snowfes.com"},
-  {name:"니조 시장", wikiTitle:"Hakodate", type:"음식", desc:"100년 이상 역사를 가진 삿포로 대표 시장으로 게, 성게, 연어알 등 신선한 해산물을 맛볼 수 있습니다. 해산물 덮밥이 특히 인기입니다.", rating:4.5, openTime:"07:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Nij%C5%8D_Market"},
+  {name:"니조 시장", wikiTitle:"Hakodate Morning Market", type:"음식", desc:"100년 이상 역사를 가진 삿포로 대표 시장으로 게, 성게, 연어알 등 신선한 해산물을 맛볼 수 있습니다. 해산물 덮밥이 특히 인기입니다.", rating:4.5, openTime:"07:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Nij%C5%8D_Market"},
   {name:"모이와산 전망대", wikiTitle:"Mount Moiwa", type:"자연", desc:"삿포로 시내를 360도로 조망할 수 있는 야경 명소입니다. 일본 신 3대 야경에 선정된 로맨틱한 전망대입니다.", rating:4.6, openTime:"11:00~22:00", price:"로프웨이 왕복 2,100엔", website:"https://mt-moiwa.jp"},
   {name:"삿포로 맥주 박물관", wikiTitle:"Sapporo Beer Museum", type:"문화", desc:"일본에서 가장 오래된 맥주 브랜드 삿포로의 역사를 배울 수 있는 박물관입니다. 한정 생맥주 시음이 하이라이트입니다.", rating:4.4, openTime:"11:00~20:00", price:"무료(시음별도)", website:"https://www.sapporobeer.jp/brewery/s_museum/"},
 ]},
@@ -856,7 +875,7 @@ const CITY_DATA = {
   {name:"슈리성", wikiTitle:"Shuri Castle", type:"역사", desc:"류큐 왕국의 왕궁이었던 세계문화유산으로 2019년 화재 후 복원 중입니다. 중국과 일본 건축이 융합된 독특한 양식이 특징입니다.", rating:4.5, openTime:"08:30~18:00", price:"성인 400엔", website:"https://en.wikipedia.org/wiki/Shuri_Castle"},
   {name:"추라우미 수족관", wikiTitle:"Okinawa Churaumi Aquarium", type:"랜드마크", desc:"세계 최대급 수조에서 고래상어와 만타가오리가 유영하는 모습을 볼 수 있는 수족관입니다. 오키나와 최고의 관광지 중 하나입니다.", rating:4.8, openTime:"08:30~18:30", price:"성인 2,180엔", website:"https://churaumi.okinawa/"},
   {name:"만좌모", wikiTitle:"Cape Manzamo", type:"자연", desc:"코끼리 코 모양의 기암절벽과 투명한 바다가 어우러진 절경입니다. 석양이 특히 아름다워 오키나와 대표 포토 스팟입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Cape_Manzamo"},
-  {name:"국제거리", wikiTitle:"Naha, Okinawa", type:"도시", desc:"나하 시내 약 1.6km의 메인 스트리트로 오키나와 기념품과 먹거리가 가득합니다. 사탕수수 아이스크림과 시사(사자상) 기념품이 인기입니다.", rating:4.3, openTime:"10:00~22:00", price:"무료", website:"https://en.wikipedia.org/wiki/Kokusai_Street"},
+  {name:"국제거리", wikiTitle:"Kokusai Street", type:"도시", desc:"나하 시내 약 1.6km의 메인 스트리트로 오키나와 기념품과 먹거리가 가득합니다. 사탕수수 아이스크림과 시사(사자상) 기념품이 인기입니다.", rating:4.3, openTime:"10:00~22:00", price:"무료", website:"https://en.wikipedia.org/wiki/Kokusai_Street"},
 ]},
 "가나자와": { description:"가나자와는 일본 3대 정원 겐로쿠엔과 보존된 에도시대 거리로 유명한 호쿠리쿠의 보석입니다. 전통 공예와 해산물 문화가 잘 보존된 문화 도시입니다.", spots:[
   {name:"겐로쿠엔", wikiTitle:"Kenroku-en", type:"자연", desc:"일본 3대 정원 중 하나로 사계절 각기 다른 아름다움을 선사합니다. 특히 겨울의 유키츠리(눈 대비 나무 보호)가 상징적입니다.", rating:4.8, openTime:"07:00~18:00", price:"성인 320엔", website:"https://en.wikipedia.org/wiki/Kenroku-en"},
@@ -925,7 +944,7 @@ const CITY_DATA = {
   {name:"황산 풍경구", wikiTitle:"Huangshan", type:"자연", desc:"유네스코 세계유산으로 72개의 봉우리와 운해가 만드는 초현실적 풍경이 장관입니다. 일출과 운해가 만나는 순간이 하이라이트입니다.", rating:4.9, openTime:"06:30~16:30(케이블카)", price:"190위안+케이블카", website:"https://en.wikipedia.org/wiki/Huangshan"},
   {name:"시디·홍춘 마을", wikiTitle:"Xidi", type:"문화", desc:"명·청 시대 안후이 상인들의 마을로 유네스코 세계문화유산입니다. 백벽흑기와의 전통 건축이 수묵화 같은 풍경을 연출합니다.", rating:4.6, openTime:"07:00~17:30", price:"104위안", website:"https://en.wikipedia.org/wiki/Xidi"},
   {name:"영객송", wikiTitle:"Huangshan", type:"자연", desc:"황산을 대표하는 소나무로 천 년 이상 절벽에서 자라며 양팔을 벌려 손님을 맞이하는 형상입니다. 중국인이 가장 사랑하는 나무입니다.", rating:4.5, openTime:"황산 입장 시", price:"포함", website:"https://en.wikipedia.org/wiki/Huangshan"},
-  {name:"툰시 고가(둔계 옛거리)", wikiTitle:"Huangshan City", type:"문화", desc:"송나라 시대부터 이어진 상업 거리로 전통 차, 먹물, 붓 등 문방사우를 판매합니다. 안후이 요리인 취두부(냄새나는 두부)가 명물입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Tunxi_District"},
+  {name:"툰시 고가(둔계 옛거리)", wikiTitle:"Tunxi District", type:"문화", desc:"송나라 시대부터 이어진 상업 거리로 전통 차, 먹물, 붓 등 문방사우를 판매합니다. 안후이 요리인 취두부(냄새나는 두부)가 명물입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Tunxi_District"},
 ]},
 "홍콩": { description:"홍콩은 동양과 서양이 만나는 세계적인 금융·쇼핑 도시로 빅토리아 피크의 야경과 딤섬 문화가 유명합니다. 작은 면적에 압축된 다양한 문화와 미식이 매력입니다.", spots:[
   {name:"빅토리아 피크", wikiTitle:"Victoria Peak", type:"랜드마크", desc:"해발 552m에서 홍콩의 스카이라인을 한눈에 조망할 수 있는 최고의 전망대입니다. 피크 트램을 타고 올라가는 것 자체가 경험입니다.", rating:4.7, openTime:"10:00~23:00", price:"피크트램 왕복 HK$88", website:"https://www.thepeak.com.hk"},
@@ -1505,9 +1524,9 @@ const CITY_DATA = {
   {name:"아크로폴리스 박물관", wikiTitle:"Acropolis Museum", type:"문화", desc:"아크로폴리스 발굴품을 전시하는 현대적 박물관으로 유리 바닥 아래 고대 유적도 볼 수 있습니다.", rating:4.7, openTime:"09:00~17:00", price:"€10", website:"https://en.wikipedia.org/wiki/Acropolis_Museum"},
 ]},
 "미코노스": { description:"미코노스는 에게해의 파티 섬으로 풍차, 하얀 골목, 세계적인 나이트라이프가 매력적인 그리스의 대표 휴양지입니다.", spots:[
-  {name:"리틀 베니스", wikiTitle:"Little Venice, Mykonos", type:"문화", desc:"바다 위로 돌출된 중세 건물에 카페와 바가 자리한 미코노스의 가장 로맨틱한 지구입니다. 석양이 특히 아름답습니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Mykonos"},
+  {name:"리틀 베니스", wikiTitle:"Mykonos (town)", type:"문화", desc:"바다 위로 돌출된 중세 건물에 카페와 바가 자리한 미코노스의 가장 로맨틱한 지구입니다. 석양이 특히 아름답습니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Mykonos"},
   {name:"미코노스 풍차", wikiTitle:"Mykonos", type:"랜드마크", desc:"카토밀리 풍차는 미코노스의 상징으로 16세기부터 곡물을 분쇄하던 풍차입니다. 석양 배경으로 포토제닉합니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Mykonos"},
-  {name:"파라다이스 비치", wikiTitle:"Paradise Beach, Mykonos", type:"자연", desc:"미코노스에서 가장 유명한 파티 해변으로 DJ 음악과 함께 수영과 일광욕을 즐깁니다.", rating:4.2, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Mykonos"},
+  {name:"파라다이스 비치", wikiTitle:"Paradise Beach", type:"자연", desc:"미코노스에서 가장 유명한 파티 해변으로 DJ 음악과 함께 수영과 일광욕을 즐깁니다.", rating:4.2, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Mykonos"},
 ]},
 "크레타": { description:"크레타는 그리스 최대의 섬으로 미노아 문명의 발상지이며 아름다운 해변과 협곡, 전통 음식이 매력적입니다.", spots:[
   {name:"크노소스 궁전", wikiTitle:"Knossos", type:"역사", desc:"미노아 문명의 중심 궁전으로 미노타우르스 미궁 전설의 배경입니다. 아서 에반스가 복원한 프레스코 벽화가 인상적입니다.", rating:4.5, openTime:"08:00~20:00", price:"€15", website:"https://en.wikipedia.org/wiki/Knossos"},
@@ -1565,13 +1584,13 @@ const CITY_DATA = {
 ]},
 "사파": { description:"사파는 베트남 북부 산악 지대에 자리한 소수민족의 터전으로 계단식 논과 안개 낀 산봉우리가 만드는 풍경이 장관입니다. 트레킹과 홈스테이로 소수민족 문화를 체험할 수 있습니다.", spots:[
   {name:"판시판산", wikiTitle:"Fansipan", type:"자연", desc:"해발 3,143m로 인도차이나 반도 최고봉입니다. 케이블카로 정상 근처까지 올라갈 수 있어 접근이 수월합니다.", rating:4.7, openTime:"07:30~17:30", price:"700,000 VND(케이블카)", website:"https://en.wikipedia.org/wiki/Fansipan"},
-  {name:"무엉호아 계곡", wikiTitle:"Sapa_(city)", type:"자연", desc:"사파에서 가장 아름다운 계단식 논이 펼쳐지는 계곡으로 소수민족 마을과 고대 암각화가 있습니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Mường_Hoa_valley"},
+  {name:"무엉호아 계곡", wikiTitle:"Sa Pa", type:"자연", desc:"사파에서 가장 아름다운 계단식 논이 펼쳐지는 계곡으로 소수민족 마을과 고대 암각화가 있습니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Mường_Hoa_valley"},
   {name:"깟깟 마을", wikiTitle:"Cat Cat village", type:"문화", desc:"흑몽족이 거주하는 전통 마을로 폭포와 대나무 숲이 어우러져 있습니다. 전통 직물 짜기 체험이 가능합니다.", rating:4.4, openTime:"07:00~18:00", price:"70,000 VND", website:"https://en.wikipedia.org/wiki/Cát_Cát"},
 ]},
 "푸꾸옥": { description:"푸꾸옥은 베트남 최대의 섬으로 에메랄드빛 바다와 새하얀 모래사장이 펼쳐진 열대 낙원입니다. 최근 리조트 개발이 활발하여 동남아시아의 새로운 휴양지로 떠오르고 있습니다.", spots:[
   {name:"사오 비치", wikiTitle:"Phu Quoc", type:"자연", desc:"푸꾸옥 남동쪽의 새하얀 모래사장과 투명한 바다가 아름다운 해변입니다. 야자수 그늘 아래 휴식을 즐기기에 완벽합니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Phu_Quoc"},
-  {name:"빈원더스 푸꾸옥", wikiTitle:"VinWonders Phu Quoc", type:"도시", desc:"베트남 최대 규모의 놀이공원 겸 리조트 단지로 워터파크, 사파리, 수족관 등이 한곳에 모여 있습니다.", rating:4.5, openTime:"09:00~21:00", price:"750,000 VND", website:"https://en.wikipedia.org/wiki/VinWonders"},
-  {name:"푸꾸옥 야시장", wikiTitle:"Phu Quoc night market", type:"음식", desc:"신선한 해산물 구이와 베트남 현지 음식을 저렴하게 즐길 수 있는 활기찬 야시장입니다.", rating:4.4, openTime:"17:00~22:00", price:"무료", website:"https://en.wikipedia.org/wiki/Phu_Quoc"},
+  {name:"빈원더스 푸꾸옥", wikiTitle:"Vinpearl", type:"도시", desc:"베트남 최대 규모의 놀이공원 겸 리조트 단지로 워터파크, 사파리, 수족관 등이 한곳에 모여 있습니다.", rating:4.5, openTime:"09:00~21:00", price:"750,000 VND", website:"https://en.wikipedia.org/wiki/VinWonders"},
+  {name:"푸꾸옥 야시장", wikiTitle:"Phu Quoc", type:"음식", desc:"신선한 해산물 구이와 베트남 현지 음식을 저렴하게 즐길 수 있는 활기찬 야시장입니다.", rating:4.4, openTime:"17:00~22:00", price:"무료", website:"https://en.wikipedia.org/wiki/Phu_Quoc"},
 ]},
 "닌빈": { description:"닌빈은 '육지의 하롱베이'로 불리는 석회암 카르스트 지형이 논과 강 사이로 솟아오른 비경의 땅입니다. 짱안 생태관광지구는 유네스코 세계유산으로 등재되어 있습니다.", spots:[
   {name:"짱안 보트투어", wikiTitle:"Tràng An", type:"자연", desc:"석회암 동굴과 계곡 사이를 배로 지나며 감상하는 코스로 킹콩 영화 촬영지이기도 합니다. 유네스코 세계유산입니다.", rating:4.7, openTime:"07:00~16:00", price:"250,000 VND", website:"https://en.wikipedia.org/wiki/Tràng_An"},
@@ -1611,7 +1630,7 @@ const CITY_DATA = {
 ]},
 "라자암팟": { description:"라자암팟은 1,500개 이상의 섬으로 이루어진 인도네시아 최동단의 다이빙 천국입니다. 지구상에서 가장 풍부한 해양 생물 다양성을 자랑하는 미지의 낙원입니다.", spots:[
   {name:"라자암팟 해양공원", wikiTitle:"Raja Ampat Islands", type:"자연", desc:"전 세계 산호 종의 75%가 서식하는 곳으로 만타레이, 상어 등 대형 해양생물을 만날 수 있습니다.", rating:4.9, openTime:"연중", price:"1,000,000 IDR(환경세)", website:"https://en.wikipedia.org/wiki/Raja_Ampat_Islands"},
-  {name:"피아네모 전망대", wikiTitle:"Pianemo viewpoint", type:"자연", desc:"석회암 섬들이 에메랄드빛 바다 위에 흩어진 전경을 볼 수 있는 전망대입니다. 계단을 올라가면 숨막히는 파노라마가 펼쳐집니다.", rating:4.8, openTime:"06:00~18:00", price:"입장료 포함", website:"https://en.wikipedia.org/wiki/Raja_Ampat_Islands"},
+  {name:"피아네모 전망대", wikiTitle:"Raja Ampat Islands", type:"자연", desc:"석회암 섬들이 에메랄드빛 바다 위에 흩어진 전경을 볼 수 있는 전망대입니다. 계단을 올라가면 숨막히는 파노라마가 펼쳐집니다.", rating:4.8, openTime:"06:00~18:00", price:"입장료 포함", website:"https://en.wikipedia.org/wiki/Raja_Ampat_Islands"},
 ]},
 
 // ────────────────────────── 말레이시아 ──────────────────────────
@@ -1796,7 +1815,7 @@ const CITY_DATA = {
 ]},
 "셰프샤우엔": { description:"셰프샤우엔은 '블루 시티'로 불리는 리프 산맥 속의 작은 마을로 건물 전체가 파란색으로 칠해진 동화 같은 풍경으로 유명합니다.", spots:[
   {name:"메디나(블루시티)", wikiTitle:"Chefchaouen", type:"문화", desc:"온통 파란색으로 칠해진 골목과 건물이 환상적인 포토제닉 마을입니다. 15세기 무어인이 건설했습니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Chefchaouen"},
-  {name:"스페인 모스크 전망대", wikiTitle:"Spanish Mosque Chefchaouen", type:"랜드마크", desc:"마을 외곽 언덕에서 파란 마을 전체와 리프 산맥을 한눈에 볼 수 있는 최고의 전망대입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Chefchaouen"},
+  {name:"스페인 모스크 전망대", wikiTitle:"Chefchaouen", type:"랜드마크", desc:"마을 외곽 언덕에서 파란 마을 전체와 리프 산맥을 한눈에 볼 수 있는 최고의 전망대입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Chefchaouen"},
 ]},
 "에사우이라": { description:"에사우이라는 대서양 연안의 바람의 도시로 18세기 요새와 푸른 어선, 갈매기가 어우러진 유네스코 세계유산 항구 도시입니다.", spots:[
   {name:"에사우이라 메디나", wikiTitle:"Medina of Essaouira", type:"역사", desc:"18세기 유럽과 이슬람 건축이 융합된 항구 도시의 구시가지입니다. 유네스코 세계유산입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Medina_of_Essaouira"},
@@ -1804,7 +1823,7 @@ const CITY_DATA = {
 ]},
 "메르주가": { description:"메르주가는 사하라 사막의 관문으로 에르그 셰비 모래 사구에서 낙타 트레킹과 사막 캠핑을 즐길 수 있는 꿈같은 곳입니다.", spots:[
   {name:"에르그 셰비 사구", wikiTitle:"Erg Chebbi", type:"자연", desc:"높이 150m까지 이르는 거대한 사하라 모래 사구로 일출·일몰의 색채 변화가 경이롭습니다.", rating:4.8, openTime:"24시간", price:"낙타투어 MAD 300~", website:"https://en.wikipedia.org/wiki/Erg_Chebbi"},
-  {name:"사막 캠프 별 관측", wikiTitle:"Sahara desert camp", type:"자연", desc:"사하라 사막 한가운데 텐트에서 밤하늘의 은하수를 감상하는 잊을 수 없는 경험입니다.", rating:4.7, openTime:"야간", price:"1박 MAD 500~", website:"https://en.wikipedia.org/wiki/Erg_Chebbi"},
+  {name:"사막 캠프 별 관측", wikiTitle:"Sahara", type:"자연", desc:"사하라 사막 한가운데 텐트에서 밤하늘의 은하수를 감상하는 잊을 수 없는 경험입니다.", rating:4.7, openTime:"야간", price:"1박 MAD 500~", website:"https://en.wikipedia.org/wiki/Erg_Chebbi"},
 ]},
 
 // ────────────────────────── 포르투갈 ──────────────────────────
@@ -2111,13 +2130,11 @@ function App() {
       })
   }, [])
 
-  // Init Globe with high-res tile-based satellite imagery
+  // Init Globe with high-res satellite imagery
   useEffect(() => {
     if (globeRef.current || !globeContainerRef.current) return
 
     const globe = Globe()(globeContainerRef.current)
-      // ESRI World Imagery - 구글 어스급 고해상도 위성 타일
-      .globeImageUrl(`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/3/2/4`)
       .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
       .showAtmosphere(true)
       .atmosphereColor('#3a7bd5')
@@ -2125,16 +2142,38 @@ function App() {
       .width(window.innerWidth)
       .height(window.innerHeight)
 
-    // 가장 선명한 NASA Blue Marble Next Generation 2048x1024
-    globe.globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+    // NASA Blue Marble 8K (고해상도 위성 이미지)
+    // 고해상도 NASA 이미지 (5400x2700) + 실패시 폴백
+    const hiResUrl = 'https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74218/world.200412.3x5400x2700.jpg'
+    const fallbackUrl = 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg'
+    const testImg = new Image()
+    testImg.onload = () => globe.globeImageUrl(hiResUrl)
+    testImg.onerror = () => globe.globeImageUrl(fallbackUrl)
+    testImg.src = hiResUrl
+    globe.globeImageUrl(fallbackUrl) // 즉시 기본 이미지 로드, 고해상도 로드 완료 시 교체
     globe.bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
 
     // Three.js 렌더러 품질 최대화
     const renderer = globe.renderer()
     if (renderer) {
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio * 2, 4))
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3))
       renderer.antialias = true
     }
+
+    // Globe 텍스처 필터링 품질 향상 (텍스처 로드 후 적용)
+    setTimeout(() => {
+      try {
+        const scene = globe.scene()
+        if (scene) {
+          scene.traverse(obj => {
+            if (obj.material && obj.material.map) {
+              obj.material.map.anisotropy = renderer?.capabilities?.getMaxAnisotropy?.() || 16
+              obj.material.map.needsUpdate = true
+            }
+          })
+        }
+      } catch(e) { console.log('texture quality setup skipped') }
+    }, 3000)
 
     globe.camera().position.z = 260
     globe.controls().autoRotate = true
@@ -2252,8 +2291,80 @@ function App() {
       .onPolygonClick(feat => handleCountryClick(feat))
   }, [countries, hoveredCountry, selectedCountry])
 
-  // Calculate zoom altitude so country fills the screen
+  // 국가별 최적 줌 레벨 (수동 튜닝)
+  const COUNTRY_ZOOM = {
+    // 아시아
+    "South Korea": { alt: 0.22, lat: 36.0, lng: 127.8 },
+    "Japan": { alt: 0.35, lat: 36.5, lng: 138.0 },
+    "China": { alt: 0.8, lat: 35.0, lng: 105.0 },
+    "India": { alt: 0.6, lat: 22.0, lng: 79.0 },
+    "Thailand": { alt: 0.35, lat: 14.0, lng: 100.5 },
+    "Vietnam": { alt: 0.4, lat: 16.0, lng: 107.5 },
+    "Indonesia": { alt: 0.7, lat: -2.5, lng: 118.0 },
+    "Malaysia": { alt: 0.35, lat: 4.0, lng: 109.0 },
+    "Singapore": { alt: 0.08, lat: 1.35, lng: 103.82 },
+    "Cambodia": { alt: 0.2, lat: 12.5, lng: 105.0 },
+    "Myanmar": { alt: 0.45, lat: 19.5, lng: 96.5 },
+    "Nepal": { alt: 0.2, lat: 28.2, lng: 84.5 },
+    "Sri Lanka": { alt: 0.18, lat: 7.8, lng: 80.7 },
+    "Philippines": { alt: 0.5, lat: 12.0, lng: 122.0 },
+    "United Arab Emirates": { alt: 0.15, lat: 24.5, lng: 54.5 },
+    "Saudi Arabia": { alt: 0.6, lat: 24.0, lng: 44.0 },
+    "Iran": { alt: 0.55, lat: 33.0, lng: 53.5 },
+    "Uzbekistan": { alt: 0.35, lat: 41.3, lng: 64.5 },
+    // 유럽
+    "France": { alt: 0.3, lat: 46.6, lng: 2.5 },
+    "Italy": { alt: 0.32, lat: 42.5, lng: 12.5 },
+    "Spain": { alt: 0.35, lat: 40.0, lng: -3.5 },
+    "Germany": { alt: 0.28, lat: 51.0, lng: 10.5 },
+    "United Kingdom": { alt: 0.3, lat: 54.0, lng: -2.5 },
+    "Portugal": { alt: 0.25, lat: 39.6, lng: -8.0 },
+    "Netherlands": { alt: 0.12, lat: 52.2, lng: 5.3 },
+    "Czechia": { alt: 0.15, lat: 49.8, lng: 15.5 },
+    "Austria": { alt: 0.15, lat: 47.5, lng: 14.0 },
+    "Switzerland": { alt: 0.12, lat: 46.8, lng: 8.2 },
+    "Hungary": { alt: 0.15, lat: 47.2, lng: 19.5 },
+    "Croatia": { alt: 0.2, lat: 44.5, lng: 16.0 },
+    "Greece": { alt: 0.28, lat: 38.5, lng: 23.5 },
+    "Turkey": { alt: 0.45, lat: 39.0, lng: 35.0 },
+    "Norway": { alt: 0.55, lat: 64.0, lng: 12.0 },
+    "Sweden": { alt: 0.5, lat: 62.0, lng: 16.0 },
+    "Denmark": { alt: 0.14, lat: 56.0, lng: 10.0 },
+    "Finland": { alt: 0.4, lat: 64.0, lng: 26.0 },
+    "Iceland": { alt: 0.2, lat: 64.9, lng: -18.5 },
+    "Poland": { alt: 0.22, lat: 52.0, lng: 19.5 },
+    "Russia": { alt: 1.8, lat: 62.0, lng: 95.0 },
+    // 아프리카
+    "Egypt": { alt: 0.4, lat: 27.0, lng: 30.5 },
+    "Morocco": { alt: 0.3, lat: 32.0, lng: -6.0 },
+    "South Africa": { alt: 0.5, lat: -29.0, lng: 25.0 },
+    "Kenya": { alt: 0.3, lat: 0.5, lng: 37.5 },
+    "Tanzania": { alt: 0.35, lat: -6.5, lng: 35.0 },
+    "Ethiopia": { alt: 0.4, lat: 9.0, lng: 39.5 },
+    "Ghana": { alt: 0.22, lat: 7.5, lng: -1.5 },
+    // 아메리카
+    "United States of America": { alt: 1.2, lat: 39.0, lng: -98.0 },
+    "Canada": { alt: 1.5, lat: 58.0, lng: -98.0 },
+    "Mexico": { alt: 0.55, lat: 23.5, lng: -102.5 },
+    "Brazil": { alt: 0.9, lat: -10.0, lng: -52.0 },
+    "Argentina": { alt: 0.9, lat: -35.0, lng: -65.0 },
+    "Peru": { alt: 0.5, lat: -10.0, lng: -76.0 },
+    "Chile": { alt: 1.0, lat: -33.0, lng: -71.0 },
+    "Colombia": { alt: 0.4, lat: 4.5, lng: -73.0 },
+    "Cuba": { alt: 0.22, lat: 22.0, lng: -79.5 },
+    // 오세아니아
+    "Australia": { alt: 1.0, lat: -26.0, lng: 134.0 },
+    "New Zealand": { alt: 0.45, lat: -41.5, lng: 173.0 },
+    // 중동
+    "Jordan": { alt: 0.15, lat: 31.3, lng: 36.3 },
+    "Israel": { alt: 0.12, lat: 31.5, lng: 35.0 },
+  }
+
   const getCountryAltitude = (feat) => {
+    const name = feat.properties.NAME
+    // 사전 정의된 줌이 있으면 사용
+    if (COUNTRY_ZOOM[name]) return COUNTRY_ZOOM[name].alt
+    // 없으면 바운딩박스 기반 계산
     try {
       let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180
       const processCoord = (c) => {
@@ -2264,16 +2375,30 @@ function App() {
         }
       }
       processCoord(feat.geometry.coordinates)
-      const span = Math.max(maxLat - minLat, maxLng - minLng)
-      if (span < 3)  return 0.15   // 싱가포르 등 소국
-      if (span < 8)  return 0.18   // 한국, 그리스 등
-      if (span < 15) return 0.25   // 일본, 영국, 독일
-      if (span < 25) return 0.35   // 프랑스, 스페인, 이탈리아
-      if (span < 40) return 0.5    // 인도, 멕시코
-      if (span < 60) return 0.7    // 호주, 브라질
-      if (span < 100) return 1.0   // 미국
-      return 1.5                   // 러시아, 캐나다
+      const latSpan = maxLat - minLat
+      const lngSpan = maxLng - minLng
+      const span = Math.max(latSpan, lngSpan)
+      // 더 세밀한 줌 매핑
+      if (span < 2)  return 0.08
+      if (span < 4)  return 0.12
+      if (span < 6)  return 0.18
+      if (span < 10) return 0.25
+      if (span < 15) return 0.35
+      if (span < 25) return 0.5
+      if (span < 40) return 0.7
+      if (span < 60) return 0.9
+      if (span < 100) return 1.2
+      return 1.8
     } catch { return 0.5 }
+  }
+
+  // 국가 클릭 시 중심점도 최적화
+  const getCountryCenter = (feat) => {
+    const name = feat.properties.NAME
+    if (COUNTRY_ZOOM[name]) {
+      return { lat: COUNTRY_ZOOM[name].lat, lng: COUNTRY_ZOOM[name].lng }
+    }
+    return { lat: feat.properties.LABEL_Y || 0, lng: feat.properties.LABEL_X || 0 }
   }
 
   const handleCountryClick = (feat) => {
@@ -2291,12 +2416,11 @@ function App() {
     setSelectedCity(null)
     setCityData(null)
 
-    const lat = feat.properties.LABEL_Y || 0
-    const lng = feat.properties.LABEL_X || 0
+    const center = getCountryCenter(feat)
     const altitude = getCountryAltitude(feat)
 
     globe.controls().autoRotate = false
-    globe.pointOfView({ lat, lng, altitude }, 1300)
+    globe.pointOfView({ lat: center.lat, lng: center.lng, altitude }, 1300)
   }
 
   const handleCityClick = (city) => {
@@ -2306,7 +2430,12 @@ function App() {
       setSelectedSpot(null)
       setCityData(null)
       fetchCityData(city)
-      globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: 0.5 }, 900)
+      // 국가 줌보다 더 가까이 줌인
+      const countryName = city.countryEn || selectedCountry?.properties?.NAME
+      const cz = countryName && COUNTRY_ZOOM[countryName]
+      const baseAlt = cz ? cz.alt : 0.3
+      const cityAlt = Math.max(Math.min(baseAlt * 0.45, 0.15), 0.06)
+      globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: cityAlt }, 900)
     } catch(e) { console.error('city click error:', e) }
   }
 
@@ -2376,9 +2505,9 @@ function App() {
   const closePanel = () => {
     setSelectedCity(null); setCityData(null); setSelectedSpot(null)
     if (selectedCountry && globeRef.current) {
-      const lat = selectedCountry.properties.LABEL_Y || 0
-      const lng = selectedCountry.properties.LABEL_X || 0
-      globeRef.current.pointOfView({ lat, lng, altitude: 1.8 }, 900)
+      const center = getCountryCenter(selectedCountry)
+      const altitude = getCountryAltitude(selectedCountry)
+      globeRef.current.pointOfView({ lat: center.lat, lng: center.lng, altitude }, 900)
     }
   }
 
