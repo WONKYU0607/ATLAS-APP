@@ -1017,9 +1017,24 @@ function App() {
     ]
   })
 
+  // ── 캐시 유틸 (localStorage, 24시간 유효) ────────────────────────────────
+  const CACHE_TTL = 24 * 60 * 60 * 1000 // 24시간
+  const cacheGet = (key) => {
+    try {
+      const raw = localStorage.getItem('atlas_' + key)
+      if (!raw) return null
+      const { data, ts } = JSON.parse(raw)
+      if (Date.now() - ts > CACHE_TTL) { localStorage.removeItem('atlas_' + key); return null }
+      return data
+    } catch { return null }
+  }
+  const cacheSet = (key, data) => {
+    try { localStorage.setItem('atlas_' + key, JSON.stringify({ data, ts: Date.now() })) } catch {}
+  }
+
   const fetchCityData = async (city) => {
     try {
-      // 사전 데이터 있으면 즉시 표시 후 날씨만 업데이트
+      // 1. 사전 데이터 (서울 등)
       if (CITY_DATA[city.name]) {
         const base = { ...CITY_DATA[city.name] }
         if (!base.weather) base.weather = { temp: '—', condition: '날씨 로딩 중', icon: '🌤️', humidity: '—' }
@@ -1031,28 +1046,38 @@ function App() {
         return
       }
 
-      // AI로 데이터 생성
-      setLoading(true)
+      // 2. 캐시 확인 (24시간)
+      const cached = cacheGet(city.name)
+      if (cached) {
+        setCityData(cached)
+        setLoading(false)
+        // 날씨만 실시간 업데이트
+        fetchWeather(city.lat, city.lng).then(w => {
+          if (w) setCityData(prev => prev ? { ...prev, weather: w } : prev)
+        }).catch(() => {})
+        return
+      }
 
-      // 날씨 먼저 가져오기
+      // 3. AI로 새로 생성
+      setLoading(true)
       const weather = await fetchWeather(city.lat, city.lng).catch(() => null)
         || { temp: '—', condition: '—', icon: '🌤️', humidity: '—' }
 
-      // AI 호출 (최대 2번 시도)
       let aiData = null
       for (let attempt = 1; attempt <= 2; attempt++) {
         aiData = await fetchAIWithSearch(city)
         if (aiData?.spots?.length >= 2) break
-        if (attempt === 1) await new Promise(r => setTimeout(r, 1000)) // 1초 대기 후 재시도
+        if (attempt === 1) await new Promise(r => setTimeout(r, 1000))
       }
 
       if (aiData?.spots?.length >= 2) {
-        setCityData({ ...aiData, weather })
+        const result = { ...aiData, weather }
+        cacheSet(city.name, result) // 캐시 저장
+        setCityData(result)
       } else {
-        // AI 2번 모두 실패 - 재시도 버튼 보여주기
         setCityData({
           weather,
-          description: `${city.name} 정보를 불러오지 못했습니다. 아래 버튼으로 다시 시도해보세요.`,
+          description: `${city.name} 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.`,
           spots: [],
           loadFailed: true,
           city,
@@ -1063,9 +1088,7 @@ function App() {
       setCityData({
         weather: { temp: '—', condition: '—', icon: '🌤️', humidity: '—' },
         description: `${city.name} 정보를 불러오지 못했습니다.`,
-        spots: [],
-        loadFailed: true,
-        city,
+        spots: [], loadFailed: true, city,
       })
     } finally {
       setLoading(false)
