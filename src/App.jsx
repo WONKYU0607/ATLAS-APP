@@ -2845,8 +2845,6 @@ function App() {
     globe.camera().position.z = 260
     globe.controls().autoRotate = false
     globe.controls().zoomSpeed = 1.5
-    // 폴리곤 툴팁 영구 비활성화
-    globe.polygonLabel(() => '')
     globeRef.current = globe
 
     // 초기 화면: 대한민국 중심
@@ -2992,6 +2990,16 @@ function App() {
         if (hasSelection && selectedCountry?.properties.NAME === name) return 0.003
         if (hoveredCountry === name) return 0.005
         return 0.004
+      })
+      .polygonLabel(feat => {
+        if (hasSelection) return ''
+        const name = feat.properties.NAME
+        const koName = COUNTRY_KO[name] || name
+        const hasCities = COUNTRY_CITIES[name]
+        return `<div style="background:rgba(15,23,42,0.92);border-radius:10px;padding:8px 14px;font-family:Pretendard,Inter,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);">
+          <div style="font-size:15px;font-weight:700;color:white">${koName}</div>
+          ${hasCities ? `<div style="font-size:11px;color:#94a3b8;margin-top:2px">클릭하여 도시 탐색</div>` : ''}
+        </div>`
       })
       .onPolygonHover(feat => {
         // 국가 선택 상태에서는 호버 끄기
@@ -3158,6 +3166,10 @@ function App() {
     if (!feat || !globeRef.current) return
     const globe = globeRef.current
 
+    // 즉시 툴팁 제거 (useEffect 기다리지 않고 직접)
+    globe.polygonLabel(() => '')
+    setHoveredCountry(null)
+
     const clickedName = feat.properties.NAME
 
     // 같은 나라 다시 클릭하면 원상복구
@@ -3292,7 +3304,6 @@ function App() {
         *{box-sizing:border-box;margin:0;padding:0}
         ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px}
         .panel{animation:sIn .42s cubic-bezier(.16,1,.3,1)}
-        .scene-tooltip,.globe-tooltip,[class*="tooltip"]{display:none !important;pointer-events:none !important;opacity:0 !important;}
         @keyframes sIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
         .card{transition:transform .18s,box-shadow .18s;cursor:pointer}
         .card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.13)!important}
