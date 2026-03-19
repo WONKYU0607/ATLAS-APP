@@ -2906,7 +2906,8 @@ function App() {
         if (d._type === 'city') {
           const isSelected = selectedCity?.name === d.name
           el.style.cssText = 'cursor:pointer;pointer-events:all;'
-          el.innerHTML = `<div style="
+          const inner = document.createElement('div')
+          inner.style.cssText = `
             transform:translate(-50%,-50%);
             font-family:Pretendard,Inter,system-ui,sans-serif;
             font-size:${isSelected ? '14px' : '12px'};
@@ -2915,10 +2916,28 @@ function App() {
             text-shadow:0 1px 6px rgba(0,0,0,1),0 0 12px rgba(0,0,0,0.9);
             white-space:nowrap;
             user-select:none;
-            padding:3px 8px;
-            border-radius:4px;
-            background:${isSelected ? 'rgba(37,99,235,0.15)' : 'transparent'};
-          ">${d.name}</div>`
+            padding:4px 10px;
+            border-radius:6px;
+            background:${isSelected ? 'rgba(37,99,235,0.2)' : 'rgba(0,0,0,0.15)'};
+            transition:all 0.2s ease;
+            border:1.5px solid ${isSelected ? 'rgba(37,99,235,0.5)' : 'transparent'};
+          `
+          inner.textContent = d.name
+          el.appendChild(inner)
+          el.onmouseenter = () => {
+            inner.style.fontSize = '15px'
+            inner.style.background = 'rgba(37,99,235,0.25)'
+            inner.style.border = '1.5px solid rgba(37,99,235,0.6)'
+            inner.style.color = '#93c5fd'
+            inner.style.transform = 'translate(-50%,-50%) scale(1.1)'
+          }
+          el.onmouseleave = () => {
+            inner.style.fontSize = isSelected ? '14px' : '12px'
+            inner.style.background = isSelected ? 'rgba(37,99,235,0.2)' : 'rgba(0,0,0,0.15)'
+            inner.style.border = `1.5px solid ${isSelected ? 'rgba(37,99,235,0.5)' : 'transparent'}`
+            inner.style.color = isSelected ? '#2563eb' : 'rgba(255,255,255,0.95)'
+            inner.style.transform = 'translate(-50%,-50%) scale(1)'
+          }
           el.onclick = () => handleCityClickRef.current?.(d)
         } else {
           const hasCities = COUNTRY_CITIES[d.nameEn]
@@ -3459,8 +3478,9 @@ function App() {
                               {selectedSpot?.name===spot.name && (
                                 <div style={{padding:'12px 14px',borderTop:`1px solid ${(selectedCity?.color||'#3b82f6')}22`,background:`${selectedCity?.color||'#3b82f6'}07`}}>
                                   <p style={{fontSize:12.5,color:'#475569',lineHeight:1.75,marginBottom:10}}>{spot.desc}</p>
+                                  {/* 참고 정보 + Google 최신 정보 */}
                                   {(spot.openTime || spot.price) && (
-                                    <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:8}}>
+                                    <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8,alignItems:'center'}}>
                                       {spot.openTime && (
                                         <div style={{display:'flex',alignItems:'center',gap:4,background:'white',borderRadius:8,padding:'4px 10px',fontSize:11,color:'#475569',border:'1px solid #e2e8f0'}}>
                                           🕐 {spot.openTime}
@@ -3471,9 +3491,28 @@ function App() {
                                           🎫 {spot.price}
                                         </div>
                                       )}
+                                      <span style={{fontSize:9,color:'#94a3b8',fontStyle:'italic'}}>*참고용</span>
                                     </div>
                                   )}
                                   <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                                    {/* Google Maps 최신 운영정보 + 리뷰 (메인 버튼) */}
+                                    <a
+                                      href={`https://www.google.com/maps/search/${encodeURIComponent(spot.wikiTitle || spot.name)}+${encodeURIComponent(selectedCity?.name || '')}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={e => e.stopPropagation()}
+                                      style={{
+                                        display:'inline-flex',alignItems:'center',gap:6,
+                                        background:'#fff',color:'#1a73e8',borderRadius:8,
+                                        padding:'7px 14px',fontSize:12,fontWeight:700,
+                                        textDecoration:'none',
+                                        border:'1.5px solid #dadce0',
+                                        boxShadow:'0 1px 4px rgba(0,0,0,0.08)'
+                                      }}
+                                    >
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#ea4335"/></svg>
+                                      최신 운영시간 · 리뷰 보기
+                                    </a>
                                   {spot.website && (
                                     <a
                                       href={spot.website}
@@ -3484,31 +3523,14 @@ function App() {
                                         display:'inline-flex',alignItems:'center',gap:6,
                                         background: spot.website?.includes('wikipedia.org') ? '#475569' : (selectedCity?.color || '#3b82f6'),
                                         color:'white',borderRadius:8,
-                                        padding:'6px 14px',fontSize:12,fontWeight:700,
+                                        padding:'7px 14px',fontSize:12,fontWeight:700,
                                         textDecoration:'none',
                                         boxShadow:`0 2px 8px ${spot.website?.includes('wikipedia.org') ? '#47556944' : (selectedCity?.color || '#3b82f6') + '44'}`
                                       }}
                                     >
-                                      {spot.website?.includes('wikipedia.org') ? '📖 상세 정보 보기' : '🌐 공식 홈페이지'}
+                                      {spot.website?.includes('wikipedia.org') ? '📖 상세 정보' : '🌐 공식 홈페이지'}
                                     </a>
                                   )}
-                                    <a
-                                      href={`https://www.google.com/maps/search/${encodeURIComponent(spot.wikiTitle || spot.name)}+${encodeURIComponent(selectedCity?.name || '')}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={e => e.stopPropagation()}
-                                      style={{
-                                        display:'inline-flex',alignItems:'center',gap:5,
-                                        background:'#fff',color:'#1a73e8',borderRadius:8,
-                                        padding:'6px 14px',fontSize:12,fontWeight:700,
-                                        textDecoration:'none',
-                                        border:'1.5px solid #dadce0',
-                                        boxShadow:'0 1px 4px rgba(0,0,0,0.08)'
-                                      }}
-                                    >
-                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#ea4335"/></svg>
-                                      리뷰 보기
-                                    </a>
                                   </div>
                                 </div>
                               )}
