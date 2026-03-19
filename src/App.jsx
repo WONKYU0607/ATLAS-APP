@@ -568,6 +568,135 @@ const COUNTRY_CITIES = {
     { name:"케이프코스트", lat:5.10, lng:-1.25, emoji:"🏰", color:"#3498db" },
     { name:"쿠마시", lat:6.69, lng:-1.62, emoji:"👑", color:"#2ecc71" },
   ],
+  "Ireland": [
+    { name:"더블린", lat:53.35, lng:-6.26, emoji:"🍀", color:"#2ecc71" },
+    { name:"골웨이", lat:53.27, lng:-9.05, emoji:"🎵", color:"#3498db" },
+  ],
+  "Belgium": [
+    { name:"브뤼셀", lat:50.85, lng:4.35, emoji:"🧇", color:"#f39c12" },
+    { name:"브뤼헤", lat:51.21, lng:3.22, emoji:"🏰", color:"#3498db" },
+  ],
+  "Taiwan": [
+    { name:"타이베이", lat:25.03, lng:121.57, emoji:"🏙️", color:"#e74c3c" },
+    { name:"지우펀", lat:25.11, lng:121.84, emoji:"🏮", color:"#f39c12" },
+  ],
+  "Maldives": [
+    { name:"말레", lat:4.18, lng:73.51, emoji:"🏝️", color:"#3498db" },
+  ],
+  "Costa Rica": [
+    { name:"산호세", lat:9.93, lng:-84.08, emoji:"🌿", color:"#2ecc71" },
+    { name:"아레날", lat:10.46, lng:-84.70, emoji:"🌋", color:"#e74c3c" },
+  ],
+  "Panama": [
+    { name:"파나마시티", lat:8.98, lng:-79.52, emoji:"🏙️", color:"#3498db" },
+  ],
+  "Ecuador": [
+    { name:"키토", lat:-0.18, lng:-78.47, emoji:"🏔️", color:"#e74c3c" },
+    { name:"갈라파고스", lat:-0.95, lng:-90.97, emoji:"🐢", color:"#2ecc71" },
+  ],
+  "Romania": [
+    { name:"부쿠레슈티", lat:44.43, lng:26.10, emoji:"🏛️", color:"#3498db" },
+    { name:"브라쇼프", lat:45.66, lng:25.61, emoji:"🏰", color:"#e74c3c" },
+  ],
+  "Georgia": [
+    { name:"트빌리시", lat:41.72, lng:44.79, emoji:"⛪", color:"#9b59b6" },
+  ],
+  "Montenegro": [
+    { name:"코토르", lat:42.42, lng:18.77, emoji:"🏰", color:"#3498db" },
+  ],
+  "Mongolia": [
+    { name:"울란바토르", lat:47.92, lng:106.91, emoji:"🏙️", color:"#e74c3c" },
+  ],
+  "Laos": [
+    { name:"루앙프라방", lat:19.89, lng:102.14, emoji:"🛕", color:"#f39c12" },
+    { name:"비엔티안", lat:17.97, lng:102.63, emoji:"🏙️", color:"#3498db" },
+  ],
+  "Tunisia": [
+    { name:"튀니스", lat:36.81, lng:10.17, emoji:"🕌", color:"#e74c3c" },
+  ],
+  "Oman": [
+    { name:"무스카트", lat:23.59, lng:58.38, emoji:"🕌", color:"#f39c12" },
+  ],
+  "Qatar": [
+    { name:"도하", lat:25.29, lng:51.53, emoji:"🏙️", color:"#3498db" },
+  ],
+  "Bolivia": [
+    { name:"라파스", lat:-16.50, lng:-68.15, emoji:"🏔️", color:"#e74c3c" },
+    { name:"우유니", lat:-20.46, lng:-66.83, emoji:"🪞", color:"#3498db" },
+  ],
+  "Dominican Republic": [
+    { name:"푼타카나", lat:18.58, lng:-68.40, emoji:"🏖️", color:"#2ecc71" },
+  ],
+  "Guatemala": [
+    { name:"안티구아", lat:14.56, lng:-90.73, emoji:"🌋", color:"#e74c3c" },
+  ],
+  "Jamaica": [
+    { name:"킹스턴", lat:18.00, lng:-76.79, emoji:"🎵", color:"#f39c12" },
+    { name:"몬테고베이", lat:18.47, lng:-77.92, emoji:"🏖️", color:"#3498db" },
+  ],
+  "Latvia": [
+    { name:"리가", lat:56.95, lng:24.11, emoji:"🏛️", color:"#9b59b6" },
+  ],
+  "Lithuania": [
+    { name:"빌뉴스", lat:54.69, lng:25.28, emoji:"🏰", color:"#e74c3c" },
+  ],
+  "Estonia": [
+    { name:"탈린", lat:59.44, lng:24.75, emoji:"🏰", color:"#3498db" },
+  ],
+  "Cyprus": [
+    { name:"파포스", lat:34.78, lng:32.42, emoji:"🏛️", color:"#f39c12" },
+  ],
+  "Albania": [
+    { name:"티라나", lat:41.33, lng:19.82, emoji:"🏙️", color:"#e74c3c" },
+  ],
+  "Serbia": [
+    { name:"베오그라드", lat:44.79, lng:20.47, emoji:"🏰", color:"#3498db" },
+  ],
+  "Namibia": [
+    { name:"빈트후크", lat:-22.56, lng:17.08, emoji:"🏜️", color:"#e67e22" },
+    { name:"소수스블레이", lat:-24.73, lng:15.29, emoji:"🏜️", color:"#e74c3c" },
+  ],
+  "Zimbabwe": [
+    { name:"빅토리아폴스", lat:-17.92, lng:25.86, emoji:"💧", color:"#3498db" },
+  ],
+  "Fiji": [
+    { name:"나디", lat:-17.77, lng:177.95, emoji:"🏝️", color:"#2ecc71" },
+  ],
+  "Madagascar": [
+    { name:"안타나나리보", lat:-18.88, lng:47.51, emoji:"🦎", color:"#2ecc71" },
+  ],
+  "Mauritius": [
+    { name:"포트루이스", lat:-20.16, lng:57.50, emoji:"🏝️", color:"#3498db" },
+  ],
+  "Lebanon": [
+    { name:"베이루트", lat:33.89, lng:35.50, emoji:"🏙️", color:"#e74c3c" },
+  ],
+  "Ukraine": [
+    { name:"키이우", lat:50.45, lng:30.52, emoji:"🏛️", color:"#3498db" },
+    { name:"르비우", lat:49.84, lng:24.03, emoji:"🏰", color:"#2ecc71" },
+  ],
+  "Pakistan": [
+    { name:"라호르", lat:31.55, lng:74.35, emoji:"🕌", color:"#2ecc71" },
+    { name:"이슬라마바드", lat:33.69, lng:73.04, emoji:"🏙️", color:"#3498db" },
+  ],
+  "Luxembourg": [
+    { name:"룩셈부르크시티", lat:49.61, lng:6.13, emoji:"🏰", color:"#9b59b6" },
+  ],
+  "Slovakia": [
+    { name:"브라티슬라바", lat:48.15, lng:17.11, emoji:"🏰", color:"#3498db" },
+  ],
+  "Bulgaria": [
+    { name:"소피아", lat:42.70, lng:23.32, emoji:"⛪", color:"#e74c3c" },
+  ],
+  "Rwanda": [
+    { name:"키갈리", lat:-1.94, lng:30.06, emoji:"🏙️", color:"#2ecc71" },
+  ],
+  "Senegal": [
+    { name:"다카르", lat:14.72, lng:-17.47, emoji:"🌍", color:"#f39c12" },
+  ],
+  "Kazakhstan": [
+    { name:"알마티", lat:43.24, lng:76.95, emoji:"🏔️", color:"#3498db" },
+  ],
 }
 
 
@@ -2429,6 +2558,171 @@ const CITY_DATA = {
 "자코파네": { description:"자코파네는 타트라 산맥 기슭의 겨울 스포츠 도시로 폴란드의 알프스라 불립니다.", spots:[
   {name:"타트라 국립공원", wikiTitle:"Tatra National Park, Poland", type:"자연", desc:"폴란드 최고봉 리시산을 품은 고산 국립공원으로 하이킹이 인기입니다.", rating:4.6, openTime:"24시간", price:"PLN 8", website:"https://en.wikipedia.org/wiki/Tatra_National_Park,_Poland"},
 ]},
+
+// ────────────────────────── 추가 국가 ──────────────────────────
+"더블린": { description:"더블린은 기네스 맥주와 문학의 도시로 제임스 조이스, 오스카 와일드를 배출한 아일랜드의 수도입니다.", spots:[
+  {name:"트리니티 칼리지", wikiTitle:"Trinity College Dublin", type:"역사", desc:"1592년 설립된 아일랜드 최고의 대학으로 켈스의 서가 유명합니다.", rating:4.7, openTime:"08:30~17:00", price:"€18", website:"https://en.wikipedia.org/wiki/Trinity_College_Dublin"},
+  {name:"기네스 스토어하우스", wikiTitle:"Guinness Storehouse", type:"문화", desc:"기네스 맥주의 역사를 배우고 옥상 바에서 더블린 전경과 함께 한 잔을 즐깁니다.", rating:4.5, openTime:"09:30~19:00", price:"€26", website:"https://en.wikipedia.org/wiki/Guinness_Storehouse"},
+  {name:"템플 바", wikiTitle:"Temple Bar, Dublin", type:"도시", desc:"라이브 아이리시 음악과 펍이 가득한 더블린의 문화 중심 거리입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Temple_Bar,_Dublin"},
+]},
+"골웨이": { description:"골웨이는 아일랜드 서해안의 보헤미안 도시로 전통 음악과 모허 절벽 투어의 거점입니다.", spots:[
+  {name:"모허 절벽", wikiTitle:"Cliffs of Moher", type:"자연", desc:"214m 높이의 수직 절벽이 대서양과 만나는 아일랜드 최고의 절경입니다.", rating:4.8, openTime:"08:00~19:00", price:"€8", website:"https://en.wikipedia.org/wiki/Cliffs_of_Moher"},
+]},
+"브뤼셀": { description:"브뤼셀은 EU 본부가 있는 벨기에의 수도로 그랑플라스 광장과 초콜릿, 와플이 유명합니다.", spots:[
+  {name:"그랑플라스", wikiTitle:"Grand-Place", type:"역사", desc:"유네스코 세계유산으로 화려한 길드 하우스에 둘러싸인 유럽에서 가장 아름다운 광장입니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Grand-Place"},
+  {name:"오줌싸개 소년상", wikiTitle:"Manneken Pis", type:"랜드마크", desc:"61cm의 작은 동상이지만 브뤼셀의 상징으로 계절마다 옷을 갈아입힙니다.", rating:4.0, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Manneken_Pis"},
+]},
+"브뤼헤": { description:"브뤼헤는 '북유럽의 베니스'로 불리는 벨기에의 중세 도시로 운하와 초콜릿 가게가 매력적입니다.", spots:[
+  {name:"브뤼헤 운하 투어", wikiTitle:"Bruges", type:"역사", desc:"운하를 따라 중세 건물을 보트에서 감상하는 유네스코 세계유산 도시입니다.", rating:4.7, openTime:"10:00~18:00", price:"€12", website:"https://en.wikipedia.org/wiki/Bruges"},
+]},
+"타이베이": { description:"타이베이는 대만의 수도로 야시장 미식, 101 타워, 전통 사원이 어우러진 활기찬 도시입니다.", spots:[
+  {name:"타이베이 101", wikiTitle:"Taipei 101", type:"랜드마크", desc:"508m 높이의 대나무 모양 초고층 빌딩으로 전망대에서 도시 전경을 감상합니다.", rating:4.6, openTime:"09:00~22:00", price:"NT$600", website:"https://en.wikipedia.org/wiki/Taipei_101"},
+  {name:"스린 야시장", wikiTitle:"Shilin Night Market", type:"음식", desc:"대만 최대의 야시장으로 소룽바오, 닭튀김, 버블티 등 먹거리 천국입니다.", rating:4.5, openTime:"16:00~00:00", price:"무료", website:"https://en.wikipedia.org/wiki/Shilin_Night_Market"},
+  {name:"룽산사", wikiTitle:"Lungshan Temple (Wanhua District)", type:"역사", desc:"1738년에 건립된 타이베이에서 가장 오래된 사원으로 정교한 조각이 인상적입니다.", rating:4.4, openTime:"06:00~22:00", price:"무료", website:"https://en.wikipedia.org/wiki/Lungshan_Temple_(Wanhua_District)"},
+]},
+"지우펀": { description:"지우펀은 산비탈의 계단식 골목과 홍등이 지브리 애니메이션 '센과 치히로'를 떠올리게 하는 마을입니다.", spots:[
+  {name:"지우펀 올드스트리트", wikiTitle:"Jiufen", type:"문화", desc:"붉은 등불이 걸린 좁은 골목에 차집, 토란볼 가게, 기념품점이 빼곡합니다.", rating:4.5, openTime:"10:00~20:00", price:"무료", website:"https://en.wikipedia.org/wiki/Jiufen"},
+]},
+"말레": { description:"몰디브의 수도 말레는 1,200개 산호섬으로 이루어진 인도양의 열대 낙원으로 가는 관문입니다.", spots:[
+  {name:"수상 빌라 리조트", wikiTitle:"Maldives", type:"자연", desc:"투명한 바다 위 수상 빌라에서 산호초 스노클링과 돌고래를 만나는 꿈의 휴양지입니다.", rating:4.9, openTime:"연중", price:"리조트별", website:"https://en.wikipedia.org/wiki/Maldives"},
+]},
+"산호세": { description:"산호세는 코스타리카의 수도로 열대우림과 화산, 야생동물의 보고인 에코투어리즘의 메카입니다.", spots:[
+  {name:"마누엘 안토니오 국립공원", wikiTitle:"Manuel Antonio National Park", type:"자연", desc:"열대우림과 백사장이 만나는 곳으로 원숭이, 나무늘보를 야생에서 만납니다.", rating:4.7, openTime:"07:00~16:00", price:"$18", website:"https://en.wikipedia.org/wiki/Manuel_Antonio_National_Park"},
+]},
+"아레날": { description:"아레날은 활화산과 온천이 어우러진 코스타리카의 모험 관광 중심지입니다.", spots:[
+  {name:"아레날 화산", wikiTitle:"Arenal Volcano", type:"자연", desc:"원뿔형 활화산 아래 열대우림 트레킹과 화산 온천을 즐깁니다.", rating:4.6, openTime:"08:00~16:00", price:"$15", website:"https://en.wikipedia.org/wiki/Arenal_Volcano"},
+]},
+"파나마시티": { description:"파나마시티는 파나마 운하와 현대적 스카이라인이 공존하는 중미의 국제 도시입니다.", spots:[
+  {name:"파나마 운하", wikiTitle:"Panama Canal", type:"랜드마크", desc:"대서양과 태평양을 잇는 80km 인공 수로로 미라플로레스 전망대에서 관찰합니다.", rating:4.7, openTime:"08:00~17:00", price:"$20", website:"https://en.wikipedia.org/wiki/Panama_Canal"},
+]},
+"키토": { description:"키토는 해발 2,850m에 위치한 에콰도르의 수도로 유네스코 세계유산 최초 등록 도시입니다.", spots:[
+  {name:"키토 구시가지", wikiTitle:"Historic Centre of Quito", type:"역사", desc:"남미에서 가장 잘 보존된 식민지 시대 구시가지로 유네스코 세계유산입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Historic_Centre_of_Quito"},
+]},
+"갈라파고스": { description:"갈라파고스 제도는 다윈의 진화론이 탄생한 곳으로 독특한 야생동물이 가득한 자연의 보고입니다.", spots:[
+  {name:"갈라파고스 국립공원", wikiTitle:"Galápagos National Park", type:"자연", desc:"거대 거북, 바다이구아나, 푸른발 부비새 등 독특한 생물을 만나는 살아있는 진화의 섬입니다.", rating:4.9, openTime:"연중", price:"$100", website:"https://en.wikipedia.org/wiki/Galápagos_National_Park"},
+]},
+"부쿠레슈티": { description:"부쿠레슈티는 '동유럽의 파리'로 불리는 루마니아의 수도로 세계 최대 의회 궁전이 있습니다.", spots:[
+  {name:"의회 궁전", wikiTitle:"Palace of the Parliament", type:"역사", desc:"세계에서 두 번째로 큰 건물로 차우셰스쿠가 건설한 거대한 궁전입니다.", rating:4.5, openTime:"09:00~17:00", price:"RON 70", website:"https://en.wikipedia.org/wiki/Palace_of_the_Parliament"},
+]},
+"브라쇼프": { description:"브라쇼프는 트란실바니아의 중세 도시로 드라큘라 성(브란성)의 관문입니다.", spots:[
+  {name:"브란 성(드라큘라 성)", wikiTitle:"Bran Castle", type:"역사", desc:"드라큘라 전설의 배경이 된 14세기 고딕 성으로 카르파티아 산맥 아래 자리합니다.", rating:4.4, openTime:"09:00~18:00", price:"RON 50", website:"https://en.wikipedia.org/wiki/Bran_Castle"},
+]},
+"트빌리시": { description:"트빌리시는 코카서스 산맥 아래 유럽과 아시아가 만나는 조지아의 수도로 와인과 온천이 유명합니다.", spots:[
+  {name:"나리칼라 요새", wikiTitle:"Narikala", type:"역사", desc:"4세기에 건설된 요새에서 트빌리시 구시가지와 쿠라강을 조망합니다.", rating:4.5, openTime:"24시간", price:"무료(케이블카 GEL 2.5)", website:"https://en.wikipedia.org/wiki/Narikala"},
+  {name:"유황 온천 지구", wikiTitle:"Abanotubani", type:"문화", desc:"트빌리시의 이름 유래가 된 유황 온천 지구로 돔형 목욕탕이 특징입니다.", rating:4.4, openTime:"09:00~23:00", price:"GEL 30~80", website:"https://en.wikipedia.org/wiki/Abanotubani"},
+]},
+"코토르": { description:"코토르는 아드리아해 피오르 끝에 자리한 중세 성벽 도시로 유네스코 세계유산입니다.", spots:[
+  {name:"코토르 성벽", wikiTitle:"Kotor", type:"역사", desc:"1,350개 계단을 올라가면 코토르 만과 구시가지의 숨막히는 전경이 펼쳐집니다.", rating:4.7, openTime:"08:00~20:00", price:"€8", website:"https://en.wikipedia.org/wiki/Kotor"},
+]},
+"울란바토르": { description:"울란바토르는 몽골의 수도로 광활한 초원과 유목 문화, 칭기즈칸의 유산이 살아있습니다.", spots:[
+  {name:"칭기즈칸 기마상", wikiTitle:"Equestrian statue of Genghis Khan", type:"랜드마크", desc:"40m 높이의 세계 최대 기마상으로 머리 부분 전망대에서 초원을 조망합니다.", rating:4.5, openTime:"09:00~18:00", price:"MNT 10,000", website:"https://en.wikipedia.org/wiki/Equestrian_statue_of_Genghis_Khan"},
+]},
+"루앙프라방": { description:"루앙프라방은 메콩강변의 유네스코 세계유산 도시로 새벽 탁발 행렬이 유명한 라오스의 옛 수도입니다.", spots:[
+  {name:"새벽 탁발", wikiTitle:"Alms giving ceremony of Luang Prabang", type:"문화", desc:"매일 새벽 수백 명의 승려가 줄지어 탁발하는 경건한 의식입니다.", rating:4.6, openTime:"새벽 05:30~", price:"무료", website:"https://en.wikipedia.org/wiki/Luang_Prabang"},
+  {name:"꽝시 폭포", wikiTitle:"Kuang Si Falls", type:"자연", desc:"청록빛 물이 석회암 계단을 타고 흘러내리는 3단 폭포로 수영도 가능합니다.", rating:4.8, openTime:"08:00~17:00", price:"LAK 20,000", website:"https://en.wikipedia.org/wiki/Kuang_Si_Falls"},
+]},
+"비엔티안": { description:"비엔티안은 메콩강변의 라오스 수도로 프랑스 식민지 건축과 불교 사원이 어우러진 한적한 도시입니다.", spots:[
+  {name:"탓루앙", wikiTitle:"Pha That Luang", type:"역사", desc:"라오스의 국가 상징인 황금 불탑으로 16세기에 건설되었습니다.", rating:4.4, openTime:"08:00~17:00", price:"LAK 10,000", website:"https://en.wikipedia.org/wiki/Pha_That_Luang"},
+]},
+"튀니스": { description:"튀니스는 튀니지의 수도로 고대 카르타고 유적과 이슬람 메디나가 공존합니다.", spots:[
+  {name:"카르타고 유적", wikiTitle:"Carthage", type:"역사", desc:"로마에 맞선 고대 페니키아 도시의 유적으로 유네스코 세계유산입니다.", rating:4.5, openTime:"08:00~17:00", price:"TND 12", website:"https://en.wikipedia.org/wiki/Carthage"},
+]},
+"무스카트": { description:"무스카트는 오만의 수도로 술탄 카부스 모스크와 아라비아해의 피오르가 아름다운 도시입니다.", spots:[
+  {name:"술탄 카부스 대모스크", wikiTitle:"Sultan Qaboos Grand Mosque", type:"역사", desc:"오만 최대의 모스크로 세계에서 두 번째로 큰 수제 카펫이 있습니다.", rating:4.7, openTime:"08:00~11:00(비무슬림)", price:"무료", website:"https://en.wikipedia.org/wiki/Sultan_Qaboos_Grand_Mosque"},
+]},
+"도하": { description:"도하는 카타르의 수도로 이슬람 예술 박물관과 미래지향적 건축이 인상적인 걸프의 신흥 도시입니다.", spots:[
+  {name:"이슬람 예술 박물관", wikiTitle:"Museum of Islamic Art, Doha", type:"문화", desc:"I.M. 페이가 설계한 건축 걸작으로 14세기에 걸친 이슬람 예술을 소장합니다.", rating:4.7, openTime:"09:00~19:00", price:"무료", website:"https://en.wikipedia.org/wiki/Museum_of_Islamic_Art,_Doha"},
+  {name:"수크 와키프", wikiTitle:"Souq Waqif", type:"문화", desc:"전통 시장을 현대적으로 복원한 곳으로 향신료, 매, 레스토랑이 가득합니다.", rating:4.5, openTime:"07:00~23:00", price:"무료", website:"https://en.wikipedia.org/wiki/Souq_Waqif"},
+]},
+"라파스": { description:"라파스는 해발 3,640m의 세계에서 가장 높은 수도로 케이블카가 대중교통인 독특한 도시입니다.", spots:[
+  {name:"텔레페리코 케이블카", wikiTitle:"Mi Teleférico", type:"도시", desc:"10개 노선의 도시형 케이블카에서 안데스와 라파스 전경을 공중에서 감상합니다.", rating:4.5, openTime:"06:00~22:00", price:"BOB 3", website:"https://en.wikipedia.org/wiki/Mi_Teleférico"},
+]},
+"우유니": { description:"우유니 소금사막은 세계 최대의 소금 평원으로 우기에는 하늘을 비추는 거울이 됩니다.", spots:[
+  {name:"우유니 소금사막", wikiTitle:"Salar de Uyuni", type:"자연", desc:"10,582km²의 소금 평원이 비가 내리면 세계 최대의 자연 거울이 됩니다.", rating:4.9, openTime:"투어 전용", price:"$30~50/일", website:"https://en.wikipedia.org/wiki/Salar_de_Uyuni"},
+]},
+"푼타카나": { description:"푼타카나는 카리브해의 올인클루시브 리조트가 즐비한 도미니카 공화국 최고의 휴양지입니다.", spots:[
+  {name:"바바로 비치", wikiTitle:"Punta Cana", type:"자연", desc:"야자수와 백사장이 32km 이어지는 카리브해 최고의 해변입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Punta_Cana"},
+]},
+"안티구아": { description:"안티구아 과테말라는 3개의 화산에 둘러싸인 스페인 식민지 시대의 유네스코 세계유산 도시입니다.", spots:[
+  {name:"안티구아 구시가지", wikiTitle:"Antigua Guatemala", type:"역사", desc:"화산과 식민지 유적이 어우러진 유네스코 세계유산 도시로 스페인어 학교가 유명합니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Antigua_Guatemala"},
+]},
+"킹스턴": { description:"킹스턴은 자메이카의 수도로 레게 음악과 밥 말리의 고향입니다.", spots:[
+  {name:"밥 말리 박물관", wikiTitle:"Bob Marley Museum", type:"문화", desc:"레게의 전설 밥 말리가 살았던 집을 박물관으로 전환한 곳입니다.", rating:4.4, openTime:"09:30~17:00", price:"$25", website:"https://en.wikipedia.org/wiki/Bob_Marley_Museum"},
+]},
+"몬테고베이": { description:"몬테고베이는 자메이카 최고의 해변 리조트 도시로 닥터스 케이브 비치가 유명합니다.", spots:[
+  {name:"닥터스 케이브 비치", wikiTitle:"Doctor's Cave Beach", type:"자연", desc:"투명한 카리브해 바다와 백사장이 아름다운 자메이카 대표 해변입니다.", rating:4.5, openTime:"08:30~17:00", price:"$6", website:"https://en.wikipedia.org/wiki/Doctor's_Cave_Beach"},
+]},
+"리가": { description:"리가는 발트 3국 최대 도시로 아르누보 건축과 중세 구시가지가 유네스코 세계유산인 라트비아의 수도입니다.", spots:[
+  {name:"리가 구시가지", wikiTitle:"Riga", type:"역사", desc:"한자동맹 시대의 건축과 800개 이상의 아르누보 건물이 공존하는 유네스코 세계유산입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Riga"},
+]},
+"빌뉴스": { description:"빌뉴스는 바로크 건축의 보고인 리투아니아의 수도로 유네스코 세계유산 구시가지가 매력적입니다.", spots:[
+  {name:"빌뉴스 구시가지", wikiTitle:"Vilnius Old Town", type:"역사", desc:"유럽 최대의 바로크 구시가지 중 하나로 유네스코 세계유산입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Vilnius_Old_Town"},
+]},
+"탈린": { description:"탈린은 중세 성벽과 탑이 완벽히 보존된 에스토니아의 수도로 디지털 혁신 국가의 얼굴이기도 합니다.", spots:[
+  {name:"탈린 구시가지", wikiTitle:"Tallinn Old Town", type:"역사", desc:"13세기 중세 성벽과 탑이 완벽히 보존된 유네스코 세계유산 도시입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Tallinn_Old_Town"},
+]},
+"파포스": { description:"파포스는 아프로디테 탄생 전설의 섬 키프로스의 고대 도시로 유네스코 세계유산 모자이크가 유명합니다.", spots:[
+  {name:"파포스 고고학 공원", wikiTitle:"Paphos Archaeological Park", type:"역사", desc:"로마 시대 모자이크 바닥이 보존된 유네스코 세계유산 유적지입니다.", rating:4.6, openTime:"08:30~17:00", price:"€4.5", website:"https://en.wikipedia.org/wiki/Paphos_Archaeological_Park"},
+]},
+"티라나": { description:"티라나는 알바니아의 수도로 오스만과 이탈리아 건축, 활기찬 카페 문화가 매력적인 발칸의 숨은 보석입니다.", spots:[
+  {name:"스칸데르베그 광장", wikiTitle:"Skanderbeg Square", type:"도시", desc:"알바니아 국민 영웅의 이름을 딴 중심 광장으로 도시의 심장입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Skanderbeg_Square"},
+]},
+"베오그라드": { description:"베오그라드는 다뉴브와 사바강이 만나는 세르비아의 수도로 요새와 나이트라이프가 유명합니다.", spots:[
+  {name:"칼레메그단 요새", wikiTitle:"Belgrade Fortress", type:"역사", desc:"2,000년 역사의 요새에서 두 강의 합류점과 도시 전경을 조망합니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Belgrade_Fortress"},
+]},
+"빈트후크": { description:"빈트후크는 나미비아의 수도로 독일 식민지 건축과 아프리카 문화가 독특하게 공존합니다.", spots:[
+  {name:"크리스투스 교회", wikiTitle:"Christ Church, Windhoek", type:"역사", desc:"독일 식민지 시대의 루터교 교회로 빈트후크의 상징적 랜드마크입니다.", rating:4.2, openTime:"외관 24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Christ_Church,_Windhoek"},
+]},
+"소수스블레이": { description:"소수스블레이는 세계에서 가장 높은 붉은 모래사구가 있는 나미브 사막의 하이라이트입니다.", spots:[
+  {name:"듄 45", wikiTitle:"Dune 45", type:"자연", desc:"높이 170m의 별 모양 붉은 사구로 일출 시 빛과 그림자의 대비가 경이롭습니다.", rating:4.8, openTime:"일출~일몰", price:"NAD 80", website:"https://en.wikipedia.org/wiki/Dune_45"},
+  {name:"데드블레이", wikiTitle:"Deadvlei", type:"자연", desc:"900년 된 검은 고목이 하얀 소금 평원에 서 있는 초현실적 풍경입니다.", rating:4.9, openTime:"일출~일몰", price:"소수스블레이 포함", website:"https://en.wikipedia.org/wiki/Deadvlei"},
+]},
+"빅토리아폴스": { description:"빅토리아 폭포는 잠비아와 짐바브웨 국경에 걸친 세계 3대 폭포 중 하나로 원주민이 '천둥치는 연기'라 부릅니다.", spots:[
+  {name:"빅토리아 폭포", wikiTitle:"Victoria Falls", type:"자연", desc:"폭 1.7km, 높이 108m에서 분당 5억 리터의 물이 쏟아지는 세계유산 폭포입니다.", rating:4.9, openTime:"06:00~18:00", price:"$30", website:"https://en.wikipedia.org/wiki/Victoria_Falls"},
+]},
+"나디": { description:"나디는 피지의 관문 도시로 333개 섬으로 이루어진 남태평양 낙원으로 가는 출발점입니다.", spots:[
+  {name:"마나 아일랜드", wikiTitle:"Mamanuca Islands", type:"자연", desc:"영화 '캐스트 어웨이' 촬영지로 산호초 스노클링과 리조트 휴양이 유명합니다.", rating:4.7, openTime:"연중", price:"리조트별", website:"https://en.wikipedia.org/wiki/Mamanuca_Islands"},
+]},
+"안타나나리보": { description:"안타나나리보는 마다가스카르의 수도로 여우원숭이와 바오밥 나무 등 독특한 생태계의 관문입니다.", spots:[
+  {name:"바오밥 나무길", wikiTitle:"Avenue of the Baobabs", type:"자연", desc:"800년 된 거대한 바오밥 나무가 도로 양쪽에 줄지어 선 마다가스카르의 상징적 풍경입니다.", rating:4.7, openTime:"24시간", price:"MGA 10,000", website:"https://en.wikipedia.org/wiki/Avenue_of_the_Baobabs"},
+]},
+"포트루이스": { description:"포트루이스는 모리셔스의 수도로 인도양의 에메랄드빛 바다와 7색 대지가 유명합니다.", spots:[
+  {name:"샤마렐 7색 대지", wikiTitle:"Chamarel", type:"자연", desc:"화산 활동으로 7가지 색의 흙이 층을 이루는 독특한 지질 현상입니다.", rating:4.5, openTime:"08:30~17:00", price:"MUR 350", website:"https://en.wikipedia.org/wiki/Chamarel"},
+]},
+"베이루트": { description:"베이루트는 '중동의 파리'로 불리는 레바논의 수도로 페니키아 유적과 활기찬 나이트라이프가 공존합니다.", spots:[
+  {name:"비블로스", wikiTitle:"Byblos", type:"역사", desc:"7,000년 역사의 세계에서 가장 오래된 도시 중 하나로 유네스코 세계유산입니다.", rating:4.6, openTime:"09:00~18:00", price:"LBP 150,000", website:"https://en.wikipedia.org/wiki/Byblos"},
+]},
+"키이우": { description:"키이우는 우크라이나의 수도로 황금빛 돔의 교회와 1,000년 역사의 동유럽 문화가 깃든 도시입니다.", spots:[
+  {name:"성 소피아 대성당", wikiTitle:"Saint Sophia Cathedral, Kyiv", type:"역사", desc:"11세기 비잔틴 모자이크가 보존된 유네스코 세계유산 성당입니다.", rating:4.6, openTime:"10:00~18:00", price:"UAH 100", website:"https://en.wikipedia.org/wiki/Saint_Sophia_Cathedral,_Kyiv"},
+]},
+"르비우": { description:"르비우는 우크라이나 서부의 문화 수도로 합스부르크 건축과 커피 문화가 매력적입니다.", spots:[
+  {name:"르비우 구시가지", wikiTitle:"Lviv", type:"역사", desc:"르네상스·바로크·고딕 건축이 혼합된 유네스코 세계유산 도시입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Lviv"},
+]},
+"라호르": { description:"라호르는 무굴 제국의 문화 수도였던 파키스탄 제2의 도시로 화려한 이슬람 건축이 가득합니다.", spots:[
+  {name:"바드샤히 모스크", wikiTitle:"Badshahi Mosque", type:"역사", desc:"1673년 무굴 황제 아우랑제브가 건설한 세계 최대급 모스크입니다.", rating:4.6, openTime:"08:00~20:00", price:"무료", website:"https://en.wikipedia.org/wiki/Badshahi_Mosque"},
+  {name:"라호르 요새", wikiTitle:"Lahore Fort", type:"역사", desc:"무굴 제국의 궁전 겸 요새로 거울의 궁전(시시 마할)이 유명합니다.", rating:4.5, openTime:"08:30~17:00", price:"PKR 500", website:"https://en.wikipedia.org/wiki/Lahore_Fort"},
+]},
+"이슬라마바드": { description:"이슬라마바드는 1960년대 계획도시로 건설된 파키스탄의 수도로 파이살 모스크가 랜드마크입니다.", spots:[
+  {name:"파이살 모스크", wikiTitle:"Faisal Mosque", type:"역사", desc:"텐트 모양의 독특한 디자인으로 10만 명을 수용하는 세계 최대급 모스크입니다.", rating:4.5, openTime:"04:00~22:00", price:"무료", website:"https://en.wikipedia.org/wiki/Faisal_Mosque"},
+]},
+"룩셈부르크시티": { description:"룩셈부르크시티는 절벽 위에 자리한 요새 도시로 유네스코 세계유산인 구시가지가 아름답습니다.", spots:[
+  {name:"복 카제마트", wikiTitle:"Bock casemates", type:"역사", desc:"963년부터 이어진 17km 지하 터널 요새로 유네스코 세계유산입니다.", rating:4.4, openTime:"10:00~17:00", price:"€7", website:"https://en.wikipedia.org/wiki/Bock_casemates"},
+]},
+"브라티슬라바": { description:"브라티슬라바는 다뉴브 강변의 슬로바키아 수도로 중세 성과 오스트리아-헝가리 건축이 매력적입니다.", spots:[
+  {name:"브라티슬라바 성", wikiTitle:"Bratislava Castle", type:"역사", desc:"다뉴브 강 위 언덕의 흰 성에서 슬로바키아, 오스트리아, 헝가리 3국을 동시에 조망합니다.", rating:4.4, openTime:"10:00~18:00", price:"€10", website:"https://en.wikipedia.org/wiki/Bratislava_Castle"},
+]},
+"소피아": { description:"소피아는 불가리아의 수도로 로마 유적, 비잔틴 교회, 오스만 모스크가 한 도시에 공존합니다.", spots:[
+  {name:"알렉산드르 네프스키 대성당", wikiTitle:"Alexander Nevsky Cathedral, Sofia", type:"역사", desc:"황금 돔이 인상적인 발칸 최대의 정교회 성당입니다.", rating:4.6, openTime:"07:00~19:00", price:"무료", website:"https://en.wikipedia.org/wiki/Alexander_Nevsky_Cathedral,_Sofia"},
+]},
+"키갈리": { description:"키갈리는 아프리카에서 가장 깨끗한 도시로 알려진 르완다의 수도이자 마운틴 고릴라 트레킹의 관문입니다.", spots:[
+  {name:"볼카노스 국립공원(고릴라 트레킹)", wikiTitle:"Volcanoes National Park", type:"자연", desc:"세계에서 멸종위기 마운틴 고릴라를 야생에서 만날 수 있는 몇 안 되는 곳입니다.", rating:4.9, openTime:"06:00~18:00", price:"$1,500", website:"https://en.wikipedia.org/wiki/Volcanoes_National_Park"},
+]},
+"다카르": { description:"다카르는 세네갈의 수도로 고레섬의 노예 무역 역사와 활기찬 서아프리카 문화가 공존합니다.", spots:[
+  {name:"고레섬", wikiTitle:"Gorée", type:"역사", desc:"대서양 노예 무역의 중심지였던 섬으로 유네스코 세계유산입니다.", rating:4.5, openTime:"페리 06:30~22:30", price:"CFA 5,200(페리)", website:"https://en.wikipedia.org/wiki/Gorée"},
+]},
+"알마티": { description:"알마티는 천산산맥 아래 카자흐스탄 최대 도시로 소비에트 건축과 자연이 어우러진 중앙아시아의 관문입니다.", spots:[
+  {name:"빅 알마티 호수", wikiTitle:"Big Almaty Lake", type:"자연", desc:"해발 2,511m의 청록빛 빙하 호수로 천산산맥의 장엄한 파노라마가 펼쳐집니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Big_Almaty_Lake"},
+]},
 }
 
 const DEFAULT_CITY_DATA = (cityName) => ({
@@ -2739,6 +3033,46 @@ function App() {
     // 중동
     "Jordan": { alt: 0.15, lat: 31.3, lng: 36.3 },
     "Israel": { alt: 0.12, lat: 31.5, lng: 35.0 },
+    // 추가 국가
+    "Ireland": { alt: 0.18, lat: 53.4, lng: -8.0 },
+    "Belgium": { alt: 0.1, lat: 50.5, lng: 4.5 },
+    "Taiwan": { alt: 0.15, lat: 23.7, lng: 121.0 },
+    "Maldives": { alt: 0.12, lat: 3.2, lng: 73.2 },
+    "Costa Rica": { alt: 0.12, lat: 10.0, lng: -84.0 },
+    "Panama": { alt: 0.12, lat: 9.0, lng: -79.5 },
+    "Ecuador": { alt: 0.25, lat: -1.5, lng: -78.5 },
+    "Romania": { alt: 0.2, lat: 46.0, lng: 25.0 },
+    "Georgia": { alt: 0.12, lat: 42.3, lng: 43.5 },
+    "Montenegro": { alt: 0.08, lat: 42.7, lng: 19.4 },
+    "Mongolia": { alt: 0.6, lat: 47.5, lng: 105.0 },
+    "Laos": { alt: 0.3, lat: 18.5, lng: 103.5 },
+    "Tunisia": { alt: 0.2, lat: 34.5, lng: 9.5 },
+    "Oman": { alt: 0.25, lat: 22.0, lng: 57.5 },
+    "Qatar": { alt: 0.08, lat: 25.3, lng: 51.2 },
+    "Bolivia": { alt: 0.45, lat: -17.0, lng: -65.0 },
+    "Dominican Republic": { alt: 0.15, lat: 19.0, lng: -70.0 },
+    "Guatemala": { alt: 0.18, lat: 15.5, lng: -90.3 },
+    "Jamaica": { alt: 0.1, lat: 18.1, lng: -77.3 },
+    "Latvia": { alt: 0.12, lat: 57.0, lng: 24.5 },
+    "Lithuania": { alt: 0.12, lat: 55.2, lng: 24.0 },
+    "Estonia": { alt: 0.12, lat: 59.0, lng: 25.5 },
+    "Cyprus": { alt: 0.1, lat: 35.1, lng: 33.4 },
+    "Albania": { alt: 0.12, lat: 41.3, lng: 20.0 },
+    "Serbia": { alt: 0.18, lat: 44.5, lng: 20.9 },
+    "Namibia": { alt: 0.5, lat: -22.0, lng: 17.5 },
+    "Zimbabwe": { alt: 0.3, lat: -19.0, lng: 29.5 },
+    "Fiji": { alt: 0.15, lat: -18.0, lng: 178.0 },
+    "Madagascar": { alt: 0.45, lat: -19.0, lng: 47.0 },
+    "Mauritius": { alt: 0.08, lat: -20.2, lng: 57.5 },
+    "Lebanon": { alt: 0.08, lat: 33.9, lng: 35.9 },
+    "Ukraine": { alt: 0.4, lat: 49.0, lng: 31.5 },
+    "Pakistan": { alt: 0.5, lat: 30.5, lng: 69.5 },
+    "Luxembourg": { alt: 0.06, lat: 49.6, lng: 6.1 },
+    "Slovakia": { alt: 0.12, lat: 48.7, lng: 19.7 },
+    "Bulgaria": { alt: 0.18, lat: 42.7, lng: 25.5 },
+    "Rwanda": { alt: 0.08, lat: -2.0, lng: 29.9 },
+    "Senegal": { alt: 0.2, lat: 14.5, lng: -14.5 },
+    "Kazakhstan": { alt: 0.8, lat: 48.0, lng: 67.0 },
   }
 
   const getCountryAltitude = (feat) => {
