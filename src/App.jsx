@@ -958,15 +958,15 @@ function App() {
       }
       processCoord(feat.geometry.coordinates)
       const span = Math.max(maxLat - minLat, maxLng - minLng)
-      if (span < 3)  return 0.25   // 싱가포르, 소국
-      if (span < 8)  return 0.35   // 한국, 그리스
-      if (span < 15) return 0.5    // 일본, 영국, 독일
-      if (span < 25) return 0.65   // 프랑스, 스페인, 이탈리아
-      if (span < 40) return 0.85   // 인도, 멕시코
-      if (span < 60) return 1.1    // 호주, 브라질
-      if (span < 100) return 1.5   // 미국
-      return 2.0                   // 러시아, 캐나다
-    } catch { return 0.8 }
+      if (span < 3)  return 0.15   // 싱가포르 등 소국
+      if (span < 8)  return 0.18   // 한국, 그리스 등
+      if (span < 15) return 0.25   // 일본, 영국, 독일
+      if (span < 25) return 0.35   // 프랑스, 스페인, 이탈리아
+      if (span < 40) return 0.5    // 인도, 멕시코
+      if (span < 60) return 0.7    // 호주, 브라질
+      if (span < 100) return 1.0   // 미국
+      return 1.5                   // 러시아, 캐나다
+    } catch { return 0.5 }
   }
 
   const handleCountryClick = (feat) => {
