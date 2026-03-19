@@ -2501,6 +2501,7 @@ function App() {
   const [hoveredCountry, setHoveredCountry] = useState(null)
   const [tripItems, setTripItems] = useState([]) // 여행 계획 아이템
   const [showTrip, setShowTrip] = useState(false) // 여행 계획 패널 표시
+  const [dragItem, setDragItem] = useState(null) // 드래그 중인 아이템 ID
 
   // 오늘 날짜 기본값
   const todayStr = new Date().toISOString().split('T')[0]
@@ -2525,7 +2526,18 @@ function App() {
   const updateTripDate = (id, date) => {
     setTripItems(prev => prev.map(t => t.id === id ? { ...t, date } : t))
   }
+  // DAY 헤더의 날짜를 변경하면 그 날짜의 모든 아이템 이동
+  const updateGroupDate = (oldDate, newDate) => {
+    if (oldDate === newDate) return
+    setTripItems(prev => prev.map(t => t.date === oldDate ? { ...t, date: newDate } : t))
+  }
   const removeTrip = (id) => setTripItems(prev => prev.filter(t => t.id !== id))
+  // 드래그 아이템을 특정 날짜로 이동
+  const dropToDate = (targetDate) => {
+    if (!dragItem) return
+    setTripItems(prev => prev.map(t => t.id === dragItem ? { ...t, date: targetDate } : t))
+    setDragItem(null)
+  }
 
   // 날짜순 정렬된 아이템
   const sortedTrip = [...tripItems].sort((a, b) => a.date.localeCompare(b.date))
@@ -2728,7 +2740,7 @@ function App() {
       .onPolygonClick(feat => handleCountryClick(feat))
   }, [countries, hoveredCountry, selectedCountry])
 
-  // ── 여행 경로 Arc 애니메이션 (도시 간 이동만 표시) ──────────────
+  // ── 여행 경로 표시 (실선 고정 경로) ──────────────────────────
   useEffect(() => {
     if (!globeRef.current) return
     const globe = globeRef.current
@@ -2736,29 +2748,27 @@ function App() {
       globe.arcsData([])
       return
     }
-    // 날짜순 정렬된 아이템에서 도시가 바뀌는 구간만 Arc 표시
     const arcs = []
     const seen = new Set()
     for (let i = 0; i < sortedTrip.length - 1; i++) {
       const from = sortedTrip[i], to = sortedTrip[i+1]
-      if (from.cityName === to.cityName) continue // 같은 도시 건너뜀
+      if (from.cityName === to.cityName) continue
       const key = `${from.cityName}-${to.cityName}`
-      if (seen.has(key)) continue // 중복 경로 건너뜀
+      if (seen.has(key)) continue
       seen.add(key)
       arcs.push({
         startLat: from.lat, startLng: from.lng,
         endLat: to.lat, endLng: to.lng,
-        color: ['rgba(99,102,241,0.7)', 'rgba(168,85,247,0.7)'],
       })
     }
     globe
       .arcsData(arcs)
-      .arcColor(d => d.color)
-      .arcStroke(0.5)
-      .arcDashLength(0.4)
-      .arcDashGap(0.2)
-      .arcDashAnimateTime(3000)
-      .arcAltitudeAutoScale(0.15)
+      .arcColor(() => ['rgba(251,146,60,0.9)', 'rgba(251,146,60,0.9)'])
+      .arcStroke(1.5)
+      .arcDashLength(1)
+      .arcDashGap(0)
+      .arcDashAnimateTime(0)
+      .arcAltitude(0.005)
   }, [tripItems])
 
   // 국가별 최적 줌 레벨 (수동 튜닝)
@@ -3197,9 +3207,13 @@ function App() {
             <div style={{padding:'6px 20px 80px'}}>
               {/* 날짜별 그룹 */}
               {tripDates.map((date, di) => (
-                <div key={date} style={{marginTop:16}}>
-                  {/* 날짜 헤더 */}
-                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+                <div key={date} style={{marginTop:16}}
+                  onDragOver={e => { e.preventDefault(); e.currentTarget.style.background='rgba(37,99,235,0.04)' }}
+                  onDragLeave={e => { e.currentTarget.style.background='transparent' }}
+                  onDrop={e => { e.preventDefault(); e.currentTarget.style.background='transparent'; dropToDate(date) }}
+                >
+                  {/* DAY 헤더 + 날짜 선택 */}
+                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
                     <div style={{
                       background:'linear-gradient(135deg,#2563eb,#7c3aed)',
                       color:'white',borderRadius:10,padding:'6px 12px',
@@ -3208,41 +3222,55 @@ function App() {
                     }}>
                       DAY {di+1}
                     </div>
-                    <div style={{fontSize:13,fontWeight:600,color:'#334155'}}>{formatDate(date)}</div>
+                    {/* 클릭하면 달력 열리는 날짜 버튼 */}
+                    <div style={{position:'relative'}}>
+                      <input type="date" value={date}
+                        onChange={e => { if (e.target.value) updateGroupDate(date, e.target.value) }}
+                        style={{position:'absolute',inset:0,opacity:0,cursor:'pointer',zIndex:1,fontSize:16}}
+                      />
+                      <div style={{
+                        display:'flex',alignItems:'center',gap:5,
+                        background:'white',borderRadius:8,padding:'4px 10px',
+                        border:'1.5px solid #e2e8f0',cursor:'pointer',
+                        fontSize:13,fontWeight:600,color:'#334155',
+                      }}>
+                        📅 {formatDate(date)}
+                      </div>
+                    </div>
                     <div style={{flex:1,height:1,background:'#e2e8f0'}}/>
+                    <div style={{fontSize:10,color:'#94a3b8'}}>{tripByDate[date].length}곳</div>
                   </div>
 
-                  {/* 해당 날짜의 관광지 */}
+                  {/* 해당 날짜의 관광지 (드래그 가능) */}
                   {tripByDate[date].map((item, ii) => (
-                    <div key={item.id} style={{display:'flex',gap:12,marginBottom:8,marginLeft:4}}>
-                      {/* 타임라인 도트 */}
-                      <div style={{display:'flex',flexDirection:'column',alignItems:'center',width:20,flexShrink:0,paddingTop:4}}>
-                        <div style={{width:10,height:10,borderRadius:'50%',background:item.color||'#3b82f6',border:'2px solid white',boxShadow:`0 0 0 2px ${item.color||'#3b82f6'}44`}}/>
-                        {ii < tripByDate[date].length-1 && <div style={{flex:1,width:1.5,background:'#e2e8f0',minHeight:30}}/>}
+                    <div key={item.id}
+                      draggable
+                      onDragStart={() => setDragItem(item.id)}
+                      onDragEnd={() => setDragItem(null)}
+                      style={{
+                        display:'flex',gap:10,marginBottom:6,marginLeft:4,
+                        opacity: dragItem === item.id ? 0.4 : 1,
+                        transition:'opacity .15s',
+                      }}
+                    >
+                      {/* 드래그 핸들 + 타임라인 도트 */}
+                      <div style={{display:'flex',flexDirection:'column',alignItems:'center',width:20,flexShrink:0,paddingTop:6,cursor:'grab'}}>
+                        <div style={{fontSize:8,color:'#94a3b8',lineHeight:1,marginBottom:2,letterSpacing:1}}>⠿</div>
+                        <div style={{width:8,height:8,borderRadius:'50%',background:item.color||'#3b82f6',boxShadow:`0 0 0 2px ${item.color||'#3b82f6'}22`}}/>
+                        {ii < tripByDate[date].length-1 && <div style={{flex:1,width:1,background:'#e2e8f0',minHeight:16}}/>}
                       </div>
                       {/* 카드 */}
-                      <div style={{flex:1,background:'#f8fafc',borderRadius:12,padding:'10px 12px',border:'1px solid #e2e8f0',transition:'all .15s'}}>
-                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:8}}>
+                      <div style={{flex:1,background:'white',borderRadius:10,padding:'8px 11px',border:'1px solid #e2e8f0',boxShadow:'0 1px 3px rgba(0,0,0,0.04)'}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:6}}>
                           <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontSize:13,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.emoji} {item.spotName}</div>
-                            <div style={{fontSize:11,color:'#94a3b8',marginTop:1}}>{item.cityName} · {item.countryKo}</div>
+                            <div style={{fontSize:12.5,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.emoji} {item.spotName}</div>
+                            <div style={{fontSize:10,color:'#94a3b8',marginTop:1}}>{item.cityName}</div>
                           </div>
-                          <div style={{display:'flex',gap:3,alignItems:'center',flexShrink:0}}>
-                            {/* 날짜 변경 */}
-                            <div style={{position:'relative',width:22,height:22}}>
-                              <input type="date" value={item.date}
-                                onChange={e => updateTripDate(item.id, e.target.value)}
-                                style={{position:'absolute',inset:0,opacity:0,cursor:'pointer',zIndex:1,fontSize:16}}
-                              />
-                              <div style={{width:22,height:22,borderRadius:6,border:'1px solid #e2e8f0',background:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'#475569',pointerEvents:'none'}}>📅</div>
-                            </div>
+                          <div style={{display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
+                            {item.price && item.price !== '무료' && <span style={{fontSize:9,color:'#16a34a',fontWeight:600}}>🎫 {item.price}</span>}
                             <button onClick={() => removeTrip(item.id)}
-                              style={{width:22,height:22,borderRadius:6,border:'1px solid #fecaca',background:'#fef2f2',cursor:'pointer',fontSize:9,color:'#ef4444'}}>✕</button>
+                              style={{width:20,height:20,borderRadius:5,border:'1px solid #fecaca',background:'#fef2f2',cursor:'pointer',fontSize:8,color:'#ef4444',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
                           </div>
-                        </div>
-                        <div style={{display:'flex',gap:6,marginTop:6,flexWrap:'wrap'}}>
-                          <span style={{fontSize:9,padding:'2px 7px',borderRadius:8,background:TYPE_COLORS[item.type]||'#64748b',color:'white',fontWeight:600}}>{item.type}</span>
-                          {item.price && item.price !== '무료' && <span style={{fontSize:9,padding:'2px 7px',borderRadius:8,background:'#f0fdf4',color:'#16a34a',border:'1px solid #bbf7d0',fontWeight:600}}>🎫 {item.price}</span>}
                         </div>
                       </div>
                     </div>
@@ -3252,19 +3280,22 @@ function App() {
 
               {/* 요약 */}
               <div style={{background:'linear-gradient(135deg,#eff6ff,#f5f3ff)',borderRadius:14,padding:'14px 16px',marginTop:16,border:'1px solid #dbeafe'}}>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-                  <div style={{textAlign:'center',padding:'6px'}}>
-                    <div style={{fontSize:20,fontWeight:800,color:'#2563eb'}}>{tripDuration || 0}</div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:6}}>
+                  <div style={{textAlign:'center',padding:'4px'}}>
+                    <div style={{fontSize:18,fontWeight:800,color:'#2563eb'}}>{tripDuration || 0}</div>
                     <div style={{fontSize:10,color:'#64748b'}}>일간</div>
                   </div>
-                  <div style={{textAlign:'center',padding:'6px'}}>
-                    <div style={{fontSize:20,fontWeight:800,color:'#7c3aed'}}>{[...new Set(tripItems.map(t=>t.cityName))].length}</div>
+                  <div style={{textAlign:'center',padding:'4px'}}>
+                    <div style={{fontSize:18,fontWeight:800,color:'#7c3aed'}}>{[...new Set(tripItems.map(t=>t.cityName))].length}</div>
                     <div style={{fontSize:10,color:'#64748b'}}>도시</div>
+                  </div>
+                  <div style={{textAlign:'center',padding:'4px'}}>
+                    <div style={{fontSize:18,fontWeight:800,color:'#0f172a'}}>{tripItems.length}</div>
+                    <div style={{fontSize:10,color:'#64748b'}}>관광지</div>
                   </div>
                 </div>
               </div>
 
-              {/* 전체 삭제 */}
               <button onClick={() => setTripItems([])}
                 style={{width:'100%',marginTop:10,padding:'9px',background:'#fef2f2',color:'#ef4444',border:'1px solid #fecaca',borderRadius:10,cursor:'pointer',fontSize:12,fontWeight:600}}>
                 🗑 전체 삭제
