@@ -2775,11 +2775,11 @@ function App() {
     globe
       .arcsData(arcs)
       .arcColor(() => ['#f97316', '#f97316'])
-      .arcStroke(0.3)
+      .arcStroke(0.8)
       .arcDashLength(1)
       .arcDashGap(0)
       .arcDashAnimateTime(0)
-      .arcAltitude(0)
+      .arcAltitude(0.01)
   }, [tripItems])
 
   // 국가별 최적 줌 레벨 (수동 튜닝)
@@ -3396,52 +3396,21 @@ function App() {
                                   style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
                                 />
                                 <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 55%)'}}/>
-                                {/* 여행 추가 버튼 + 날짜 팝업 */}
-                                <div style={{position:'absolute',top:8,right:8}}>
-                                  <button
-                                    onClick={e => { e.stopPropagation(); addToTrip(spot, selectedCity) }}
-                                    style={{
-                                      width:32,height:32,borderRadius:'50%',border:'none',
-                                      background: isTripItem(spot, selectedCity) ? '#ef4444' : 'rgba(255,255,255,0.93)',
-                                      color: isTripItem(spot, selectedCity) ? 'white' : '#475569',
-                                      fontSize:16,cursor:'pointer',fontWeight:700,
-                                      display:'flex',alignItems:'center',justifyContent:'center',
-                                      boxShadow:'0 2px 8px rgba(0,0,0,0.3)',
-                                    }}
-                                  >
-                                    {isTripItem(spot, selectedCity) ? '✓' : '+'}
-                                  </button>
-                                  {/* 날짜 선택 팝업 */}
-                                  {tripAddTarget?.id === `${selectedCity?.name}-${spot.name}` && (
-                                    <div onClick={e => e.stopPropagation()} style={{
-                                      position:'absolute',top:38,right:0,
-                                      background:'white',borderRadius:12,padding:'8px',
-                                      boxShadow:'0 8px 30px rgba(0,0,0,0.25)',border:'1px solid #e2e8f0',
-                                      zIndex:100,minWidth:160,
-                                    }}>
-                                      <div style={{fontSize:11,fontWeight:700,color:'#64748b',padding:'4px 8px',marginBottom:4}}>📅 일정에 추가</div>
-                                      {tripDates.length > 0 ? tripDates.map((d, di) => (
-                                        <button key={d} onClick={() => addToTripDate(d)}
-                                          style={{width:'100%',textAlign:'left',padding:'8px 10px',border:'none',background:'transparent',borderRadius:8,cursor:'pointer',fontSize:12,fontWeight:600,color:'#1e293b',display:'flex',alignItems:'center',gap:8}}
-                                          onMouseEnter={e=>e.currentTarget.style.background='#f1f5f9'}
-                                          onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-                                        >
-                                          <span style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',color:'white',borderRadius:6,padding:'2px 7px',fontSize:10,fontWeight:700}}>DAY {di+1}</span>
-                                          {formatDate(d)}
-                                        </button>
-                                      )) : null}
-                                      <div style={{borderTop:'1px solid #f1f5f9',marginTop:4,paddingTop:4,position:'relative'}}>
-                                        <input type="date" value={todayStr}
-                                          onChange={e => { if (e.target.value) addToTripDate(e.target.value) }}
-                                          style={{position:'absolute',inset:0,opacity:0,cursor:'pointer',zIndex:1,fontSize:16}}
-                                        />
-                                        <div style={{padding:'8px 10px',fontSize:12,fontWeight:600,color:'#2563eb',display:'flex',alignItems:'center',gap:6,cursor:'pointer'}}>
-                                          ＋ 새 날짜 선택
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
+                                {/* 여행 추가 버튼 */}
+                                <button
+                                  onClick={e => { e.stopPropagation(); addToTrip(spot, selectedCity) }}
+                                  style={{
+                                    position:'absolute',top:8,right:8,
+                                    width:32,height:32,borderRadius:'50%',border:'none',
+                                    background: isTripItem(spot, selectedCity) ? '#ef4444' : 'rgba(255,255,255,0.93)',
+                                    color: isTripItem(spot, selectedCity) ? 'white' : '#475569',
+                                    fontSize:16,cursor:'pointer',fontWeight:700,
+                                    display:'flex',alignItems:'center',justifyContent:'center',
+                                    boxShadow:'0 2px 8px rgba(0,0,0,0.3)',
+                                  }}
+                                >
+                                  {isTripItem(spot, selectedCity) ? '✓' : '+'}
+                                </button>
                                 <div style={{position:'absolute',bottom:10,left:12,right:12,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
                                   <div>
                                     <div style={{fontSize:13.5,fontWeight:700,color:'white',textShadow:'0 1px 4px rgba(0,0,0,.6)'}}>{spot.name}</div>
@@ -3450,6 +3419,35 @@ function App() {
                                   {spot.rating > 0 && <div style={{fontSize:13,color:'#fbbf24',fontWeight:700}}>★ {spot.rating}</div>}
                                 </div>
                               </div>
+                              {/* 날짜 선택 팝업 (카드 밖에서 렌더링 → 짤림 방지) */}
+                              {tripAddTarget?.id === `${selectedCity?.name}-${spot.name}` && (
+                                <div onClick={e => e.stopPropagation()} style={{
+                                  background:'#f8fafc',borderRadius:0,padding:'10px 14px',
+                                  borderBottom:'1px solid #e2e8f0',
+                                }}>
+                                  <div style={{fontSize:11,fontWeight:700,color:'#64748b',marginBottom:8}}>📅 일정에 추가</div>
+                                  <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                                    {tripDates.map((d, di) => (
+                                      <button key={d} onClick={() => addToTripDate(d)}
+                                        style={{padding:'6px 12px',border:'1.5px solid #e2e8f0',background:'white',borderRadius:10,cursor:'pointer',fontSize:11,fontWeight:600,color:'#1e293b',display:'flex',alignItems:'center',gap:6}}
+                                        onMouseEnter={e=>e.currentTarget.style.borderColor='#2563eb'}
+                                        onMouseLeave={e=>e.currentTarget.style.borderColor='#e2e8f0'}
+                                      >
+                                        <span style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',color:'white',borderRadius:5,padding:'1px 6px',fontSize:9,fontWeight:700}}>D{di+1}</span>
+                                        {formatDate(d)}
+                                      </button>
+                                    ))}
+                                    {/* 새 날짜 - 글씨 클릭하면 달력 열림 */}
+                                    <label style={{padding:'6px 12px',border:'1.5px dashed #c7d2fe',background:'#eff6ff',borderRadius:10,cursor:'pointer',fontSize:11,fontWeight:700,color:'#2563eb',display:'flex',alignItems:'center',gap:4,position:'relative'}}>
+                                      ＋ 새 날짜
+                                      <input type="date" value={todayStr}
+                                        onChange={e => { if (e.target.value) addToTripDate(e.target.value) }}
+                                        style={{position:'absolute',inset:0,width:'100%',height:'100%',opacity:0,cursor:'pointer',fontSize:16}}
+                                      />
+                                    </label>
+                                  </div>
+                                </div>
+                              )}
                               {selectedSpot?.name===spot.name && (
                                 <div style={{padding:'12px 14px',borderTop:`1px solid ${(selectedCity?.color||'#3b82f6')}22`,background:`${selectedCity?.color||'#3b82f6'}07`}}>
                                   <p style={{fontSize:12.5,color:'#475569',lineHeight:1.75,marginBottom:10}}>{spot.desc}</p>
