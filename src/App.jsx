@@ -79,6 +79,122 @@ function SpotImage({ wikiTitle, spotName, fallback, className, style, alt }) {
   )
 }
 
+// ── 관광지 사진 갤러리 (Wikipedia에서 여러 장 로드) ───────────────────
+function SpotGallery({ wikiTitle, spotName, fallback, style }) {
+  const [images, setImages] = useState([])
+  const [idx, setIdx] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setImages([]); setIdx(0); setLoading(true)
+    let cancelled = false
+    const keyword = wikiTitle || spotName || ''
+    if (!keyword) { setLoading(false); return }
+
+    const fetchImages = async () => {
+      try {
+        // 1단계: 페이지의 모든 이미지 파일명 가져오기
+        const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(keyword)}&prop=images&imlimit=20&format=json&origin=*`)
+        const data = await res.json()
+        const page = Object.values(data?.query?.pages || {})[0]
+        const allFiles = (page?.images || [])
+          .map(img => img.title)
+          .filter(t => /\.(jpg|jpeg|png)$/i.test(t))
+          .filter(t => !/\b(icon|logo|flag|map|symbol|coat|seal|crest|commons|wiki|button|arrow|edit|stub)\b/i.test(t))
+          .slice(0, 8)
+
+        if (cancelled || allFiles.length === 0) {
+          // 검색 API로 폴백
+          const sRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(keyword)}&gsrlimit=3&prop=pageimages&format=json&pithumbsize=800&origin=*`)
+          const sData = await sRes.json()
+          const pages = Object.values(sData?.query?.pages || {})
+          const thumbs = pages.map(p => p?.thumbnail?.source).filter(Boolean)
+          if (!cancelled) { setImages(thumbs.length > 0 ? thumbs : (fallback ? [fallback] : [])); setLoading(false) }
+          return
+        }
+
+        // 2단계: 각 파일의 실제 썸네일 URL 가져오기
+        const thumbUrls = []
+        const batchSize = 4
+        for (let i = 0; i < allFiles.length; i += batchSize) {
+          const batch = allFiles.slice(i, i + batchSize)
+          const tRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${batch.map(t => encodeURIComponent(t)).join('|')}&prop=imageinfo&iiprop=url&iiurlwidth=800&format=json&origin=*`)
+          const tData = await tRes.json()
+          const tPages = Object.values(tData?.query?.pages || {})
+          for (const tp of tPages) {
+            const thumb = tp?.imageinfo?.[0]?.thumburl
+            if (thumb && !cancelled) thumbUrls.push(thumb)
+          }
+        }
+
+        if (!cancelled) {
+          setImages(thumbUrls.length > 0 ? thumbUrls : (fallback ? [fallback] : []))
+          setLoading(false)
+        }
+      } catch {
+        if (!cancelled) { setImages(fallback ? [fallback] : []); setLoading(false) }
+      }
+    }
+
+    fetchImages()
+    return () => { cancelled = true }
+  }, [wikiTitle, spotName, fallback])
+
+  const goNext = (e) => { e.stopPropagation(); setIdx(i => (i + 1) % images.length) }
+  const goPrev = (e) => { e.stopPropagation(); setIdx(i => (i - 1 + images.length) % images.length) }
+
+  if (loading) return (
+    <div style={{...style, display:'flex',alignItems:'center',justifyContent:'center',background:'#1e293b'}}>
+      <div style={{width:20,height:20,borderRadius:'50%',border:'2px solid #475569',borderTopColor:'#94a3b8',animation:'spin .7s linear infinite'}}/>
+    </div>
+  )
+  if (images.length === 0) return <div style={{...style, background:'#1e293b'}}/>
+
+  return (
+    <div style={{...style, position:'relative', overflow:'hidden'}}>
+      <img
+        src={images[idx]}
+        alt=""
+        style={{width:'100%',height:'100%',objectFit:'cover',display:'block',transition:'opacity 0.3s'}}
+        onError={e => { e.target.src = fallback; e.target.onerror = null }}
+      />
+      {images.length > 1 && (
+        <>
+          {/* 좌우 화살표 */}
+          <button onClick={goPrev} style={{
+            position:'absolute',left:6,top:'50%',transform:'translateY(-50%)',
+            width:28,height:28,borderRadius:'50%',border:'none',
+            background:'rgba(0,0,0,0.5)',color:'white',fontSize:14,
+            cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',
+            opacity:0.7,transition:'opacity .2s',
+          }} onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0.7'}>‹</button>
+          <button onClick={goNext} style={{
+            position:'absolute',right:6,top:'50%',transform:'translateY(-50%)',
+            width:28,height:28,borderRadius:'50%',border:'none',
+            background:'rgba(0,0,0,0.5)',color:'white',fontSize:14,
+            cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',
+            opacity:0.7,transition:'opacity .2s',
+          }} onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0.7'}>›</button>
+          {/* 하단 도트 인디케이터 */}
+          <div style={{position:'absolute',bottom:6,left:'50%',transform:'translateX(-50%)',display:'flex',gap:4}}>
+            {images.map((_, i) => (
+              <div key={i} onClick={e => { e.stopPropagation(); setIdx(i) }} style={{
+                width: i === idx ? 16 : 6, height:6, borderRadius:3,
+                background: i === idx ? 'white' : 'rgba(255,255,255,0.5)',
+                cursor:'pointer', transition:'all .2s',
+              }}/>
+            ))}
+          </div>
+          {/* 사진 카운터 */}
+          <div style={{position:'absolute',top:8,left:8,background:'rgba(0,0,0,0.6)',borderRadius:10,padding:'2px 8px',fontSize:10,color:'white',fontWeight:600}}>
+            {idx+1} / {images.length}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 // ── 에러 바운더리 (흰 화면 방지) ─────────────────────────────────────────
 class ErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { hasError: false } }
@@ -3466,16 +3582,25 @@ function App() {
                             <div key={i} className="card"
                               onClick={()=>setSelectedSpot(selectedSpot?.name===spot.name?null:spot)}
                               style={{borderRadius:14,overflow:'hidden',background:'white',border:`1.5px solid ${selectedSpot?.name===spot.name?(selectedCity?.color||'#3b82f6'):'#e2e8f0'}`,boxShadow:'0 2px 8px rgba(0,0,0,.06)'}}>
-                              <div style={{height:142,overflow:'hidden',position:'relative'}}>
-                                <SpotImage
-                                  className="cimg"
-                                  wikiTitle={spot.wikiTitle}
-                                  spotName={spot.name}
-                                  alt={spot.name}
-                                  fallback={spot.img || getImg(spot.type, spot.name)}
-                                  style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
-                                />
-                                <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 55%)'}}/>
+                              <div style={{height: selectedSpot?.name===spot.name ? 200 : 142,overflow:'hidden',position:'relative',transition:'height .3s'}}>
+                                {selectedSpot?.name===spot.name ? (
+                                  <SpotGallery
+                                    wikiTitle={spot.wikiTitle}
+                                    spotName={spot.name}
+                                    fallback={spot.img || getImg(spot.type, spot.name)}
+                                    style={{width:'100%',height:'100%'}}
+                                  />
+                                ) : (
+                                  <SpotImage
+                                    className="cimg"
+                                    wikiTitle={spot.wikiTitle}
+                                    spotName={spot.name}
+                                    alt={spot.name}
+                                    fallback={spot.img || getImg(spot.type, spot.name)}
+                                    style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
+                                  />
+                                )}
+                                {selectedSpot?.name!==spot.name && <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 55%)'}}/>}
 
                                 <div style={{position:'absolute',bottom:10,left:12,right:12,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
                                   <div>
