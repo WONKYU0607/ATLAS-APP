@@ -2245,17 +2245,22 @@ function App() {
       .polygonsData(countries)
       .polygonCapColor(feat => {
         const name = feat.properties.NAME
-        if (hoveredCountry === name) return 'rgba(255,220,50,0.55)'
-        if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.45)'
-        return COUNTRY_CITIES[name] ? 'rgba(34,197,94,0.12)' : 'rgba(200,220,180,0.08)'
+        if (hoveredCountry === name) return 'rgba(255,220,50,0.35)'
+        if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.30)'
+        return COUNTRY_CITIES[name] ? 'rgba(34,197,94,0.08)' : 'rgba(200,220,180,0.04)'
       })
-      .polygonSideColor(() => 'rgba(0,0,0,0.05)')
-      .polygonStrokeColor(() => 'rgba(255,255,255,0.2)')
+      .polygonSideColor(() => 'rgba(0,0,0,0)')
+      .polygonStrokeColor(feat => {
+        const name = feat.properties.NAME
+        if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.8)'
+        if (hoveredCountry === name) return 'rgba(255,220,50,0.6)'
+        return 'rgba(255,255,255,0.15)'
+      })
       .polygonAltitude(feat => {
         const name = feat.properties.NAME
-        if (selectedCountry?.properties.NAME === name) return 0.02
-        if (hoveredCountry === name) return 0.012
-        return 0.003
+        if (selectedCountry?.properties.NAME === name) return 0.001
+        if (hoveredCountry === name) return 0.001
+        return 0.001
       })
       .polygonLabel(feat => {
         const name = feat.properties.NAME
