@@ -1,29 +1,45 @@
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 
-// ── 실제 관광지 사진 (Wikipedia API - 영어 제목으로 검색) ──────────────────
-function SpotImage({ wikiTitle, fallback, className, style, alt }) {
-  const [src, setSrc] = useState(fallback)
+// ── 실제 관광지 사진 (Wikipedia API + Unsplash 키워드 폴백) ──────────────
+function SpotImage({ wikiTitle, spotName, fallback, className, style, alt }) {
+  const [src, setSrc] = useState(null)
 
   useEffect(() => {
-    if (!wikiTitle) { setSrc(fallback); return }
-    setSrc(fallback) // 먼저 fallback 보여주고
-    const title = encodeURIComponent(wikiTitle)
-    fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${title}&prop=pageimages&format=json&pithumbsize=600&origin=*`)
-      .then(r => r.json())
-      .then(data => {
-        const pages = data?.query?.pages || {}
-        const page = Object.values(pages)[0]
-        if (page?.thumbnail?.source) setSrc(page.thumbnail.source)
-      })
-      .catch(() => {})
-  }, [wikiTitle])
+    setSrc(null)
+    const keyword = wikiTitle || spotName || ''
+    if (!keyword) { setSrc(fallback); return }
+
+    // 1차: Wikipedia 영어 제목으로 검색
+    const tryWiki = (title) =>
+      fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=600&origin=*`)
+        .then(r => r.json())
+        .then(data => {
+          const page = Object.values(data?.query?.pages || {})[0]
+          return page?.thumbnail?.source || null
+        })
+        .catch(() => null)
+
+    // 2차: Unsplash 키워드 검색 (실제 사진)
+    const unsplashUrl = (q) =>
+      `https://source.unsplash.com/featured/600x400/?${encodeURIComponent(q)}`
+
+    tryWiki(keyword).then(img => {
+      if (img) { setSrc(img); return }
+      // Wikipedia 실패시 영어 키워드로 재시도
+      const enKeyword = keyword.replace(/[가-힣]+/g, '').trim() || keyword
+      return tryWiki(enKeyword)
+    }).then(img => {
+      if (img) { setSrc(img); return }
+      setSrc(fallback)
+    }).catch(() => setSrc(fallback))
+  }, [wikiTitle, spotName])
 
   return (
     <img
       className={className}
-      src={src}
-      alt={alt || wikiTitle || ''}
+      src={src || fallback}
+      alt={alt || ''}
       style={style}
       onError={e => { e.target.src = fallback; e.target.onerror = null }}
     />
@@ -838,9 +854,32 @@ function App() {
     const cities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, countryEn }))
     const updateCoords = () => {
       if (!globeRef.current) return
+      const globe = globeRef.current
+      
+      // 카메라 위치 가져오기 (뒤쪽 도시 필터링용)
+      const camera = globe.camera()
+      const camPos = camera.position
+      
       const coords = cities.map(city => {
-        const sc = globeRef.current.getScreenCoords(city.lat, city.lng, 0.02)
-        return { ...city, sx: sc?.x, sy: sc?.y, visible: sc != null }
+        const sc = globe.getScreenCoords(city.lat, city.lng, 0.02)
+        if (!sc) return { ...city, sx: 0, sy: 0, visible: false }
+        
+        // 도시가 지구 앞면에 있는지 확인 (카메라 방향과 도시 방향의 내적)
+        const latRad = city.lat * Math.PI / 180
+        const lngRad = city.lng * Math.PI / 180
+        const cityVec = {
+          x: Math.cos(latRad) * Math.cos(lngRad),
+          y: Math.sin(latRad),
+          z: Math.cos(latRad) * Math.sin(lngRad),
+        }
+        const camLen = Math.sqrt(camPos.x**2 + camPos.y**2 + camPos.z**2)
+        const dot = (cityVec.x * camPos.x + cityVec.y * camPos.y + cityVec.z * camPos.z) / camLen
+        const onFrontSide = dot > 0.1 // 앞면에 있을 때만 표시
+        
+        // 화면 범위 안에 있는지도 확인
+        const inBounds = sc.x > 0 && sc.x < window.innerWidth && sc.y > 0 && sc.y < window.innerHeight
+        
+        return { ...city, sx: sc.x, sy: sc.y, visible: onFrontSide && inBounds }
       })
       setCityScreenCoords(coords)
     }
@@ -1079,29 +1118,16 @@ function App() {
     const cityName = city.name || ''
     if (!cityName) return null
     try {
-      const prompt = `${countryKoName} ${cityName}의 실제 유명 관광지 정보를 JSON으로만 반환하세요. 마크다운 없이 순수 JSON만:
-{
-  "description": "${cityName}의 특징 2문장",
-  "spots": [
-    {
-      "name": "관광지 한국어명",
-      "wikiTitle": "Wikipedia English article title",
-      "type": "랜드마크",
-      "desc": "이 관광지의 구체적인 특징 2문장",
-      "rating": 4.7,
-      "openTime": "09:00~18:00",
-      "price": "무료",
-      "website": "https://공식홈페이지주소"
-    }
-  ]
-}
-조건:
-- ${cityName}에 실제 존재하는 관광지를 최대한 많이 포함 (최소 4개, 많으면 8~10개도 가능)
-- 관광지가 많은 도시는 더 많이, 적은 도시는 있는 만큼만
-- wikiTitle: 영어 Wikipedia 문서 제목 (예: "Eiffel Tower", "Gyeongbokgung Palace")
-- type: 문화/자연/랜드마크/도시/역사/음식 중 하나
-- openTime, price: 실제 정보 기입
-- website: 공식 홈페이지 URL (없으면 null)`
+      const prompt = `너는 여행 전문가야. ${countryKoName} ${cityName}의 유명 관광지를 알려줘.
+아래 JSON 형식으로만 답해. 다른 말 하지 마. JSON 외 텍스트 금지.
+
+{"description":"${cityName}에 대한 소개 2문장","spots":[{"name":"관광지명(한국어)","wikiTitle":"English Wikipedia title","type":"랜드마크","desc":"이 관광지 설명 2문장","rating":4.5,"openTime":"09:00~18:00","price":"무료","website":"https://official-url.com"},{"name":"관광지명2","wikiTitle":"English title2","type":"자연","desc":"설명2","rating":4.3,"openTime":"24시간","price":"무료","website":null}]}
+
+규칙:
+1. spots 배열에 최소 4개, 최대 8개 관광지
+2. wikiTitle은 반드시 영어 Wikipedia 제목
+3. type은 랜드마크/문화/자연/역사/음식/도시 중 하나
+4. JSON만 출력, 마크다운 사용 금지`
 
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -1112,13 +1138,13 @@ function App() {
       const data = await res.json()
       if (!data.text) return null
 
-      // JSON 파싱
-      let txt = data.text.replace(/```json|```/g, '').trim()
+      // JSON 파싱 - 가장 바깥 { } 찾기
+      const txt = data.text.replace(/```json|```/g, '').trim()
       const start = txt.indexOf('{')
       const end = txt.lastIndexOf('}')
       if (start === -1 || end === -1) return null
       const parsed = JSON.parse(txt.slice(start, end + 1))
-      if (!parsed.spots || parsed.spots.length < 2) return null
+      if (!parsed?.spots?.length) return null
       return parsed
     } catch (e) {
       console.error('AI failed for', cityName, ':', e.message)
@@ -1389,7 +1415,8 @@ function App() {
                               <div style={{height:142,overflow:'hidden',position:'relative'}}>
                                 <SpotImage
                                   className="cimg"
-                                  wikiTitle={spot.wikiTitle || spot.name}
+                                  wikiTitle={spot.wikiTitle}
+                                  spotName={spot.name}
                                   alt={spot.name}
                                   fallback={spot.img || 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80'}
                                   style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
