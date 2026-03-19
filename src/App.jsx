@@ -2116,17 +2116,17 @@ function App() {
   const [showDrop, setShowDrop] = useState(false)
   const [hoveredCountry, setHoveredCountry] = useState(null)
 
-  // Load world GeoJSON
+  // Load world GeoJSON (50m 고해상도 → 해안선 정확, 영토 누락 없음)
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
+    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson')
       .then(r => r.json())
       .then(data => setCountries(data.features))
       .catch(() => {
-        fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+        // 50m 실패시 110m 폴백
+        fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
           .then(r => r.json())
-          .then(data => {
-            // fallback
-          })
+          .then(data => setCountries(data.features))
+          .catch(() => {})
       })
   }, [])
 
