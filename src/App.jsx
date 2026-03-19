@@ -2130,7 +2130,7 @@ function App() {
       })
   }, [])
 
-  // Init Globe with high-res satellite imagery
+  // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
   useEffect(() => {
     if (globeRef.current || !globeContainerRef.current) return
 
@@ -2142,16 +2142,10 @@ function App() {
       .width(window.innerWidth)
       .height(window.innerHeight)
 
-    // NASA Blue Marble 8K (고해상도 위성 이미지)
-    // 고해상도 NASA 이미지 (5400x2700) + 실패시 폴백
-    const hiResUrl = 'https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74218/world.200412.3x5400x2700.jpg'
-    const fallbackUrl = 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg'
-    const testImg = new Image()
-    testImg.onload = () => globe.globeImageUrl(hiResUrl)
-    testImg.onerror = () => globe.globeImageUrl(fallbackUrl)
-    testImg.src = hiResUrl
-    globe.globeImageUrl(fallbackUrl) // 즉시 기본 이미지 로드, 고해상도 로드 완료 시 교체
-    globe.bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+    // ESRI World Imagery 위성 타일 (줌 레벨별 자동 로딩 → 구글어스급 해상도)
+    globe.globeTileEngineUrl((x, y, level) =>
+      `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${level}/${y}/${x}`
+    )
 
     // Three.js 렌더러 품질 최대화
     const renderer = globe.renderer()
@@ -2159,21 +2153,6 @@ function App() {
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3))
       renderer.antialias = true
     }
-
-    // Globe 텍스처 필터링 품질 향상 (텍스처 로드 후 적용)
-    setTimeout(() => {
-      try {
-        const scene = globe.scene()
-        if (scene) {
-          scene.traverse(obj => {
-            if (obj.material && obj.material.map) {
-              obj.material.map.anisotropy = renderer?.capabilities?.getMaxAnisotropy?.() || 16
-              obj.material.map.needsUpdate = true
-            }
-          })
-        }
-      } catch(e) { console.log('texture quality setup skipped') }
-    }, 3000)
 
     globe.camera().position.z = 260
     globe.controls().autoRotate = true
