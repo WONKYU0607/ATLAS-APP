@@ -855,30 +855,27 @@ function App() {
     const updateCoords = () => {
       if (!globeRef.current) return
       const globe = globeRef.current
-      
-      // 카메라 위치 가져오기 (뒤쪽 도시 필터링용)
       const camera = globe.camera()
       const camPos = camera.position
-      
+      const camLen = Math.sqrt(camPos.x**2 + camPos.y**2 + camPos.z**2)
+
       const coords = cities.map(city => {
         const sc = globe.getScreenCoords(city.lat, city.lng, 0.02)
         if (!sc) return { ...city, sx: 0, sy: 0, visible: false }
-        
-        // 도시가 지구 앞면에 있는지 확인 (카메라 방향과 도시 방향의 내적)
+
+        // Three.js / globe.gl 좌표계: x=cos(lat)*sin(lng), y=sin(lat), z=cos(lat)*cos(lng)
         const latRad = city.lat * Math.PI / 180
         const lngRad = city.lng * Math.PI / 180
-        const cityVec = {
-          x: Math.cos(latRad) * Math.cos(lngRad),
-          y: Math.sin(latRad),
-          z: Math.cos(latRad) * Math.sin(lngRad),
-        }
-        const camLen = Math.sqrt(camPos.x**2 + camPos.y**2 + camPos.z**2)
-        const dot = (cityVec.x * camPos.x + cityVec.y * camPos.y + cityVec.z * camPos.z) / camLen
-        const onFrontSide = dot > 0.1 // 앞면에 있을 때만 표시
-        
-        // 화면 범위 안에 있는지도 확인
-        const inBounds = sc.x > 0 && sc.x < window.innerWidth && sc.y > 0 && sc.y < window.innerHeight
-        
+        const cx = Math.cos(latRad) * Math.sin(lngRad)
+        const cy = Math.sin(latRad)
+        const cz = Math.cos(latRad) * Math.cos(lngRad)
+
+        const dot = (cx * camPos.x + cy * camPos.y + cz * camPos.z) / camLen
+        const onFrontSide = dot > 0  // 앞면 도시만
+
+        const inBounds = sc.x > 10 && sc.x < window.innerWidth - 10
+                      && sc.y > 10 && sc.y < window.innerHeight - 10
+
         return { ...city, sx: sc.x, sy: sc.y, visible: onFrontSide && inBounds }
       })
       setCityScreenCoords(coords)
