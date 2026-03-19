@@ -54,6 +54,12 @@ const COUNTRY_CITIES = {
     { name:"부산", lat:35.18, lng:129.07, emoji:"🌊", color:"#3498db" },
     { name:"제주", lat:33.50, lng:126.53, emoji:"🌺", color:"#2ecc71" },
     { name:"경주", lat:35.85, lng:129.22, emoji:"🏛️", color:"#f39c12" },
+    { name:"인천", lat:37.46, lng:126.71, emoji:"✈️", color:"#9b59b6" },
+    { name:"대구", lat:35.87, lng:128.60, emoji:"🍎", color:"#e67e22" },
+    { name:"전주", lat:35.82, lng:127.15, emoji:"🥘", color:"#8e44ad" },
+    { name:"강릉", lat:37.75, lng:128.88, emoji:"🏖️", color:"#2980b9" },
+    { name:"수원", lat:37.27, lng:127.01, emoji:"🏰", color:"#c0392b" },
+    { name:"광주", lat:35.16, lng:126.85, emoji:"🎨", color:"#1abc9c" },
   ],
   "Japan": [
     { name:"도쿄", lat:35.68, lng:139.69, emoji:"🗼", color:"#e74c3c" },
@@ -61,173 +67,13 @@ const COUNTRY_CITIES = {
     { name:"오사카", lat:34.69, lng:135.50, emoji:"🏯", color:"#f39c12" },
     { name:"삿포로", lat:43.06, lng:141.35, emoji:"❄️", color:"#3498db" },
     { name:"나라", lat:34.68, lng:135.83, emoji:"🦌", color:"#2ecc71" },
-  ],
-  "France": [
-    { name:"파리", lat:48.86, lng:2.35, emoji:"🗼", color:"#2ecc71" },
-    { name:"니스", lat:43.71, lng:7.26, emoji:"🌊", color:"#3498db" },
-    { name:"리옹", lat:45.75, lng:4.83, emoji:"🍷", color:"#9b59b6" },
-    { name:"보르도", lat:44.84, lng:-0.58, emoji:"🍇", color:"#e74c3c" },
-  ],
-  "United States of America": [
-    { name:"뉴욕", lat:40.71, lng:-74.01, emoji:"🗽", color:"#3498db" },
-    { name:"로스앤젤레스", lat:34.05, lng:-118.24, emoji:"🎬", color:"#e74c3c" },
-    { name:"샌프란시스코", lat:37.77, lng:-122.42, emoji:"🌉", color:"#f39c12" },
-    { name:"라스베이거스", lat:36.17, lng:-115.14, emoji:"🎰", color:"#e74c3c" },
-    { name:"마이애미", lat:25.77, lng:-80.19, emoji:"🌴", color:"#2ecc71" },
-    { name:"시카고", lat:41.88, lng:-87.63, emoji:"🌆", color:"#9b59b6" },
-  ],
-  "Australia": [
-    { name:"시드니", lat:-33.87, lng:151.21, emoji:"🎭", color:"#1abc9c" },
-    { name:"멜버른", lat:-37.81, lng:144.96, emoji:"🏙️", color:"#3498db" },
-    { name:"케언즈", lat:-16.92, lng:145.77, emoji:"🐠", color:"#2ecc71" },
-    { name:"울루루", lat:-25.34, lng:131.04, emoji:"🪨", color:"#e67e22" },
-  ],
-  "United Arab Emirates": [
-    { name:"두바이", lat:25.20, lng:55.27, emoji:"🏗️", color:"#f39c12" },
-    { name:"아부다비", lat:24.47, lng:54.37, emoji:"🕌", color:"#3498db" },
-  ],
-  "Italy": [
-    { name:"로마", lat:41.90, lng:12.50, emoji:"🏛️", color:"#9b59b6" },
-    { name:"베네치아", lat:45.44, lng:12.32, emoji:"🚤", color:"#3498db" },
-    { name:"피렌체", lat:43.77, lng:11.25, emoji:"🎨", color:"#e74c3c" },
-    { name:"밀라노", lat:45.46, lng:9.19, emoji:"👗", color:"#2ecc71" },
-    { name:"나폴리", lat:40.85, lng:14.27, emoji:"🍕", color:"#f39c12" },
-  ],
-  "Thailand": [
-    { name:"방콕", lat:13.76, lng:100.50, emoji:"🛕", color:"#00bcd4" },
-    { name:"치앙마이", lat:18.79, lng:98.98, emoji:"🐘", color:"#2ecc71" },
-    { name:"푸켓", lat:7.89, lng:98.40, emoji:"🏖️", color:"#3498db" },
-    { name:"파타야", lat:12.93, lng:100.88, emoji:"🌊", color:"#e74c3c" },
-  ],
-  "Egypt": [
-    { name:"카이로", lat:30.04, lng:31.24, emoji:"🔺", color:"#e67e22" },
-    { name:"룩소르", lat:25.69, lng:32.64, emoji:"🏺", color:"#f39c12" },
-    { name:"아스완", lat:24.09, lng:32.90, emoji:"⛵", color:"#e74c3c" },
-  ],
-  "Brazil": [
-    { name:"리우데자네이루", lat:-22.91, lng:-43.17, emoji:"🏖️", color:"#27ae60" },
-    { name:"상파울루", lat:-23.55, lng:-46.63, emoji:"🏙️", color:"#3498db" },
-    { name:"마나우스", lat:-3.10, lng:-60.02, emoji:"🌿", color:"#2ecc71" },
-    { name:"포스두이과수", lat:-25.52, lng:-54.59, emoji:"💧", color:"#00bcd4" },
-  ],
-  "Morocco": [
-    { name:"마라케시", lat:31.63, lng:-7.98, emoji:"🕌", color:"#e74c3c" },
-    { name:"페스", lat:34.03, lng:-5.00, emoji:"🏺", color:"#f39c12" },
-    { name:"카사블랑카", lat:33.59, lng:-7.62, emoji:"🌊", color:"#3498db" },
-  ],
-  "Spain": [
-    { name:"바르셀로나", lat:41.39, lng:2.17, emoji:"🏟️", color:"#3498db" },
-    { name:"마드리드", lat:40.42, lng:-3.70, emoji:"🎨", color:"#e74c3c" },
-    { name:"세비야", lat:37.39, lng:-5.99, emoji:"💃", color:"#f39c12" },
-    { name:"그라나다", lat:37.18, lng:-3.60, emoji:"🏰", color:"#9b59b6" },
-  ],
-  "South Africa": [
-    { name:"케이프타운", lat:-33.92, lng:18.42, emoji:"🏔️", color:"#2ecc71" },
-    { name:"요하네스버그", lat:-26.20, lng:28.04, emoji:"🏙️", color:"#3498db" },
-    { name:"더반", lat:-29.86, lng:31.02, emoji:"🌊", color:"#e74c3c" },
-  ],
-  "Indonesia": [
-    { name:"발리", lat:-8.41, lng:115.19, emoji:"🌺", color:"#0e7490" },
-    { name:"자카르타", lat:-6.21, lng:106.85, emoji:"🏙️", color:"#3498db" },
-    { name:"족자카르타", lat:-7.80, lng:110.36, emoji:"🏛️", color:"#f39c12" },
-    { name:"코모도", lat:-8.55, lng:119.49, emoji:"🦎", color:"#2ecc71" },
-  ],
-  "United Kingdom": [
-    { name:"런던", lat:51.51, lng:-0.13, emoji:"👑", color:"#7c3aed" },
-    { name:"에든버러", lat:55.95, lng:-3.19, emoji:"🏰", color:"#3498db" },
-    { name:"맨체스터", lat:53.48, lng:-2.24, emoji:"⚽", color:"#e74c3c" },
-    { name:"바스", lat:51.38, lng:-2.36, emoji:"🛁", color:"#2ecc71" },
-  ],
-  "Turkey": [
-    { name:"이스탄불", lat:41.01, lng:28.98, emoji:"🕌", color:"#b45309" },
-    { name:"카파도키아", lat:38.64, lng:34.83, emoji:"🎈", color:"#e74c3c" },
-    { name:"파묵칼레", lat:37.92, lng:29.12, emoji:"💎", color:"#3498db" },
-    { name:"안탈리아", lat:36.90, lng:30.70, emoji:"🌊", color:"#2ecc71" },
-  ],
-  "Greece": [
-    { name:"산토리니", lat:36.39, lng:25.46, emoji:"🏛️", color:"#1e40af" },
-    { name:"아테네", lat:37.98, lng:23.73, emoji:"🏛️", color:"#e74c3c" },
-    { name:"미코노스", lat:37.44, lng:25.33, emoji:"💃", color:"#3498db" },
-    { name:"크레타", lat:35.24, lng:25.02, emoji:"🌿", color:"#2ecc71" },
-  ],
-  "Peru": [
-    { name:"마추픽추", lat:-13.16, lng:-72.55, emoji:"🏔️", color:"#15803d" },
-    { name:"쿠스코", lat:-13.53, lng:-71.97, emoji:"🏛️", color:"#78350f" },
-    { name:"리마", lat:-12.05, lng:-77.04, emoji:"🏙️", color:"#3498db" },
-  ],
-  "Jordan": [
-    { name:"페트라", lat:30.33, lng:35.44, emoji:"🏺", color:"#b45309" },
-    { name:"암만", lat:31.95, lng:35.93, emoji:"🕌", color:"#3498db" },
-    { name:"와디럼", lat:29.58, lng:35.42, emoji:"🏜️", color:"#e67e22" },
-  ],
-  "Netherlands": [
-    { name:"암스테르담", lat:52.37, lng:4.90, emoji:"🚲", color:"#c2410c" },
-    { name:"로테르담", lat:51.92, lng:4.48, emoji:"🌉", color:"#3498db" },
-    { name:"헤이그", lat:52.08, lng:4.31, emoji:"⚖️", color:"#2ecc71" },
-  ],
-  "Czechia": [
-    { name:"프라하", lat:50.08, lng:14.44, emoji:"🏰", color:"#065f46" },
-    { name:"체스키크룸로프", lat:48.81, lng:14.32, emoji:"🏯", color:"#e74c3c" },
-  ],
-  "Portugal": [
-    { name:"리스본", lat:38.72, lng:-9.14, emoji:"🏙️", color:"#92400e" },
-    { name:"포르투", lat:41.15, lng:-8.61, emoji:"🍷", color:"#e74c3c" },
-    { name:"신트라", lat:38.80, lng:-9.39, emoji:"🏰", color:"#2ecc71" },
-  ],
-  "Singapore": [
-    { name:"싱가포르", lat:1.35, lng:103.82, emoji:"🦁", color:"#991b1b" },
-  ],
-  "Argentina": [
-    { name:"부에노스아이레스", lat:-34.60, lng:-58.38, emoji:"💃", color:"#0369a1" },
-    { name:"파타고니아", lat:-41.83, lng:-68.91, emoji:"🏔️", color:"#2ecc71" },
-    { name:"이과수", lat:-25.69, lng:-54.44, emoji:"💧", color:"#3498db" },
-  ],
-  "India": [
-    { name:"뭄바이", lat:19.08, lng:72.88, emoji:"🌆", color:"#b45309" },
-    { name:"뉴델리", lat:28.61, lng:77.21, emoji:"🕌", color:"#e74c3c" },
-    { name:"아그라", lat:27.18, lng:78.02, emoji:"🕌", color:"#f39c12" },
-    { name:"바라나시", lat:25.32, lng:83.01, emoji:"🙏", color:"#9b59b6" },
-    { name:"고아", lat:15.30, lng:74.09, emoji:"🏖️", color:"#2ecc71" },
-  ],
-  "Mexico": [
-    { name:"멕시코시티", lat:19.43, lng:-99.13, emoji:"🏛️", color:"#166534" },
-    { name:"칸쿤", lat:21.16, lng:-86.85, emoji:"🏖️", color:"#3498db" },
-    { name:"과달라하라", lat:20.66, lng:-103.35, emoji:"🌮", color:"#e74c3c" },
-  ],
-  "Canada": [
-    { name:"밴쿠버", lat:49.28, lng:-123.12, emoji:"🏔️", color:"#9f1239" },
-    { name:"토론토", lat:43.65, lng:-79.38, emoji:"🏙️", color:"#3498db" },
-    { name:"퀘벡시티", lat:46.81, lng:-71.21, emoji:"🏰", color:"#2ecc71" },
-    { name:"밴프", lat:51.18, lng:-115.57, emoji:"🏞️", color:"#e67e22" },
-  ],
-  "Iceland": [
-    { name:"레이캬비크", lat:64.13, lng:-21.82, emoji:"🌋", color:"#1e3a8a" },
-    { name:"아퀴레이리", lat:65.68, lng:-18.10, emoji:"❄️", color:"#3498db" },
-  ],
-  "Kenya": [
-    { name:"나이로비", lat:-1.29, lng:36.82, emoji:"🦁", color:"#14532d" },
-    { name:"마사이마라", lat:-1.49, lng:35.15, emoji:"🐘", color:"#2ecc71" },
-    { name:"몸바사", lat:-4.05, lng:39.67, emoji:"🌊", color:"#3498db" },
-  ],
-  "Cuba": [
-    { name:"하바나", lat:23.11, lng:-82.37, emoji:"🚗", color:"#7c2d12" },
-    { name:"트리니다드", lat:21.80, lng:-79.98, emoji:"🎵", color:"#e74c3c" },
-  ],
-  "Vietnam": [
-    { name:"하노이", lat:21.03, lng:105.85, emoji:"🏮", color:"#be123c" },
-    { name:"호찌민시", lat:10.78, lng:106.70, emoji:"🛵", color:"#e74c3c" },
-    { name:"하롱베이", lat:20.91, lng:107.18, emoji:"⛵", color:"#3498db" },
-    { name:"호이안", lat:15.88, lng:108.34, emoji:"🏮", color:"#f39c12" },
-  ],
-  "Austria": [
-    { name:"빈", lat:48.21, lng:16.37, emoji:"🎵", color:"#5b21b6" },
-    { name:"잘츠부르크", lat:47.80, lng:13.04, emoji:"🎶", color:"#3498db" },
-    { name:"인스브루크", lat:47.27, lng:11.39, emoji:"⛷️", color:"#2ecc71" },
-  ],
-  "New Zealand": [
-    { name:"퀸스타운", lat:-45.03, lng:168.66, emoji:"🏔️", color:"#065f46" },
-    { name:"오클랜드", lat:-36.85, lng:174.76, emoji:"🌉", color:"#3498db" },
-    { name:"로토루아", lat:-38.14, lng:176.25, emoji:"♨️", color:"#e74c3c" },
+    { name:"나고야", lat:35.18, lng:136.91, emoji:"🏯", color:"#e67e22" },
+    { name:"후쿠오카", lat:33.59, lng:130.40, emoji:"🍜", color:"#c0392b" },
+    { name:"히로시마", lat:34.39, lng:132.45, emoji:"☮️", color:"#8e44ad" },
+    { name:"고베", lat:34.69, lng:135.19, emoji:"🥩", color:"#16a085" },
+    { name:"오키나와", lat:26.21, lng:127.68, emoji:"🏖️", color:"#2980b9" },
+    { name:"가나자와", lat:36.56, lng:136.66, emoji:"🎋", color:"#27ae60" },
+    { name:"하코네", lat:35.23, lng:139.02, emoji:"🌋", color:"#e74c3c" },
   ],
   "China": [
     { name:"베이징", lat:39.90, lng:116.41, emoji:"🏯", color:"#e74c3c" },
@@ -235,59 +81,446 @@ const COUNTRY_CITIES = {
     { name:"시안", lat:34.34, lng:108.94, emoji:"🏺", color:"#f39c12" },
     { name:"구이린", lat:25.27, lng:110.29, emoji:"⛰️", color:"#2ecc71" },
     { name:"청두", lat:30.57, lng:104.07, emoji:"🐼", color:"#9b59b6" },
+    { name:"항저우", lat:30.27, lng:120.15, emoji:"🍵", color:"#16a085" },
+    { name:"장자제", lat:29.13, lng:110.48, emoji:"🏔️", color:"#27ae60" },
+    { name:"리장", lat:26.87, lng:100.22, emoji:"🌸", color:"#c0392b" },
+    { name:"황산", lat:30.13, lng:118.17, emoji:"🌄", color:"#e67e22" },
+    { name:"홍콩", lat:22.32, lng:114.17, emoji:"🌃", color:"#2980b9" },
+    { name:"마카오", lat:22.20, lng:113.55, emoji:"🎲", color:"#f39c12" },
+    { name:"쑤저우", lat:31.30, lng:120.62, emoji:"🏮", color:"#8e44ad" },
+  ],
+  "France": [
+    { name:"파리", lat:48.86, lng:2.35, emoji:"🗼", color:"#2ecc71" },
+    { name:"니스", lat:43.71, lng:7.26, emoji:"🌊", color:"#3498db" },
+    { name:"리옹", lat:45.75, lng:4.83, emoji:"🍷", color:"#9b59b6" },
+    { name:"보르도", lat:44.84, lng:-0.58, emoji:"🍇", color:"#e74c3c" },
+    { name:"마르세유", lat:43.30, lng:5.37, emoji:"⛵", color:"#e67e22" },
+    { name:"몽생미셸", lat:48.64, lng:-1.51, emoji:"🏰", color:"#8e44ad" },
+    { name:"스트라스부르", lat:48.57, lng:7.75, emoji:"🥨", color:"#16a085" },
+    { name:"앙시", lat:45.90, lng:6.12, emoji:"🏔️", color:"#2980b9" },
+    { name:"툴루즈", lat:43.60, lng:1.44, emoji:"✈️", color:"#c0392b" },
+  ],
+  "Italy": [
+    { name:"로마", lat:41.90, lng:12.50, emoji:"🏛️", color:"#9b59b6" },
+    { name:"베네치아", lat:45.44, lng:12.32, emoji:"🚤", color:"#3498db" },
+    { name:"피렌체", lat:43.77, lng:11.25, emoji:"🎨", color:"#e74c3c" },
+    { name:"밀라노", lat:45.46, lng:9.19, emoji:"👗", color:"#2ecc71" },
+    { name:"나폴리", lat:40.85, lng:14.27, emoji:"🍕", color:"#f39c12" },
+    { name:"아말피", lat:40.63, lng:14.60, emoji:"🌊", color:"#16a085" },
+    { name:"시칠리아", lat:37.60, lng:14.02, emoji:"🍋", color:"#e67e22" },
+    { name:"친퀘테레", lat:44.13, lng:9.67, emoji:"🎨", color:"#8e44ad" },
+    { name:"볼로냐", lat:44.49, lng:11.34, emoji:"🍝", color:"#c0392b" },
+    { name:"시에나", lat:43.32, lng:11.33, emoji:"🏰", color:"#f39c12" },
+    { name:"폼페이", lat:40.75, lng:14.49, emoji:"🌋", color:"#7f8c8d" },
+  ],
+  "Spain": [
+    { name:"바르셀로나", lat:41.39, lng:2.17, emoji:"🏟️", color:"#3498db" },
+    { name:"마드리드", lat:40.42, lng:-3.70, emoji:"🎨", color:"#e74c3c" },
+    { name:"세비야", lat:37.39, lng:-5.99, emoji:"💃", color:"#f39c12" },
+    { name:"그라나다", lat:37.18, lng:-3.60, emoji:"🏰", color:"#9b59b6" },
+    { name:"발렌시아", lat:39.47, lng:-0.38, emoji:"🥘", color:"#e67e22" },
+    { name:"빌바오", lat:43.26, lng:-2.93, emoji:"🎭", color:"#16a085" },
+    { name:"말라가", lat:36.72, lng:-4.42, emoji:"☀️", color:"#c0392b" },
+    { name:"톨레도", lat:39.86, lng:-4.02, emoji:"🗡️", color:"#2980b9" },
+    { name:"산티아고데콤포스텔라", lat:42.88, lng:-8.54, emoji:"⛪", color:"#8e44ad" },
   ],
   "Germany": [
     { name:"베를린", lat:52.52, lng:13.40, emoji:"🏛️", color:"#3498db" },
     { name:"뮌헨", lat:48.14, lng:11.58, emoji:"🍺", color:"#e74c3c" },
     { name:"함부르크", lat:53.55, lng:9.99, emoji:"⚓", color:"#2ecc71" },
     { name:"로텐부르크", lat:49.38, lng:10.18, emoji:"🏰", color:"#f39c12" },
+    { name:"프랑크푸르트", lat:50.11, lng:8.68, emoji:"🏦", color:"#9b59b6" },
+    { name:"쾰른", lat:50.93, lng:6.96, emoji:"⛪", color:"#e67e22" },
+    { name:"드레스덴", lat:51.05, lng:13.74, emoji:"🎭", color:"#8e44ad" },
+    { name:"하이델베르크", lat:49.40, lng:8.69, emoji:"🏰", color:"#16a085" },
+    { name:"퓌센", lat:47.57, lng:10.70, emoji:"🏰", color:"#c0392b" },
   ],
-  "Russia": [
-    { name:"모스크바", lat:55.75, lng:37.62, emoji:"🕌", color:"#e74c3c" },
-    { name:"상트페테르부르크", lat:59.95, lng:30.32, emoji:"🏛️", color:"#3498db" },
-    { name:"바이칼호", lat:53.50, lng:108.17, emoji:"🌊", color:"#2ecc71" },
+  "United Kingdom": [
+    { name:"런던", lat:51.51, lng:-0.13, emoji:"👑", color:"#7c3aed" },
+    { name:"에든버러", lat:55.95, lng:-3.19, emoji:"🏰", color:"#3498db" },
+    { name:"맨체스터", lat:53.48, lng:-2.24, emoji:"⚽", color:"#e74c3c" },
+    { name:"바스", lat:51.38, lng:-2.36, emoji:"🛁", color:"#2ecc71" },
+    { name:"옥스퍼드", lat:51.75, lng:-1.26, emoji:"📚", color:"#9b59b6" },
+    { name:"케임브리지", lat:52.20, lng:0.12, emoji:"🎓", color:"#e67e22" },
+    { name:"요크", lat:53.96, lng:-1.08, emoji:"🏛️", color:"#8e44ad" },
+    { name:"리버풀", lat:53.41, lng:-2.98, emoji:"🎸", color:"#16a085" },
+    { name:"코츠월즈", lat:51.83, lng:-1.80, emoji:"🌿", color:"#27ae60" },
+    { name:"글래스고", lat:55.86, lng:-4.25, emoji:"🏙️", color:"#2980b9" },
+  ],
+  "United States of America": [
+    { name:"뉴욕", lat:40.71, lng:-74.01, emoji:"🗽", color:"#3498db" },
+    { name:"로스앤젤레스", lat:34.05, lng:-118.24, emoji:"🎬", color:"#e74c3c" },
+    { name:"샌프란시스코", lat:37.77, lng:-122.42, emoji:"🌉", color:"#f39c12" },
+    { name:"라스베이거스", lat:36.17, lng:-115.14, emoji:"🎰", color:"#9b59b6" },
+    { name:"마이애미", lat:25.77, lng:-80.19, emoji:"🌴", color:"#2ecc71" },
+    { name:"시카고", lat:41.88, lng:-87.63, emoji:"🌆", color:"#8e44ad" },
+    { name:"워싱턴DC", lat:38.91, lng:-77.04, emoji:"🏛️", color:"#16a085" },
+    { name:"보스턴", lat:42.36, lng:-71.06, emoji:"🦞", color:"#c0392b" },
+    { name:"뉴올리언스", lat:29.95, lng:-90.07, emoji:"🎷", color:"#e67e22" },
+    { name:"시애틀", lat:47.61, lng:-122.33, emoji:"☕", color:"#2980b9" },
+    { name:"하와이", lat:21.31, lng:-157.85, emoji:"🌺", color:"#16a085" },
+    { name:"그랜드캐니언", lat:36.10, lng:-112.11, emoji:"🏜️", color:"#e67e22" },
+    { name:"옐로스톤", lat:44.43, lng:-110.59, emoji:"🌋", color:"#27ae60" },
+    { name:"샌디에이고", lat:32.72, lng:-117.16, emoji:"🌞", color:"#f39c12" },
+  ],
+  "Australia": [
+    { name:"시드니", lat:-33.87, lng:151.21, emoji:"🎭", color:"#1abc9c" },
+    { name:"멜버른", lat:-37.81, lng:144.96, emoji:"🏙️", color:"#3498db" },
+    { name:"케언즈", lat:-16.92, lng:145.77, emoji:"🐠", color:"#2ecc71" },
+    { name:"울루루", lat:-25.34, lng:131.04, emoji:"🪨", color:"#e67e22" },
+    { name:"브리즈번", lat:-27.47, lng:153.02, emoji:"☀️", color:"#e74c3c" },
+    { name:"퍼스", lat:-31.95, lng:115.86, emoji:"🌅", color:"#9b59b6" },
+    { name:"골드코스트", lat:-28.02, lng:153.43, emoji:"🏄", color:"#f39c12" },
+    { name:"그레이트배리어리프", lat:-18.29, lng:147.70, emoji:"🐠", color:"#16a085" },
+    { name:"태즈메이니아", lat:-41.46, lng:145.97, emoji:"🌿", color:"#27ae60" },
+  ],
+  "Thailand": [
+    { name:"방콕", lat:13.76, lng:100.50, emoji:"🛕", color:"#00bcd4" },
+    { name:"치앙마이", lat:18.79, lng:98.98, emoji:"🐘", color:"#2ecc71" },
+    { name:"푸켓", lat:7.89, lng:98.40, emoji:"🏖️", color:"#3498db" },
+    { name:"파타야", lat:12.93, lng:100.88, emoji:"🌊", color:"#e74c3c" },
+    { name:"코사무이", lat:9.51, lng:100.06, emoji:"🌴", color:"#f39c12" },
+    { name:"아유타야", lat:14.35, lng:100.56, emoji:"🏛️", color:"#9b59b6" },
+    { name:"크라비", lat:8.09, lng:98.91, emoji:"🏝️", color:"#16a085" },
+    { name:"코피피", lat:7.74, lng:98.77, emoji:"🐚", color:"#8e44ad" },
+  ],
+  "India": [
+    { name:"뭄바이", lat:19.08, lng:72.88, emoji:"🌆", color:"#b45309" },
+    { name:"뉴델리", lat:28.61, lng:77.21, emoji:"🕌", color:"#e74c3c" },
+    { name:"아그라", lat:27.18, lng:78.02, emoji:"🕌", color:"#f39c12" },
+    { name:"바라나시", lat:25.32, lng:83.01, emoji:"🙏", color:"#9b59b6" },
+    { name:"고아", lat:15.30, lng:74.09, emoji:"🏖️", color:"#2ecc71" },
+    { name:"자이푸르", lat:26.91, lng:75.79, emoji:"🏰", color:"#e67e22" },
+    { name:"우다이푸르", lat:24.57, lng:73.68, emoji:"🏯", color:"#8e44ad" },
+    { name:"콜카타", lat:22.57, lng:88.36, emoji:"🌸", color:"#16a085" },
+    { name:"케랄라", lat:10.85, lng:76.27, emoji:"🌴", color:"#27ae60" },
+    { name:"암리차르", lat:31.63, lng:74.87, emoji:"🛕", color:"#f39c12" },
+  ],
+  "United Arab Emirates": [
+    { name:"두바이", lat:25.20, lng:55.27, emoji:"🏗️", color:"#f39c12" },
+    { name:"아부다비", lat:24.47, lng:54.37, emoji:"🕌", color:"#3498db" },
+    { name:"샤르자", lat:25.35, lng:55.39, emoji:"🏺", color:"#2ecc71" },
+  ],
+  "Turkey": [
+    { name:"이스탄불", lat:41.01, lng:28.98, emoji:"🕌", color:"#b45309" },
+    { name:"카파도키아", lat:38.64, lng:34.83, emoji:"🎈", color:"#e74c3c" },
+    { name:"파묵칼레", lat:37.92, lng:29.12, emoji:"💎", color:"#3498db" },
+    { name:"안탈리아", lat:36.90, lng:30.70, emoji:"🌊", color:"#2ecc71" },
+    { name:"에페소", lat:37.94, lng:27.34, emoji:"🏛️", color:"#9b59b6" },
+    { name:"보드룸", lat:37.03, lng:27.43, emoji:"⛵", color:"#8e44ad" },
+    { name:"트라브존", lat:41.00, lng:39.72, emoji:"🌿", color:"#16a085" },
+  ],
+  "Greece": [
+    { name:"산토리니", lat:36.39, lng:25.46, emoji:"🏛️", color:"#1e40af" },
+    { name:"아테네", lat:37.98, lng:23.73, emoji:"🏛️", color:"#e74c3c" },
+    { name:"미코노스", lat:37.44, lng:25.33, emoji:"💃", color:"#3498db" },
+    { name:"크레타", lat:35.24, lng:25.02, emoji:"🌿", color:"#2ecc71" },
+    { name:"로도스", lat:36.43, lng:28.22, emoji:"🌹", color:"#f39c12" },
+    { name:"코르푸", lat:39.62, lng:19.92, emoji:"🏝️", color:"#9b59b6" },
+    { name:"메테오라", lat:39.72, lng:21.63, emoji:"🏔️", color:"#8e44ad" },
+  ],
+  "Egypt": [
+    { name:"카이로", lat:30.04, lng:31.24, emoji:"🔺", color:"#e67e22" },
+    { name:"룩소르", lat:25.69, lng:32.64, emoji:"🏺", color:"#f39c12" },
+    { name:"아스완", lat:24.09, lng:32.90, emoji:"⛵", color:"#e74c3c" },
+    { name:"알렉산드리아", lat:31.20, lng:29.92, emoji:"📚", color:"#3498db" },
+    { name:"후르가다", lat:27.26, lng:33.81, emoji:"🐠", color:"#16a085" },
+    { name:"샤름엘셰이크", lat:27.91, lng:34.33, emoji:"🏖️", color:"#2ecc71" },
+  ],
+  "Morocco": [
+    { name:"마라케시", lat:31.63, lng:-7.98, emoji:"🕌", color:"#e74c3c" },
+    { name:"페스", lat:34.03, lng:-5.00, emoji:"🏺", color:"#f39c12" },
+    { name:"카사블랑카", lat:33.59, lng:-7.62, emoji:"🌊", color:"#3498db" },
+    { name:"셰프샤우엔", lat:35.17, lng:-5.27, emoji:"💙", color:"#2980b9" },
+    { name:"에사우이라", lat:31.51, lng:-9.76, emoji:"⛵", color:"#2ecc71" },
+    { name:"메르주가", lat:31.08, lng:-4.01, emoji:"🏜️", color:"#e67e22" },
+  ],
+  "Vietnam": [
+    { name:"하노이", lat:21.03, lng:105.85, emoji:"🏮", color:"#be123c" },
+    { name:"호찌민시", lat:10.78, lng:106.70, emoji:"🛵", color:"#e74c3c" },
+    { name:"하롱베이", lat:20.91, lng:107.18, emoji:"⛵", color:"#3498db" },
+    { name:"호이안", lat:15.88, lng:108.34, emoji:"🏮", color:"#f39c12" },
+    { name:"다낭", lat:16.05, lng:108.22, emoji:"🌉", color:"#2ecc71" },
+    { name:"후에", lat:16.46, lng:107.60, emoji:"🏰", color:"#9b59b6" },
+    { name:"사파", lat:22.34, lng:103.84, emoji:"🌾", color:"#27ae60" },
+    { name:"푸꾸옥", lat:10.29, lng:103.98, emoji:"🌴", color:"#8e44ad" },
+    { name:"닌빈", lat:20.25, lng:105.97, emoji:"⛰️", color:"#16a085" },
+  ],
+  "Indonesia": [
+    { name:"발리", lat:-8.41, lng:115.19, emoji:"🌺", color:"#0e7490" },
+    { name:"자카르타", lat:-6.21, lng:106.85, emoji:"🏙️", color:"#3498db" },
+    { name:"족자카르타", lat:-7.80, lng:110.36, emoji:"🏛️", color:"#f39c12" },
+    { name:"코모도", lat:-8.55, lng:119.49, emoji:"🦎", color:"#2ecc71" },
+    { name:"롬복", lat:-8.57, lng:116.36, emoji:"🌋", color:"#e74c3c" },
+    { name:"보로부두르", lat:-7.61, lng:110.20, emoji:"🕌", color:"#e67e22" },
+    { name:"라자암팟", lat:-1.08, lng:130.87, emoji:"🐠", color:"#16a085" },
+  ],
+  "Malaysia": [
+    { name:"쿠알라룸푸르", lat:3.14, lng:101.69, emoji:"🏙️", color:"#3498db" },
+    { name:"페낭", lat:5.41, lng:100.33, emoji:"🍜", color:"#e74c3c" },
+    { name:"코타키나발루", lat:5.98, lng:116.07, emoji:"🏔️", color:"#2ecc71" },
+    { name:"랑카위", lat:6.35, lng:99.80, emoji:"🏝️", color:"#f39c12" },
+    { name:"말라카", lat:2.19, lng:102.25, emoji:"🏛️", color:"#9b59b6" },
+  ],
+  "Singapore": [
+    { name:"싱가포르", lat:1.35, lng:103.82, emoji:"🦁", color:"#991b1b" },
+  ],
+  "Cambodia": [
+    { name:"씨엠립", lat:13.36, lng:103.86, emoji:"🏛️", color:"#e74c3c" },
+    { name:"프놈펜", lat:11.56, lng:104.93, emoji:"🏙️", color:"#3498db" },
+    { name:"시아누크빌", lat:10.63, lng:103.50, emoji:"🏖️", color:"#2ecc71" },
+  ],
+  "Myanmar": [
+    { name:"양곤", lat:16.87, lng:96.19, emoji:"🛕", color:"#f39c12" },
+    { name:"바간", lat:21.17, lng:94.86, emoji:"🏯", color:"#e74c3c" },
+    { name:"만달레이", lat:21.97, lng:96.08, emoji:"🌉", color:"#9b59b6" },
+    { name:"인레호수", lat:20.53, lng:96.90, emoji:"🚣", color:"#3498db" },
+  ],
+  "Nepal": [
+    { name:"카트만두", lat:27.70, lng:85.32, emoji:"🕌", color:"#e74c3c" },
+    { name:"포카라", lat:28.21, lng:83.99, emoji:"🏔️", color:"#3498db" },
+    { name:"치트완", lat:27.52, lng:84.35, emoji:"🦏", color:"#2ecc71" },
+    { name:"룸비니", lat:27.48, lng:83.28, emoji:"🙏", color:"#f39c12" },
+  ],
+  "Sri Lanka": [
+    { name:"콜롬보", lat:6.93, lng:79.85, emoji:"🌿", color:"#2ecc71" },
+    { name:"캔디", lat:7.29, lng:80.63, emoji:"🐘", color:"#e74c3c" },
+    { name:"갈레", lat:6.03, lng:80.22, emoji:"🏰", color:"#3498db" },
+    { name:"시기리야", lat:7.96, lng:80.76, emoji:"🦁", color:"#f39c12" },
+    { name:"누와라엘리야", lat:6.97, lng:80.78, emoji:"🍵", color:"#9b59b6" },
+  ],
+  "Philippines": [
+    { name:"마닐라", lat:14.60, lng:120.98, emoji:"🏙️", color:"#e74c3c" },
+    { name:"팔라완", lat:9.84, lng:118.74, emoji:"🏝️", color:"#3498db" },
+    { name:"보라카이", lat:11.97, lng:121.92, emoji:"🌴", color:"#f39c12" },
+    { name:"세부", lat:10.32, lng:123.89, emoji:"🐬", color:"#2ecc71" },
+    { name:"시아르가오", lat:9.85, lng:126.05, emoji:"🏄", color:"#9b59b6" },
+  ],
+  "Portugal": [
+    { name:"리스본", lat:38.72, lng:-9.14, emoji:"🏙️", color:"#92400e" },
+    { name:"포르투", lat:41.15, lng:-8.61, emoji:"🍷", color:"#e74c3c" },
+    { name:"신트라", lat:38.80, lng:-9.39, emoji:"🏰", color:"#2ecc71" },
+    { name:"알가르브", lat:37.09, lng:-8.23, emoji:"🌊", color:"#3498db" },
+    { name:"코임브라", lat:40.20, lng:-8.41, emoji:"📚", color:"#e67e22" },
+    { name:"마데이라", lat:32.65, lng:-16.91, emoji:"🌺", color:"#8e44ad" },
+  ],
+  "Netherlands": [
+    { name:"암스테르담", lat:52.37, lng:4.90, emoji:"🚲", color:"#c2410c" },
+    { name:"로테르담", lat:51.92, lng:4.48, emoji:"🌉", color:"#3498db" },
+    { name:"헤이그", lat:52.08, lng:4.31, emoji:"⚖️", color:"#2ecc71" },
+    { name:"위트레흐트", lat:52.09, lng:5.12, emoji:"⛪", color:"#9b59b6" },
+    { name:"마스트리흐트", lat:50.85, lng:5.69, emoji:"🍷", color:"#8e44ad" },
+  ],
+  "Czechia": [
+    { name:"프라하", lat:50.08, lng:14.44, emoji:"🏰", color:"#065f46" },
+    { name:"체스키크룸로프", lat:48.81, lng:14.32, emoji:"🏯", color:"#e74c3c" },
+    { name:"브르노", lat:49.19, lng:16.61, emoji:"🏙️", color:"#3498db" },
+  ],
+  "Austria": [
+    { name:"빈", lat:48.21, lng:16.37, emoji:"🎵", color:"#5b21b6" },
+    { name:"잘츠부르크", lat:47.80, lng:13.04, emoji:"🎶", color:"#3498db" },
+    { name:"인스브루크", lat:47.27, lng:11.39, emoji:"⛷️", color:"#2ecc71" },
+    { name:"할슈타트", lat:47.56, lng:13.65, emoji:"🏔️", color:"#e74c3c" },
+    { name:"그라츠", lat:47.07, lng:15.44, emoji:"🏛️", color:"#f39c12" },
   ],
   "Switzerland": [
     { name:"취리히", lat:47.38, lng:8.54, emoji:"🏦", color:"#e74c3c" },
     { name:"제네바", lat:46.20, lng:6.15, emoji:"⌚", color:"#3498db" },
     { name:"인터라켄", lat:46.69, lng:7.86, emoji:"🏔️", color:"#2ecc71" },
     { name:"루체른", lat:47.05, lng:8.31, emoji:"🌉", color:"#9b59b6" },
-  ],
-  "Nepal": [
-    { name:"카트만두", lat:27.70, lng:85.32, emoji:"🕌", color:"#e74c3c" },
-    { name:"포카라", lat:28.21, lng:83.99, emoji:"🏔️", color:"#3498db" },
-  ],
-  "Cambodia": [
-    { name:"씨엠립", lat:13.36, lng:103.86, emoji:"🏛️", color:"#e74c3c" },
-    { name:"프놈펜", lat:11.56, lng:104.93, emoji:"🏙️", color:"#3498db" },
-  ],
-  "Sri Lanka": [
-    { name:"콜롬보", lat:6.93, lng:79.85, emoji:"🌿", color:"#2ecc71" },
-    { name:"캔디", lat:7.29, lng:80.63, emoji:"🐘", color:"#e74c3c" },
-  ],
-  "Tanzania": [
-    { name:"잔지바르", lat:-6.16, lng:39.20, emoji:"🏖️", color:"#3498db" },
-    { name:"세렝게티", lat:-2.33, lng:34.83, emoji:"🦁", color:"#2ecc71" },
-  ],
-  "Norway": [
-    { name:"오슬로", lat:59.91, lng:10.75, emoji:"🏙️", color:"#3498db" },
-    { name:"베르겐", lat:60.39, lng:5.32, emoji:"⛵", color:"#2ecc71" },
-    { name:"플롬", lat:60.86, lng:7.11, emoji:"🌊", color:"#e74c3c" },
+    { name:"체르마트", lat:46.02, lng:7.75, emoji:"⛷️", color:"#e67e22" },
+    { name:"베른", lat:46.95, lng:7.44, emoji:"🐻", color:"#8e44ad" },
   ],
   "Hungary": [
     { name:"부다페스트", lat:47.50, lng:19.04, emoji:"🏰", color:"#e74c3c" },
+    { name:"에게르", lat:47.90, lng:20.38, emoji:"🍷", color:"#9b59b6" },
   ],
   "Croatia": [
     { name:"두브로브니크", lat:42.65, lng:18.09, emoji:"🌊", color:"#3498db" },
     { name:"자그레브", lat:45.81, lng:15.98, emoji:"🏙️", color:"#e74c3c" },
     { name:"플리트비체", lat:44.88, lng:15.62, emoji:"💧", color:"#2ecc71" },
+    { name:"스플리트", lat:43.51, lng:16.44, emoji:"🏛️", color:"#f39c12" },
+    { name:"흐바르", lat:43.17, lng:16.44, emoji:"🌞", color:"#9b59b6" },
   ],
-  "Malaysia": [
-    { name:"쿠알라룸푸르", lat:3.14, lng:101.69, emoji:"🏙️", color:"#3498db" },
-    { name:"페낭", lat:5.41, lng:100.33, emoji:"🍜", color:"#e74c3c" },
-    { name:"코타키나발루", lat:5.98, lng:116.07, emoji:"🏔️", color:"#2ecc71" },
+  "Norway": [
+    { name:"오슬로", lat:59.91, lng:10.75, emoji:"🏙️", color:"#3498db" },
+    { name:"베르겐", lat:60.39, lng:5.32, emoji:"⛵", color:"#2ecc71" },
+    { name:"플롬", lat:60.86, lng:7.11, emoji:"🌊", color:"#e74c3c" },
+    { name:"트롬쇠", lat:69.65, lng:18.96, emoji:"🌌", color:"#9b59b6" },
+    { name:"로포텐", lat:68.23, lng:13.99, emoji:"🎣", color:"#8e44ad" },
+    { name:"게이랑에르", lat:62.10, lng:7.21, emoji:"🏔️", color:"#16a085" },
+  ],
+  "Sweden": [
+    { name:"스톡홀름", lat:59.33, lng:18.07, emoji:"👑", color:"#2980b9" },
+    { name:"예테보리", lat:57.71, lng:11.97, emoji:"🚢", color:"#e74c3c" },
+    { name:"말뫼", lat:55.60, lng:13.00, emoji:"🌉", color:"#2ecc71" },
+    { name:"아비스코", lat:68.35, lng:18.83, emoji:"🌌", color:"#9b59b6" },
+  ],
+  "Denmark": [
+    { name:"코펜하겐", lat:55.68, lng:12.57, emoji:"🧜", color:"#3498db" },
+    { name:"오르후스", lat:56.15, lng:10.21, emoji:"🎨", color:"#2ecc71" },
+    { name:"오덴세", lat:55.40, lng:10.38, emoji:"📖", color:"#e74c3c" },
+  ],
+  "Finland": [
+    { name:"헬싱키", lat:60.17, lng:24.94, emoji:"🏛️", color:"#2980b9" },
+    { name:"로바니에미", lat:66.50, lng:25.72, emoji:"🎅", color:"#3498db" },
+    { name:"탐페레", lat:61.50, lng:23.77, emoji:"🏭", color:"#e74c3c" },
+  ],
+  "Iceland": [
+    { name:"레이캬비크", lat:64.13, lng:-21.82, emoji:"🌋", color:"#1e3a8a" },
+    { name:"아퀴레이리", lat:65.68, lng:-18.10, emoji:"❄️", color:"#3498db" },
+    { name:"블루라군", lat:63.88, lng:-22.45, emoji:"💙", color:"#2ecc71" },
+    { name:"요쿨살론", lat:64.05, lng:-16.18, emoji:"🧊", color:"#9b59b6" },
+    { name:"골든서클", lat:64.31, lng:-20.12, emoji:"♨️", color:"#e74c3c" },
+  ],
+  "Poland": [
+    { name:"크라쿠프", lat:50.06, lng:19.94, emoji:"🏰", color:"#e74c3c" },
+    { name:"바르샤바", lat:52.23, lng:21.01, emoji:"🏙️", color:"#3498db" },
+    { name:"브로츠와프", lat:51.11, lng:17.04, emoji:"🌉", color:"#2ecc71" },
+    { name:"그단스크", lat:54.35, lng:18.65, emoji:"⚓", color:"#f39c12" },
+    { name:"자코파네", lat:49.30, lng:19.95, emoji:"⛷️", color:"#9b59b6" },
+  ],
+  "Russia": [
+    { name:"모스크바", lat:55.75, lng:37.62, emoji:"🕌", color:"#e74c3c" },
+    { name:"상트페테르부르크", lat:59.95, lng:30.32, emoji:"🏛️", color:"#3498db" },
+    { name:"바이칼호", lat:53.50, lng:108.17, emoji:"🌊", color:"#2ecc71" },
+    { name:"소치", lat:43.60, lng:39.73, emoji:"🏖️", color:"#f39c12" },
+    { name:"블라디보스토크", lat:43.12, lng:131.89, emoji:"⚓", color:"#9b59b6" },
+  ],
+  "South Africa": [
+    { name:"케이프타운", lat:-33.92, lng:18.42, emoji:"🏔️", color:"#2ecc71" },
+    { name:"요하네스버그", lat:-26.20, lng:28.04, emoji:"🏙️", color:"#3498db" },
+    { name:"더반", lat:-29.86, lng:31.02, emoji:"🌊", color:"#e74c3c" },
+    { name:"크루거국립공원", lat:-23.99, lng:31.55, emoji:"🦁", color:"#f39c12" },
+    { name:"드라켄즈버그", lat:-29.30, lng:29.42, emoji:"🏔️", color:"#16a085" },
+  ],
+  "Kenya": [
+    { name:"나이로비", lat:-1.29, lng:36.82, emoji:"🦁", color:"#14532d" },
+    { name:"마사이마라", lat:-1.49, lng:35.15, emoji:"🐘", color:"#2ecc71" },
+    { name:"몸바사", lat:-4.05, lng:39.67, emoji:"🌊", color:"#3498db" },
+    { name:"암보셀리", lat:-2.65, lng:37.26, emoji:"🐘", color:"#e67e22" },
+    { name:"라무", lat:-2.27, lng:40.90, emoji:"⛵", color:"#f39c12" },
+  ],
+  "Tanzania": [
+    { name:"잔지바르", lat:-6.16, lng:39.20, emoji:"🏖️", color:"#3498db" },
+    { name:"세렝게티", lat:-2.33, lng:34.83, emoji:"🦁", color:"#2ecc71" },
+    { name:"킬리만자로", lat:-3.07, lng:37.35, emoji:"🏔️", color:"#e74c3c" },
+    { name:"응고롱고로", lat:-3.26, lng:35.52, emoji:"🦏", color:"#9b59b6" },
+  ],
+  "Jordan": [
+    { name:"페트라", lat:30.33, lng:35.44, emoji:"🏺", color:"#b45309" },
+    { name:"암만", lat:31.95, lng:35.93, emoji:"🕌", color:"#3498db" },
+    { name:"와디럼", lat:29.58, lng:35.42, emoji:"🏜️", color:"#e67e22" },
+    { name:"아카바", lat:29.53, lng:35.01, emoji:"🤿", color:"#2ecc71" },
+  ],
+  "Israel": [
+    { name:"예루살렘", lat:31.77, lng:35.22, emoji:"✡️", color:"#3498db" },
+    { name:"텔아비브", lat:32.09, lng:34.79, emoji:"🌆", color:"#e74c3c" },
+    { name:"마사다", lat:31.32, lng:35.35, emoji:"🏔️", color:"#f39c12" },
+    { name:"사해", lat:31.56, lng:35.47, emoji:"🌊", color:"#9b59b6" },
+  ],
+  "Canada": [
+    { name:"밴쿠버", lat:49.28, lng:-123.12, emoji:"🏔️", color:"#9f1239" },
+    { name:"토론토", lat:43.65, lng:-79.38, emoji:"🏙️", color:"#3498db" },
+    { name:"퀘벡시티", lat:46.81, lng:-71.21, emoji:"🏰", color:"#2ecc71" },
+    { name:"밴프", lat:51.18, lng:-115.57, emoji:"🏞️", color:"#e67e22" },
+    { name:"몬트리올", lat:45.50, lng:-73.57, emoji:"🎭", color:"#9b59b6" },
+    { name:"오타와", lat:45.42, lng:-75.70, emoji:"🏛️", color:"#16a085" },
+    { name:"나이아가라폴스", lat:43.09, lng:-79.07, emoji:"💧", color:"#c0392b" },
+    { name:"빅토리아", lat:48.43, lng:-123.37, emoji:"🌸", color:"#27ae60" },
+  ],
+  "Cuba": [
+    { name:"하바나", lat:23.11, lng:-82.37, emoji:"🚗", color:"#7c2d12" },
+    { name:"트리니다드", lat:21.80, lng:-79.98, emoji:"🎵", color:"#e74c3c" },
+    { name:"바라데로", lat:23.15, lng:-81.24, emoji:"🏖️", color:"#3498db" },
+    { name:"비냘레스", lat:22.62, lng:-83.71, emoji:"🌿", color:"#2ecc71" },
+  ],
+  "Argentina": [
+    { name:"부에노스아이레스", lat:-34.60, lng:-58.38, emoji:"💃", color:"#0369a1" },
+    { name:"파타고니아", lat:-41.83, lng:-68.91, emoji:"🏔️", color:"#2ecc71" },
+    { name:"이과수", lat:-25.69, lng:-54.44, emoji:"💧", color:"#3498db" },
+    { name:"멘도사", lat:-32.89, lng:-68.83, emoji:"🍷", color:"#9b59b6" },
+    { name:"우수아이아", lat:-54.80, lng:-68.30, emoji:"🌎", color:"#16a085" },
+    { name:"살타", lat:-24.79, lng:-65.41, emoji:"🌄", color:"#e67e22" },
+  ],
+  "Brazil": [
+    { name:"리우데자네이루", lat:-22.91, lng:-43.17, emoji:"🏖️", color:"#27ae60" },
+    { name:"상파울루", lat:-23.55, lng:-46.63, emoji:"🏙️", color:"#3498db" },
+    { name:"마나우스", lat:-3.10, lng:-60.02, emoji:"🌿", color:"#2ecc71" },
+    { name:"포스두이과수", lat:-25.52, lng:-54.59, emoji:"💧", color:"#00bcd4" },
+    { name:"살바도르", lat:-12.97, lng:-38.50, emoji:"🎭", color:"#e74c3c" },
+    { name:"브라질리아", lat:-15.78, lng:-47.93, emoji:"🏛️", color:"#9b59b6" },
+    { name:"포르탈레자", lat:-3.72, lng:-38.54, emoji:"🏖️", color:"#f39c12" },
+  ],
+  "Mexico": [
+    { name:"멕시코시티", lat:19.43, lng:-99.13, emoji:"🏛️", color:"#166534" },
+    { name:"칸쿤", lat:21.16, lng:-86.85, emoji:"🏖️", color:"#3498db" },
+    { name:"과달라하라", lat:20.66, lng:-103.35, emoji:"🌮", color:"#e74c3c" },
+    { name:"오악사카", lat:17.07, lng:-96.72, emoji:"🎨", color:"#9b59b6" },
+    { name:"툴룸", lat:20.21, lng:-87.46, emoji:"🌴", color:"#f39c12" },
+    { name:"과나후아토", lat:21.02, lng:-101.26, emoji:"🎭", color:"#e67e22" },
+    { name:"치첸이트사", lat:20.68, lng:-88.57, emoji:"🏛️", color:"#8e44ad" },
+  ],
+  "Colombia": [
+    { name:"보고타", lat:4.71, lng:-74.07, emoji:"🏙️", color:"#f39c12" },
+    { name:"카르타헤나", lat:10.40, lng:-75.51, emoji:"🏰", color:"#e74c3c" },
+    { name:"메데인", lat:6.25, lng:-75.56, emoji:"🌸", color:"#2ecc71" },
+    { name:"살렌토", lat:4.63, lng:-75.57, emoji:"☕", color:"#9b59b6" },
+  ],
+  "Peru": [
+    { name:"마추픽추", lat:-13.16, lng:-72.55, emoji:"🏔️", color:"#15803d" },
+    { name:"쿠스코", lat:-13.53, lng:-71.97, emoji:"🏛️", color:"#78350f" },
+    { name:"리마", lat:-12.05, lng:-77.04, emoji:"🏙️", color:"#3498db" },
+    { name:"나스카", lat:-14.74, lng:-75.13, emoji:"🌀", color:"#e67e22" },
+    { name:"티티카카호수", lat:-15.84, lng:-69.33, emoji:"🚣", color:"#2ecc71" },
+    { name:"아레키파", lat:-16.41, lng:-71.54, emoji:"🌋", color:"#9b59b6" },
+  ],
+  "Chile": [
+    { name:"산티아고", lat:-33.45, lng:-70.67, emoji:"🏙️", color:"#e74c3c" },
+    { name:"발파라이소", lat:-33.05, lng:-71.62, emoji:"🎨", color:"#3498db" },
+    { name:"아타카마", lat:-22.91, lng:-68.20, emoji:"🏜️", color:"#e67e22" },
+    { name:"토레스델파이네", lat:-50.94, lng:-73.41, emoji:"🏔️", color:"#2ecc71" },
+    { name:"이스터섬", lat:-27.11, lng:-109.35, emoji:"🗿", color:"#8e44ad" },
+  ],
+  "New Zealand": [
+    { name:"퀸스타운", lat:-45.03, lng:168.66, emoji:"🏔️", color:"#065f46" },
+    { name:"오클랜드", lat:-36.85, lng:174.76, emoji:"🌉", color:"#3498db" },
+    { name:"로토루아", lat:-38.14, lng:176.25, emoji:"♨️", color:"#e74c3c" },
+    { name:"웰링턴", lat:-41.29, lng:174.78, emoji:"🎭", color:"#9b59b6" },
+    { name:"밀포드사운드", lat:-44.67, lng:167.93, emoji:"🏔️", color:"#f39c12" },
+    { name:"호비튼", lat:-37.86, lng:175.68, emoji:"🧙", color:"#8e44ad" },
+  ],
+  "Saudi Arabia": [
+    { name:"리야드", lat:24.69, lng:46.72, emoji:"🕌", color:"#2ecc71" },
+    { name:"제다", lat:21.49, lng:39.19, emoji:"🌊", color:"#3498db" },
+    { name:"알울라", lat:26.62, lng:37.92, emoji:"🏔️", color:"#e67e22" },
+    { name:"메카", lat:21.39, lng:39.86, emoji:"🕋", color:"#f39c12" },
+  ],
+  "Iran": [
+    { name:"테헤란", lat:35.69, lng:51.39, emoji:"🏙️", color:"#e74c3c" },
+    { name:"이스파한", lat:32.66, lng:51.68, emoji:"🕌", color:"#3498db" },
+    { name:"시라즈", lat:29.59, lng:52.58, emoji:"🌹", color:"#2ecc71" },
+    { name:"페르세폴리스", lat:29.93, lng:52.89, emoji:"🏛️", color:"#f39c12" },
+  ],
+  "Uzbekistan": [
+    { name:"사마르칸트", lat:39.65, lng:66.96, emoji:"🕌", color:"#e74c3c" },
+    { name:"부하라", lat:39.77, lng:64.43, emoji:"🏺", color:"#f39c12" },
+    { name:"히바", lat:41.38, lng:60.36, emoji:"🏯", color:"#3498db" },
+    { name:"타슈켄트", lat:41.30, lng:69.24, emoji:"🏙️", color:"#2ecc71" },
+  ],
+  "Ethiopia": [
+    { name:"아디스아바바", lat:9.03, lng:38.74, emoji:"🏙️", color:"#2ecc71" },
+    { name:"랄리벨라", lat:12.03, lng:39.04, emoji:"⛪", color:"#e74c3c" },
+    { name:"악숨", lat:14.13, lng:38.73, emoji:"🏛️", color:"#f39c12" },
+    { name:"다나킬사막", lat:14.24, lng:40.30, emoji:"🌋", color:"#e67e22" },
+  ],
+  "Ghana": [
+    { name:"아크라", lat:5.56, lng:-0.20, emoji:"🏙️", color:"#f39c12" },
+    { name:"케이프코스트", lat:5.10, lng:-1.25, emoji:"🏰", color:"#3498db" },
+    { name:"쿠마시", lat:6.69, lng:-1.62, emoji:"👑", color:"#2ecc71" },
   ],
 }
+
 
 // 국가명 한국어 매핑
 const COUNTRY_KO = {
@@ -761,61 +994,53 @@ function App() {
 
   const fetchCityData = async (city) => {
     try {
-      // 1단계: 사전 데이터 있으면 즉시 표시
+      // 사전 데이터 있으면 즉시 표시 후 날씨만 업데이트
       if (CITY_DATA[city.name]) {
         const base = { ...CITY_DATA[city.name] }
-        // weather 없으면 기본값 추가
         if (!base.weather) base.weather = { temp: '—', condition: '날씨 로딩 중', icon: '🌤️', humidity: '—' }
         setCityData(base)
         setLoading(false)
-        // 날씨만 백그라운드로 업데이트
         fetchWeather(city.lat, city.lng).then(w => {
           if (w) setCityData(prev => prev ? { ...prev, weather: w } : prev)
         }).catch(() => {})
         return
       }
 
-      // 2단계: 사전 데이터 없으면 즉시 로딩 화면 표시
+      // AI로 데이터 생성
       setLoading(true)
-      setCityData(makeInstantData(city))
 
-      // 3단계: AI + 날씨 병렬로 백그라운드 로딩
-      const [aiResult, weatherResult] = await Promise.allSettled([
-        fetchAIWithSearch(city),
-        fetchWeather(city.lat, city.lng)
-      ])
+      // 날씨 먼저 가져오기
+      const weather = await fetchWeather(city.lat, city.lng).catch(() => null)
+        || { temp: '—', condition: '—', icon: '🌤️', humidity: '—' }
 
-      const weather = (weatherResult.status === 'fulfilled' && weatherResult.value)
-        ? weatherResult.value
-        : { temp: 22, condition: '맑음', icon: '☀️', humidity: 55 }
+      // AI 호출 (최대 2번 시도)
+      let aiData = null
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        aiData = await fetchAIWithSearch(city)
+        if (aiData?.spots?.length >= 2) break
+        if (attempt === 1) await new Promise(r => setTimeout(r, 1000)) // 1초 대기 후 재시도
+      }
 
-      if (aiResult.status === 'fulfilled' && aiResult.value?.spots?.length >= 2) {
-        setCityData({ ...aiResult.value, weather })
+      if (aiData?.spots?.length >= 2) {
+        setCityData({ ...aiData, weather })
       } else {
-        // AI 실패해도 도시별 기본 데이터로 대체 (절대 흰 화면 없음)
+        // AI 2번 모두 실패 - 재시도 버튼 보여주기
         setCityData({
           weather,
-          description: `${city.name}은(는) 풍부한 역사와 문화, 아름다운 자연을 간직한 매력적인 여행지입니다.`,
-          spots: [
-            { name:`${city.name} 역사 지구`, type:'역사', desc:`${city.name}의 오랜 역사가 살아 숨쉬는 구시가지로 전통 건축물과 문화재가 가득합니다. 골목골목마다 이 도시만의 이야기가 담겨 있습니다.`, img:'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400&q=80', rating:4.5 },
-            { name:`${city.name} 국립 박물관`, type:'문화', desc:`${city.name}과 이 지역의 역사, 예술, 문화를 집대성한 박물관입니다. 지역 문명의 정수를 한자리에서 만날 수 있습니다.`, img:'https://images.unsplash.com/photo-1566127992631-137a642a90f4?w=400&q=80', rating:4.4 },
-            { name:`${city.name} 자연 공원`, type:'자연', desc:`도시 근교의 아름다운 자연 공원으로 현지인들이 즐겨 찾는 휴식 공간입니다. 계절마다 다른 풍경을 선사합니다.`, img:'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80', rating:4.3 },
-            { name:`${city.name} 전통 시장`, type:'음식', desc:`현지 특산물과 전통 음식이 가득한 활기찬 재래시장입니다. 이 도시만의 독특한 식문화를 경험할 수 있습니다.`, img:'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=80', rating:4.4 },
-          ]
+          description: `${city.name} 정보를 불러오지 못했습니다. 아래 버튼으로 다시 시도해보세요.`,
+          spots: [],
+          loadFailed: true,
+          city,
         })
       }
     } catch(e) {
       console.error('fetchCityData error:', e)
-      // 최후의 보루 - 절대 크래시 없이 기본 데이터 표시
       setCityData({
-        weather: { temp: 22, condition: '맑음', icon: '☀️', humidity: 55 },
-        description: `${city.name}은(는) 매력적인 여행지입니다.`,
-        spots: [
-          { name:`${city.name} 대표 명소`, type:'랜드마크', desc:'이 도시의 대표적인 관광 명소입니다.', img:'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80', rating:4.5 },
-          { name:`${city.name} 문화 센터`, type:'문화', desc:'지역 문화와 예술을 즐길 수 있는 공간입니다.', img:'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400&q=80', rating:4.3 },
-          { name:`${city.name} 자연 명소`, type:'자연', desc:'아름다운 자연 풍경을 감상할 수 있는 곳입니다.', img:'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80', rating:4.4 },
-          { name:`${city.name} 맛집 거리`, type:'음식', desc:'현지 음식과 문화를 동시에 즐길 수 있는 거리입니다.', img:'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=80', rating:4.2 },
-        ]
+        weather: { temp: '—', condition: '—', icon: '🌤️', humidity: '—' },
+        description: `${city.name} 정보를 불러오지 못했습니다.`,
+        spots: [],
+        loadFailed: true,
+        city,
       })
     } finally {
       setLoading(false)
@@ -854,7 +1079,7 @@ function App() {
     const cityName = city.name || ''
     if (!cityName) return null
     try {
-      const prompt = `${countryKoName} ${cityName}의 실제 유명 관광지 4곳 정보를 JSON으로만 반환하세요. 마크다운 없이 순수 JSON만:
+      const prompt = `${countryKoName} ${cityName}의 실제 유명 관광지 정보를 JSON으로만 반환하세요. 마크다운 없이 순수 JSON만:
 {
   "description": "${cityName}의 특징 2문장",
   "spots": [
@@ -865,15 +1090,18 @@ function App() {
       "desc": "이 관광지의 구체적인 특징 2문장",
       "rating": 4.7,
       "openTime": "09:00~18:00",
-      "price": "무료"
+      "price": "무료",
+      "website": "https://공식홈페이지주소"
     }
   ]
 }
 조건:
-- ${cityName}에 실제 존재하는 관광지 4개
+- ${cityName}에 실제 존재하는 관광지를 최대한 많이 포함 (최소 4개, 많으면 8~10개도 가능)
+- 관광지가 많은 도시는 더 많이, 적은 도시는 있는 만큼만
 - wikiTitle: 영어 Wikipedia 문서 제목 (예: "Eiffel Tower", "Gyeongbokgung Palace")
 - type: 문화/자연/랜드마크/도시/역사/음식 중 하나
-- openTime, price: 실제 정보 기입`
+- openTime, price: 실제 정보 기입
+- website: 공식 홈페이지 URL (없으면 null)`
 
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -942,49 +1170,77 @@ function App() {
       {/* Globe */}
       <div ref={globeContainerRef} style={{position:'absolute',inset:0,zIndex:0}}/>
 
-      {/* ── React overlay city pins ── */}
-      {cityScreenCoords.filter(c => c.visible && c.sx > 0 && c.sy > 0).map((city, i) => (
-        <div key={i}
-          onClick={() => handleCityClick(city)}
-          style={{
-            position:'absolute',
-            left: city.sx,
-            top: city.sy,
-            transform:'translate(-50%, -100%)',
-            zIndex: 500,
-            cursor:'pointer',
-            display:'flex',
-            flexDirection:'column',
-            alignItems:'center',
-            transition:'transform 0.15s',
-            pointerEvents:'all',
-          }}
-          onMouseEnter={e => e.currentTarget.style.transform='translate(-50%,-100%) scale(1.15)'}
-          onMouseLeave={e => e.currentTarget.style.transform='translate(-50%,-100%) scale(1)'}
-        >
-          <div style={{
-            background:'rgba(255,255,255,0.97)',
-            backdropFilter:'blur(8px)',
-            borderRadius:20,
-            padding:'5px 13px',
-            boxShadow:'0 4px 18px rgba(0,0,0,0.5)',
-            border:`2px solid ${city.color}`,
-            whiteSpace:'nowrap',
-            fontFamily:'Pretendard,Inter,sans-serif',
-            fontSize:13,
-            fontWeight:700,
-            color:'#0f172a',
-            letterSpacing:'-0.3px',
-          }}>{city.name}</div>
-          <div style={{width:2,height:8,background:city.color}}/>
-          <div style={{
-            width:11,height:11,borderRadius:'50%',
-            background:city.color,
-            border:'2.5px solid white',
-            boxShadow:`0 0 10px ${city.color}`,
-          }}/>
-        </div>
-      ))}
+      {/* ── React overlay city pins (겹침 방지) ── */}
+      {(() => {
+        const visible = cityScreenCoords.filter(c => c.visible && c.sx > 0 && c.sy > 0)
+        const PIN_W = 90   // 핀 라벨 너비 추정
+        const PIN_H = 36   // 핀 라벨 높이 추정
+        const PADDING = 6  // 핀 간격
+
+        // 겹침 방지: 이미 배치된 핀과 겹치면 위/아래로 밀어내기
+        const placed = []
+        const adjusted = visible.map(city => {
+          let ax = city.sx
+          let ay = city.sy
+          let tries = 0
+          while (tries < 20) {
+            const overlap = placed.find(p =>
+              Math.abs(p.ax - ax) < PIN_W + PADDING &&
+              Math.abs(p.ay - ay) < PIN_H + PADDING
+            )
+            if (!overlap) break
+            // 겹치면 위쪽으로 올리거나 옆으로 밀기
+            if (tries % 2 === 0) ay -= PIN_H + PADDING
+            else ax += (ax > overlap.ax ? 1 : -1) * (PIN_W / 2 + PADDING)
+            tries++
+          }
+          placed.push({ ax, ay })
+          return { ...city, ax, ay }
+        })
+
+        return adjusted.map((city, i) => (
+          <div key={i}
+            onClick={() => handleCityClick(city)}
+            style={{
+              position:'absolute',
+              left: city.ax,
+              top: city.ay,
+              transform:'translate(-50%, -100%)',
+              zIndex: 500,
+              cursor:'pointer',
+              display:'flex',
+              flexDirection:'column',
+              alignItems:'center',
+              transition:'transform 0.15s',
+              pointerEvents:'all',
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform='translate(-50%,-100%) scale(1.12)'}
+            onMouseLeave={e => e.currentTarget.style.transform='translate(-50%,-100%) scale(1)'}
+          >
+            <div style={{
+              background:'rgba(255,255,255,0.97)',
+              backdropFilter:'blur(8px)',
+              borderRadius:20,
+              padding:'4px 11px',
+              boxShadow:'0 3px 14px rgba(0,0,0,0.45)',
+              border:`2px solid ${city.color}`,
+              whiteSpace:'nowrap',
+              fontFamily:'Pretendard,Inter,sans-serif',
+              fontSize:12,
+              fontWeight:700,
+              color:'#0f172a',
+              letterSpacing:'-0.3px',
+            }}>{city.name}</div>
+            <div style={{width:2,height:6,background:city.color}}/>
+            <div style={{
+              width:9,height:9,borderRadius:'50%',
+              background:city.color,
+              border:'2px solid white',
+              boxShadow:`0 0 8px ${city.color}`,
+            }}/>
+          </div>
+        ))
+      })()}
 
       {/* Header */}
       <div style={{
@@ -1097,68 +1353,105 @@ function App() {
           <div style={{padding:'0 20px 40px'}}>
             {cityData ? (
               <>
-                {/* AI 로딩 중 배너 */}
                 {loading && (
                   <div style={{display:'flex',alignItems:'center',gap:8,background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,padding:'10px 14px',marginBottom:14}}>
                     <div style={{width:16,height:16,borderRadius:'50%',border:'2px solid #bae6fd',borderTopColor:'#0ea5e9',animation:'spin .7s linear infinite',flexShrink:0}}/>
-                    <span style={{fontSize:12,color:'#0369a1',fontWeight:600}}>AI가 최신 관광 정보를 검색 중입니다...</span>
+                    <span style={{fontSize:12,color:'#0369a1',fontWeight:600}}>AI가 관광 정보를 검색 중입니다...</span>
                   </div>
                 )}
-                <p style={{fontSize:13.5,color:'#475569',lineHeight:1.8,margin:'0 0 20px',borderLeft:`3px solid ${selectedCity.color}`,paddingLeft:14}}>
-                  {cityData.description}
-                </p>
-                <div style={{fontSize:10,color:'#94a3b8',letterSpacing:'2.5px',textTransform:'uppercase',marginBottom:12}}>
-                  추천 관광지 · {cityData.spots?.length}곳
-                </div>
-                <div style={{display:'flex',flexDirection:'column',gap:11}}>
-                  {cityData.spots?.map((spot,i)=>(
-                    <div key={i} className="card"
-                      onClick={()=>setSelectedSpot(selectedSpot?.name===spot.name?null:spot)}
-                      style={{borderRadius:14,overflow:'hidden',background:'white',border:`1.5px solid ${selectedSpot?.name===spot.name?selectedCity.color:'#e2e8f0'}`,boxShadow:'0 2px 8px rgba(0,0,0,.06)',opacity:loading?0.6:1,transition:'opacity 0.3s'}}>
-                      <div style={{height:142,overflow:'hidden',position:'relative'}}>
-                        <SpotImage
-                          className="cimg"
-                          wikiTitle={spot.wikiTitle || spot.name}
-                          alt={spot.name}
-                          fallback={spot.img || 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80'}
-                          style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
-                        />
-                        <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 55%)'}}/>
-                        <div style={{position:'absolute',bottom:10,left:12,right:12,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
-                          <div>
-                            <div style={{fontSize:13.5,fontWeight:700,color:'white',textShadow:'0 1px 4px rgba(0,0,0,.6)'}}>{spot.name}</div>
-                            <div style={{display:'inline-block',fontSize:10,padding:'2px 9px',borderRadius:20,background:TYPE_COLORS[spot.type]||'#64748b',color:'white',marginTop:4,fontWeight:700}}>{spot.type}</div>
-                          </div>
-                          {spot.rating > 0 && <div style={{fontSize:13,color:'#fbbf24',fontWeight:700}}>★ {spot.rating}</div>}
+
+                {/* AI 실패 시 재시도 버튼 */}
+                {cityData.loadFailed ? (
+                  <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:280,gap:16,textAlign:'center'}}>
+                    <div style={{fontSize:40}}>🔄</div>
+                    <div style={{fontSize:14,color:'#64748b',lineHeight:1.6}}>관광 정보를 불러오지 못했어요.<br/>다시 시도해볼게요!</div>
+                    <button
+                      onClick={() => { setCityData(null); setLoading(true); fetchCityData(cityData.city || selectedCity) }}
+                      style={{background:'#3b82f6',color:'white',border:'none',borderRadius:12,padding:'12px 28px',cursor:'pointer',fontSize:14,fontWeight:700,boxShadow:'0 4px 12px rgba(59,130,246,0.4)'}}>
+                      다시 불러오기
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <p style={{fontSize:13.5,color:'#475569',lineHeight:1.8,margin:'0 0 20px',borderLeft:`3px solid ${selectedCity?.color||'#3b82f6'}`,paddingLeft:14}}>
+                      {cityData.description}
+                    </p>
+                    {cityData.spots?.length > 0 && (
+                      <>
+                        <div style={{fontSize:10,color:'#94a3b8',letterSpacing:'2.5px',textTransform:'uppercase',marginBottom:12}}>
+                          추천 관광지 · {cityData.spots.length}곳
                         </div>
-                      </div>
-                      {selectedSpot?.name===spot.name && (
-                        <div style={{padding:'12px 14px',borderTop:`1px solid ${selectedCity.color}22`,background:`${selectedCity.color}07`}}>
-                          <p style={{fontSize:12.5,color:'#475569',lineHeight:1.75,marginBottom: (spot.openTime||spot.price)?10:0}}>{spot.desc}</p>
-                          {(spot.openTime || spot.price) && (
-                            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                              {spot.openTime && (
-                                <div style={{display:'flex',alignItems:'center',gap:4,background:'white',borderRadius:8,padding:'4px 10px',fontSize:11,color:'#475569',border:'1px solid #e2e8f0'}}>
-                                  🕐 {spot.openTime}
+                        <div style={{display:'flex',flexDirection:'column',gap:11}}>
+                          {cityData.spots.map((spot,i)=>(
+                            <div key={i} className="card"
+                              onClick={()=>setSelectedSpot(selectedSpot?.name===spot.name?null:spot)}
+                              style={{borderRadius:14,overflow:'hidden',background:'white',border:`1.5px solid ${selectedSpot?.name===spot.name?(selectedCity?.color||'#3b82f6'):'#e2e8f0'}`,boxShadow:'0 2px 8px rgba(0,0,0,.06)'}}>
+                              <div style={{height:142,overflow:'hidden',position:'relative'}}>
+                                <SpotImage
+                                  className="cimg"
+                                  wikiTitle={spot.wikiTitle || spot.name}
+                                  alt={spot.name}
+                                  fallback={spot.img || 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80'}
+                                  style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
+                                />
+                                <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 55%)'}}/>
+                                <div style={{position:'absolute',bottom:10,left:12,right:12,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
+                                  <div>
+                                    <div style={{fontSize:13.5,fontWeight:700,color:'white',textShadow:'0 1px 4px rgba(0,0,0,.6)'}}>{spot.name}</div>
+                                    <div style={{display:'inline-block',fontSize:10,padding:'2px 9px',borderRadius:20,background:TYPE_COLORS[spot.type]||'#64748b',color:'white',marginTop:4,fontWeight:700}}>{spot.type}</div>
+                                  </div>
+                                  {spot.rating > 0 && <div style={{fontSize:13,color:'#fbbf24',fontWeight:700}}>★ {spot.rating}</div>}
                                 </div>
-                              )}
-                              {spot.price && (
-                                <div style={{display:'flex',alignItems:'center',gap:4,background:'white',borderRadius:8,padding:'4px 10px',fontSize:11,color:'#475569',border:'1px solid #e2e8f0'}}>
-                                  🎫 {spot.price}
+                              </div>
+                              {selectedSpot?.name===spot.name && (
+                                <div style={{padding:'12px 14px',borderTop:`1px solid ${(selectedCity?.color||'#3b82f6')}22`,background:`${selectedCity?.color||'#3b82f6'}07`}}>
+                                  <p style={{fontSize:12.5,color:'#475569',lineHeight:1.75,marginBottom:(spot.openTime||spot.price||spot.website)?10:0}}>{spot.desc}</p>
+                                  {(spot.openTime || spot.price) && (
+                                    <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:spot.website?8:0}}>
+                                      {spot.openTime && (
+                                        <div style={{display:'flex',alignItems:'center',gap:4,background:'white',borderRadius:8,padding:'4px 10px',fontSize:11,color:'#475569',border:'1px solid #e2e8f0'}}>
+                                          🕐 {spot.openTime}
+                                        </div>
+                                      )}
+                                      {spot.price && (
+                                        <div style={{display:'flex',alignItems:'center',gap:4,background:'white',borderRadius:8,padding:'4px 10px',fontSize:11,color:'#475569',border:'1px solid #e2e8f0'}}>
+                                          🎫 {spot.price}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                  {spot.website && (
+                                    <a
+                                      href={spot.website}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={e => e.stopPropagation()}
+                                      style={{
+                                        display:'inline-flex',alignItems:'center',gap:6,
+                                        background: selectedCity?.color || '#3b82f6',
+                                        color:'white',borderRadius:8,
+                                        padding:'6px 14px',fontSize:12,fontWeight:700,
+                                        textDecoration:'none',
+                                        boxShadow:`0 2px 8px ${selectedCity?.color || '#3b82f6'}44`
+                                      }}
+                                    >
+                                      🌐 공식 홈페이지
+                                    </a>
+                                  )}
                                 </div>
                               )}
                             </div>
-                          )}
+                          ))}
                         </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                      </>
+                    )}
+                  </>
+                )}
               </>
             ) : (
               <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:320,gap:16}}>
                 <div style={{width:38,height:38,borderRadius:'50%',border:'3px solid #e2e8f0',borderTopColor:(selectedCity?.color||'#3b82f6'),animation:'spin .8s linear infinite'}}/>
-                <div style={{fontSize:13,color:'#94a3b8'}}>잠시만 기다려주세요...</div>
+                <div style={{fontSize:13,color:'#94a3b8'}}>관광 정보 불러오는 중...</div>
               </div>
             )}
           </div>
