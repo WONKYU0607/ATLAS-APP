@@ -10,6 +10,7 @@ export default async function handler(req, res) {
 
   try {
     const { prompt } = req.body
+
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
@@ -19,34 +20,21 @@ export default async function handler(req, res) {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.5,
-            maxOutputTokens: 4096,
-            thinkingConfig: { thinkingBudget: 0 }
+            maxOutputTokens: 4096
           }
         })
       }
     )
+
     const data = await response.json()
+    if (data.error) return res.status(500).json({ error: data.error.message })
 
-    if (data.error) {
-      console.error('Gemini error:', JSON.stringify(data.error))
-      return res.status(500).json({ error: data.error.message })
-    }
-
-    // thinking 파트 제외, 일반 텍스트만 추출
+    // 모든 텍스트 파트 합치기 (thought 파트 제외)
     const parts = data?.candidates?.[0]?.content?.parts || []
-    const text = parts
-      .filter(p => p.text && !p.thought)
-      .map(p => p.text)
-      .join('')
-
-    if (!text) {
-      console.error('Empty response, full data:', JSON.stringify(data).slice(0, 500))
-      return res.status(500).json({ error: 'Empty response from Gemini' })
-    }
+    const text = parts.filter(p => p.text && !p.thought).map(p => p.text).join('')
 
     return res.status(200).json({ text })
   } catch (error) {
-    console.error('Handler error:', error.message)
     return res.status(500).json({ error: error.message })
   }
 }
