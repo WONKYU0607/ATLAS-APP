@@ -18,23 +18,35 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2048,
-            // thinking 비활성화 → 일반 텍스트만 반환
+            temperature: 0.5,
+            maxOutputTokens: 4096,
             thinkingConfig: { thinkingBudget: 0 }
           }
         })
       }
     )
     const data = await response.json()
-    // 모든 parts에서 텍스트만 합치기 (thinking 제외)
+
+    if (data.error) {
+      console.error('Gemini error:', JSON.stringify(data.error))
+      return res.status(500).json({ error: data.error.message })
+    }
+
+    // thinking 파트 제외, 일반 텍스트만 추출
     const parts = data?.candidates?.[0]?.content?.parts || []
     const text = parts
-      .filter(p => p.text && !p.thought) // thought 파트 제외
+      .filter(p => p.text && !p.thought)
       .map(p => p.text)
       .join('')
+
+    if (!text) {
+      console.error('Empty response, full data:', JSON.stringify(data).slice(0, 500))
+      return res.status(500).json({ error: 'Empty response from Gemini' })
+    }
+
     return res.status(200).json({ text })
   } catch (error) {
+    console.error('Handler error:', error.message)
     return res.status(500).json({ error: error.message })
   }
 }
