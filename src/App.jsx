@@ -3167,8 +3167,13 @@ function App() {
     if (!feat || !globeRef.current) return
     const globe = globeRef.current
 
-    // 즉시 툴팁 제거 (줌인 전에)
-    globe.polygonLabel(() => null)
+    // 포인터 이벤트 순간 차단 → 호버 해제 → 툴팁 즉시 사라짐
+    const container = globeContainerRef.current
+    if (container) {
+      container.style.pointerEvents = 'none'
+      setTimeout(() => { container.style.pointerEvents = 'auto' }, 500)
+    }
+    setHoveredCountry(null)
 
     const clickedName = feat.properties.NAME
 
