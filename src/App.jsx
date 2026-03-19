@@ -2045,6 +2045,390 @@ const CITY_DATA = {
   {name:"안데르센 생가 & 박물관", wikiTitle:"Hans Christian Andersen Museum", type:"문화", desc:"안데르센이 태어난 집과 그의 삶·작품을 다룬 박물관으로 일본 건축가 구마 겐고가 설계한 신관이 인상적입니다.", rating:4.5, openTime:"10:00~18:00", price:"DKK 170", website:"https://hcandersenshus.dk"},
   {name:"오덴세 구시가지", wikiTitle:"Odense", type:"역사", desc:"색색의 목조 건물과 조약돌 거리가 어우러진 동화 같은 분위기의 도심입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Odense"},
 ]},
+
+// ────────────────────────── 누락 도시 추가 ──────────────────────────
+
+// 캐나다
+"밴쿠버": { description:"밴쿠버는 태평양과 산맥 사이에 자리한 캐나다 서부 최대 도시로 자연과 도시가 완벽히 조화를 이룹니다.", spots:[
+  {name:"스탠리 파크", wikiTitle:"Stanley Park", type:"자연", desc:"1,000에이커의 도심 공원으로 시월을 따라 이어지는 시월 산책로가 유명합니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://vancouver.ca/parks-recreation-culture/stanley-park.aspx"},
+  {name:"캐필라노 현수교", wikiTitle:"Capilano Suspension Bridge", type:"자연", desc:"70m 높이, 140m 길이의 현수교에서 열대우림 위를 걷는 스릴을 즐길 수 있습니다.", rating:4.5, openTime:"09:00~18:00", price:"CAD 62", website:"https://www.capbridge.com"},
+  {name:"그랜빌 아일랜드", wikiTitle:"Granville Island", type:"도시", desc:"공공시장, 갤러리, 공방이 모여있는 문화 예술 지구입니다.", rating:4.6, openTime:"09:00~19:00", price:"무료", website:"https://en.wikipedia.org/wiki/Granville_Island"},
+]},
+"토론토": { description:"토론토는 CN타워가 상징하는 캐나다 최대 도시로 다문화와 현대 예술이 어우러진 국제도시입니다.", spots:[
+  {name:"CN 타워", wikiTitle:"CN Tower", type:"랜드마크", desc:"553m 높이의 타워로 유리 바닥 전망대와 에지워크 체험이 인기입니다.", rating:4.6, openTime:"09:00~22:00", price:"CAD 43", website:"https://www.cntower.ca"},
+  {name:"로열 온타리오 박물관", wikiTitle:"Royal Ontario Museum", type:"문화", desc:"세계 문화와 자연사를 아우르는 캐나다 최대 박물관입니다.", rating:4.5, openTime:"10:00~17:30", price:"CAD 23", website:"https://www.rom.on.ca"},
+  {name:"켄싱턴 마켓", wikiTitle:"Kensington Market, Toronto", type:"도시", desc:"빈티지 숍, 다국적 레스토랑, 카페가 모인 보헤미안 동네입니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Kensington_Market,_Toronto"},
+]},
+"퀘벡시티": { description:"퀘벡시티는 북미 유일의 성벽 도시로 유네스코 세계유산인 구시가지의 프랑스풍 건축이 유럽에 온 듯한 분위기를 자아냅니다.", spots:[
+  {name:"샤토 프롱트낙", wikiTitle:"Château Frontenac", type:"랜드마크", desc:"세계에서 가장 많이 사진 찍히는 호텔로 퀘벡시티의 상징입니다.", rating:4.7, openTime:"외관 24시간", price:"무료(외관)", website:"https://www.fairmont.com/frontenac-quebec"},
+  {name:"쁘띠 샹플랭 거리", wikiTitle:"Petit Champlain", type:"역사", desc:"북미에서 가장 오래된 상업 거리로 프랑스풍 부티크와 카페가 줄지어 있습니다.", rating:4.6, openTime:"10:00~21:00", price:"무료", website:"https://en.wikipedia.org/wiki/Petit_Champlain"},
+]},
+"밴프": { description:"밴프는 캐나다 로키 산맥 속 최초의 국립공원으로 에메랄드빛 호수와 눈 덮인 봉우리가 장관입니다.", spots:[
+  {name:"레이크 루이스", wikiTitle:"Lake Louise", type:"자연", desc:"빅토리아 빙하에서 녹아내린 물이 만든 터키옥빛 호수로 캐나다 로키의 보석입니다.", rating:4.9, openTime:"24시간", price:"공원입장 CAD 10.5", website:"https://www.banfflakelouise.com"},
+  {name:"밴프 곤돌라", wikiTitle:"Banff Gondola", type:"자연", desc:"설퍼산 정상까지 곤돌라로 올라가면 6개의 산맥을 동시에 조망할 수 있습니다.", rating:4.6, openTime:"08:00~21:00", price:"CAD 72", website:"https://en.wikipedia.org/wiki/Banff_Gondola"},
+]},
+"몬트리올": { description:"몬트리올은 프랑스어를 사용하는 북미 최대 도시로 유럽풍 구시가지와 세계적 미식, 재즈 페스티벌로 유명합니다.", spots:[
+  {name:"노트르담 대성당", wikiTitle:"Notre-Dame Basilica (Montreal)", type:"역사", desc:"화려한 파란빛 내부와 7,000개의 파이프 오르간이 인상적인 고딕 양식 성당입니다.", rating:4.7, openTime:"09:00~16:30", price:"CAD 8", website:"https://en.wikipedia.org/wiki/Notre-Dame_Basilica_(Montreal)"},
+  {name:"올드 몬트리올", wikiTitle:"Old Montreal", type:"역사", desc:"자갈길과 17세기 건축물이 보존된 구시가지로 마차 투어가 인기입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Old_Montreal"},
+]},
+"오타와": { description:"오타와는 캐나다의 수도로 의회 언덕과 국립 박물관, 리도 운하가 어우러진 정치·문화의 중심지입니다.", spots:[
+  {name:"의회 언덕", wikiTitle:"Parliament Hill", type:"랜드마크", desc:"캐나다 연방 의회가 자리한 네오고딕 건축물로 여름 근위병 교대식이 유명합니다.", rating:4.5, openTime:"가이드투어 예약", price:"무료", website:"https://en.wikipedia.org/wiki/Parliament_Hill"},
+  {name:"리도 운하", wikiTitle:"Rideau Canal", type:"역사", desc:"유네스코 세계유산으로 겨울에는 세계 최대의 천연 스케이트 링크가 됩니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Rideau_Canal"},
+]},
+"나이아가라폴스": { description:"나이아가라 폭포는 캐나다와 미국 국경에 걸친 세계 3대 폭포 중 하나로 매초 280만 리터의 물이 쏟아지는 장관입니다.", spots:[
+  {name:"나이아가라 폭포", wikiTitle:"Niagara Falls", type:"자연", desc:"캐나다 쪽 호스슈 폭포가 가장 웅장하며 보트 투어로 폭포 아래까지 접근 가능합니다.", rating:4.8, openTime:"24시간", price:"무료(보트 CAD 28)", website:"https://www.niagarafallstourism.com"},
+]},
+"빅토리아": { description:"빅토리아는 브리티시컬럼비아주의 주도로 영국풍 정원과 건축이 아름다운 해안 도시입니다.", spots:[
+  {name:"부차트 가든", wikiTitle:"Butchart Gardens", type:"자연", desc:"100년 이상 역사의 세계적 정원으로 계절마다 다른 꽃이 피어납니다.", rating:4.7, openTime:"09:00~17:00", price:"CAD 37", website:"https://www.butchartgardens.com"},
+]},
+
+// 남미
+"리우데자네이루": { description:"리우데자네이루는 코르코바도 산의 예수상과 코파카바나 해변, 삼바 카니발로 유명한 브라질의 상징적 도시입니다.", spots:[
+  {name:"코르코바도 예수상", wikiTitle:"Christ the Redeemer (statue)", type:"랜드마크", desc:"해발 710m 정상에 서 있는 30m 높이 예수상으로 세계 신 7대 불가사의입니다.", rating:4.8, openTime:"08:00~19:00", price:"R$90", website:"https://www.cristoredentoroficial.com.br"},
+  {name:"슈가로프 산", wikiTitle:"Sugarloaf Mountain", type:"자연", desc:"케이블카 2번을 타고 정상에 오르면 리우의 해안선과 도시 전경이 한눈에 들어옵니다.", rating:4.7, openTime:"08:00~21:00", price:"R$130", website:"https://en.wikipedia.org/wiki/Sugarloaf_Mountain"},
+  {name:"코파카바나 해변", wikiTitle:"Copacabana", type:"자연", desc:"4km의 백사장이 펼쳐진 세계에서 가장 유명한 해변입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Copacabana,_Rio_de_Janeiro"},
+]},
+"상파울루": { description:"상파울루는 남미 최대의 메트로폴리스로 미식, 예술, 다문화가 공존하는 브라질의 경제 수도입니다.", spots:[
+  {name:"상파울루 미술관", wikiTitle:"São Paulo Museum of Art", type:"문화", desc:"공중에 떠 있는 듯한 독특한 건축과 라틴아메리카 최고의 미술 컬렉션을 자랑합니다.", rating:4.5, openTime:"10:00~18:00", price:"R$60", website:"https://en.wikipedia.org/wiki/São_Paulo_Museum_of_Art"},
+]},
+"마나우스": { description:"마나우스는 아마존 열대우림의 관문 도시로 두 강의 만남(검은강과 흰강)이 유명합니다.", spots:[
+  {name:"아마존 강 투어", wikiTitle:"Amazon River", type:"자연", desc:"세계 최대 열대우림을 보트로 탐험하며 핑크 돌고래와 원주민 마을을 만납니다.", rating:4.7, openTime:"연중", price:"$50~150", website:"https://en.wikipedia.org/wiki/Amazon_River"},
+]},
+"포스두이과수": { description:"포스두이과수는 브라질 측에서 이과수 폭포를 감상할 수 있는 관문 도시입니다.", spots:[
+  {name:"이과수 폭포", wikiTitle:"Iguazu Falls", type:"자연", desc:"275개의 폭포가 2.7km에 걸쳐 쏟아지는 세계 최대급 폭포로 악마의 목구멍이 하이라이트입니다.", rating:4.9, openTime:"09:00~17:00", price:"R$72", website:"https://iguazuargentina.com"},
+]},
+"살바도르": { description:"살바도르는 브라질 최초의 수도로 아프리카 문화가 깊이 뿌리내린 활기찬 도시입니다.", spots:[
+  {name:"펠로우리뉴 역사지구", wikiTitle:"Pelourinho", type:"역사", desc:"파스텔색 식민지 건물이 줄지어 선 유네스코 세계유산 지구입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Pelourinho"},
+]},
+"브라질리아": { description:"브라질리아는 1960년 비행기 모양으로 설계된 계획도시로 유네스코 세계유산인 브라질의 수도입니다.", spots:[
+  {name:"브라질리아 대성당", wikiTitle:"Cathedral of Brasília", type:"역사", desc:"오스카 니마이어가 설계한 곡선형 현대 건축의 걸작입니다.", rating:4.5, openTime:"08:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Cathedral_of_Brasília"},
+]},
+"포르탈레자": { description:"포르탈레자는 브라질 북동부의 해변 도시로 아름다운 사구와 해변이 유명합니다.", spots:[
+  {name:"제리코아코아라 해변", wikiTitle:"Jericoacoara", type:"자연", desc:"바람과 파도가 만든 모래사구와 청록빛 바다가 환상적인 해변입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Jericoacoara"},
+]},
+"부에노스아이레스": { description:"부에노스아이레스는 탱고의 본고장으로 유럽풍 건축과 라틴 열정이 공존하는 아르헨티나의 수도입니다.", spots:[
+  {name:"라 보카(카미니토)", wikiTitle:"La Boca", type:"문화", desc:"형형색색 양철 건물이 줄지어 선 탱고 발상지로 거리 공연이 펼쳐집니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/La_Boca"},
+  {name:"레콜레타 묘지", wikiTitle:"La Recoleta Cemetery", type:"역사", desc:"에바 페론이 잠든 곳으로 정교한 조각의 묘소 6,400기가 예술 작품 같습니다.", rating:4.6, openTime:"08:00~17:30", price:"무료", website:"https://en.wikipedia.org/wiki/La_Recoleta_Cemetery"},
+]},
+"파타고니아": { description:"파타고니아는 남미 남단의 광활한 자연 지역으로 빙하와 호수, 야생동물이 가득한 모험의 땅입니다.", spots:[
+  {name:"페리토 모레노 빙하", wikiTitle:"Perito Moreno Glacier", type:"자연", desc:"5km 폭, 60m 높이의 거대한 빙하가 천둥 같은 소리와 함께 무너지는 장관을 볼 수 있습니다.", rating:4.9, openTime:"08:00~18:00", price:"ARS 5,000", website:"https://en.wikipedia.org/wiki/Perito_Moreno_Glacier"},
+]},
+"이과수": { description:"이과수는 아르헨티나 측에서 이과수 폭포를 감상하는 관문 도시입니다.", spots:[
+  {name:"이과수 폭포 아르헨티나", wikiTitle:"Iguazu Falls", type:"자연", desc:"악마의 목구멍 위에서 내려다보는 코스가 아르헨티나 측 하이라이트입니다.", rating:4.9, openTime:"08:00~18:00", price:"ARS 8,000", website:"https://iguazuargentina.com"},
+]},
+"멘도사": { description:"멘도사는 안데스 산맥 기슭의 와인 수도로 말벡 와인과 아콩카과 산이 유명합니다.", spots:[
+  {name:"멘도사 와이너리 투어", wikiTitle:"Argentine wine", type:"음식", desc:"세계적 말벡 와인의 본고장에서 포도밭과 와이너리를 투어합니다.", rating:4.6, openTime:"10:00~17:00", price:"$20~50", website:"https://en.wikipedia.org/wiki/Argentine_wine"},
+]},
+"우수아이아": { description:"우수아이아는 세계 최남단 도시로 남극 크루즈의 출발점이자 '세계의 끝' 표지판이 있는 곳입니다.", spots:[
+  {name:"티에라 델 푸에고 국립공원", wikiTitle:"Tierra del Fuego National Park", type:"자연", desc:"세계 최남단 국립공원으로 빙하 호수와 아한대 숲이 어우러진 비경입니다.", rating:4.6, openTime:"08:00~18:00", price:"ARS 3,500", website:"https://en.wikipedia.org/wiki/Tierra_del_Fuego_National_Park"},
+]},
+"살타": { description:"살타는 아르헨티나 북서부의 식민지 도시로 안데스 고원과 무지개 산이 유명합니다.", spots:[
+  {name:"우마우아카 협곡", wikiTitle:"Quebrada de Humahuaca", type:"자연", desc:"유네스코 세계유산으로 7색 산과 잉카 유적이 어우러진 안데스 협곡입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Quebrada_de_Humahuaca"},
+]},
+
+// 페루·칠레·콜롬비아
+"마추픽추": { description:"마추픽추는 해발 2,430m 안데스 산중에 숨겨진 잉카 제국의 공중 도시로 세계 신 7대 불가사의입니다.", spots:[
+  {name:"마추픽추 유적", wikiTitle:"Machu Picchu", type:"역사", desc:"15세기 잉카 황제 파차쿠텍이 건설한 석조 도시로 구름 속 풍경이 경이롭습니다.", rating:4.9, openTime:"06:00~17:00", price:"$50", website:"https://www.machupicchu.gob.pe"},
+]},
+"쿠스코": { description:"쿠스코는 잉카 제국의 옛 수도로 식민지 건축과 잉카 석조 기술이 공존하는 유네스코 세계유산 도시입니다.", spots:[
+  {name:"아르마스 광장", wikiTitle:"Plaza de Armas, Cusco", type:"역사", desc:"잉카 시대부터 도시의 중심이었던 광장으로 대성당과 식민지 건축이 둘러싸고 있습니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Plaza_de_Armas,_Cusco"},
+  {name:"삭사이와만", wikiTitle:"Sacsayhuamán", type:"역사", desc:"수백 톤 무게의 돌을 이음새 없이 쌓아올린 잉카 요새로 건축 기술이 경이롭습니다.", rating:4.7, openTime:"07:00~17:30", price:"S/70(통합권)", website:"https://en.wikipedia.org/wiki/Sacsayhuamán"},
+]},
+"리마": { description:"리마는 페루의 수도로 식민지 역사와 세계적 미식 문화가 공존하는 남미의 미식 수도입니다.", spots:[
+  {name:"리마 역사지구", wikiTitle:"Historic Centre of Lima", type:"역사", desc:"유네스코 세계유산으로 대성당, 산프란시스코 수도원 등 식민지 건축의 보고입니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Historic_Centre_of_Lima"},
+]},
+"나스카": { description:"나스카는 사막 위에 그려진 거대한 지상화로 유명한 미스터리의 땅입니다.", spots:[
+  {name:"나스카 라인", wikiTitle:"Nazca Lines", type:"역사", desc:"2,000년 전 사막에 그려진 거대한 동물과 기하학 문양으로 경비행기에서만 전체를 볼 수 있습니다.", rating:4.6, openTime:"경비행기 07:00~15:00", price:"$80~120", website:"https://en.wikipedia.org/wiki/Nazca_Lines"},
+]},
+"티티카카호수": { description:"티티카카 호수는 해발 3,812m에 위치한 세계에서 가장 높은 대형 항행 가능 호수입니다.", spots:[
+  {name:"우로스 떠다니는 섬", wikiTitle:"Floating islands of Lake Titicaca", type:"문화", desc:"갈대로 만든 인공 섬 위에서 우로스 원주민이 전통 생활을 영위하고 있습니다.", rating:4.5, openTime:"보트투어 07:00~", price:"S/15", website:"https://en.wikipedia.org/wiki/Floating_islands_of_Lake_Titicaca"},
+]},
+"아레키파": { description:"아레키파는 흰 화산석으로 지어진 '하얀 도시'로 콜카 캐니언 투어의 거점입니다.", spots:[
+  {name:"콜카 캐니언", wikiTitle:"Colca Canyon", type:"자연", desc:"그랜드캐니언보다 2배 깊은 협곡에서 안데스 콘도르가 날아다니는 장관을 볼 수 있습니다.", rating:4.7, openTime:"24시간", price:"S/70", website:"https://en.wikipedia.org/wiki/Colca_Canyon"},
+]},
+"산티아고": { description:"산티아고는 안데스 산맥을 배경으로 한 칠레의 수도로 와인과 미식, 현대 문화가 매력적입니다.", spots:[
+  {name:"산크리스토발 언덕", wikiTitle:"San Cristóbal Hill", type:"자연", desc:"케이블카로 올라가면 산티아고 시내와 안데스 산맥의 파노라마가 펼쳐집니다.", rating:4.5, openTime:"08:30~20:00", price:"CLP 3,300", website:"https://en.wikipedia.org/wiki/San_Cristóbal_Hill"},
+]},
+"발파라이소": { description:"발파라이소는 알록달록한 집과 거리 예술이 가득한 태평양 항구 도시로 유네스코 세계유산입니다.", spots:[
+  {name:"아센소르(케이블 엘리베이터)", wikiTitle:"Valparaíso", type:"도시", desc:"가파른 언덕을 오르는 100년 된 케이블 엘리베이터 15기가 도시의 상징입니다.", rating:4.5, openTime:"07:00~23:00", price:"CLP 300", website:"https://en.wikipedia.org/wiki/Valparaíso"},
+]},
+"아타카마": { description:"아타카마 사막은 세계에서 가장 건조한 사막으로 달의 계곡과 간헐천, 별 관측이 유명합니다.", spots:[
+  {name:"달의 계곡", wikiTitle:"Valle de la Luna (Chile)", type:"자연", desc:"달 표면처럼 침식된 지형에서 일몰 시 붉은빛으로 물드는 장관을 감상합니다.", rating:4.7, openTime:"08:00~19:00", price:"CLP 3,000", website:"https://en.wikipedia.org/wiki/Valle_de_la_Luna_(Chile)"},
+]},
+"토레스델파이네": { description:"토레스 델 파이네는 세 개의 화강암 탑이 상징인 파타고니아 최고의 국립공원입니다.", spots:[
+  {name:"토레스 델 파이네 국립공원", wikiTitle:"Torres del Paine National Park", type:"자연", desc:"빙하, 호수, 화강암 봉우리가 어우러진 남미 최고의 트레킹 명소입니다.", rating:4.9, openTime:"연중", price:"CLP 21,000", website:"https://torresdelpaine.com"},
+]},
+"이스터섬": { description:"이스터섬은 태평양 한가운데 외딴 섬으로 900개의 거대한 모아이 석상이 미스터리를 간직하고 있습니다.", spots:[
+  {name:"라노 라라쿠", wikiTitle:"Rano Raraku", type:"역사", desc:"모아이 석상이 만들어진 채석장으로 400개 이상의 미완성 석상이 흩어져 있습니다.", rating:4.8, openTime:"09:00~17:00", price:"$80", website:"https://en.wikipedia.org/wiki/Rano_Raraku"},
+]},
+"보고타": { description:"보고타는 해발 2,640m에 위치한 콜롬비아의 수도로 황금 박물관과 활기찬 거리가 매력적입니다.", spots:[
+  {name:"황금 박물관", wikiTitle:"Museo del Oro", type:"문화", desc:"55,000점 이상의 프리콜롬비아 황금 유물을 소장한 세계 최대 금 박물관입니다.", rating:4.7, openTime:"09:00~18:00", price:"COP 5,000", website:"https://en.wikipedia.org/wiki/Museo_del_Oro"},
+]},
+"카르타헤나": { description:"카르타헤나는 카리브해의 보석으로 식민지 시대 성벽 도시가 유네스코 세계유산입니다.", spots:[
+  {name:"성벽 도시", wikiTitle:"Cartagena, Colombia", type:"역사", desc:"16세기 스페인 식민지 성벽이 둘러싼 구시가지로 파스텔색 건물이 매력적입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Cartagena,_Colombia"},
+]},
+"메데인": { description:"메데인은 '영원한 봄의 도시'로 혁신적 도시 재생과 쾌적한 기후가 매력적인 콜롬비아 제2의 도시입니다.", spots:[
+  {name:"코무나 13", wikiTitle:"Comuna 13", type:"도시", desc:"에스컬레이터로 오르는 언덕 마을에 화려한 그래피티 아트가 가득합니다.", rating:4.5, openTime:"10:00~17:00", price:"투어 $10~20", website:"https://en.wikipedia.org/wiki/Comuna_13"},
+]},
+"살렌토": { description:"살렌토는 콜롬비아 커피 삼각지대의 작은 마을로 왁스팜 야자나무 계곡이 유명합니다.", spots:[
+  {name:"코코라 계곡", wikiTitle:"Cocora Valley", type:"자연", desc:"높이 60m의 왁스팜 야자나무가 안개 낀 계곡에 줄지어 선 초현실적 풍경입니다.", rating:4.8, openTime:"08:00~16:00", price:"COP 10,000", website:"https://en.wikipedia.org/wiki/Cocora_Valley"},
+]},
+
+// 멕시코
+"멕시코시티": { description:"멕시코시티는 아즈텍 제국 위에 세워진 멕시코의 수도로 프리다 칼로, 테오티와칸 등 풍부한 문화유산이 있습니다.", spots:[
+  {name:"테오티와칸", wikiTitle:"Teotihuacan", type:"역사", desc:"태양의 피라미드와 달의 피라미드가 있는 고대 도시로 아메리카 대륙 최대 유적입니다.", rating:4.8, openTime:"09:00~17:00", price:"MXN 85", website:"https://en.wikipedia.org/wiki/Teotihuacan"},
+  {name:"국립인류학 박물관", wikiTitle:"National Museum of Anthropology (Mexico)", type:"문화", desc:"아즈텍 달력석 등 메소아메리카 문명의 보물을 소장한 세계적 박물관입니다.", rating:4.7, openTime:"09:00~19:00", price:"MXN 85", website:"https://en.wikipedia.org/wiki/National_Museum_of_Anthropology_(Mexico)"},
+]},
+"칸쿤": { description:"칸쿤은 카리브해의 터키옥빛 바다와 마야 유적이 어우러진 멕시코 최고의 리조트 도시입니다.", spots:[
+  {name:"치첸이트사", wikiTitle:"Chichen Itza", type:"역사", desc:"쿠쿨칸 피라미드가 상징인 마야 문명 최대 유적지로 세계 신 7대 불가사의입니다.", rating:4.8, openTime:"08:00~17:00", price:"MXN 571", website:"https://www.chichenitza.com"},
+  {name:"이슬라 무헤레스", wikiTitle:"Isla Mujeres", type:"자연", desc:"칸쿤 앞바다의 작은 섬으로 스노클링과 한적한 해변이 매력적입니다.", rating:4.6, openTime:"페리 05:30~23:30", price:"MXN 300(페리)", website:"https://en.wikipedia.org/wiki/Isla_Mujeres"},
+]},
+"과달라하라": { description:"과달라하라는 마리아치 음악과 테킬라의 본고장으로 멕시코 전통 문화의 중심지입니다.", spots:[
+  {name:"테킬라 마을", wikiTitle:"Tequila, Jalisco", type:"문화", desc:"유네스코 세계유산인 아가베 농장과 테킬라 증류소를 투어합니다.", rating:4.5, openTime:"투어 09:00~", price:"$30~60", website:"https://en.wikipedia.org/wiki/Tequila,_Jalisco"},
+]},
+"오악사카": { description:"오악사카는 원주민 문화와 미식이 풍부한 멕시코 남부의 문화 도시입니다.", spots:[
+  {name:"몬테 알반", wikiTitle:"Monte Albán", type:"역사", desc:"해발 1,940m 산 위에 건설된 사포텍 문명의 유적지로 유네스코 세계유산입니다.", rating:4.6, openTime:"10:00~17:00", price:"MXN 85", website:"https://en.wikipedia.org/wiki/Monte_Albán"},
+]},
+"툴룸": { description:"툴룸은 카리브해 절벽 위의 마야 유적과 에메랄드빛 해변이 어우러진 보헤미안 리조트 타운입니다.", spots:[
+  {name:"툴룸 유적", wikiTitle:"Tulum", type:"역사", desc:"카리브해 절벽 위에 자리한 마야 성벽 도시로 바다를 배경으로 한 유적이 장관입니다.", rating:4.5, openTime:"08:00~17:00", price:"MXN 85", website:"https://en.wikipedia.org/wiki/Tulum_(Maya_city)"},
+]},
+"과나후아토": { description:"과나후아토는 지하 터널 도로와 알록달록한 집이 계단식으로 들어선 유네스코 세계유산 도시입니다.", spots:[
+  {name:"피필라 전망대", wikiTitle:"Guanajuato", type:"도시", desc:"산 위 전망대에서 알록달록한 도시 전경을 한눈에 내려다볼 수 있습니다.", rating:4.6, openTime:"24시간", price:"케이블카 MXN 30", website:"https://en.wikipedia.org/wiki/Guanajuato"},
+]},
+"치첸이트사": { description:"치첸이트사는 마야 문명 최대의 고고학 유적지로 쿠쿨칸 피라미드가 상징입니다.", spots:[
+  {name:"쿠쿨칸 피라미드", wikiTitle:"El Castillo, Chichen Itza", type:"역사", desc:"춘·추분에 뱀의 그림자가 계단을 타고 내려오는 천문학적 설계가 경이롭습니다.", rating:4.8, openTime:"08:00~17:00", price:"MXN 571", website:"https://www.chichenitza.com"},
+]},
+
+// 쿠바
+"하바나": { description:"하바나는 클래식카와 식민지 건축, 쿠바 음악이 어우러진 시간이 멈춘 듯한 카리브해의 수도입니다.", spots:[
+  {name:"올드 하바나", wikiTitle:"Old Havana", type:"역사", desc:"유네스코 세계유산인 구시가지로 스페인 식민지 시대 건축물이 보존되어 있습니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Old_Havana"},
+  {name:"말레콘 해안도로", wikiTitle:"Malecón, Havana", type:"도시", desc:"8km의 해안 산책로로 일몰 시 하바나 시민들이 모이는 소셜 공간입니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Malecón,_Havana"},
+]},
+"트리니다드": { description:"트리니다드는 설탕 무역으로 번영한 18세기 식민지 도시가 완벽히 보존된 유네스코 세계유산입니다.", spots:[
+  {name:"마요르 광장", wikiTitle:"Trinidad, Cuba", type:"역사", desc:"자갈길과 파스텔색 건물이 어우러진 식민지 시대 광장입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Trinidad,_Cuba"},
+]},
+"바라데로": { description:"바라데로는 20km의 백사장이 펼쳐진 쿠바 최고의 해변 리조트입니다.", spots:[
+  {name:"바라데로 해변", wikiTitle:"Varadero", type:"자연", desc:"카리브해의 터키옥빛 바다와 새하얀 모래사장이 20km 이어지는 쿠바 최고의 해변입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Varadero"},
+]},
+"비냘레스": { description:"비냘레스는 석회암 봉우리(모고테)와 담배밭이 어우러진 유네스코 세계유산 계곡입니다.", spots:[
+  {name:"비냘레스 계곡", wikiTitle:"Viñales Valley", type:"자연", desc:"석회암 기둥과 붉은 땅, 초록 담배밭이 만드는 독특한 풍경의 유네스코 세계유산입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Viñales_Valley"},
+]},
+
+// 아프리카
+"케이프타운": { description:"케이프타운은 테이블 마운틴과 두 대양이 만나는 희망봉이 있는 남아프리카의 보석 같은 도시입니다.", spots:[
+  {name:"테이블 마운틴", wikiTitle:"Table Mountain", type:"자연", desc:"케이블카로 1,085m 정상에 오르면 케이프타운과 대서양, 인도양이 한눈에 들어옵니다.", rating:4.8, openTime:"08:00~18:00", price:"R390", website:"https://www.tablemountain.net"},
+  {name:"로벤 섬", wikiTitle:"Robben Island", type:"역사", desc:"넬슨 만델라가 18년간 수감되었던 섬으로 유네스코 세계유산입니다.", rating:4.6, openTime:"09:00~15:00", price:"R400", website:"https://www.robben-island.org.za"},
+  {name:"희망봉", wikiTitle:"Cape of Good Hope", type:"자연", desc:"아프리카 대륙 남서쪽 끝단으로 대서양과 인도양이 만나는 상징적 장소입니다.", rating:4.5, openTime:"06:00~18:00", price:"R376", website:"https://en.wikipedia.org/wiki/Cape_of_Good_Hope"},
+]},
+"요하네스버그": { description:"요하네스버그는 남아프리카 최대 도시로 아파르트헤이트 역사와 현대 아프리카 문화가 공존합니다.", spots:[
+  {name:"아파르트헤이트 박물관", wikiTitle:"Apartheid Museum", type:"역사", desc:"남아프리카 인종차별 역사를 생생히 전하는 강렬한 박물관입니다.", rating:4.6, openTime:"09:00~17:00", price:"R120", website:"https://en.wikipedia.org/wiki/Apartheid_Museum"},
+]},
+"더반": { description:"더반은 인도양 해변과 줄루 문화가 어우러진 남아프리카 동해안의 휴양 도시입니다.", spots:[
+  {name:"골든 마일 해변", wikiTitle:"Durban", type:"자연", desc:"서핑과 수영을 즐길 수 있는 6km의 황금빛 해변 산책로입니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Durban"},
+]},
+"크루거국립공원": { description:"크루거 국립공원은 아프리카 빅5를 모두 만날 수 있는 세계 최고의 사파리 명소입니다.", spots:[
+  {name:"크루거 사파리", wikiTitle:"Kruger National Park", type:"자연", desc:"사자, 코끼리, 표범, 코뿔소, 버팔로 빅5를 야생에서 관찰하는 사파리입니다.", rating:4.8, openTime:"05:30~18:30", price:"R440", website:"https://www.sanparks.org/parks/kruger"},
+]},
+"드라켄즈버그": { description:"드라켄즈버그는 남아프리카 최고봉이 있는 산맥으로 유네스코 세계유산입니다.", spots:[
+  {name:"드라켄즈버그 산맥", wikiTitle:"Drakensberg", type:"자연", desc:"'용의 산'이라는 뜻의 웅장한 산맥으로 하이킹과 암각화가 유명합니다.", rating:4.6, openTime:"24시간", price:"R80(공원)", website:"https://en.wikipedia.org/wiki/Drakensberg"},
+]},
+"나이로비": { description:"나이로비는 케냐의 수도이자 동아프리카 사파리의 관문으로 도심 국립공원이 독특합니다.", spots:[
+  {name:"나이로비 국립공원", wikiTitle:"Nairobi National Park", type:"자연", desc:"도심 스카이라인을 배경으로 사자, 기린 등 야생동물을 볼 수 있는 독특한 국립공원입니다.", rating:4.5, openTime:"06:00~18:00", price:"$43", website:"https://en.wikipedia.org/wiki/Nairobi_National_Park"},
+]},
+"마사이마라": { description:"마사이마라는 세렝게티와 이어진 대초원으로 세계 최대의 야생동물 이동을 볼 수 있습니다.", spots:[
+  {name:"마사이마라 사파리", wikiTitle:"Maasai Mara", type:"자연", desc:"매년 200만 마리의 누 떼가 대이동하는 세계 최고의 사파리 명소입니다.", rating:4.9, openTime:"연중", price:"$80/일", website:"https://www.maasaimara.com"},
+]},
+"몸바사": { description:"몸바사는 인도양의 해변 도시로 스와힐리 문화와 역사적 요새가 매력적입니다.", spots:[
+  {name:"포트 지저스", wikiTitle:"Fort Jesus", type:"역사", desc:"1593년 포르투갈이 건설한 유네스코 세계유산 해안 요새입니다.", rating:4.4, openTime:"08:00~18:00", price:"KES 1,200", website:"https://en.wikipedia.org/wiki/Fort_Jesus"},
+]},
+"암보셀리": { description:"암보셀리는 킬리만자로 산을 배경으로 코끼리 떼를 볼 수 있는 케냐 최고의 국립공원입니다.", spots:[
+  {name:"암보셀리 국립공원", wikiTitle:"Amboseli National Park", type:"자연", desc:"킬리만자로의 눈 덮인 봉우리를 배경으로 코끼리 떼가 거니는 상징적 풍경입니다.", rating:4.7, openTime:"06:00~18:00", price:"$60", website:"https://en.wikipedia.org/wiki/Amboseli_National_Park"},
+]},
+"라무": { description:"라무는 케냐 해안의 스와힐리 무역 도시로 600년 역사의 구시가지가 유네스코 세계유산입니다.", spots:[
+  {name:"라무 구시가지", wikiTitle:"Lamu Old Town", type:"역사", desc:"차가 없는 좁은 골목의 스와힐리 전통 마을로 당나귀만 오갑니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Lamu_Old_Town"},
+]},
+"잔지바르": { description:"잔지바르는 스파이스 아일랜드로 불리는 탄자니아의 섬으로 아랍·아프리카 문화가 융합되어 있습니다.", spots:[
+  {name:"스톤타운", wikiTitle:"Stone Town", type:"역사", desc:"유네스코 세계유산인 구시가지로 미로 같은 골목에 향신료 향이 가득합니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Stone_Town"},
+]},
+"세렝게티": { description:"세렝게티 국립공원은 200만 마리의 야생동물 대이동이 펼쳐지는 아프리카 최고의 사파리입니다.", spots:[
+  {name:"세렝게티 사파리", wikiTitle:"Serengeti National Park", type:"자연", desc:"끝없는 대초원에서 사자, 치타, 누 떼의 야생 드라마를 목격합니다.", rating:4.9, openTime:"연중", price:"$70/일", website:"https://www.serengeti.com"},
+]},
+"킬리만자로": { description:"킬리만자로는 아프리카 최고봉(5,895m)으로 만년설이 덮인 적도 위의 산입니다.", spots:[
+  {name:"킬리만자로 등반", wikiTitle:"Mount Kilimanjaro", type:"자연", desc:"세계 7대 정상 중 하나로 5~9일 트레킹으로 정상 우후루 피크에 오릅니다.", rating:4.8, openTime:"연중(1~3월,6~10월 최적)", price:"$1,500~4,000", website:"https://www.tanzaniaparks.go.tz"},
+]},
+"응고롱고로": { description:"응고롱고로 분화구는 세계 최대의 칼데라로 내부에 빅5가 모두 서식합니다.", spots:[
+  {name:"응고롱고로 크레이터", wikiTitle:"Ngorongoro Conservation Area", type:"자연", desc:"직경 20km의 거대한 분화구 안에 25,000마리 이상의 동물이 서식합니다.", rating:4.8, openTime:"06:00~18:00", price:"$70", website:"https://en.wikipedia.org/wiki/Ngorongoro_Conservation_Area"},
+]},
+
+// 중동
+"페트라": { description:"페트라는 붉은 사암 절벽을 깎아 만든 나바테아 왕국의 고대 도시로 세계 신 7대 불가사의입니다.", spots:[
+  {name:"알카즈네(보물창고)", wikiTitle:"Al-Khazneh", type:"역사", desc:"좁은 시크 협곡을 지나면 나타나는 40m 높이의 장미빛 석조 신전으로 인디아나 존스 촬영지입니다.", rating:4.9, openTime:"06:00~18:00", price:"JOD 50", website:"https://www.visitpetra.jo"},
+]},
+"암만": { description:"암만은 요르단의 수도로 로마 유적과 현대 도시가 공존하는 중동의 관문입니다.", spots:[
+  {name:"암만 시타델", wikiTitle:"Amman Citadel", type:"역사", desc:"3,000년 역사의 언덕 위 유적지에서 암만 시내를 조망합니다.", rating:4.4, openTime:"08:00~19:00", price:"JOD 3", website:"https://en.wikipedia.org/wiki/Amman_Citadel"},
+]},
+"와디럼": { description:"와디럼은 '달의 계곡'으로 불리는 붉은 사막으로 영화 '마션'의 촬영지입니다.", spots:[
+  {name:"와디럼 사막 캠프", wikiTitle:"Wadi Rum", type:"자연", desc:"붉은 사암 절벽과 모래 사막에서 베두인 캠프 숙박과 별 관측을 즐깁니다.", rating:4.8, openTime:"연중", price:"JOD 5(입장)+캠프별", website:"https://en.wikipedia.org/wiki/Wadi_Rum"},
+]},
+"아카바": { description:"아카바는 요르단 유일의 해안 도시로 홍해 다이빙과 스노클링이 유명합니다.", spots:[
+  {name:"아카바 산호초", wikiTitle:"Gulf of Aqaba", type:"자연", desc:"홍해의 산호초 사이에서 열대어와 함께 스노클링과 다이빙을 즐깁니다.", rating:4.5, openTime:"08:00~17:00", price:"JOD 15(다이빙)", website:"https://en.wikipedia.org/wiki/Gulf_of_Aqaba"},
+]},
+"예루살렘": { description:"예루살렘은 유대교, 기독교, 이슬람 3대 종교의 성지가 한 도시에 모여있는 세계에서 가장 신성한 도시입니다.", spots:[
+  {name:"통곡의 벽", wikiTitle:"Western Wall", type:"역사", desc:"유대교의 가장 신성한 장소로 솔로몬 성전의 서쪽 벽 잔해입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Western_Wall"},
+  {name:"성묘교회", wikiTitle:"Church of the Holy Sepulchre", type:"역사", desc:"예수의 십자가형과 매장, 부활이 이루어진 곳으로 기독교 최고의 성지입니다.", rating:4.7, openTime:"05:00~21:00", price:"무료", website:"https://en.wikipedia.org/wiki/Church_of_the_Holy_Sepulchre"},
+]},
+"텔아비브": { description:"텔아비브는 지중해 해변과 바우하우스 건축, 활기찬 나이트라이프가 매력적인 이스라엘의 현대 도시입니다.", spots:[
+  {name:"야포 구시가지", wikiTitle:"Jaffa", type:"역사", desc:"4,000년 역사의 항구 도시로 갤러리와 레스토랑이 모여있는 예술 지구입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Jaffa"},
+]},
+"마사다": { description:"마사다는 사해 옆 절벽 위에 자리한 고대 유대인 요새로 유네스코 세계유산입니다.", spots:[
+  {name:"마사다 요새", wikiTitle:"Masada", type:"역사", desc:"로마 제국에 맞서 최후 항전한 유대인 요새로 일출 시 케이블카로 올라갑니다.", rating:4.6, openTime:"05:00~17:00", price:"₪31", website:"https://en.wikipedia.org/wiki/Masada"},
+]},
+"사해": { description:"사해는 해발 -430m 세계에서 가장 낮은 곳에 위치한 염도 34%의 호수로 물에 둥둥 뜹니다.", spots:[
+  {name:"사해 해변", wikiTitle:"Dead Sea", type:"자연", desc:"높은 염도로 몸이 저절로 뜨는 신기한 체험과 천연 머드팩이 유명합니다.", rating:4.5, openTime:"08:00~17:00", price:"₪50", website:"https://en.wikipedia.org/wiki/Dead_Sea"},
+]},
+
+// 러시아
+"모스크바": { description:"모스크바는 크렘린과 붉은 광장이 상징하는 러시아의 수도로 제정 러시아의 웅장한 유산이 가득합니다.", spots:[
+  {name:"크렘린", wikiTitle:"Moscow Kremlin", type:"역사", desc:"러시아 대통령 관저이자 중세 요새로 성당, 궁전, 무기고가 모여있습니다.", rating:4.7, openTime:"09:30~18:00", price:"₽700", website:"https://www.kreml.ru"},
+  {name:"성 바실리 대성당", wikiTitle:"Saint Basil's Cathedral", type:"역사", desc:"양파 모양의 알록달록한 돔이 상징적인 러시아 건축의 아이콘입니다.", rating:4.8, openTime:"10:00~18:00", price:"₽500", website:"https://en.wikipedia.org/wiki/Saint_Basil's_Cathedral"},
+]},
+"상트페테르부르크": { description:"상트페테르부르크는 에르미타주 박물관과 운하가 아름다운 러시아의 문화 수도입니다.", spots:[
+  {name:"에르미타주 박물관", wikiTitle:"Hermitage Museum", type:"문화", desc:"300만 점의 소장품을 가진 세계 4대 박물관 중 하나로 겨울 궁전에 자리합니다.", rating:4.9, openTime:"10:30~18:00", price:"₽500", website:"https://www.hermitagemuseum.org"},
+  {name:"피터호프 궁전", wikiTitle:"Peterhof Palace", type:"역사", desc:"'러시아의 베르사유'로 불리며 150개의 황금 분수가 장관입니다.", rating:4.7, openTime:"09:00~20:00", price:"₽600", website:"https://en.wikipedia.org/wiki/Peterhof_Palace"},
+]},
+"바이칼호": { description:"바이칼 호수는 세계에서 가장 깊고(1,642m) 오래된 호수로 투명한 얼음이 유명합니다.", spots:[
+  {name:"바이칼 호수", wikiTitle:"Lake Baikal", type:"자연", desc:"지구 민물의 20%를 담고 있는 유네스코 세계유산으로 겨울 투명 얼음이 장관입니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Lake_Baikal"},
+]},
+"소치": { description:"소치는 흑해 연안의 러시아 최대 휴양지로 2014 동계올림픽 개최 도시입니다.", spots:[
+  {name:"로사 쿠토르 스키 리조트", wikiTitle:"Rosa Khutor", type:"자연", desc:"2014 동계올림픽 알파인 스키 경기장으로 사계절 관광이 가능합니다.", rating:4.5, openTime:"10:00~17:00", price:"₽1,500", website:"https://en.wikipedia.org/wiki/Rosa_Khutor"},
+]},
+"블라디보스토크": { description:"블라디보스토크는 시베리아 횡단 열차의 종점으로 태평양과 접한 러시아 극동의 항구 도시입니다.", spots:[
+  {name:"금각만 대교", wikiTitle:"Russky Bridge", type:"랜드마크", desc:"세계 최장 사장교로 블라디보스토크의 상징적 랜드마크입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Russky_Bridge"},
+]},
+
+// 사우디·이란·우즈벡·에티오피아·가나
+"리야드": { description:"리야드는 사우디아라비아의 수도로 현대적 마천루와 전통 시장이 공존합니다.", spots:[
+  {name:"킹덤 센터 타워", wikiTitle:"Kingdom Centre", type:"랜드마크", desc:"302m 높이의 타워로 꼭대기 스카이 브릿지에서 리야드 전경을 조망합니다.", rating:4.4, openTime:"10:00~23:00", price:"SAR 63", website:"https://en.wikipedia.org/wiki/Kingdom_Centre"},
+]},
+"제다": { description:"제다는 홍해 연안의 상업 도시로 메카 순례의 관문이자 유네스코 세계유산 구시가지가 있습니다.", spots:[
+  {name:"알발라드 구시가지", wikiTitle:"Al-Balad", type:"역사", desc:"산호석으로 지어진 전통 건물의 유네스코 세계유산 역사 지구입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Al-Balad"},
+]},
+"알울라": { description:"알울라는 사우디아라비아 북부의 고대 유적지로 나바테아 왕국의 무덤이 있는 사막의 보석입니다.", spots:[
+  {name:"마다인 살레", wikiTitle:"Hegra (archaeological site)", type:"역사", desc:"페트라와 비슷한 나바테아 왕국의 암굴 무덤 유적으로 유네스코 세계유산입니다.", rating:4.7, openTime:"07:00~19:00", price:"SAR 95", website:"https://en.wikipedia.org/wiki/Hegra_(archaeological_site)"},
+]},
+"메카": { description:"메카는 이슬람교의 최고 성지로 전 세계 무슬림의 순례 목적지입니다.", spots:[
+  {name:"마스지드 알하람", wikiTitle:"Masjid al-Haram", type:"역사", desc:"세계 최대의 모스크로 중앙에 카바 신전이 자리합니다. 비무슬림 입장 불가입니다.", rating:4.9, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Masjid_al-Haram"},
+]},
+"테헤란": { description:"테헤란은 이란의 수도로 페르시아 문명의 보물과 현대 도시가 공존합니다.", spots:[
+  {name:"골레스탄 궁전", wikiTitle:"Golestan Palace", type:"역사", desc:"카자르 왕조의 궁전으로 거울의 방이 유명한 유네스코 세계유산입니다.", rating:4.5, openTime:"09:00~16:30", price:"IRR 500,000", website:"https://en.wikipedia.org/wiki/Golestan_Palace"},
+]},
+"이스파한": { description:"이스파한은 '세계의 절반'이라 불리는 페르시아의 보석으로 이맘 광장이 유네스코 세계유산입니다.", spots:[
+  {name:"이맘 광장", wikiTitle:"Naqsh-e Jahan Square", type:"역사", desc:"세계에서 두 번째로 큰 광장으로 이맘 모스크, 알리카푸 궁전이 둘러싸고 있습니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Naqsh-e_Jahan_Square"},
+]},
+"시라즈": { description:"시라즈는 페르세폴리스의 관문이자 시와 장미의 도시로 페르시아 문화의 심장입니다.", spots:[
+  {name:"나시르 알 몰크 모스크", wikiTitle:"Nasir-ol-Molk Mosque", type:"역사", desc:"스테인드글라스를 통해 무지개빛이 쏟아지는 '핑크 모스크'입니다.", rating:4.7, openTime:"08:00~11:30", price:"IRR 200,000", website:"https://en.wikipedia.org/wiki/Nasir-ol-Molk_Mosque"},
+]},
+"페르세폴리스": { description:"페르세폴리스는 아케메네스 제국의 수도였던 고대 유적으로 유네스코 세계유산입니다.", spots:[
+  {name:"페르세폴리스 유적", wikiTitle:"Persepolis", type:"역사", desc:"다리우스 1세가 건설한 제국의 의전 수도로 거대한 석조 궁전과 부조가 남아있습니다.", rating:4.8, openTime:"08:00~17:00", price:"IRR 500,000", website:"https://en.wikipedia.org/wiki/Persepolis"},
+]},
+"사마르칸트": { description:"사마르칸트는 실크로드의 교차점으로 티무르 제국의 화려한 이슬람 건축이 보존된 유네스코 세계유산 도시입니다.", spots:[
+  {name:"레기스탄 광장", wikiTitle:"Registan", type:"역사", desc:"세 개의 웅장한 마드라사가 광장을 둘러싼 중앙아시아 최고의 건축물입니다.", rating:4.9, openTime:"08:00~19:00", price:"$6", website:"https://en.wikipedia.org/wiki/Registan"},
+]},
+"부하라": { description:"부하라는 2,500년 역사의 실크로드 도시로 중앙아시아에서 가장 잘 보존된 중세 이슬람 도시입니다.", spots:[
+  {name:"아르크 요새", wikiTitle:"Ark of Bukhara", type:"역사", desc:"2,000년 역사의 부하라 에미르 궁전 겸 요새입니다.", rating:4.5, openTime:"09:00~17:00", price:"$4", website:"https://en.wikipedia.org/wiki/Ark_of_Bukhara"},
+]},
+"히바": { description:"히바는 실크로드의 오아시스 도시로 이찬칼라 내성 전체가 유네스코 세계유산입니다.", spots:[
+  {name:"이찬칼라", wikiTitle:"Itchan Kala", type:"역사", desc:"완벽히 보존된 중세 이슬람 도시로 미완성 미나렛 칼타 미노르가 상징입니다.", rating:4.6, openTime:"08:00~18:00", price:"$8", website:"https://en.wikipedia.org/wiki/Itchan_Kala"},
+]},
+"타슈켄트": { description:"타슈켄트는 우즈베키스탄의 수도로 소비에트와 이슬람 건축이 독특하게 공존합니다.", spots:[
+  {name:"초르수 바자르", wikiTitle:"Chorsu Bazaar", type:"문화", desc:"거대한 돔 아래 향신료, 과일, 수공예품이 가득한 중앙아시아 최대 바자르입니다.", rating:4.4, openTime:"06:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Chorsu_Bazaar"},
+]},
+"아디스아바바": { description:"아디스아바바는 에티오피아의 수도이자 아프리카 연합 본부가 있는 아프리카의 정치 수도입니다.", spots:[
+  {name:"에티오피아 국립박물관", wikiTitle:"National Museum of Ethiopia", type:"문화", desc:"320만 년 전 인류 화석 '루시'를 소장한 박물관입니다.", rating:4.3, openTime:"08:30~17:30", price:"ETB 10", website:"https://en.wikipedia.org/wiki/National_Museum_of_Ethiopia"},
+]},
+"랄리벨라": { description:"랄리벨라는 12세기에 바위를 깎아 만든 11개의 암굴 교회가 있는 에티오피아 기독교의 성지입니다.", spots:[
+  {name:"암굴 교회", wikiTitle:"Churches of Lalibela", type:"역사", desc:"단일 바위를 위에서 아래로 깎아 만든 교회 11개가 유네스코 세계유산입니다.", rating:4.8, openTime:"06:00~17:00", price:"$50", website:"https://en.wikipedia.org/wiki/Rock-Hewn_Churches,_Lalibela"},
+]},
+"악숨": { description:"악숨은 악숨 왕국의 고대 수도로 오벨리스크와 시바 여왕 전설이 있는 역사 도시입니다.", spots:[
+  {name:"악숨 오벨리스크", wikiTitle:"Obelisk of Axum", type:"역사", desc:"1,700년 된 24m 높이 화강암 석비로 유네스코 세계유산입니다.", rating:4.4, openTime:"08:00~17:00", price:"ETB 200", website:"https://en.wikipedia.org/wiki/Obelisk_of_Axum"},
+]},
+"다나킬사막": { description:"다나킬 사막은 지구에서 가장 뜨겁고 낮은 곳 중 하나로 유황 온천과 소금 호수가 외계 행성 같습니다.", spots:[
+  {name:"다나킬 함몰지", wikiTitle:"Danakil Depression", type:"자연", desc:"유황 분출구와 형형색색 소금 결정이 만드는 초현실적 풍경입니다.", rating:4.5, openTime:"투어 전용", price:"$200~(3박4일)", website:"https://en.wikipedia.org/wiki/Danakil_Depression"},
+]},
+"아크라": { description:"아크라는 가나의 수도로 대서양 해안의 노예 무역 역사와 활기찬 시장이 있습니다.", spots:[
+  {name:"제임스 타운", wikiTitle:"James Town, Accra", type:"역사", desc:"아크라 원주민 가(Ga) 족의 전통 어업 마을로 등대와 식민지 유적이 있습니다.", rating:4.2, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/James_Town,_Accra"},
+]},
+"케이프코스트": { description:"케이프코스트는 가나 남부의 역사 도시로 노예 무역 시대의 요새가 유네스코 세계유산입니다.", spots:[
+  {name:"케이프코스트 성", wikiTitle:"Cape Coast Castle", type:"역사", desc:"대서양 노예 무역의 중심지였던 요새로 유네스코 세계유산입니다.", rating:4.6, openTime:"09:00~16:30", price:"GHS 80", website:"https://en.wikipedia.org/wiki/Cape_Coast_Castle"},
+]},
+"쿠마시": { description:"쿠마시는 아샨티 왕국의 수도로 가나의 문화와 전통 공예의 중심지입니다.", spots:[
+  {name:"케제티아 시장", wikiTitle:"Kejetia Market", type:"문화", desc:"서아프리카 최대의 야외 시장으로 10,000개 이상의 노점이 있습니다.", rating:4.2, openTime:"06:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Kejetia_Market"},
+]},
+
+// 뉴질랜드
+"퀸스타운": { description:"퀸스타운은 번지점프의 발상지이자 모험 스포츠의 수도로 와카티푸 호수와 리마커블즈 산맥이 장관입니다.", spots:[
+  {name:"밀포드 사운드", wikiTitle:"Milford Sound", type:"자연", desc:"피오르드랜드 국립공원의 하이라이트로 깎아지른 절벽과 폭포가 장관입니다.", rating:4.9, openTime:"크루즈 08:00~", price:"NZD 70~", website:"https://en.wikipedia.org/wiki/Milford_Sound/Piopiotahi"},
+  {name:"카와라우 번지점프", wikiTitle:"Bungee jumping", type:"도시", desc:"세계 최초의 상업 번지점프 사이트로 43m 다리에서 뛰어내립니다.", rating:4.5, openTime:"09:00~17:00", price:"NZD 205", website:"https://www.bungy.co.nz"},
+]},
+"오클랜드": { description:"오클랜드는 뉴질랜드 최대 도시로 항구와 화산, 폴리네시아 문화가 어우러진 도시입니다.", spots:[
+  {name:"스카이 타워", wikiTitle:"Sky Tower (Auckland)", type:"랜드마크", desc:"328m 뉴질랜드 최고층 타워에서 스카이워크와 스카이점프 체험이 가능합니다.", rating:4.4, openTime:"09:00~22:00", price:"NZD 33", website:"https://en.wikipedia.org/wiki/Sky_Tower_(Auckland)"},
+]},
+"로토루아": { description:"로토루아는 지열 활동이 활발한 마오리 문화의 중심지로 간헐천과 온천이 유명합니다.", spots:[
+  {name:"테푸이아", wikiTitle:"Te Puia", type:"문화", desc:"포후투 간헐천과 마오리 공연, 키위새를 볼 수 있는 지열 공원입니다.", rating:4.5, openTime:"08:00~18:00", price:"NZD 70", website:"https://www.tepuia.com"},
+]},
+"웰링턴": { description:"웰링턴은 뉴질랜드의 수도로 카페 문화와 영화(반지의 제왕) 산업이 번성한 문화 도시입니다.", spots:[
+  {name:"테파파 박물관", wikiTitle:"Museum of New Zealand Te Papa Tongarewa", type:"문화", desc:"뉴질랜드의 자연과 마오리 문화를 다루는 국립박물관으로 입장 무료입니다.", rating:4.6, openTime:"10:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Museum_of_New_Zealand_Te_Papa_Tongarewa"},
+]},
+"밀포드사운드": { description:"밀포드 사운드는 뉴질랜드 남섬의 피오르드로 수직 절벽과 폭포가 장관인 세계유산입니다.", spots:[
+  {name:"밀포드 사운드 크루즈", wikiTitle:"Milford Sound", type:"자연", desc:"마이터 피크와 스털링 폭포를 배로 지나며 감상하는 뉴질랜드 최고의 경관입니다.", rating:4.9, openTime:"08:00~17:00", price:"NZD 70~", website:"https://en.wikipedia.org/wiki/Milford_Sound/Piopiotahi"},
+]},
+"호비튼": { description:"호비튼은 반지의 제왕·호빗 영화 촬영 세트로 실제 호빗 마을을 체험할 수 있습니다.", spots:[
+  {name:"호비튼 무비 세트", wikiTitle:"Hobbiton Movie Set", type:"문화", desc:"44개의 호빗 집이 보존된 촬영지로 그린 드래곤 펍에서 에일 맥주를 즐깁니다.", rating:4.7, openTime:"09:00~17:00", price:"NZD 89", website:"https://www.hobbitontours.com"},
+]},
+
+// 핀란드·아이슬란드·폴란드
+"헬싱키": { description:"헬싱키는 북유럽 디자인과 사우나 문화, 아르누보 건축이 매력적인 핀란드의 수도입니다.", spots:[
+  {name:"수오멘린나 해상 요새", wikiTitle:"Suomenlinna", type:"역사", desc:"6개 섬에 걸친 18세기 해상 요새로 유네스코 세계유산입니다.", rating:4.6, openTime:"24시간", price:"무료(페리)", website:"https://www.suomenlinna.fi"},
+  {name:"템펠리아우키오 교회", wikiTitle:"Temppeliaukio Church", type:"역사", desc:"바위를 파서 만든 독특한 지하 교회로 자연 음향이 뛰어납니다.", rating:4.4, openTime:"10:00~17:00", price:"€5", website:"https://en.wikipedia.org/wiki/Temppeliaukio_Church"},
+]},
+"로바니에미": { description:"로바니에미는 북극권 위의 도시로 산타클로스 마을과 오로라 관측이 유명합니다.", spots:[
+  {name:"산타클로스 마을", wikiTitle:"Santa Claus Village", type:"문화", desc:"북극선 위에 자리한 산타의 공식 거주지로 연중 크리스마스 분위기입니다.", rating:4.5, openTime:"10:00~17:00", price:"무료(체험별)", website:"https://santaclausvillage.info"},
+]},
+"탐페레": { description:"탐페레는 두 호수 사이에 자리한 핀란드 제2의 도시로 사우나 문화의 본고장입니다.", spots:[
+  {name:"라우하니에미 공공 사우나", wikiTitle:"Tampere", type:"문화", desc:"호수 옆 전통 공공 사우나에서 핀란드 사우나 문화를 체험합니다.", rating:4.4, openTime:"14:00~20:00", price:"€8", website:"https://en.wikipedia.org/wiki/Tampere"},
+]},
+"레이캬비크": { description:"레이캬비크는 세계 최북단 수도로 블루라군과 오로라, 고래 관측의 거점 도시입니다.", spots:[
+  {name:"할그림스키르캬 교회", wikiTitle:"Hallgrímskirkja", type:"랜드마크", desc:"73m 높이의 현무암 기둥을 모티브로 한 교회로 레이캬비크의 상징입니다.", rating:4.5, openTime:"09:00~17:00", price:"ISK 1,000(타워)", website:"https://www.hallgrimskirkja.is"},
+  {name:"골든서클 투어", wikiTitle:"Golden Circle", type:"자연", desc:"굴포스 폭포, 게이시르 간헐천, 씽벨리르 국립공원을 하루에 돌아보는 인기 코스입니다.", rating:4.7, openTime:"투어별", price:"ISK 10,000~", website:"https://www.visiticeland.com"},
+]},
+"아퀴레이리": { description:"아퀴레이리는 아이슬란드 북부의 수도로 고래 관측과 미바튼 호수 투어의 거점입니다.", spots:[
+  {name:"미바튼 호수", wikiTitle:"Lake Mývatn", type:"자연", desc:"화산 분화구와 지열 지대에 둘러싸인 호수로 이색적 풍경이 펼쳐집니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Lake_Mývatn"},
+]},
+"블루라군": { description:"블루라군은 아이슬란드의 상징적 지열 온천으로 유백색 온천수에서의 입욕 경험이 유명합니다.", spots:[
+  {name:"블루 라군 온천", wikiTitle:"Blue Lagoon (geothermal spa)", type:"자연", desc:"38°C 지열 온천수에서 실리카 머드팩을 하며 용암 지대를 감상합니다.", rating:4.6, openTime:"07:00~22:00", price:"ISK 11,990~", website:"https://www.bluelagoon.com"},
+]},
+"요쿨살론": { description:"요쿨살론은 빙하 조각이 떠다니는 빙하 석호로 아이슬란드 최고의 자연 경관입니다.", spots:[
+  {name:"요쿨살론 빙하 석호", wikiTitle:"Jökulsárlón", type:"자연", desc:"빙하에서 떨어져 나온 파란 빙산이 호수에 떠다니는 환상적인 풍경입니다.", rating:4.9, openTime:"24시간", price:"무료(보트 ISK 6,600)", website:"https://www.visiticeland.com"},
+]},
+"골든서클": { description:"골든서클은 아이슬란드에서 가장 인기 있는 관광 루트로 폭포, 간헐천, 국립공원을 하루에 돌아봅니다.", spots:[
+  {name:"굴포스 폭포", wikiTitle:"Gullfoss", type:"자연", desc:"이중 계단식 폭포로 엄청난 양의 물이 협곡으로 쏟아지는 장관입니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://www.visiticeland.com"},
+]},
+"크라쿠프": { description:"크라쿠프는 폴란드의 옛 수도로 바벨 성과 중세 구시가지가 아름다운 유네스코 세계유산 도시입니다.", spots:[
+  {name:"바벨 성", wikiTitle:"Wawel Castle", type:"역사", desc:"폴란드 왕들이 거주한 고딕-르네상스 궁전으로 대성당과 용 동굴이 유명합니다.", rating:4.7, openTime:"09:30~17:00", price:"PLN 30~", website:"https://www.wawel.krakow.pl"},
+  {name:"비엘리치카 소금광산", wikiTitle:"Wieliczka Salt Mine", type:"역사", desc:"700년 역사의 지하 소금 도시로 소금으로 만든 예배당이 경이롭습니다.", rating:4.7, openTime:"07:30~19:30", price:"PLN 120", website:"https://www.wieliczka-saltmine.com"},
+]},
+"바르샤바": { description:"바르샤바는 2차대전 파괴 후 복원된 폴란드의 수도로 유네스코 세계유산인 구시가지가 부활의 상징입니다.", spots:[
+  {name:"바르샤바 구시가지", wikiTitle:"Warsaw Old Town", type:"역사", desc:"전쟁 후 시민들이 원래 모습으로 재건한 유네스코 세계유산입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Warsaw_Old_Town"},
+]},
+"브로츠와프": { description:"브로츠와프는 오데르강의 12개 섬과 130개 다리로 이루어진 폴란드의 '작은 베니스'입니다.", spots:[
+  {name:"난쟁이 동상 찾기", wikiTitle:"Wrocław's dwarfs", type:"문화", desc:"시내 곳곳에 숨겨진 300개 이상의 작은 난쟁이 동상을 찾는 재미가 있습니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Wrocław's_dwarfs"},
+]},
+"그단스크": { description:"그단스크는 발트해 연안의 항구 도시로 한자동맹 시대의 부유함과 호박 가공 전통이 살아있습니다.", spots:[
+  {name:"긴 시장 거리", wikiTitle:"Long Market, Gdańsk", type:"역사", desc:"한자동맹 시대의 화려한 건물이 줄지어 선 그단스크의 메인 거리입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Long_Market,_Gdańsk"},
+]},
+"자코파네": { description:"자코파네는 타트라 산맥 기슭의 겨울 스포츠 도시로 폴란드의 알프스라 불립니다.", spots:[
+  {name:"타트라 국립공원", wikiTitle:"Tatra National Park, Poland", type:"자연", desc:"폴란드 최고봉 리시산을 품은 고산 국립공원으로 하이킹이 인기입니다.", rating:4.6, openTime:"24시간", price:"PLN 8", website:"https://en.wikipedia.org/wiki/Tatra_National_Park,_Poland"},
+]},
 }
 
 const DEFAULT_CITY_DATA = (cityName) => ({
@@ -2269,9 +2653,9 @@ function App() {
       })
       .polygonAltitude(feat => {
         const name = feat.properties.NAME
-        if (selectedCountry?.properties.NAME === name) return 0.001
-        if (hoveredCountry === name) return 0.001
-        return 0.001
+        if (selectedCountry?.properties.NAME === name) return 0.006
+        if (hoveredCountry === name) return 0.005
+        return 0.004
       })
       .polygonLabel(feat => {
         const name = feat.properties.NAME
@@ -2742,9 +3126,9 @@ function App() {
                               </div>
                               {selectedSpot?.name===spot.name && (
                                 <div style={{padding:'12px 14px',borderTop:`1px solid ${(selectedCity?.color||'#3b82f6')}22`,background:`${selectedCity?.color||'#3b82f6'}07`}}>
-                                  <p style={{fontSize:12.5,color:'#475569',lineHeight:1.75,marginBottom:(spot.openTime||spot.price||spot.website)?10:0}}>{spot.desc}</p>
+                                  <p style={{fontSize:12.5,color:'#475569',lineHeight:1.75,marginBottom:10}}>{spot.desc}</p>
                                   {(spot.openTime || spot.price) && (
-                                    <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:spot.website?8:0}}>
+                                    <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:8}}>
                                       {spot.openTime && (
                                         <div style={{display:'flex',alignItems:'center',gap:4,background:'white',borderRadius:8,padding:'4px 10px',fontSize:11,color:'#475569',border:'1px solid #e2e8f0'}}>
                                           🕐 {spot.openTime}
@@ -2757,6 +3141,7 @@ function App() {
                                       )}
                                     </div>
                                   )}
+                                  <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                                   {spot.website && (
                                     <a
                                       href={spot.website}
@@ -2775,6 +3160,24 @@ function App() {
                                       {spot.website?.includes('wikipedia.org') ? '📖 상세 정보 보기' : '🌐 공식 홈페이지'}
                                     </a>
                                   )}
+                                    <a
+                                      href={`https://www.google.com/maps/search/${encodeURIComponent(spot.wikiTitle || spot.name)}+${encodeURIComponent(selectedCity?.name || '')}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={e => e.stopPropagation()}
+                                      style={{
+                                        display:'inline-flex',alignItems:'center',gap:5,
+                                        background:'#fff',color:'#1a73e8',borderRadius:8,
+                                        padding:'6px 14px',fontSize:12,fontWeight:700,
+                                        textDecoration:'none',
+                                        border:'1.5px solid #dadce0',
+                                        boxShadow:'0 1px 4px rgba(0,0,0,0.08)'
+                                      }}
+                                    >
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#ea4335"/></svg>
+                                      리뷰 보기
+                                    </a>
+                                  </div>
                                 </div>
                               )}
                             </div>
