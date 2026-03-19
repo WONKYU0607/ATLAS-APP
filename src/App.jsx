@@ -2918,23 +2918,23 @@ function App() {
             user-select:none;
             padding:4px 10px;
             border-radius:6px;
-            background:${isSelected ? 'rgba(37,99,235,0.2)' : 'rgba(0,0,0,0.15)'};
+            background:transparent;
             transition:all 0.2s ease;
-            border:1.5px solid ${isSelected ? 'rgba(37,99,235,0.5)' : 'transparent'};
+            border:none;
           `
           inner.textContent = d.name
           el.appendChild(inner)
           el.onmouseenter = () => {
             inner.style.fontSize = '15px'
-            inner.style.background = 'rgba(37,99,235,0.25)'
-            inner.style.border = '1.5px solid rgba(37,99,235,0.6)'
+            inner.style.background = 'transparent'
+            inner.style.border = 'none'
             inner.style.color = '#93c5fd'
             inner.style.transform = 'translate(-50%,-50%) scale(1.1)'
           }
           el.onmouseleave = () => {
             inner.style.fontSize = isSelected ? '14px' : '12px'
-            inner.style.background = isSelected ? 'rgba(37,99,235,0.2)' : 'rgba(0,0,0,0.15)'
-            inner.style.border = `1.5px solid ${isSelected ? 'rgba(37,99,235,0.5)' : 'transparent'}`
+            inner.style.background = 'transparent'
+            inner.style.border = 'none'
             inner.style.color = isSelected ? '#2563eb' : 'rgba(255,255,255,0.95)'
             inner.style.transform = 'translate(-50%,-50%) scale(1)'
           }
