@@ -855,28 +855,12 @@ function App() {
     const updateCoords = () => {
       if (!globeRef.current) return
       const globe = globeRef.current
-      const camera = globe.camera()
-      const camPos = camera.position
-      const camLen = Math.sqrt(camPos.x**2 + camPos.y**2 + camPos.z**2)
-
       const coords = cities.map(city => {
-        const sc = globe.getScreenCoords(city.lat, city.lng, 0.02)
-        if (!sc) return { ...city, sx: 0, sy: 0, visible: false }
-
-        // Three.js / globe.gl 좌표계: x=cos(lat)*sin(lng), y=sin(lat), z=cos(lat)*cos(lng)
-        const latRad = city.lat * Math.PI / 180
-        const lngRad = city.lng * Math.PI / 180
-        const cx = Math.cos(latRad) * Math.sin(lngRad)
-        const cy = Math.sin(latRad)
-        const cz = Math.cos(latRad) * Math.cos(lngRad)
-
-        const dot = (cx * camPos.x + cy * camPos.y + cz * camPos.z) / camLen
-        const onFrontSide = dot > 0  // 앞면 도시만
-
-        const inBounds = sc.x > 10 && sc.x < window.innerWidth - 10
-                      && sc.y > 10 && sc.y < window.innerHeight - 10
-
-        return { ...city, sx: sc.x, sy: sc.y, visible: onFrontSide && inBounds }
+        const sc = globe.getScreenCoords(city.lat, city.lng, 0.01)
+        const visible = sc != null
+          && sc.x > 50 && sc.x < window.innerWidth - 50
+          && sc.y > 50 && sc.y < window.innerHeight - 50
+        return { ...city, sx: sc?.x ?? 0, sy: sc?.y ?? 0, visible }
       })
       setCityScreenCoords(coords)
     }
@@ -1195,27 +1179,16 @@ function App() {
 
       {/* ── React overlay city pins (겹침 방지) ── */}
       {(() => {
-        const visible = cityScreenCoords.filter(c => c.visible && c.sx > 0 && c.sy > 0)
-        const PIN_W = 90   // 핀 라벨 너비 추정
-        const PIN_H = 36   // 핀 라벨 높이 추정
-        const PADDING = 6  // 핀 간격
-
-        // 겹침 방지: 이미 배치된 핀과 겹치면 위/아래로 밀어내기
+        const visible = cityScreenCoords.filter(c => c.visible)
         const placed = []
         const adjusted = visible.map(city => {
-          let ax = city.sx
-          let ay = city.sy
-          let tries = 0
-          while (tries < 20) {
+          let ax = city.sx, ay = city.sy
+          for (let i = 0; i < 10; i++) {
             const overlap = placed.find(p =>
-              Math.abs(p.ax - ax) < PIN_W + PADDING &&
-              Math.abs(p.ay - ay) < PIN_H + PADDING
+              Math.abs(p.ax - ax) < 80 && Math.abs(p.ay - ay) < 30
             )
             if (!overlap) break
-            // 겹치면 위쪽으로 올리거나 옆으로 밀기
-            if (tries % 2 === 0) ay -= PIN_H + PADDING
-            else ax += (ax > overlap.ax ? 1 : -1) * (PIN_W / 2 + PADDING)
-            tries++
+            ay -= 34
           }
           placed.push({ ax, ay })
           return { ...city, ax, ay }
