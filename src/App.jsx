@@ -2116,18 +2116,27 @@ function App() {
   const [showDrop, setShowDrop] = useState(false)
   const [hoveredCountry, setHoveredCountry] = useState(null)
 
-  // Load world GeoJSON (50m 고해상도 → 해안선 정확, 영토 누락 없음)
+  // Load world GeoJSON (110m 경량 + 폴리곤 구멍 제거 → 빠른 렌더링, 빈 공간 없음)
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson')
+    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
       .then(r => r.json())
-      .then(data => setCountries(data.features))
-      .catch(() => {
-        // 50m 실패시 110m 폴백
-        fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
-          .then(r => r.json())
-          .then(data => setCountries(data.features))
-          .catch(() => {})
+      .then(data => {
+        // 폴리곤 내부 구멍(holes) 제거 → 중국, 러시아 등 빈 공간 해결
+        const fixed = data.features.map(feat => {
+          const geom = feat.geometry
+          if (geom.type === 'Polygon') {
+            // Polygon: 첫 번째 링만 유지 (나머지는 holes)
+            return { ...feat, geometry: { ...geom, coordinates: [geom.coordinates[0]] } }
+          }
+          if (geom.type === 'MultiPolygon') {
+            // MultiPolygon: 각 폴리곤에서 첫 번째 링만 유지
+            return { ...feat, geometry: { ...geom, coordinates: geom.coordinates.map(poly => [poly[0]]) } }
+          }
+          return feat
+        })
+        setCountries(fixed)
       })
+      .catch(() => {})
   }, [])
 
   // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
@@ -2155,10 +2164,12 @@ function App() {
     }
 
     globe.camera().position.z = 260
-    globe.controls().autoRotate = true
-    globe.controls().autoRotateSpeed = 0.35
+    globe.controls().autoRotate = false
     globe.controls().zoomSpeed = 1.5
     globeRef.current = globe
+
+    // 초기 화면: 대한민국 중심
+    setTimeout(() => globe.pointOfView({ lat: 36, lng: 127.8, altitude: 2.2 }), 300)
 
     const onResize = () => {
       globe.width(window.innerWidth)
@@ -2498,8 +2509,7 @@ function App() {
   const closeCountry = () => {
     setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null)
     if (globeRef.current) {
-      globeRef.current.controls().autoRotate = true
-      globeRef.current.pointOfView({ lat:20, lng:10, altitude:2.5 }, 1000)
+      globeRef.current.pointOfView({ lat: 36, lng: 127.8, altitude: 2.2 }, 1000)
     }
   }
 
