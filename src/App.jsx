@@ -715,12 +715,13 @@ const COUNTRY_KO = {
 
 // 전 세계 도시 사전 관광 데이터
 const CITY_DATA = {
-  // 대한민국
   "서울": { description:"서울은 600년 조선왕조의 역사와 K-팝 문화, 첨단 기술이 공존하는 아시아 최고의 도시입니다. 고궁과 현대 빌딩이 어우러진 독특한 매력으로 매년 수천만 명의 여행자를 끌어들입니다.", spots:[
-    {name:"경복궁", wikiTitle:"Gyeongbokgung", type:"역사", desc:"조선 5대 궁궐 중 가장 웅장하며 매시간 수문장 교대식이 열립니다. 근정전과 경회루는 조선 건축의 정수를 보여줍니다.", img:"https://images.unsplash.com/photo-1548115184-bc6544d06a58?w=400&q=80", rating:4.8, openTime:"09:00~18:00", price:"성인 3,000원"},
-    {name:"북촌 한옥마을", wikiTitle:"Bukchon Hanok Village", type:"문화", desc:"600년 된 전통 한옥이 즐비한 골목으로 조선시대 양반 생활을 엿볼 수 있습니다. 인왕산을 배경으로 한 풍경이 일품입니다.", img:"https://images.unsplash.com/photo-1538485399081-7191377e8241?w=400&q=80", rating:4.7, openTime:"24시간", price:"무료"},
-    {name:"N서울타워", wikiTitle:"N Seoul Tower", type:"랜드마크", desc:"남산 정상에 솟아오른 타워로 서울 전역을 360도로 내려다볼 수 있습니다. 야경이 특히 아름다워 연인들의 필수 코스입니다.", img:"https://images.unsplash.com/photo-1601621915196-2621bfb0cd6e?w=400&q=80", rating:4.6, openTime:"10:00~23:00", price:"성인 21,000원"},
-    {name:"광장시장", wikiTitle:"Gwangjang Market", type:"음식", desc:"1905년에 문을 연 서울 최초의 전통시장으로 빈대떡, 육회, 마약김밥이 유명합니다. 한국 전통 먹거리 문화의 살아있는 역사입니다.", img:"https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=400&q=80", rating:4.7, openTime:"09:00~23:00", price:"무료"}
+    {name:"경복궁", wikiTitle:"Gyeongbokgung", type:"역사", desc:"조선 5대 궁궐 중 가장 웅장하며 매시간 수문장 교대식이 열립니다. 근정전과 경회루는 조선 건축의 정수를 보여줍니다.", img:"https://images.unsplash.com/photo-1548115184-bc6544d06a58?w=400&q=80", rating:4.8, openTime:"09:00~18:00", price:"성인 3,000원", website:"https://www.royalpalace.go.kr"},
+    {name:"북촌 한옥마을", wikiTitle:"Bukchon Hanok Village", type:"문화", desc:"600년 된 전통 한옥이 즐비한 골목으로 조선시대 양반 생활을 엿볼 수 있습니다. 인왕산을 배경으로 한 풍경이 일품입니다.", img:"https://images.unsplash.com/photo-1538485399081-7191377e8241?w=400&q=80", rating:4.7, openTime:"24시간", price:"무료", website:"https://bukchon.seoul.go.kr"},
+    {name:"N서울타워", wikiTitle:"N Seoul Tower", type:"랜드마크", desc:"남산 정상에 솟아오른 타워로 서울 전역을 360도로 내려다볼 수 있습니다. 야경이 특히 아름다워 연인들의 필수 코스입니다.", img:"https://images.unsplash.com/photo-1601621915196-2621bfb0cd6e?w=400&q=80", rating:4.6, openTime:"10:00~23:00", price:"성인 21,000원", website:"https://www.nseoultower.co.kr"},
+    {name:"경복궁 근처 인사동", wikiTitle:"Insadong", type:"문화", desc:"전통 공예품과 갤러리, 찻집이 가득한 서울의 대표 문화 거리입니다. 주말이면 각종 공연과 체험 프로그램도 열립니다.", img:"https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=400&q=80", rating:4.5, openTime:"24시간", price:"무료", website:null},
+    {name:"광장시장", wikiTitle:"Gwangjang Market", type:"음식", desc:"1905년에 문을 연 서울 최초의 전통시장으로 빈대떡, 육회, 마약김밥이 유명합니다. 한국 전통 먹거리 문화의 살아있는 역사입니다.", img:"https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=400&q=80", rating:4.7, openTime:"09:00~23:00", price:"무료", website:"https://www.gwangjangmarket.co.kr"},
+    {name:"창덕궁", wikiTitle:"Changdeokgung", type:"역사", desc:"비원(후원)이라 불리는 아름다운 비밀 정원이 있는 유네스코 세계문화유산 궁궐입니다. 계절마다 다른 풍경이 펼쳐집니다.", img:"https://images.unsplash.com/photo-1548115184-bc6544d06a58?w=400&q=80", rating:4.8, openTime:"09:00~17:30", price:"성인 3,000원", website:"https://www.cdg.go.kr"},
   ]},
 }
 
@@ -855,12 +856,27 @@ function App() {
     const updateCoords = () => {
       if (!globeRef.current) return
       const globe = globeRef.current
+      const camera = globe.camera()
+      const cp = camera.position // 카메라 위치
+
       const coords = cities.map(city => {
         const sc = globe.getScreenCoords(city.lat, city.lng, 0.01)
-        const visible = sc != null
-          && sc.x > 50 && sc.x < window.innerWidth - 50
-          && sc.y > 50 && sc.y < window.innerHeight - 50
-        return { ...city, sx: sc?.x ?? 0, sy: sc?.y ?? 0, visible }
+        if (!sc) return { ...city, sx: 0, sy: 0, visible: false }
+
+        // globe.gl 좌표계: x=cos(lat)*sin(lng), y=sin(lat), z=cos(lat)*cos(lng)
+        const R = 100
+        const latR = city.lat * Math.PI / 180
+        const lngR = city.lng * Math.PI / 180
+        const wx = R * Math.cos(latR) * Math.sin(lngR)
+        const wy = R * Math.sin(latR)
+        const wz = R * Math.cos(latR) * Math.cos(lngR)
+
+        // 내적 > 0 이면 카메라 방향 (앞면)
+        const dot = wx * cp.x + wy * cp.y + wz * cp.z
+        const inBounds = sc.x > 0 && sc.x < window.innerWidth
+                      && sc.y > 0 && sc.y < window.innerHeight
+
+        return { ...city, sx: sc.x, sy: sc.y, visible: dot > 0 && inBounds }
       })
       setCityScreenCoords(coords)
     }
