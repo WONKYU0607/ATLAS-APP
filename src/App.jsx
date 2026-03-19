@@ -2899,7 +2899,7 @@ function App() {
     globe
       .htmlLat(d => d.lat)
       .htmlLng(d => d.lng)
-      .htmlAltitude(d => d._type === 'city' ? 0.008 : 0.005)
+      .htmlAltitude(d => d._type === 'city' ? 0.012 : 0.005)
       .htmlElement(d => {
         const el = document.createElement('div')
 
@@ -2942,28 +2942,39 @@ function App() {
   useEffect(() => {
     if (!globeRef.current || countries.length === 0) return
     const globe = globeRef.current
+    const hasSelection = !!selectedCountry
+
     globe
       .polygonsData(countries)
       .polygonCapColor(feat => {
         const name = feat.properties.NAME
+        // 국가 선택 상태에서는 선택된 국가만 연한 표시, 나머지 숨김
+        if (hasSelection) {
+          if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.15)'
+          return 'rgba(0,0,0,0)'
+        }
         if (hoveredCountry === name) return 'rgba(255,220,50,0.35)'
-        if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.30)'
         return COUNTRY_CITIES[name] ? 'rgba(34,197,94,0.08)' : 'rgba(200,220,180,0.04)'
       })
       .polygonSideColor(() => 'rgba(0,0,0,0)')
       .polygonStrokeColor(feat => {
         const name = feat.properties.NAME
-        if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.8)'
+        if (hasSelection) {
+          if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.5)'
+          return 'rgba(255,255,255,0.05)'
+        }
         if (hoveredCountry === name) return 'rgba(255,220,50,0.6)'
         return 'rgba(255,255,255,0.15)'
       })
       .polygonAltitude(feat => {
         const name = feat.properties.NAME
-        if (selectedCountry?.properties.NAME === name) return 0.006
+        if (hasSelection && selectedCountry?.properties.NAME === name) return 0.003
         if (hoveredCountry === name) return 0.005
         return 0.004
       })
       .polygonLabel(feat => {
+        // 국가 선택 상태에서는 툴팁 끄기
+        if (hasSelection) return null
         const name = feat.properties.NAME
         const koName = COUNTRY_KO[name] || name
         const hasCities = COUNTRY_CITIES[name]
@@ -2972,8 +2983,14 @@ function App() {
           ${hasCities ? `<div style="font-size:11px;color:#94a3b8;margin-top:2px">클릭하여 도시 탐색</div>` : ''}
         </div>`
       })
-      .onPolygonHover(feat => setHoveredCountry(feat ? feat.properties.NAME : null))
-      .onPolygonClick(feat => handleCountryClick(feat))
+      .onPolygonHover(feat => {
+        // 국가 선택 상태에서는 호버 끄기
+        if (!hasSelection) setHoveredCountry(feat ? feat.properties.NAME : null)
+      })
+      .onPolygonClick(feat => {
+        // 국가 선택 상태에서는 폴리곤 클릭 무시 (도시 라벨 클릭 우선)
+        if (!hasSelection) handleCountryClick(feat)
+      })
   }, [countries, hoveredCountry, selectedCountry])
 
 
