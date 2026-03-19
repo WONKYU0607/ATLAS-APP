@@ -3177,6 +3177,7 @@ function App() {
     setSelectedCountry(feat)
     setSelectedCity(null)
     setCityData(null)
+    setHoveredCountry(null)
 
     const center = getCountryCenter(feat)
     const altitude = getCountryAltitude(feat)
