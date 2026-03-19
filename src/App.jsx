@@ -3255,9 +3255,11 @@ function App() {
   }
 
   const closeCountry = () => {
+    // 현재 국가 위치에서 줌아웃만 (대한민국으로 돌아가지 않음)
+    const center = selectedCountry ? getCountryCenter(selectedCountry) : { lat: 36, lng: 127.8 }
     setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null)
     if (globeRef.current) {
-      globeRef.current.pointOfView({ lat: 36, lng: 127.8, altitude: 2.2 }, 1000)
+      globeRef.current.pointOfView({ lat: center.lat, lng: center.lng, altitude: 2.2 }, 1000)
     }
   }
 
