@@ -134,31 +134,31 @@ const COUNTRY_CITIES = {
     { name:"장자제", lat:29.13, lng:110.48, emoji:"🏔️", color:"#27ae60" },
     { name:"리장", lat:26.87, lng:100.22, emoji:"🌸", color:"#c0392b" },
     { name:"황산", lat:30.13, lng:118.17, emoji:"🌄", color:"#e67e22" },
-    { name:"홍콩", lat:22.32, lng:114.17, emoji:"🌃", color:"#2980b9" },
-    { name:"마카오", lat:22.20, lng:113.55, emoji:"🎲", color:"#f39c12" },
+    { name:"홍콩", lat:22.35, lng:114.15, emoji:"🌃", color:"#2980b9" },
+    { name:"마카오", lat:22.20, lng:113.56, emoji:"🎲", color:"#f39c12" },
     { name:"쑤저우", lat:31.30, lng:120.62, emoji:"🏮", color:"#8e44ad" },
   ],
   "France": [
     { name:"파리", lat:48.86, lng:2.35, emoji:"🗼", color:"#2ecc71" },
-    { name:"니스", lat:43.71, lng:7.26, emoji:"🌊", color:"#3498db" },
+    { name:"니스", lat:43.72, lng:7.20, emoji:"🌊", color:"#3498db" },
     { name:"리옹", lat:45.75, lng:4.83, emoji:"🍷", color:"#9b59b6" },
     { name:"보르도", lat:44.84, lng:-0.58, emoji:"🍇", color:"#e74c3c" },
     { name:"마르세유", lat:43.30, lng:5.37, emoji:"⛵", color:"#e67e22" },
-    { name:"몽생미셸", lat:48.64, lng:-1.51, emoji:"🏰", color:"#8e44ad" },
-    { name:"스트라스부르", lat:48.57, lng:7.75, emoji:"🥨", color:"#16a085" },
-    { name:"앙시", lat:45.90, lng:6.12, emoji:"🏔️", color:"#2980b9" },
+    { name:"몽생미셸", lat:48.62, lng:-1.48, emoji:"🏰", color:"#8e44ad" },
+    { name:"스트라스부르", lat:48.57, lng:7.65, emoji:"🥨", color:"#16a085" },
+    { name:"앙시", lat:45.92, lng:6.08, emoji:"🏔️", color:"#2980b9" },
     { name:"툴루즈", lat:43.60, lng:1.44, emoji:"✈️", color:"#c0392b" },
   ],
   "Italy": [
     { name:"로마", lat:41.90, lng:12.50, emoji:"🏛️", color:"#9b59b6" },
     { name:"베네치아", lat:45.44, lng:12.32, emoji:"🚤", color:"#3498db" },
     { name:"피렌체", lat:43.77, lng:11.25, emoji:"🎨", color:"#e74c3c" },
-    { name:"밀라노", lat:45.46, lng:9.19, emoji:"👗", color:"#2ecc71" },
+    { name:"밀라노", lat:45.47, lng:9.19, emoji:"👗", color:"#2ecc71" },
     { name:"나폴리", lat:40.85, lng:14.27, emoji:"🍕", color:"#f39c12" },
     { name:"아말피", lat:40.63, lng:14.60, emoji:"🌊", color:"#16a085" },
     { name:"시칠리아", lat:37.60, lng:14.02, emoji:"🍋", color:"#e67e22" },
     { name:"친퀘테레", lat:44.13, lng:9.67, emoji:"🎨", color:"#8e44ad" },
-    { name:"볼로냐", lat:44.49, lng:11.34, emoji:"🍝", color:"#c0392b" },
+    { name:"볼로냐", lat:44.50, lng:11.34, emoji:"🍝", color:"#c0392b" },
     { name:"시에나", lat:43.32, lng:11.33, emoji:"🏰", color:"#f39c12" },
     { name:"폼페이", lat:40.75, lng:14.49, emoji:"🌋", color:"#7f8c8d" },
   ],
@@ -171,18 +171,18 @@ const COUNTRY_CITIES = {
     { name:"빌바오", lat:43.26, lng:-2.93, emoji:"🎭", color:"#16a085" },
     { name:"말라가", lat:36.72, lng:-4.42, emoji:"☀️", color:"#c0392b" },
     { name:"톨레도", lat:39.86, lng:-4.02, emoji:"🗡️", color:"#2980b9" },
-    { name:"산티아고데콤포스텔라", lat:42.88, lng:-8.54, emoji:"⛪", color:"#8e44ad" },
+    { name:"산티아고데콤포스텔라", lat:42.87, lng:-8.50, emoji:"⛪", color:"#8e44ad" },
   ],
   "Germany": [
     { name:"베를린", lat:52.52, lng:13.40, emoji:"🏛️", color:"#3498db" },
     { name:"뮌헨", lat:48.14, lng:11.58, emoji:"🍺", color:"#e74c3c" },
     { name:"함부르크", lat:53.55, lng:9.99, emoji:"⚓", color:"#2ecc71" },
     { name:"로텐부르크", lat:49.38, lng:10.18, emoji:"🏰", color:"#f39c12" },
-    { name:"프랑크푸르트", lat:50.11, lng:8.68, emoji:"🏦", color:"#9b59b6" },
+    { name:"프랑크푸르트", lat:50.11, lng:8.70, emoji:"🏦", color:"#9b59b6" },
     { name:"쾰른", lat:50.93, lng:6.96, emoji:"⛪", color:"#e67e22" },
     { name:"드레스덴", lat:51.05, lng:13.74, emoji:"🎭", color:"#8e44ad" },
     { name:"하이델베르크", lat:49.40, lng:8.69, emoji:"🏰", color:"#16a085" },
-    { name:"퓌센", lat:47.57, lng:10.70, emoji:"🏰", color:"#c0392b" },
+    { name:"퓌센", lat:47.60, lng:10.70, emoji:"🏰", color:"#c0392b" },
   ],
   "United Kingdom": [
     { name:"런던", lat:51.51, lng:-0.13, emoji:"👑", color:"#7c3aed" },
@@ -248,7 +248,7 @@ const COUNTRY_CITIES = {
   "United Arab Emirates": [
     { name:"두바이", lat:25.20, lng:55.27, emoji:"🏗️", color:"#f39c12" },
     { name:"아부다비", lat:24.47, lng:54.37, emoji:"🕌", color:"#3498db" },
-    { name:"샤르자", lat:25.35, lng:55.39, emoji:"🏺", color:"#2ecc71" },
+    { name:"샤르자", lat:25.36, lng:55.42, emoji:"🏺", color:"#2ecc71" },
   ],
   "Turkey": [
     { name:"이스탄불", lat:41.01, lng:28.98, emoji:"🕌", color:"#b45309" },
@@ -305,17 +305,17 @@ const COUNTRY_CITIES = {
     { name:"라자암팟", lat:-1.08, lng:130.87, emoji:"🐠", color:"#16a085" },
   ],
   "Malaysia": [
-    { name:"쿠알라룸푸르", lat:3.14, lng:101.69, emoji:"🏙️", color:"#3498db" },
+    { name:"쿠알라룸푸르", lat:3.15, lng:101.70, emoji:"🏙️", color:"#3498db" },
     { name:"페낭", lat:5.41, lng:100.33, emoji:"🍜", color:"#e74c3c" },
     { name:"코타키나발루", lat:5.98, lng:116.07, emoji:"🏔️", color:"#2ecc71" },
     { name:"랑카위", lat:6.35, lng:99.80, emoji:"🏝️", color:"#f39c12" },
     { name:"말라카", lat:2.19, lng:102.25, emoji:"🏛️", color:"#9b59b6" },
   ],
   "Singapore": [
-    { name:"싱가포르", lat:1.35, lng:103.82, emoji:"🦁", color:"#991b1b" },
+    { name:"싱가포르", lat:1.36, lng:103.82, emoji:"🦁", color:"#991b1b" },
   ],
   "Cambodia": [
-    { name:"씨엠립", lat:13.36, lng:103.86, emoji:"🏛️", color:"#e74c3c" },
+    { name:"씨엠립", lat:13.37, lng:103.87, emoji:"🏛️", color:"#e74c3c" },
     { name:"프놈펜", lat:11.56, lng:104.93, emoji:"🏙️", color:"#3498db" },
     { name:"시아누크빌", lat:10.63, lng:103.50, emoji:"🏖️", color:"#2ecc71" },
   ],
@@ -358,26 +358,26 @@ const COUNTRY_CITIES = {
     { name:"로테르담", lat:51.92, lng:4.48, emoji:"🌉", color:"#3498db" },
     { name:"헤이그", lat:52.08, lng:4.31, emoji:"⚖️", color:"#2ecc71" },
     { name:"위트레흐트", lat:52.09, lng:5.12, emoji:"⛪", color:"#9b59b6" },
-    { name:"마스트리흐트", lat:50.85, lng:5.69, emoji:"🍷", color:"#8e44ad" },
+    { name:"마스트리흐트", lat:50.86, lng:5.70, emoji:"🍷", color:"#8e44ad" },
   ],
   "Czechia": [
     { name:"프라하", lat:50.08, lng:14.44, emoji:"🏰", color:"#065f46" },
-    { name:"체스키크룸로프", lat:48.81, lng:14.32, emoji:"🏯", color:"#e74c3c" },
+    { name:"체스키크룸로프", lat:48.82, lng:14.32, emoji:"🏯", color:"#e74c3c" },
     { name:"브르노", lat:49.19, lng:16.61, emoji:"🏙️", color:"#3498db" },
   ],
   "Austria": [
-    { name:"빈", lat:48.21, lng:16.37, emoji:"🎵", color:"#5b21b6" },
+    { name:"빈", lat:48.22, lng:16.35, emoji:"🎵", color:"#5b21b6" },
     { name:"잘츠부르크", lat:47.80, lng:13.04, emoji:"🎶", color:"#3498db" },
     { name:"인스브루크", lat:47.27, lng:11.39, emoji:"⛷️", color:"#2ecc71" },
     { name:"할슈타트", lat:47.56, lng:13.65, emoji:"🏔️", color:"#e74c3c" },
-    { name:"그라츠", lat:47.07, lng:15.44, emoji:"🏛️", color:"#f39c12" },
+    { name:"그라츠", lat:47.08, lng:15.43, emoji:"🏛️", color:"#f39c12" },
   ],
   "Switzerland": [
     { name:"취리히", lat:47.38, lng:8.54, emoji:"🏦", color:"#e74c3c" },
-    { name:"제네바", lat:46.20, lng:6.15, emoji:"⌚", color:"#3498db" },
+    { name:"제네바", lat:46.21, lng:6.19, emoji:"⌚", color:"#3498db" },
     { name:"인터라켄", lat:46.69, lng:7.86, emoji:"🏔️", color:"#2ecc71" },
     { name:"루체른", lat:47.05, lng:8.31, emoji:"🌉", color:"#9b59b6" },
-    { name:"체르마트", lat:46.02, lng:7.75, emoji:"⛷️", color:"#e67e22" },
+    { name:"체르마트", lat:46.05, lng:7.75, emoji:"⛷️", color:"#e67e22" },
     { name:"베른", lat:46.95, lng:7.44, emoji:"🐻", color:"#8e44ad" },
   ],
   "Hungary": [
@@ -385,7 +385,7 @@ const COUNTRY_CITIES = {
     { name:"에게르", lat:47.90, lng:20.38, emoji:"🍷", color:"#9b59b6" },
   ],
   "Croatia": [
-    { name:"두브로브니크", lat:42.65, lng:18.09, emoji:"🌊", color:"#3498db" },
+    { name:"두브로브니크", lat:42.66, lng:18.05, emoji:"🌊", color:"#3498db" },
     { name:"자그레브", lat:45.81, lng:15.98, emoji:"🏙️", color:"#e74c3c" },
     { name:"플리트비체", lat:44.88, lng:15.62, emoji:"💧", color:"#2ecc71" },
     { name:"스플리트", lat:43.51, lng:16.44, emoji:"🏛️", color:"#f39c12" },
@@ -599,10 +599,10 @@ const COUNTRY_CITIES = {
     { name:"브라쇼프", lat:45.66, lng:25.61, emoji:"🏰", color:"#e74c3c" },
   ],
   "Georgia": [
-    { name:"트빌리시", lat:41.72, lng:44.79, emoji:"⛪", color:"#9b59b6" },
+    { name:"트빌리시", lat:41.72, lng:44.80, emoji:"⛪", color:"#9b59b6" },
   ],
   "Montenegro": [
-    { name:"코토르", lat:42.42, lng:18.77, emoji:"🏰", color:"#3498db" },
+    { name:"코토르", lat:42.45, lng:18.77, emoji:"🏰", color:"#3498db" },
   ],
   "Mongolia": [
     { name:"울란바토르", lat:47.92, lng:106.91, emoji:"🏙️", color:"#e74c3c" },
@@ -618,7 +618,7 @@ const COUNTRY_CITIES = {
     { name:"무스카트", lat:23.59, lng:58.38, emoji:"🕌", color:"#f39c12" },
   ],
   "Qatar": [
-    { name:"도하", lat:25.29, lng:51.53, emoji:"🏙️", color:"#3498db" },
+    { name:"도하", lat:25.30, lng:51.53, emoji:"🏙️", color:"#3498db" },
   ],
   "Bolivia": [
     { name:"라파스", lat:-16.50, lng:-68.15, emoji:"🏔️", color:"#e74c3c" },
@@ -635,22 +635,22 @@ const COUNTRY_CITIES = {
     { name:"몬테고베이", lat:18.47, lng:-77.92, emoji:"🏖️", color:"#3498db" },
   ],
   "Latvia": [
-    { name:"리가", lat:56.95, lng:24.11, emoji:"🏛️", color:"#9b59b6" },
+    { name:"리가", lat:56.95, lng:24.12, emoji:"🏛️", color:"#9b59b6" },
   ],
   "Lithuania": [
     { name:"빌뉴스", lat:54.69, lng:25.28, emoji:"🏰", color:"#e74c3c" },
   ],
   "Estonia": [
-    { name:"탈린", lat:59.44, lng:24.75, emoji:"🏰", color:"#3498db" },
+    { name:"탈린", lat:59.43, lng:24.75, emoji:"🏰", color:"#3498db" },
   ],
   "Cyprus": [
-    { name:"파포스", lat:34.78, lng:32.42, emoji:"🏛️", color:"#f39c12" },
+    { name:"파포스", lat:34.77, lng:32.43, emoji:"🏛️", color:"#f39c12" },
   ],
   "Albania": [
     { name:"티라나", lat:41.33, lng:19.82, emoji:"🏙️", color:"#e74c3c" },
   ],
   "Serbia": [
-    { name:"베오그라드", lat:44.79, lng:20.47, emoji:"🏰", color:"#3498db" },
+    { name:"베오그라드", lat:44.80, lng:20.47, emoji:"🏰", color:"#3498db" },
   ],
   "Namibia": [
     { name:"빈트후크", lat:-22.56, lng:17.08, emoji:"🏜️", color:"#e67e22" },
@@ -669,21 +669,21 @@ const COUNTRY_CITIES = {
     { name:"포트루이스", lat:-20.16, lng:57.50, emoji:"🏝️", color:"#3498db" },
   ],
   "Lebanon": [
-    { name:"베이루트", lat:33.89, lng:35.50, emoji:"🏙️", color:"#e74c3c" },
+    { name:"베이루트", lat:33.89, lng:35.51, emoji:"🏙️", color:"#e74c3c" },
   ],
   "Ukraine": [
     { name:"키이우", lat:50.45, lng:30.52, emoji:"🏛️", color:"#3498db" },
     { name:"르비우", lat:49.84, lng:24.03, emoji:"🏰", color:"#2ecc71" },
   ],
   "Pakistan": [
-    { name:"라호르", lat:31.55, lng:74.35, emoji:"🕌", color:"#2ecc71" },
+    { name:"라호르", lat:31.52, lng:74.30, emoji:"🕌", color:"#2ecc71" },
     { name:"이슬라마바드", lat:33.69, lng:73.04, emoji:"🏙️", color:"#3498db" },
   ],
   "Luxembourg": [
     { name:"룩셈부르크시티", lat:49.61, lng:6.13, emoji:"🏰", color:"#9b59b6" },
   ],
   "Slovakia": [
-    { name:"브라티슬라바", lat:48.15, lng:17.11, emoji:"🏰", color:"#3498db" },
+    { name:"브라티슬라바", lat:48.16, lng:17.12, emoji:"🏰", color:"#3498db" },
   ],
   "Bulgaria": [
     { name:"소피아", lat:42.70, lng:23.32, emoji:"⛪", color:"#e74c3c" },
@@ -2858,36 +2858,32 @@ function App() {
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
-  // Convert globe lat/lng to screen x/y for React overlay pins
-  const [cityScreenCoords, setCityScreenCoords] = useState([])
-
+  // ── 도시 라벨 (지구본 표면에 직접 표시) ──────────────────────────
   useEffect(() => {
-    if (!globeRef.current || !selectedCountry) {
-      setCityScreenCoords([])
+    if (!globeRef.current) return
+    const globe = globeRef.current
+
+    if (!selectedCountry) {
+      globe.labelsData([])
       return
     }
+
     const countryEn = selectedCountry.properties.NAME
     const cities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, countryEn }))
-    const updateCoords = () => {
-      if (!globeRef.current) return
-      const globe = globeRef.current
-      const W = window.innerWidth - (selectedCity ? 420 : 0)
-      const H = window.innerHeight
 
-      const coords = cities.map(city => {
-        const sc = globe.getScreenCoords(city.lat, city.lng, 0.01)
-        // getScreenCoords가 뒷면이면 화면 밖 좌표 반환 → bounds 체크로 충분
-        const visible = sc != null
-          && sc.x > 20 && sc.x < W - 20
-          && sc.y > 20 && sc.y < H - 20
-        return { ...city, sx: sc?.x ?? 0, sy: sc?.y ?? 0, visible }
-      })
-      setCityScreenCoords(coords)
-    }
-    updateCoords()
-    const id = setInterval(updateCoords, 30)
-    return () => clearInterval(id)
-  }, [selectedCountry])
+    globe
+      .labelsData(cities)
+      .labelLat(d => d.lat)
+      .labelLng(d => d.lng)
+      .labelText(d => d.name)
+      .labelSize(1.2)
+      .labelDotRadius(0.3)
+      .labelDotOrientation(() => 'bottom')
+      .labelColor(d => selectedCity?.name === d.name ? '#2563eb' : 'rgba(255,255,255,0.95)')
+      .labelAltitude(0.007)
+      .labelResolution(3)
+      .onLabelClick(city => handleCityClick(city))
+  }, [selectedCountry, selectedCity])
 
   // Country labels via htmlElementsData (no click needed, just display)
   useEffect(() => {
@@ -3259,44 +3255,6 @@ function App() {
 
       {/* Globe */}
       <div ref={globeContainerRef} style={{position:'absolute',inset:0,zIndex:0}}/>
-
-      {/* ── React overlay city pins ── */}
-      {cityScreenCoords.filter(c => c.visible).map((city, i) => (
-        <div key={i}
-          onClick={() => handleCityClick(city)}
-          style={{
-            position:'absolute',
-            left: city.sx,
-            top: city.sy,
-            transform:'translate(-50%, -100%)',
-            zIndex: 500,
-            cursor:'pointer',
-            display:'flex',
-            flexDirection:'column',
-            alignItems:'center',
-            transition:'transform 0.15s',
-            pointerEvents:'all',
-          }}
-          onMouseEnter={e => e.currentTarget.style.transform='translate(-50%,-100%) scale(1.12)'}
-          onMouseLeave={e => e.currentTarget.style.transform='translate(-50%,-100%) scale(1)'}
-        >
-          <div style={{
-            background:'rgba(255,255,255,0.97)',
-            backdropFilter:'blur(8px)',
-            borderRadius:20,
-            padding:'4px 11px',
-            boxShadow:'0 3px 14px rgba(0,0,0,0.45)',
-            border:`2px solid ${city.color}`,
-            whiteSpace:'nowrap',
-            fontFamily:'Pretendard,Inter,sans-serif',
-            fontSize:12,
-            fontWeight:700,
-            color:'#0f172a',
-          }}>{city.name}</div>
-          <div style={{width:2,height:6,background:city.color}}/>
-          <div style={{width:9,height:9,borderRadius:'50%',background:city.color,border:'2px solid white',boxShadow:`0 0 8px ${city.color}`}}/>
-        </div>
-      ))}
 
       {/* Header */}
       <div style={{
