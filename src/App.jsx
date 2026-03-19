@@ -3166,9 +3166,14 @@ function App() {
     if (!feat || !globeRef.current) return
     const globe = globeRef.current
 
-    // 즉시 툴팁 제거 (useEffect 기다리지 않고 직접)
+    // 툴팁 DOM 직접 제거 (globe.gl 내부 구조 무관하게)
     globe.polygonLabel(() => '')
     setHoveredCountry(null)
+    document.querySelectorAll('div').forEach(el => {
+      if (el.textContent?.includes('클릭하여 도시') || el.classList?.contains('scene-tooltip')) {
+        el.remove()
+      }
+    })
 
     const clickedName = feat.properties.NAME
 
