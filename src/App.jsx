@@ -719,7 +719,7 @@ const CITY_DATA = {
     {name:"경복궁", wikiTitle:"Gyeongbokgung", type:"역사", desc:"조선 5대 궁궐 중 가장 웅장하며 매시간 수문장 교대식이 열립니다. 근정전과 경회루는 조선 건축의 정수를 보여줍니다.", img:"https://images.unsplash.com/photo-1548115184-bc6544d06a58?w=400&q=80", rating:4.8, openTime:"09:00~18:00", price:"성인 3,000원", website:"https://www.royalpalace.go.kr"},
     {name:"북촌 한옥마을", wikiTitle:"Bukchon Hanok Village", type:"문화", desc:"600년 된 전통 한옥이 즐비한 골목으로 조선시대 양반 생활을 엿볼 수 있습니다. 인왕산을 배경으로 한 풍경이 일품입니다.", img:"https://images.unsplash.com/photo-1538485399081-7191377e8241?w=400&q=80", rating:4.7, openTime:"24시간", price:"무료", website:"https://bukchon.seoul.go.kr"},
     {name:"N서울타워", wikiTitle:"N Seoul Tower", type:"랜드마크", desc:"남산 정상에 솟아오른 타워로 서울 전역을 360도로 내려다볼 수 있습니다. 야경이 특히 아름다워 연인들의 필수 코스입니다.", img:"https://images.unsplash.com/photo-1601621915196-2621bfb0cd6e?w=400&q=80", rating:4.6, openTime:"10:00~23:00", price:"성인 21,000원", website:"https://www.nseoultower.co.kr"},
-    {name:"경복궁 근처 인사동", wikiTitle:"Insadong", type:"문화", desc:"전통 공예품과 갤러리, 찻집이 가득한 서울의 대표 문화 거리입니다. 주말이면 각종 공연과 체험 프로그램도 열립니다.", img:"https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=400&q=80", rating:4.5, openTime:"24시간", price:"무료", website:null},
+    {name:"경복궁 근처 인사동", wikiTitle:"Insadong", type:"문화", desc:"전통 공예품과 갤러리, 찻집이 가득한 서울의 대표 문화 거리입니다. 주말이면 각종 공연과 체험 프로그램도 열립니다.", img:"https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=400&q=80", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Insadong"},
     {name:"광장시장", wikiTitle:"Gwangjang Market", type:"음식", desc:"1905년에 문을 연 서울 최초의 전통시장으로 빈대떡, 육회, 마약김밥이 유명합니다. 한국 전통 먹거리 문화의 살아있는 역사입니다.", img:"https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=400&q=80", rating:4.7, openTime:"09:00~23:00", price:"무료", website:"https://www.gwangjangmarket.co.kr"},
     {name:"창덕궁", wikiTitle:"Changdeokgung", type:"역사", desc:"비원(후원)이라 불리는 아름다운 비밀 정원이 있는 유네스코 세계문화유산 궁궐입니다. 계절마다 다른 풍경이 펼쳐집니다.", img:"https://images.unsplash.com/photo-1548115184-bc6544d06a58?w=400&q=80", rating:4.8, openTime:"09:00~17:30", price:"성인 3,000원", website:"https://www.cdg.go.kr"},
   ]},
@@ -856,27 +856,16 @@ function App() {
     const updateCoords = () => {
       if (!globeRef.current) return
       const globe = globeRef.current
-      const camera = globe.camera()
-      const cp = camera.position // 카메라 위치
+      const W = window.innerWidth - (selectedCity ? 420 : 0)
+      const H = window.innerHeight
 
       const coords = cities.map(city => {
         const sc = globe.getScreenCoords(city.lat, city.lng, 0.01)
-        if (!sc) return { ...city, sx: 0, sy: 0, visible: false }
-
-        // globe.gl 좌표계: x=cos(lat)*sin(lng), y=sin(lat), z=cos(lat)*cos(lng)
-        const R = 100
-        const latR = city.lat * Math.PI / 180
-        const lngR = city.lng * Math.PI / 180
-        const wx = R * Math.cos(latR) * Math.sin(lngR)
-        const wy = R * Math.sin(latR)
-        const wz = R * Math.cos(latR) * Math.cos(lngR)
-
-        // 내적 > 0 이면 카메라 방향 (앞면)
-        const dot = wx * cp.x + wy * cp.y + wz * cp.z
-        const inBounds = sc.x > 0 && sc.x < window.innerWidth
-                      && sc.y > 0 && sc.y < window.innerHeight
-
-        return { ...city, sx: sc.x, sy: sc.y, visible: dot > 0 && inBounds }
+        // getScreenCoords가 뒷면이면 화면 밖 좌표 반환 → bounds 체크로 충분
+        const visible = sc != null
+          && sc.x > 20 && sc.x < W - 20
+          && sc.y > 20 && sc.y < H - 20
+        return { ...city, sx: sc?.x ?? 0, sy: sc?.y ?? 0, visible }
       })
       setCityScreenCoords(coords)
     }
@@ -1109,22 +1098,24 @@ function App() {
     } catch { return null }
   }
 
-  // Gemini AI로 도시별 실제 관광 정보 생성
   const fetchAIWithSearch = async (city) => {
     const countryKoName = COUNTRY_KO[city.countryEn] || city.countryEn || ''
     const cityName = city.name || ''
     if (!cityName) return null
     try {
-      const prompt = `너는 여행 전문가야. ${countryKoName} ${cityName}의 유명 관광지를 알려줘.
-아래 JSON 형식으로만 답해. 다른 말 하지 마. JSON 외 텍스트 금지.
+      const prompt = `여행 전문가로서 ${countryKoName} ${cityName}의 실제 유명 관광지 정보를 JSON으로만 반환해. 마크다운 없이 순수 JSON만 출력.
 
-{"description":"${cityName}에 대한 소개 2문장","spots":[{"name":"관광지명(한국어)","wikiTitle":"English Wikipedia title","type":"랜드마크","desc":"이 관광지 설명 2문장","rating":4.5,"openTime":"09:00~18:00","price":"무료","website":"https://official-url.com"},{"name":"관광지명2","wikiTitle":"English title2","type":"자연","desc":"설명2","rating":4.3,"openTime":"24시간","price":"무료","website":null}]}
+{"description":"${cityName} 소개 2문장","spots":[{"name":"관광지 한국어명","wikiTitle":"English Wikipedia article title","type":"랜드마크","desc":"구체적 설명 2문장","rating":4.5,"openTime":"09:00~18:00","price":"무료","website":"https://실제공식홈페이지.com"}]}
 
-규칙:
-1. spots 배열에 최소 4개, 최대 8개 관광지
-2. wikiTitle은 반드시 영어 Wikipedia 제목
-3. type은 랜드마크/문화/자연/역사/음식/도시 중 하나
-4. JSON만 출력, 마크다운 사용 금지`
+필수 규칙:
+- spots: 최소 4개 최대 8개
+- name: 한국어 관광지명
+- wikiTitle: 영어 Wikipedia 문서 제목 (예: Eiffel Tower, Colosseum)
+- type: 랜드마크/문화/자연/역사/음식/도시 중 하나
+- openTime: 실제 운영시간
+- price: 실제 입장료 (무료 또는 금액)
+- website: 반드시 실제 공식 홈페이지 URL 입력. 공식 사이트 없으면 해당 관광지의 Wikipedia URL(https://en.wikipedia.org/wiki/제목) 사용. null 사용 금지.
+- JSON만 출력. 다른 텍스트 절대 금지.`
 
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -1135,13 +1126,22 @@ function App() {
       const data = await res.json()
       if (!data.text) return null
 
-      // JSON 파싱 - 가장 바깥 { } 찾기
       const txt = data.text.replace(/```json|```/g, '').trim()
       const start = txt.indexOf('{')
       const end = txt.lastIndexOf('}')
       if (start === -1 || end === -1) return null
       const parsed = JSON.parse(txt.slice(start, end + 1))
       if (!parsed?.spots?.length) return null
+
+      // website 없는 spot에 Wikipedia URL 자동 보완
+      parsed.spots = parsed.spots.map(s => ({
+        ...s,
+        website: s.website && s.website !== 'null'
+          ? s.website
+          : s.wikiTitle
+            ? `https://en.wikipedia.org/wiki/${encodeURIComponent(s.wikiTitle)}`
+            : null
+      }))
       return parsed
     } catch (e) {
       console.error('AI failed for', cityName, ':', e.message)
@@ -1193,66 +1193,43 @@ function App() {
       {/* Globe */}
       <div ref={globeContainerRef} style={{position:'absolute',inset:0,zIndex:0}}/>
 
-      {/* ── React overlay city pins (겹침 방지) ── */}
-      {(() => {
-        const visible = cityScreenCoords.filter(c => c.visible)
-        const placed = []
-        const adjusted = visible.map(city => {
-          let ax = city.sx, ay = city.sy
-          for (let i = 0; i < 10; i++) {
-            const overlap = placed.find(p =>
-              Math.abs(p.ax - ax) < 80 && Math.abs(p.ay - ay) < 30
-            )
-            if (!overlap) break
-            ay -= 34
-          }
-          placed.push({ ax, ay })
-          return { ...city, ax, ay }
-        })
-
-        return adjusted.map((city, i) => (
-          <div key={i}
-            onClick={() => handleCityClick(city)}
-            style={{
-              position:'absolute',
-              left: city.ax,
-              top: city.ay,
-              transform:'translate(-50%, -100%)',
-              zIndex: 500,
-              cursor:'pointer',
-              display:'flex',
-              flexDirection:'column',
-              alignItems:'center',
-              transition:'transform 0.15s',
-              pointerEvents:'all',
-            }}
-            onMouseEnter={e => e.currentTarget.style.transform='translate(-50%,-100%) scale(1.12)'}
-            onMouseLeave={e => e.currentTarget.style.transform='translate(-50%,-100%) scale(1)'}
-          >
-            <div style={{
-              background:'rgba(255,255,255,0.97)',
-              backdropFilter:'blur(8px)',
-              borderRadius:20,
-              padding:'4px 11px',
-              boxShadow:'0 3px 14px rgba(0,0,0,0.45)',
-              border:`2px solid ${city.color}`,
-              whiteSpace:'nowrap',
-              fontFamily:'Pretendard,Inter,sans-serif',
-              fontSize:12,
-              fontWeight:700,
-              color:'#0f172a',
-              letterSpacing:'-0.3px',
-            }}>{city.name}</div>
-            <div style={{width:2,height:6,background:city.color}}/>
-            <div style={{
-              width:9,height:9,borderRadius:'50%',
-              background:city.color,
-              border:'2px solid white',
-              boxShadow:`0 0 8px ${city.color}`,
-            }}/>
-          </div>
-        ))
-      })()}
+      {/* ── React overlay city pins ── */}
+      {cityScreenCoords.filter(c => c.visible).map((city, i) => (
+        <div key={i}
+          onClick={() => handleCityClick(city)}
+          style={{
+            position:'absolute',
+            left: city.sx,
+            top: city.sy,
+            transform:'translate(-50%, -100%)',
+            zIndex: 500,
+            cursor:'pointer',
+            display:'flex',
+            flexDirection:'column',
+            alignItems:'center',
+            transition:'transform 0.15s',
+            pointerEvents:'all',
+          }}
+          onMouseEnter={e => e.currentTarget.style.transform='translate(-50%,-100%) scale(1.12)'}
+          onMouseLeave={e => e.currentTarget.style.transform='translate(-50%,-100%) scale(1)'}
+        >
+          <div style={{
+            background:'rgba(255,255,255,0.97)',
+            backdropFilter:'blur(8px)',
+            borderRadius:20,
+            padding:'4px 11px',
+            boxShadow:'0 3px 14px rgba(0,0,0,0.45)',
+            border:`2px solid ${city.color}`,
+            whiteSpace:'nowrap',
+            fontFamily:'Pretendard,Inter,sans-serif',
+            fontSize:12,
+            fontWeight:700,
+            color:'#0f172a',
+          }}>{city.name}</div>
+          <div style={{width:2,height:6,background:city.color}}/>
+          <div style={{width:9,height:9,borderRadius:'50%',background:city.color,border:'2px solid white',boxShadow:`0 0 8px ${city.color}`}}/>
+        </div>
+      ))}
 
       {/* Header */}
       <div style={{
