@@ -3166,6 +3166,10 @@ function App() {
   const handleCountryClick = (feat) => {
     if (!feat || !globeRef.current) return
     const globe = globeRef.current
+
+    // 즉시 툴팁 제거 (줌인 전에)
+    globe.polygonLabel(() => null)
+
     const clickedName = feat.properties.NAME
 
     // 같은 나라 다시 클릭하면 원상복구
