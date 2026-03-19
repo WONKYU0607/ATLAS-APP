@@ -2858,70 +2858,85 @@ function App() {
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
-  // ── 도시 라벨 (지구본 표면에 직접 표시) ──────────────────────────
+  // ── 도시 라벨 (지구본 표면에 HTML로 표시) ──────────────────────────
   useEffect(() => {
     if (!globeRef.current) return
     const globe = globeRef.current
 
     if (!selectedCountry) {
-      globe.labelsData([])
+      // 국가 라벨만 표시 (도시 라벨 제거)
+      const labelItems = countries.map(feat => ({
+        lat: feat.properties.LABEL_Y || 0,
+        lng: feat.properties.LABEL_X || 0,
+        name: COUNTRY_KO[feat.properties.NAME] || feat.properties.NAME,
+        nameEn: feat.properties.NAME,
+        _type: 'country',
+      })).filter(d => d.lat !== 0 || d.lng !== 0)
+      globe.htmlElementsData(labelItems)
       return
     }
 
     const countryEn = selectedCountry.properties.NAME
-    const cities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, countryEn }))
+    const cities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, countryEn, _type: 'city' }))
 
-    globe
-      .labelsData(cities)
-      .labelLat(d => d.lat)
-      .labelLng(d => d.lng)
-      .labelText(d => d.name)
-      .labelSize(1.2)
-      .labelDotRadius(0.3)
-      .labelDotOrientation(() => 'bottom')
-      .labelColor(d => selectedCity?.name === d.name ? '#2563eb' : 'rgba(255,255,255,0.95)')
-      .labelAltitude(0.007)
-      .labelResolution(3)
-      .onLabelClick(city => handleCityClick(city))
-  }, [selectedCountry, selectedCity])
-
-  // Country labels via htmlElementsData (no click needed, just display)
-  useEffect(() => {
-    if (!globeRef.current || countries.length === 0) return
-    const globe = globeRef.current
-
-    const labelItems = countries.map(feat => ({
+    // 국가 라벨 + 선택된 국가의 도시 라벨 합침
+    const countryLabels = countries.map(feat => ({
       lat: feat.properties.LABEL_Y || 0,
       lng: feat.properties.LABEL_X || 0,
       name: COUNTRY_KO[feat.properties.NAME] || feat.properties.NAME,
       nameEn: feat.properties.NAME,
-      _type: 'label',
-    })).filter(d => d.lat !== 0 || d.lng !== 0)
+      _type: 'country',
+    })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn)
+
+    globe.htmlElementsData([...countryLabels, ...cities])
+  }, [selectedCountry, selectedCity, countries])
+
+  // HTML 요소 렌더링
+  useEffect(() => {
+    if (!globeRef.current) return
+    const globe = globeRef.current
 
     globe
-      .htmlElementsData(labelItems)
       .htmlLat(d => d.lat)
       .htmlLng(d => d.lng)
-      .htmlAltitude(0.005)
+      .htmlAltitude(d => d._type === 'city' ? 0.008 : 0.005)
       .htmlElement(d => {
         const el = document.createElement('div')
-        const hasCities = COUNTRY_CITIES[d.nameEn]
-        el.style.cssText = 'pointer-events:none;'
-        el.innerHTML = `<div style="
-          transform:translate(-50%,-50%);
-          font-family:Pretendard,Inter,sans-serif;
-          font-size:${hasCities ? '13px' : '10px'};
-          font-weight:${hasCities ? '700' : '400'};
-          color:${hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'};
-          text-shadow:0 1px 4px rgba(0,0,0,1),0 0 10px rgba(0,0,0,0.8);
-          white-space:nowrap;
-          user-select:none;
-        ">${d.name}</div>`
+
+        if (d._type === 'city') {
+          const isSelected = selectedCity?.name === d.name
+          el.style.cssText = 'cursor:pointer;pointer-events:all;'
+          el.innerHTML = `<div style="
+            transform:translate(-50%,-50%);
+            font-family:Pretendard,Inter,system-ui,sans-serif;
+            font-size:${isSelected ? '14px' : '12px'};
+            font-weight:700;
+            color:${isSelected ? '#2563eb' : 'rgba(255,255,255,0.95)'};
+            text-shadow:0 1px 6px rgba(0,0,0,1),0 0 12px rgba(0,0,0,0.9);
+            white-space:nowrap;
+            user-select:none;
+            padding:3px 8px;
+            border-radius:4px;
+            background:${isSelected ? 'rgba(37,99,235,0.15)' : 'transparent'};
+          ">${d.name}</div>`
+          el.onclick = () => handleCityClickRef.current?.(d)
+        } else {
+          const hasCities = COUNTRY_CITIES[d.nameEn]
+          el.style.cssText = 'pointer-events:none;'
+          el.innerHTML = `<div style="
+            transform:translate(-50%,-50%);
+            font-family:Pretendard,Inter,sans-serif;
+            font-size:${hasCities ? '13px' : '10px'};
+            font-weight:${hasCities ? '700' : '400'};
+            color:${hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'};
+            text-shadow:0 1px 4px rgba(0,0,0,1),0 0 10px rgba(0,0,0,0.8);
+            white-space:nowrap;
+            user-select:none;
+          ">${d.name}</div>`
+        }
         return el
       })
-
-    globe.pointsData([])
-  }, [countries])
+  }, [countries, selectedCountry, selectedCity])
 
   // Update polygons
   useEffect(() => {
