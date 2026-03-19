@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 {"description":"삿포로 소개","spots":[{"name":"관광지명","wikiTitle":"English title","type":"랜드마크","desc":"설명","rating":4.5,"openTime":"09:00~18:00","price":"무료","website":"https://example.com"}]}`
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
