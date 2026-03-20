@@ -79,7 +79,7 @@ function SpotImage({ wikiTitle, spotName, fallback, className, style, alt }) {
   )
 }
 
-// ── 관광지 사진 갤러리 (Wikipedia에서 여러 장 로드) ───────────────────
+// ── 관광지 사진 갤러리 (Wikimedia Commons 실사진 + 필터링 강화) ──────────
 function SpotGallery({ wikiTitle, spotName, fallback, style }) {
   const [images, setImages] = useState([])
   const [idx, setIdx] = useState(0)
@@ -91,48 +91,60 @@ function SpotGallery({ wikiTitle, spotName, fallback, style }) {
     const keyword = wikiTitle || spotName || ''
     if (!keyword) { setLoading(false); return }
 
+    // 그림/아이콘/지도 필터
+    const badPattern = /\b(icon|logo|flag|map|symbol|coat|seal|crest|commons|wiki|button|arrow|edit|stub|diagram|drawing|plan|layout|svg|sign|medal|badge|emblem|silhouette|panorama_from|location|locator|position)\b/i
+
     const fetchImages = async () => {
+      const results = []
+
       try {
-        // 1단계: 페이지의 모든 이미지 파일명 가져오기
-        const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(keyword)}&prop=images&imlimit=20&format=json&origin=*`)
-        const data = await res.json()
-        const page = Object.values(data?.query?.pages || {})[0]
-        const allFiles = (page?.images || [])
-          .map(img => img.title)
-          .filter(t => /\.(jpg|jpeg|png)$/i.test(t))
-          .filter(t => !/\b(icon|logo|flag|map|symbol|coat|seal|crest|commons|wiki|button|arrow|edit|stub)\b/i.test(t))
-          .slice(0, 8)
-
-        if (cancelled || allFiles.length === 0) {
-          // 검색 API로 폴백
-          const sRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(keyword)}&gsrlimit=3&prop=pageimages&format=json&pithumbsize=800&origin=*`)
-          const sData = await sRes.json()
-          const pages = Object.values(sData?.query?.pages || {})
-          const thumbs = pages.map(p => p?.thumbnail?.source).filter(Boolean)
-          if (!cancelled) { setImages(thumbs.length > 0 ? thumbs : (fallback ? [fallback] : [])); setLoading(false) }
-          return
-        }
-
-        // 2단계: 각 파일의 실제 썸네일 URL 가져오기
-        const thumbUrls = []
-        const batchSize = 4
-        for (let i = 0; i < allFiles.length; i += batchSize) {
-          const batch = allFiles.slice(i, i + batchSize)
-          const tRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${batch.map(t => encodeURIComponent(t)).join('|')}&prop=imageinfo&iiprop=url&iiurlwidth=800&format=json&origin=*`)
-          const tData = await tRes.json()
-          const tPages = Object.values(tData?.query?.pages || {})
-          for (const tp of tPages) {
-            const thumb = tp?.imageinfo?.[0]?.thumburl
-            if (thumb && !cancelled) thumbUrls.push(thumb)
+        // 1단계: Wikimedia Commons에서 실사진 검색 (가장 좋은 소스)
+        const commonsRes = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(keyword + ' photo')}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=800&format=json&origin=*`)
+        const commonsData = await commonsRes.json()
+        const commonsPages = Object.values(commonsData?.query?.pages || {})
+        for (const p of commonsPages) {
+          const info = p?.imageinfo?.[0]
+          if (!info) continue
+          // 실사진만: JPEG, 최소 400px, 아이콘/지도 제외
+          if (info.mime?.startsWith('image/jpeg') && info.width > 400 && info.height > 300) {
+            const title = p.title || ''
+            if (!badPattern.test(title)) {
+              results.push(info.thumburl || info.url)
+            }
           }
         }
+      } catch {}
 
-        if (!cancelled) {
-          setImages(thumbUrls.length > 0 ? thumbUrls : (fallback ? [fallback] : []))
-          setLoading(false)
-        }
-      } catch {
-        if (!cancelled) { setImages(fallback ? [fallback] : []); setLoading(false) }
+      // 2단계: 부족하면 Wikipedia 문서 이미지 추가
+      if (results.length < 4) {
+        try {
+          const wikiRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(keyword)}&prop=images&imlimit=15&format=json&origin=*`)
+          const wikiData = await wikiRes.json()
+          const page = Object.values(wikiData?.query?.pages || {})[0]
+          const files = (page?.images || [])
+            .map(img => img.title)
+            .filter(t => /\.jpe?g$/i.test(t))  // JPEG만 (PNG는 보통 아이콘/다이어그램)
+            .filter(t => !badPattern.test(t))
+            .slice(0, 6)
+
+          if (files.length > 0) {
+            const infoRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${files.map(t => encodeURIComponent(t)).join('|')}&prop=imageinfo&iiprop=url|size&iiurlwidth=800&format=json&origin=*`)
+            const infoData = await infoRes.json()
+            const infoPages = Object.values(infoData?.query?.pages || {})
+            for (const tp of infoPages) {
+              const info = tp?.imageinfo?.[0]
+              // 실사진 필터: 최소 크기 + 가로세로 비율 체크 (너무 좁으면 배너/로고)
+              if (info?.thumburl && info.width > 400 && info.height > 250 && info.width / info.height < 4) {
+                if (!results.includes(info.thumburl)) results.push(info.thumburl)
+              }
+            }
+          }
+        } catch {}
+      }
+
+      if (!cancelled) {
+        setImages(results.length > 0 ? results.slice(0, 8) : (fallback ? [fallback] : []))
+        setLoading(false)
       }
     }
 
@@ -225,6 +237,9 @@ const COUNTRY_CITIES = {
     { name:"강릉", lat:37.75, lng:128.88, emoji:"🏖️", color:"#2980b9" },
     { name:"수원", lat:37.27, lng:127.01, emoji:"🏰", color:"#c0392b" },
     { name:"광주", lat:35.16, lng:126.85, emoji:"🎨", color:"#1abc9c" },
+    { name:"여수", lat:34.74, lng:127.74, emoji:"🌉", color:"#3498db" },
+    { name:"속초", lat:38.19, lng:128.59, emoji:"🏔️", color:"#2ecc71" },
+    { name:"통영", lat:34.85, lng:128.43, emoji:"🎵", color:"#9b59b6" },
   ],
   "Japan": [
     { name:"도쿄", lat:35.68, lng:139.69, emoji:"🗼", color:"#e74c3c" },
@@ -285,6 +300,7 @@ const COUNTRY_CITIES = {
     { name:"그라나다", lat:37.18, lng:-3.60, emoji:"🏰", color:"#9b59b6" },
     { name:"발렌시아", lat:39.47, lng:-0.38, emoji:"🥘", color:"#e67e22" },
     { name:"빌바오", lat:43.26, lng:-2.93, emoji:"🎭", color:"#16a085" },
+    { name:"산세바스티안", lat:43.32, lng:-1.98, emoji:"🍽️", color:"#27ae60" },
     { name:"말라가", lat:36.72, lng:-4.42, emoji:"☀️", color:"#c0392b" },
     { name:"톨레도", lat:39.86, lng:-4.02, emoji:"🗡️", color:"#2980b9" },
     { name:"산티아고데콤포스텔라", lat:42.87, lng:-8.50, emoji:"⛪", color:"#8e44ad" },
@@ -347,6 +363,7 @@ const COUNTRY_CITIES = {
     { name:"코사무이", lat:9.51, lng:100.06, emoji:"🌴", color:"#f39c12" },
     { name:"아유타야", lat:14.35, lng:100.56, emoji:"🏛️", color:"#9b59b6" },
     { name:"크라비", lat:8.09, lng:98.91, emoji:"🏝️", color:"#16a085" },
+    { name:"치앙라이", lat:19.91, lng:99.83, emoji:"⛩️", color:"#9b59b6" },
     { name:"코피피", lat:7.74, lng:98.77, emoji:"🐚", color:"#8e44ad" },
   ],
   "India": [
@@ -409,6 +426,7 @@ const COUNTRY_CITIES = {
     { name:"후에", lat:16.46, lng:107.60, emoji:"🏰", color:"#9b59b6" },
     { name:"사파", lat:22.34, lng:103.84, emoji:"🌾", color:"#27ae60" },
     { name:"푸꾸옥", lat:10.29, lng:103.98, emoji:"🌴", color:"#8e44ad" },
+    { name:"나트랑", lat:12.24, lng:109.19, emoji:"🏖️", color:"#2980b9" },
     { name:"닌빈", lat:20.25, lng:105.97, emoji:"⛰️", color:"#16a085" },
   ],
   "Indonesia": [
@@ -654,6 +672,7 @@ const COUNTRY_CITIES = {
     { name:"웰링턴", lat:-41.29, lng:174.78, emoji:"🎭", color:"#9b59b6" },
     { name:"밀포드사운드", lat:-44.67, lng:167.93, emoji:"🏔️", color:"#f39c12" },
     { name:"호비튼", lat:-37.86, lng:175.68, emoji:"🧙", color:"#8e44ad" },
+    { name:"크라이스트처치", lat:-43.53, lng:172.64, emoji:"🏙️", color:"#e74c3c" },
   ],
   "Saudi Arabia": [
     { name:"리야드", lat:24.69, lng:46.72, emoji:"🕌", color:"#2ecc71" },
@@ -813,6 +832,78 @@ const COUNTRY_CITIES = {
   "Kazakhstan": [
     { name:"알마티", lat:43.24, lng:76.95, emoji:"🏔️", color:"#3498db" },
   ],
+  // ── 나머지 국가 (수도) ──
+  "Afghanistan": [{ name:"카불", lat:34.53, lng:69.17, emoji:"🏔️", color:"#e67e22" }],
+  "Algeria": [{ name:"알제", lat:36.75, lng:3.04, emoji:"🕌", color:"#e74c3c" }],
+  "Angola": [{ name:"루안다", lat:-8.84, lng:13.23, emoji:"🏙️", color:"#f39c12" }],
+  "Armenia": [{ name:"예레반", lat:40.18, lng:44.51, emoji:"⛪", color:"#9b59b6" }],
+  "Azerbaijan": [{ name:"바쿠", lat:40.41, lng:49.87, emoji:"🔥", color:"#e74c3c" }],
+  "Bahrain": [{ name:"마나마", lat:26.23, lng:50.59, emoji:"🏙️", color:"#3498db" }],
+  "Bangladesh": [{ name:"다카", lat:23.81, lng:90.41, emoji:"🕌", color:"#2ecc71" }],
+  "Belarus": [{ name:"민스크", lat:53.90, lng:27.57, emoji:"🏛️", color:"#3498db" }],
+  "Belize": [{ name:"벨리즈시티", lat:17.50, lng:-88.20, emoji:"🏝️", color:"#2ecc71" }],
+  "Benin": [{ name:"코토누", lat:6.37, lng:2.39, emoji:"🌍", color:"#f39c12" }],
+  "Bhutan": [{ name:"팀부", lat:27.47, lng:89.64, emoji:"🛕", color:"#e67e22" }],
+  "Bosnia and Herzegovina": [{ name:"사라예보", lat:43.86, lng:18.41, emoji:"🏰", color:"#e74c3c" }],
+  "Botswana": [{ name:"가보로네", lat:-24.65, lng:25.91, emoji:"🐘", color:"#2ecc71" }],
+  "Brunei": [{ name:"반다르스리브가완", lat:4.94, lng:114.95, emoji:"🕌", color:"#f39c12" }],
+  "Burkina Faso": [{ name:"와가두구", lat:12.37, lng:-1.52, emoji:"🌍", color:"#e67e22" }],
+  "Burundi": [{ name:"기테가", lat:-3.43, lng:29.93, emoji:"🌍", color:"#2ecc71" }],
+  "Cabo Verde": [{ name:"프라이아", lat:14.93, lng:-23.51, emoji:"🏝️", color:"#3498db" }],
+  "Cameroon": [{ name:"야운데", lat:3.87, lng:11.52, emoji:"🌍", color:"#2ecc71" }],
+  "Central African Republic": [{ name:"방기", lat:4.36, lng:18.56, emoji:"🌍", color:"#e67e22" }],
+  "Chad": [{ name:"은자메나", lat:12.13, lng:15.05, emoji:"🌍", color:"#f39c12" }],
+  "Comoros": [{ name:"모로니", lat:-11.70, lng:43.26, emoji:"🏝️", color:"#3498db" }],
+  "Democratic Republic of the Congo": [{ name:"킨샤사", lat:-4.44, lng:15.27, emoji:"🌍", color:"#2ecc71" }],
+  "Djibouti": [{ name:"지부티시", lat:11.59, lng:43.15, emoji:"🏙️", color:"#e74c3c" }],
+  "El Salvador": [{ name:"산살바도르", lat:13.69, lng:-89.19, emoji:"🌋", color:"#3498db" }],
+  "Equatorial Guinea": [{ name:"말라보", lat:3.75, lng:8.78, emoji:"🌍", color:"#2ecc71" }],
+  "Eritrea": [{ name:"아스마라", lat:15.34, lng:38.93, emoji:"🏛️", color:"#e74c3c" }],
+  "Eswatini": [{ name:"음바바네", lat:-26.31, lng:31.14, emoji:"🌍", color:"#9b59b6" }],
+  "Gabon": [{ name:"리브르빌", lat:0.39, lng:9.45, emoji:"🌿", color:"#2ecc71" }],
+  "Gambia": [{ name:"반줄", lat:13.45, lng:-16.58, emoji:"🌍", color:"#f39c12" }],
+  "Guinea": [{ name:"코나크리", lat:9.64, lng:-13.58, emoji:"🌍", color:"#e67e22" }],
+  "Guinea-Bissau": [{ name:"비사우", lat:11.86, lng:-15.60, emoji:"🌍", color:"#2ecc71" }],
+  "Guyana": [{ name:"조지타운", lat:6.80, lng:-58.16, emoji:"🌿", color:"#2ecc71" }],
+  "Haiti": [{ name:"포르토프랭스", lat:18.54, lng:-72.34, emoji:"🏙️", color:"#e74c3c" }],
+  "Honduras": [{ name:"테구시갈파", lat:14.07, lng:-87.19, emoji:"🌋", color:"#3498db" }],
+  "Iraq": [{ name:"바그다드", lat:33.31, lng:44.37, emoji:"🕌", color:"#e67e22" }],
+  "Ivory Coast": [{ name:"아비장", lat:5.36, lng:-4.01, emoji:"🌍", color:"#f39c12" }],
+  "Kosovo": [{ name:"프리슈티나", lat:42.66, lng:21.17, emoji:"🏛️", color:"#3498db" }],
+  "Kuwait": [{ name:"쿠웨이트시티", lat:29.38, lng:47.99, emoji:"🏙️", color:"#f39c12" }],
+  "Kyrgyzstan": [{ name:"비슈케크", lat:42.87, lng:74.59, emoji:"🏔️", color:"#3498db" }],
+  "Lesotho": [{ name:"마세루", lat:-29.31, lng:27.48, emoji:"🏔️", color:"#2ecc71" }],
+  "Liberia": [{ name:"몬로비아", lat:6.30, lng:-10.80, emoji:"🌍", color:"#e74c3c" }],
+  "Libya": [{ name:"트리폴리", lat:32.90, lng:13.18, emoji:"🏛️", color:"#e67e22" }],
+  "Malawi": [{ name:"릴롱궤", lat:-13.97, lng:33.79, emoji:"🌍", color:"#2ecc71" }],
+  "Mali": [{ name:"바마코", lat:12.64, lng:-8.00, emoji:"🌍", color:"#f39c12" }],
+  "Mauritania": [{ name:"누악쇼트", lat:18.09, lng:-15.98, emoji:"🏜️", color:"#e67e22" }],
+  "Moldova": [{ name:"키시나우", lat:47.01, lng:28.86, emoji:"🏛️", color:"#9b59b6" }],
+  "Mozambique": [{ name:"마푸토", lat:-25.97, lng:32.57, emoji:"🌍", color:"#e74c3c" }],
+  "Nicaragua": [{ name:"마나과", lat:12.11, lng:-86.24, emoji:"🌋", color:"#3498db" }],
+  "Niger": [{ name:"니아메", lat:13.51, lng:2.11, emoji:"🌍", color:"#f39c12" }],
+  "Nigeria": [{ name:"라고스", lat:6.52, lng:3.38, emoji:"🏙️", color:"#2ecc71" }, { name:"아부자", lat:9.06, lng:7.49, emoji:"🏛️", color:"#e74c3c" }],
+  "North Korea": [{ name:"평양", lat:39.02, lng:125.75, emoji:"🏛️", color:"#e74c3c" }],
+  "North Macedonia": [{ name:"스코페", lat:41.99, lng:21.43, emoji:"🏛️", color:"#e67e22" }],
+  "Papua New Guinea": [{ name:"포트모르즈비", lat:-6.31, lng:147.15, emoji:"🌿", color:"#2ecc71" }],
+  "Paraguay": [{ name:"아순시온", lat:-25.26, lng:-57.58, emoji:"🏙️", color:"#3498db" }],
+  "Republic of the Congo": [{ name:"브라자빌", lat:-4.27, lng:15.28, emoji:"🌍", color:"#2ecc71" }],
+  "Sierra Leone": [{ name:"프리타운", lat:8.47, lng:-13.23, emoji:"🌍", color:"#f39c12" }],
+  "Somalia": [{ name:"모가디슈", lat:2.05, lng:45.32, emoji:"🌍", color:"#e74c3c" }],
+  "South Sudan": [{ name:"주바", lat:4.85, lng:31.60, emoji:"🌍", color:"#2ecc71" }],
+  "Sudan": [{ name:"하르툼", lat:15.50, lng:32.56, emoji:"🏜️", color:"#e67e22" }],
+  "Suriname": [{ name:"파라마리보", lat:5.85, lng:-55.20, emoji:"🌿", color:"#2ecc71" }],
+  "Syria": [{ name:"다마스쿠스", lat:33.51, lng:36.29, emoji:"🕌", color:"#e67e22" }],
+  "Tajikistan": [{ name:"두샨베", lat:38.56, lng:68.77, emoji:"🏔️", color:"#3498db" }],
+  "Timor-Leste": [{ name:"딜리", lat:-8.56, lng:125.57, emoji:"🏝️", color:"#e74c3c" }],
+  "Togo": [{ name:"로메", lat:6.14, lng:1.21, emoji:"🌍", color:"#f39c12" }],
+  "Trinidad and Tobago": [{ name:"포트오브스페인", lat:10.65, lng:-61.51, emoji:"🎵", color:"#e74c3c" }],
+  "Turkmenistan": [{ name:"아시가바트", lat:37.96, lng:58.38, emoji:"🏛️", color:"#f39c12" }],
+  "Uganda": [{ name:"캄팔라", lat:0.35, lng:32.58, emoji:"🌍", color:"#2ecc71" }],
+  "Uruguay": [{ name:"몬테비데오", lat:-34.88, lng:-56.16, emoji:"🏙️", color:"#3498db" }],
+  "Venezuela": [{ name:"카라카스", lat:10.49, lng:-66.88, emoji:"🏙️", color:"#e74c3c" }],
+  "Yemen": [{ name:"사나", lat:15.35, lng:44.21, emoji:"🕌", color:"#e67e22" }],
+  "Zambia": [{ name:"루사카", lat:-15.39, lng:28.32, emoji:"🌍", color:"#2ecc71" }],
 }
 
 
@@ -2839,6 +2930,257 @@ const CITY_DATA = {
 "알마티": { description:"알마티는 천산산맥 아래 카자흐스탄 최대 도시로 소비에트 건축과 자연이 어우러진 중앙아시아의 관문입니다.", spots:[
   {name:"빅 알마티 호수", wikiTitle:"Big Almaty Lake", type:"자연", desc:"해발 2,511m의 청록빛 빙하 호수로 천산산맥의 장엄한 파노라마가 펼쳐집니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Big_Almaty_Lake"},
 ]},
+
+// ── 나머지 국가 수도 ──
+"카불": { description:"카불은 아프가니스탄의 수도로 힌두쿠시 산맥에 둘러싸인 3,500년 역사의 실크로드 도시입니다.", spots:[
+  {name:"바부르 정원", wikiTitle:"Gardens of Babur", type:"역사", desc:"무굴 제국 창시자 바부르의 묘지가 있는 역사적 정원입니다.", rating:4.3, openTime:"08:00~17:00", price:"$1", website:"https://en.wikipedia.org/wiki/Gardens_of_Babur"},
+]},
+"알제": { description:"알제는 알제리의 수도로 지중해를 내려다보는 카스바(구시가지)가 유네스코 세계유산입니다.", spots:[
+  {name:"카스바", wikiTitle:"Casbah of Algiers", type:"역사", desc:"오스만 시대의 미로 같은 골목이 보존된 유네스코 세계유산입니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Casbah_of_Algiers"},
+]},
+"루안다": { description:"루안다는 앙골라의 수도로 대서양 해안의 활기찬 항구 도시입니다.", spots:[
+  {name:"포르탈레자 드 상미겔", wikiTitle:"Fortress of São Miguel", type:"역사", desc:"16세기 포르투갈이 건설한 해안 요새로 도시의 역사를 전합니다.", rating:4.2, openTime:"09:00~17:00", price:"AOA 500", website:"https://en.wikipedia.org/wiki/Fortress_of_São_Miguel"},
+]},
+"예레반": { description:"예레반은 아르메니아의 수도로 아라라트 산을 배경으로 한 분홍빛 도시입니다.", spots:[
+  {name:"캐스케이드 계단", wikiTitle:"Yerevan Cascade", type:"랜드마크", desc:"거대한 석회암 계단 위 현대미술 전시와 아라라트산 전망이 인상적입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Yerevan_Cascade"},
+]},
+"바쿠": { description:"바쿠는 아제르바이잔의 수도로 '바람의 도시'라 불리며 현대 건축과 고대 성벽이 공존합니다.", spots:[
+  {name:"이체리셰헤르(내성)", wikiTitle:"Icherisheher", type:"역사", desc:"12세기 성벽에 둘러싸인 구시가지로 유네스코 세계유산입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Icherisheher"},
+  {name:"플레임 타워", wikiTitle:"Flame Towers", type:"랜드마크", desc:"불꽃 모양의 3개 초고층 빌딩으로 밤에 LED 쇼가 펼쳐집니다.", rating:4.4, openTime:"외관 24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Flame_Towers"},
+]},
+"마나마": { description:"마나마는 바레인의 수도로 페르시아만의 금융 중심지이자 고대 딜문 문명의 유적이 있습니다.", spots:[
+  {name:"바레인 요새", wikiTitle:"Bahrain Fort", type:"역사", desc:"4,000년 역사의 딜문 문명 유적으로 유네스코 세계유산입니다.", rating:4.4, openTime:"08:00~20:00", price:"무료", website:"https://en.wikipedia.org/wiki/Bahrain_Fort"},
+]},
+"다카": { description:"다카는 방글라데시의 수도로 인구 2,200만의 세계에서 가장 밀집된 도시 중 하나입니다.", spots:[
+  {name:"라르바그 요새", wikiTitle:"Lalbagh Fort", type:"역사", desc:"17세기 무굴 제국 시대의 미완성 요새로 아름다운 정원이 있습니다.", rating:4.2, openTime:"10:00~17:00", price:"BDT 20", website:"https://en.wikipedia.org/wiki/Lalbagh_Fort"},
+]},
+"민스크": { description:"민스크는 벨라루스의 수도로 소비에트 건축과 넓은 대로가 특징적인 도시입니다.", spots:[
+  {name:"독립광장", wikiTitle:"Independence Square, Minsk", type:"도시", desc:"유럽 최대급 광장 중 하나로 소비에트 시대 건축의 웅장함이 느껴집니다.", rating:4.1, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Independence_Square,_Minsk"},
+]},
+"벨리즈시티": { description:"벨리즈시티는 벨리즈 최대 도시로 세계 2위 산호초 그레이트 블루홀의 관문입니다.", spots:[
+  {name:"그레이트 블루홀", wikiTitle:"Great Blue Hole", type:"자연", desc:"직경 300m, 깊이 124m의 거대한 해중 싱크홀로 다이빙 성지입니다.", rating:4.8, openTime:"투어 전용", price:"$250~", website:"https://en.wikipedia.org/wiki/Great_Blue_Hole"},
+]},
+"코토누": { description:"코토누는 베냉의 경제 수도로 서아프리카의 활기찬 시장과 부두교 문화가 살아있습니다.", spots:[
+  {name:"간비에 수상마을", wikiTitle:"Ganvie", type:"문화", desc:"아프리카의 베니스로 불리는 호수 위 수상 가옥 마을입니다.", rating:4.3, openTime:"보트투어", price:"CFA 5,000", website:"https://en.wikipedia.org/wiki/Ganvie"},
+]},
+"팀부": { description:"팀부는 부탄의 수도로 신호등이 없는 세계 유일의 수도이며 히말라야 불교 문화의 중심입니다.", spots:[
+  {name:"타시초 종", wikiTitle:"Tashichho Dzong", type:"역사", desc:"부탄 정부 청사이자 승원으로 부탄 전통 건축의 정수입니다.", rating:4.6, openTime:"17:00~18:00(관광)", price:"무료", website:"https://en.wikipedia.org/wiki/Tashichho_Dzong"},
+]},
+"사라예보": { description:"사라예보는 보스니아의 수도로 동서양 문화가 만나는 곳에 모스크, 교회, 성당이 한 거리에 공존합니다.", spots:[
+  {name:"바슈차르시야", wikiTitle:"Baščaršija", type:"역사", desc:"15세기 오스만 시대의 구시가지 바자르로 동양과 서양이 만나는 거리입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Baščaršija"},
+]},
+"가보로네": { description:"가보로네는 보츠와나의 수도로 오카방고 델타와 초베 국립공원 사파리의 관문입니다.", spots:[
+  {name:"오카방고 델타", wikiTitle:"Okavango Delta", type:"자연", desc:"사막 한가운데 펼쳐진 세계 최대의 내륙 삼각주로 유네스코 세계유산입니다.", rating:4.9, openTime:"연중", price:"투어별", website:"https://en.wikipedia.org/wiki/Okavango_Delta"},
+]},
+"반다르스리브가완": { description:"반다르스리브가완은 브루나이의 수도로 황금빛 모스크와 수상마을이 인상적입니다.", spots:[
+  {name:"오마르 알리 사이푸딘 모스크", wikiTitle:"Omar Ali Saifuddien Mosque", type:"역사", desc:"인공 호수 위에 떠있는 듯한 황금 돔의 모스크로 아시아에서 가장 아름다운 모스크 중 하나입니다.", rating:4.6, openTime:"08:00~17:00", price:"무료", website:"https://en.wikipedia.org/wiki/Omar_Ali_Saifuddien_Mosque"},
+]},
+"와가두구": { description:"와가두구는 부르키나파소의 수도로 서아프리카 영화제(FESPACO)의 본고장입니다.", spots:[
+  {name:"FESPACO 영화제", wikiTitle:"FESPACO", type:"문화", desc:"아프리카 최대 영화제로 2년마다 개최됩니다.", rating:4.0, openTime:"격년 2~3월", price:"행사별", website:"https://en.wikipedia.org/wiki/FESPACO"},
+]},
+"기테가": { description:"기테가는 부룬디의 수도로 아프리카 대호수 지역의 문화 중심지입니다.", spots:[
+  {name:"기테가 국립박물관", wikiTitle:"Gitega", type:"문화", desc:"부룬디의 역사와 전통 문화를 전시하는 국립박물관입니다.", rating:3.8, openTime:"08:00~17:00", price:"BIF 5,000", website:"https://en.wikipedia.org/wiki/Gitega"},
+]},
+"프라이아": { description:"프라이아는 카보베르데의 수도로 대서양 위 화산섬의 아프리카-포르투갈 혼합 문화가 매력적입니다.", spots:[
+  {name:"시다드 벨랴", wikiTitle:"Cidade Velha", type:"역사", desc:"포르투갈 최초의 열대 식민지 정착지로 유네스코 세계유산입니다.", rating:4.3, openTime:"24시간", price:"CVE 500", website:"https://en.wikipedia.org/wiki/Cidade_Velha"},
+]},
+"야운데": { description:"야운데는 카메룬의 수도로 7개의 언덕 위에 자리한 열대 도시입니다.", spots:[
+  {name:"야운데 통일기념탑", wikiTitle:"Reunification Monument", type:"랜드마크", desc:"카메룬 영어권과 프랑스어권의 통일을 상징하는 기념물입니다.", rating:3.9, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Reunification_Monument"},
+]},
+"방기": { description:"방기는 중앙아프리카공화국의 수도로 우방기 강변에 자리한 도시입니다.", spots:[
+  {name:"보갈리 폭포", wikiTitle:"Boali Falls", type:"자연", desc:"높이 50m의 폭포로 방기 근교의 대표 자연 명소입니다.", rating:4.0, openTime:"24시간", price:"CFA 2,000", website:"https://en.wikipedia.org/wiki/Boali_Falls"},
+]},
+"은자메나": { description:"은자메나는 차드의 수도로 사하라 사막과 사헬 지대가 만나는 곳에 위치합니다.", spots:[
+  {name:"은자메나 대모스크", wikiTitle:"N'Djamena Grand Mosque", type:"역사", desc:"차드 최대의 모스크로 도시의 대표적 랜드마크입니다.", rating:3.8, openTime:"기도시간 외", price:"무료", website:"https://en.wikipedia.org/wiki/N%27Djamena"},
+]},
+"모로니": { description:"모로니는 코모로의 수도로 인도양의 화산섬에 자리한 아랍-아프리카 혼합 문화 도시입니다.", spots:[
+  {name:"카르탈라 화산", wikiTitle:"Mount Karthala", type:"자연", desc:"세계에서 가장 큰 활화산 분화구 중 하나가 있는 화산입니다.", rating:4.2, openTime:"가이드 투어", price:"$50~", website:"https://en.wikipedia.org/wiki/Mount_Karthala"},
+]},
+"킨샤사": { description:"킨샤사는 콩고민주공화국의 수도로 아프리카에서 3번째로 큰 메트로폴리스입니다.", spots:[
+  {name:"킨샤사 국립박물관", wikiTitle:"Kinshasa", type:"문화", desc:"콩고의 전통 예술과 역사를 전시하는 국립박물관입니다.", rating:3.9, openTime:"09:00~17:00", price:"CDF 5,000", website:"https://en.wikipedia.org/wiki/Kinshasa"},
+]},
+"지부티시": { description:"지부티는 홍해와 아덴만이 만나는 전략적 요충지의 소국 수도입니다.", spots:[
+  {name:"아살 호수", wikiTitle:"Lake Assal (Djibouti)", type:"자연", desc:"해발 -155m의 아프리카에서 가장 낮은 곳이자 세계에서 가장 짠 호수입니다.", rating:4.3, openTime:"24시간", price:"$10", website:"https://en.wikipedia.org/wiki/Lake_Assal_(Djibouti)"},
+]},
+"산살바도르": { description:"산살바도르는 엘살바도르의 수도로 화산에 둘러싸인 중미의 활기찬 도시입니다.", spots:[
+  {name:"호야 데 세렌", wikiTitle:"Joya de Cerén", type:"역사", desc:"화산재에 묻힌 마야 농촌 마을로 '중미의 폼페이'라 불리는 유네스코 세계유산입니다.", rating:4.3, openTime:"09:00~16:00", price:"$3", website:"https://en.wikipedia.org/wiki/Joya_de_Cerén"},
+]},
+"말라보": { description:"말라보는 적도 기니의 수도로 비오코 섬의 열대 도시입니다.", spots:[
+  {name:"말라보 대성당", wikiTitle:"Malabo", type:"역사", desc:"스페인 식민지 시대의 네오고딕 성당으로 도시의 랜드마크입니다.", rating:3.8, openTime:"미사시간", price:"무료", website:"https://en.wikipedia.org/wiki/Malabo"},
+]},
+"아스마라": { description:"아스마라는 에리트레아의 수도로 아르데코·미래주의 이탈리아 건축이 보존된 유네스코 세계유산 도시입니다.", spots:[
+  {name:"아스마라 아르데코 건축", wikiTitle:"Asmara", type:"역사", desc:"1930년대 이탈리아 건축이 완벽히 보존된 '아프리카의 작은 로마'입니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Asmara"},
+]},
+"음바바네": { description:"음바바네는 에스와티니(스와질란드)의 수도로 아프리카 마지막 절대군주제 국가입니다.", spots:[
+  {name:"음란카 자연보호구역", wikiTitle:"Mlilwane Wildlife Sanctuary", type:"자연", desc:"자전거와 도보로 야생동물을 만나는 에스와티니 최초의 보호구역입니다.", rating:4.3, openTime:"06:00~18:00", price:"SZL 50", website:"https://en.wikipedia.org/wiki/Mlilwane_Wildlife_Sanctuary"},
+]},
+"리브르빌": { description:"리브르빌은 가봉의 수도로 열대우림과 대서양이 만나는 적도의 도시입니다.", spots:[
+  {name:"로페 국립공원", wikiTitle:"Lopé National Park", type:"자연", desc:"고릴라와 맨드릴이 서식하는 열대우림 유네스코 세계유산입니다.", rating:4.5, openTime:"가이드 투어", price:"CFA 10,000", website:"https://en.wikipedia.org/wiki/Lopé_National_Park"},
+]},
+"반줄": { description:"반줄은 감비아의 수도로 감비아 강 하구의 작은 나라의 중심지입니다.", spots:[
+  {name:"쿤타 킨테 섬", wikiTitle:"James Island (The Gambia)", type:"역사", desc:"대서양 노예무역 시대의 유적이 남아있는 유네스코 세계유산 섬입니다.", rating:4.2, openTime:"보트투어", price:"GMD 200", website:"https://en.wikipedia.org/wiki/James_Island_(The_Gambia)"},
+]},
+"코나크리": { description:"코나크리는 기니의 수도로 대서양 연안의 서아프리카 문화 중심지입니다.", spots:[
+  {name:"일 드 로스", wikiTitle:"Îles de Los", type:"자연", desc:"코나크리 앞바다의 작은 섬들로 해변 휴양이 가능합니다.", rating:4.0, openTime:"페리 운행", price:"GNF 50,000", website:"https://en.wikipedia.org/wiki/Îles_de_Los"},
+]},
+"비사우": { description:"비사우는 기니비사우의 수도로 포르투갈 식민지 유적이 남아있는 서아프리카의 작은 도시입니다.", spots:[
+  {name:"비자고스 군도", wikiTitle:"Bijagós Archipelago", type:"자연", desc:"88개 섬으로 이루어진 군도로 유네스코 생물권보전지역입니다.", rating:4.3, openTime:"보트투어", price:"투어별", website:"https://en.wikipedia.org/wiki/Bijagós_Archipelago"},
+]},
+"조지타운": { description:"조지타운은 가이아나의 수도로 남미 유일의 영어권 국가 수도입니다.", spots:[
+  {name:"카이에투르 폭포", wikiTitle:"Kaieteur Falls", type:"자연", desc:"세계에서 가장 높은 단일 낙하 폭포(226m)로 아마존 열대우림에 숨겨져 있습니다.", rating:4.8, openTime:"경비행기 투어", price:"$200~", website:"https://en.wikipedia.org/wiki/Kaieteur_Falls"},
+]},
+"포르토프랭스": { description:"포르토프랭스는 아이티의 수도로 카리브해 최초의 흑인 독립국의 수도입니다.", spots:[
+  {name:"시타델 라페리에르", wikiTitle:"Citadelle Laferrière", type:"역사", desc:"카리브해 최대의 요새로 유네스코 세계유산입니다.", rating:4.4, openTime:"08:00~17:00", price:"$5", website:"https://en.wikipedia.org/wiki/Citadelle_Laferrière"},
+]},
+"테구시갈파": { description:"테구시갈파는 온두라스의 수도로 코판 마야 유적의 관문 도시입니다.", spots:[
+  {name:"코판 유적", wikiTitle:"Copán", type:"역사", desc:"마야 문명의 예술 중심지로 정교한 석조 조각이 유명한 유네스코 세계유산입니다.", rating:4.6, openTime:"08:00~16:00", price:"$15", website:"https://en.wikipedia.org/wiki/Copán"},
+]},
+"바그다드": { description:"바그다드는 이라크의 수도로 8세기 압바스 왕조의 수도이자 이슬람 황금기의 중심지였습니다.", spots:[
+  {name:"알무스탄시리야 마드라사", wikiTitle:"Al-Mustansiriya University", type:"역사", desc:"1227년에 설립된 세계 최초의 대학 중 하나입니다.", rating:4.3, openTime:"09:00~14:00", price:"무료", website:"https://en.wikipedia.org/wiki/Al-Mustansiriya_University"},
+]},
+"아비장": { description:"아비장은 코트디부아르의 경제 수도로 서아프리카 최대의 프랑스어권 도시입니다.", spots:[
+  {name:"평화의 성모 대성당", wikiTitle:"Basilica of Our Lady of Peace", type:"역사", desc:"기네스북에 등재된 세계 최대의 성당으로 바티칸 성 베드로 대성당보다 큽니다.", rating:4.5, openTime:"08:00~17:00", price:"CFA 2,000", website:"https://en.wikipedia.org/wiki/Basilica_of_Our_Lady_of_Peace"},
+]},
+"프리슈티나": { description:"프리슈티나는 코소보의 수도로 오스만 유적과 현대 유럽이 공존하는 발칸의 젊은 도시입니다.", spots:[
+  {name:"뉴본 기념물", wikiTitle:"Newborn monument", type:"랜드마크", desc:"2008년 독립을 기념하는 대형 NEWBORN 글자 조형물입니다.", rating:4.1, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Newborn_monument"},
+]},
+"쿠웨이트시티": { description:"쿠웨이트시티는 쿠웨이트의 수도로 페르시아만의 부유한 석유 국가 수도입니다.", spots:[
+  {name:"쿠웨이트 타워", wikiTitle:"Kuwait Towers", type:"랜드마크", desc:"세 개의 물방울 모양 타워로 쿠웨이트의 상징적 랜드마크입니다.", rating:4.4, openTime:"08:00~23:00", price:"KWD 3", website:"https://en.wikipedia.org/wiki/Kuwait_Towers"},
+]},
+"비슈케크": { description:"비슈케크는 키르기스스탄의 수도로 천산산맥 아래 자리한 중앙아시아의 녹색 도시입니다.", spots:[
+  {name:"알라아르차 국립공원", wikiTitle:"Ala Archa National Park", type:"자연", desc:"비슈케크 근교의 천산산맥 국립공원으로 빙하와 알파인 트레킹이 유명합니다.", rating:4.5, openTime:"24시간", price:"KGS 80", website:"https://en.wikipedia.org/wiki/Ala_Archa_National_Park"},
+]},
+"마세루": { description:"마세루는 레소토의 수도로 '하늘의 왕국'이라 불리는 산악 국가의 관문입니다.", spots:[
+  {name:"타바보시우 산", wikiTitle:"Thaba Bosiu", type:"역사", desc:"레소토 건국의 성산으로 모슈슈 1세 왕의 요새가 있습니다.", rating:4.1, openTime:"08:00~17:00", price:"LSL 20", website:"https://en.wikipedia.org/wiki/Thaba_Bosiu"},
+]},
+"몬로비아": { description:"몬로비아는 라이베리아의 수도로 미국 해방 노예들이 건설한 서아프리카 해안 도시입니다.", spots:[
+  {name:"프로비던스 아일랜드", wikiTitle:"Providence Island (Monrovia)", type:"역사", desc:"라이베리아 건국의 출발점으로 해방 노예들이 처음 상륙한 섬입니다.", rating:4.0, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Providence_Island_(Monrovia)"},
+]},
+"트리폴리": { description:"트리폴리는 리비아의 수도로 로마 유적 렙티스 마그나의 관문 도시입니다.", spots:[
+  {name:"렙티스 마그나", wikiTitle:"Leptis Magna", type:"역사", desc:"아프리카에서 가장 잘 보존된 로마 유적으로 유네스코 세계유산입니다.", rating:4.7, openTime:"08:00~17:00", price:"LYD 5", website:"https://en.wikipedia.org/wiki/Leptis_Magna"},
+]},
+"릴롱궤": { description:"릴롱궤는 말라위의 수도로 아프리카의 호수 나라 말라위의 중심지입니다.", spots:[
+  {name:"말라위 호수", wikiTitle:"Lake Malawi", type:"자연", desc:"아프리카에서 3번째로 큰 호수로 1,000종 이상의 시클리드 물고기가 서식합니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Lake_Malawi"},
+]},
+"바마코": { description:"바마코는 말리의 수도로 니제르 강변에 자리한 서아프리카 문화의 중심지입니다.", spots:[
+  {name:"팀북투", wikiTitle:"Timbuktu", type:"역사", desc:"사하라 사막의 전설적 학문 도시로 유네스코 세계유산입니다.", rating:4.5, openTime:"가이드 투어", price:"CFA 5,000", website:"https://en.wikipedia.org/wiki/Timbuktu"},
+]},
+"누악쇼트": { description:"누악쇼트는 모리타니아의 수도로 사하라 사막과 대서양이 만나는 곳에 자리합니다.", spots:[
+  {name:"방 다르건 국립공원", wikiTitle:"Banc d'Arguin National Park", type:"자연", desc:"사막과 바다가 만나는 곳에 수백만 마리의 철새가 모이는 유네스코 세계유산입니다.", rating:4.5, openTime:"가이드 투어", price:"MRU 200", website:"https://en.wikipedia.org/wiki/Banc_d%27Arguin_National_Park"},
+]},
+"키시나우": { description:"키시나우는 몰도바의 수도로 와인 생산과 소비에트 건축이 특징인 동유럽의 숨겨진 도시입니다.", spots:[
+  {name:"밀레슈티 미치 와이너리", wikiTitle:"Mileștii Mici", type:"문화", desc:"세계 최대의 와인 컬렉션(200만 병)을 보유한 지하 와이너리입니다.", rating:4.5, openTime:"투어 예약", price:"MDL 250", website:"https://en.wikipedia.org/wiki/Mileștii_Mici"},
+]},
+"마푸토": { description:"마푸토는 모잠비크의 수도로 포르투갈 식민지 건축과 인도양 해변이 어우러진 도시입니다.", spots:[
+  {name:"마푸토 중앙역", wikiTitle:"Maputo railway station", type:"역사", desc:"에펠의 제자가 설계한 아르누보 건축의 기차역으로 아프리카에서 가장 아름다운 역입니다.", rating:4.4, openTime:"06:00~21:00", price:"무료", website:"https://en.wikipedia.org/wiki/Maputo_railway_station"},
+]},
+"마나과": { description:"마나과는 니카라과의 수도로 화산 호수와 혁명 역사가 공존하는 중미의 도시입니다.", spots:[
+  {name:"마사야 화산", wikiTitle:"Masaya Volcano", type:"자연", desc:"활화산 분화구에서 붉은 용암을 직접 내려다볼 수 있는 국립공원입니다.", rating:4.5, openTime:"09:00~16:45", price:"$10", website:"https://en.wikipedia.org/wiki/Masaya_Volcano"},
+]},
+"니아메": { description:"니아메는 니제르의 수도로 니제르 강변의 사헬 지대 도시입니다.", spots:[
+  {name:"니제르 국립박물관", wikiTitle:"Niamey", type:"문화", desc:"니제르의 전통 문화와 공룡 화석을 전시하는 박물관입니다.", rating:3.9, openTime:"08:00~17:00", price:"CFA 1,000", website:"https://en.wikipedia.org/wiki/Niamey"},
+]},
+"라고스": { description:"라고스는 나이지리아 최대 도시로 아프리카 최대의 경제 허브이자 음악·패션의 중심지입니다.", spots:[
+  {name:"나이키 아트 갤러리", wikiTitle:"Nike Art Gallery", type:"문화", desc:"나이지리아 현대 미술의 중심으로 8,000점 이상의 작품을 소장합니다.", rating:4.3, openTime:"09:00~19:00", price:"무료", website:"https://en.wikipedia.org/wiki/Nike_Art_Gallery"},
+]},
+"아부자": { description:"아부자는 나이지리아의 수도로 1991년 건설된 계획도시입니다.", spots:[
+  {name:"아소 록", wikiTitle:"Aso Rock", type:"자연", desc:"아부자의 상징인 거대한 화강암 바위로 대통령궁이 그 아래 자리합니다.", rating:4.1, openTime:"외관 24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Aso_Rock"},
+]},
+"평양": { description:"평양은 북한의 수도로 주체사상탑과 대동강이 상징적인 세계에서 가장 폐쇄적인 수도입니다.", spots:[
+  {name:"주체사상탑", wikiTitle:"Juche Tower", type:"랜드마크", desc:"170m 높이의 탑으로 대동강변에서 평양 시내를 조망합니다.", rating:4.0, openTime:"투어 전용", price:"투어 포함", website:"https://en.wikipedia.org/wiki/Juche_Tower"},
+]},
+"스코페": { description:"스코페는 북마케도니아의 수도로 스코페 구시가지 바자르와 마더 테레사의 고향입니다.", spots:[
+  {name:"스코페 올드 바자르", wikiTitle:"Old Bazaar, Skopje", type:"역사", desc:"발칸에서 가장 큰 오스만 시대 바자르로 500년 역사가 살아있습니다.", rating:4.3, openTime:"09:00~19:00", price:"무료", website:"https://en.wikipedia.org/wiki/Old_Bazaar,_Skopje"},
+]},
+"포트모르즈비": { description:"포트모르즈비는 파푸아뉴기니의 수도로 800개 이상의 언어가 사용되는 다양성의 나라입니다.", spots:[
+  {name:"코코다 트레일", wikiTitle:"Kokoda Track", type:"자연", desc:"2차대전 격전지를 따라가는 96km 정글 트레킹 코스입니다.", rating:4.4, openTime:"건기(5~10월)", price:"$200~(가이드)", website:"https://en.wikipedia.org/wiki/Kokoda_Track"},
+]},
+"아순시온": { description:"아순시온은 파라과이의 수도로 남미에서 가장 오래된 도시 중 하나입니다.", spots:[
+  {name:"판테온 나시오날", wikiTitle:"National Pantheon of the Heroes", type:"역사", desc:"파리 앵발리드를 본뜬 파라과이의 국가 영웅 묘소입니다.", rating:4.1, openTime:"07:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/National_Pantheon_of_the_Heroes"},
+]},
+"브라자빌": { description:"브라자빌은 콩고공화국의 수도로 콩고강 건너 킨샤사와 마주보는 유일한 수도 쌍입니다.", spots:[
+  {name:"브라자빌 대성당", wikiTitle:"Basilica of Sainte-Anne-du-Congo", type:"역사", desc:"초록 지붕이 인상적인 콩고의 대표적 가톨릭 성당입니다.", rating:4.0, openTime:"06:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Basilica_of_Sainte-Anne-du-Congo"},
+]},
+"프리타운": { description:"프리타운은 시에라리온의 수도로 해방 노예들이 세운 '자유의 마을'입니다.", spots:[
+  {name:"코튼 트리", wikiTitle:"Cotton Tree (Sierra Leone)", type:"역사", desc:"1792년 해방 노예들이 아래서 감사 기도를 드린 500년 된 거대한 나무입니다.", rating:4.1, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Cotton_Tree_(Sierra_Leone)"},
+]},
+"모가디슈": { description:"모가디슈는 소말리아의 수도로 인도양 해안의 고대 무역 도시입니다.", spots:[
+  {name:"리도 비치", wikiTitle:"Mogadishu", type:"자연", desc:"모가디슈 시민들의 해변 휴식처로 도시 재건의 상징입니다.", rating:3.8, openTime:"일출~일몰", price:"무료", website:"https://en.wikipedia.org/wiki/Mogadishu"},
+]},
+"주바": { description:"주바는 남수단의 수도로 2011년 독립한 세계에서 가장 젊은 국가의 수도입니다.", spots:[
+  {name:"백나일 강", wikiTitle:"White Nile", type:"자연", desc:"나일강의 원류인 백나일이 주바를 관통합니다.", rating:3.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/White_Nile"},
+]},
+"하르툼": { description:"하르툼은 수단의 수도로 청나일과 백나일이 합류하는 지점에 자리합니다.", spots:[
+  {name:"나일강 합류점", wikiTitle:"Khartoum", type:"자연", desc:"청나일과 백나일이 만나 나일강이 되는 지점을 투티 섬에서 볼 수 있습니다.", rating:4.2, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Khartoum"},
+]},
+"파라마리보": { description:"파라마리보는 수리남의 수도로 네덜란드 식민지 건축이 유네스코 세계유산인 남미의 숨은 보석입니다.", spots:[
+  {name:"파라마리보 역사지구", wikiTitle:"Historic inner city of Paramaribo", type:"역사", desc:"네덜란드 식민지 목조 건축이 보존된 유네스코 세계유산입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Historic_inner_city_of_Paramaribo"},
+]},
+"다마스쿠스": { description:"다마스쿠스는 시리아의 수도로 5,000년 역사의 세계에서 가장 오래 사람이 살아온 도시 중 하나입니다.", spots:[
+  {name:"우마이야 모스크", wikiTitle:"Umayyad Mosque", type:"역사", desc:"이슬람 초기의 가장 위대한 건축물로 세례 요한의 머리가 안치되어 있습니다.", rating:4.7, openTime:"08:00~19:00", price:"SYP 150", website:"https://en.wikipedia.org/wiki/Umayyad_Mosque"},
+]},
+"두샨베": { description:"두샨베는 타지키스탄의 수도로 파미르 고원 트레킹의 관문 도시입니다.", spots:[
+  {name:"파미르 하이웨이", wikiTitle:"Pamir Highway", type:"자연", desc:"세계에서 두 번째로 높은 국제 도로로 4,655m 고개를 넘는 전설의 루트입니다.", rating:4.7, openTime:"5~10월", price:"$50~/일(투어)", website:"https://en.wikipedia.org/wiki/Pamir_Highway"},
+]},
+"딜리": { description:"딜리는 동티모르의 수도로 2002년 독립한 동남아시아 최연소 국가의 수도입니다.", spots:[
+  {name:"크리스토 레이 상", wikiTitle:"Cristo Rei of Dili", type:"랜드마크", desc:"27m 높이의 예수상으로 언덕에서 딜리 만의 파노라마가 펼쳐집니다.", rating:4.2, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Cristo_Rei_of_Dili"},
+]},
+"로메": { description:"로메는 토고의 수도로 기니만에 면한 서아프리카 해안 도시입니다.", spots:[
+  {name:"로메 그랑 마르셰", wikiTitle:"Lomé Grand Market", type:"문화", desc:"서아프리카 최대의 시장 중 하나로 부두교 용품도 판매합니다.", rating:4.0, openTime:"07:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Lomé"},
+]},
+"포트오브스페인": { description:"포트오브스페인은 트리니다드토바고의 수도로 카리브해 최대의 카니발이 열리는 도시입니다.", spots:[
+  {name:"트리니다드 카니발", wikiTitle:"Trinidad and Tobago Carnival", type:"문화", desc:"리우 카니발과 쌍벽을 이루는 카리브해 최대 축제로 매년 2~3월 개최됩니다.", rating:4.7, openTime:"2~3월", price:"관람 무료", website:"https://en.wikipedia.org/wiki/Trinidad_and_Tobago_Carnival"},
+]},
+"아시가바트": { description:"아시가바트는 투르크메니스탄의 수도로 하얀 대리석 건물로 가득한 '하얀 도시'입니다.", spots:[
+  {name:"지옥의 문", wikiTitle:"Darvaza gas crater", type:"자연", desc:"50년 넘게 타오르는 직경 70m의 천연가스 분화구입니다.", rating:4.6, openTime:"24시간", price:"$10(입장)", website:"https://en.wikipedia.org/wiki/Darvaza_gas_crater"},
+]},
+"캄팔라": { description:"캄팔라는 우간다의 수도로 빅토리아 호수 북안의 7개 언덕 위에 자리한 도시입니다.", spots:[
+  {name:"부윈디 원시림(고릴라 트레킹)", wikiTitle:"Bwindi Impenetrable National Park", type:"자연", desc:"세계 마운틴 고릴라의 절반이 서식하는 유네스코 세계유산 숲입니다.", rating:4.9, openTime:"08:00~", price:"$700", website:"https://en.wikipedia.org/wiki/Bwindi_Impenetrable_National_Park"},
+]},
+"몬테비데오": { description:"몬테비데오는 우루과이의 수도로 남미에서 가장 살기 좋은 도시로 꼽히는 라플라타강변의 도시입니다.", spots:[
+  {name:"시우다드 비에하", wikiTitle:"Ciudad Vieja, Montevideo", type:"역사", desc:"아르데코와 식민지 건축이 공존하는 구시가지로 카페와 갤러리가 가득합니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Ciudad_Vieja,_Montevideo"},
+]},
+"카라카스": { description:"카라카스는 베네수엘라의 수도로 아빌라 산 아래 자리한 남미의 대도시입니다.", spots:[
+  {name:"아빌라 산 국립공원", wikiTitle:"Waraira Repano", type:"자연", desc:"케이블카로 2,765m 정상에 오르면 카라카스와 카리브해가 한눈에 보입니다.", rating:4.5, openTime:"06:00~17:00", price:"무료", website:"https://en.wikipedia.org/wiki/Waraira_Repano"},
+]},
+"사나": { description:"사나는 예멘의 수도로 2,500년 역사의 구시가지가 유네스코 세계유산인 아라비아반도의 고대 도시입니다.", spots:[
+  {name:"사나 구시가지", wikiTitle:"Old City of Sana'a", type:"역사", desc:"6,000채의 다층 흙벽 건물이 밀집한 세계에서 가장 오래된 도시 중 하나입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Old_City_of_Sana%27a"},
+]},
+"루사카": { description:"루사카는 잠비아의 수도로 빅토리아 폭포와 남루앙과 사파리의 관문 도시입니다.", spots:[
+  {name:"사우스 루앙과 국립공원", wikiTitle:"South Luangwa National Park", type:"자연", desc:"아프리카 최고의 워킹 사파리 명소로 표범 관찰률이 가장 높은 곳입니다.", rating:4.7, openTime:"06:00~18:00", price:"$25", website:"https://en.wikipedia.org/wiki/South_Luangwa_National_Park"},
+]},
+
+// ── 2026 트렌딩 도시 ──
+"여수": { description:"여수는 남해안의 항구 도시로 여수 밤바다와 오동도, 해상 케이블카가 유명한 대한민국의 떠오르는 여행지입니다.", spots:[
+  {name:"여수 해상 케이블카", wikiTitle:"Yeosu", type:"랜드마크", desc:"바다 위를 가로지르는 케이블카에서 여수 앞바다와 돌산대교의 야경을 감상합니다.", rating:4.6, openTime:"09:00~21:30", price:"성인 15,000원", website:"https://en.wikipedia.org/wiki/Yeosu"},
+  {name:"오동도", wikiTitle:"Odongdo", type:"자연", desc:"동백꽃이 만발하는 아름다운 섬으로 방파제 산책로를 따라 걸어서 들어갑니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Odongdo"},
+  {name:"여수 낭만포차", wikiTitle:"Yeosu", type:"음식", desc:"해변가 포장마차에서 신선한 해산물 안주와 함께 여수 밤바다를 즐깁니다.", rating:4.4, openTime:"17:00~02:00", price:"무료(식사별)", website:"https://en.wikipedia.org/wiki/Yeosu"},
+]},
+"속초": { description:"속초는 설악산과 동해 바다가 만나는 강원도의 관광 도시로 대포항 회, 속초 중앙시장이 유명합니다.", spots:[
+  {name:"설악산 국립공원", wikiTitle:"Seoraksan", type:"자연", desc:"대한민국을 대표하는 명산으로 울산바위, 비선대, 대청봉 등 절경이 가득합니다.", rating:4.8, openTime:"탐방로별 상이", price:"무료", website:"https://en.wikipedia.org/wiki/Seoraksan"},
+  {name:"속초 중앙시장", wikiTitle:"Sokcho", type:"음식", desc:"닭강정, 순대, 회 등 강원도 먹거리가 가득한 전통시장입니다.", rating:4.5, openTime:"08:00~21:00", price:"무료", website:"https://en.wikipedia.org/wiki/Sokcho"},
+  {name:"영금정 일출", wikiTitle:"Sokcho", type:"자연", desc:"동해 바다 위 바위에서 보는 일출이 장관인 속초의 명소입니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Sokcho"},
+]},
+"통영": { description:"통영은 '한국의 나폴리'로 불리는 남해안 도시로 해상 풍경과 굴, 충무김밥이 유명합니다.", spots:[
+  {name:"통영 한려해상 케이블카", wikiTitle:"Tongyeong", type:"자연", desc:"한려해상국립공원의 섬들을 공중에서 감상하는 대한민국 최장 케이블카입니다.", rating:4.6, openTime:"09:00~18:00", price:"성인 15,000원", website:"https://en.wikipedia.org/wiki/Tongyeong"},
+  {name:"동피랑 벽화마을", wikiTitle:"Tongyeong", type:"문화", desc:"언덕 위 마을 담벼락에 다채로운 벽화가 그려진 통영의 포토스팟입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Tongyeong"},
+]},
+"나트랑": { description:"나트랑은 베트남 남부의 해변 리조트 도시로 맑은 바다와 스노클링, 저렴한 물가로 인기가 급상승 중입니다.", spots:[
+  {name:"빈펄랜드", wikiTitle:"Vinpearl", type:"랜드마크", desc:"섬 위의 대형 테마파크로 케이블카를 타고 바다를 건너 들어갑니다.", rating:4.4, openTime:"08:00~21:00", price:"VND 880,000", website:"https://en.wikipedia.org/wiki/Vinpearl"},
+  {name:"혼문 섬 스노클링", wikiTitle:"Nha Trang", type:"자연", desc:"투명한 바다에서 산호초와 열대어를 만나는 나트랑 최고의 스노클링 포인트입니다.", rating:4.5, openTime:"보트투어 08:00~", price:"VND 300,000", website:"https://en.wikipedia.org/wiki/Nha_Trang"},
+]},
+"치앙라이": { description:"치앙라이는 태국 최북단의 도시로 백색사원과 골든트라이앵글로 2026년 떠오르는 여행지입니다.", spots:[
+  {name:"왓롱쿤(백색사원)", wikiTitle:"Wat Rong Khun", type:"역사", desc:"눈부신 흰색과 거울 조각으로 뒤덮인 초현실적 현대 불교 사원입니다.", rating:4.7, openTime:"08:00~17:00", price:"THB 100", website:"https://en.wikipedia.org/wiki/Wat_Rong_Khun"},
+  {name:"블루 템플", wikiTitle:"Wat Rong Suea Ten", type:"역사", desc:"짙은 파란색과 금장식으로 꾸며진 백색사원의 자매 사원입니다.", rating:4.5, openTime:"07:00~20:00", price:"무료", website:"https://en.wikipedia.org/wiki/Wat_Rong_Suea_Ten"},
+]},
+"크라이스트처치": { description:"크라이스트처치는 2026년 글로벌 트렌딩 1위 도시로 지진 이후 혁신적으로 재건된 뉴질랜드 남섬의 관문입니다.", spots:[
+  {name:"크라이스트처치 식물원", wikiTitle:"Christchurch Botanic Gardens", type:"자연", desc:"에이번 강변의 아름다운 식물원으로 150년 역사의 장미원이 유명합니다.", rating:4.6, openTime:"07:00~18:30", price:"무료", website:"https://en.wikipedia.org/wiki/Christchurch_Botanic_Gardens"},
+  {name:"아서스 패스", wikiTitle:"Arthur's Pass", type:"자연", desc:"서던알프스를 관통하는 국립공원으로 뉴질랜드 최고의 고산 트레킹을 즐깁니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Arthur%27s_Pass"},
+]},
+"산세바스티안": { description:"산세바스티안은 바스크 지방의 미식 수도로 인구 대비 미슐랭 스타 레스토랑이 세계 최다이며 2026년 핫 데스티네이션입니다.", spots:[
+  {name:"라콘차 해변", wikiTitle:"La Concha (San Sebastián)", type:"자연", desc:"유럽 최고의 도심 해변으로 조개껍데기 모양의 만이 아름답습니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/La_Concha_(San_Sebastián)"},
+  {name:"파르테 비에하(구시가지)", wikiTitle:"San Sebastián", type:"음식", desc:"핀초스(바스크 타파스) 바가 밀집한 구시가지에서 바 호핑을 즐깁니다.", rating:4.7, openTime:"12:00~23:00", price:"무료", website:"https://en.wikipedia.org/wiki/San_Sebastián"},
+]},
 }
 
 const DEFAULT_CITY_DATA = (cityName) => ({
@@ -2975,12 +3317,27 @@ function App() {
   }, [])
 
   // ── 도시 라벨 (지구본 표면에 HTML로 표시) ──────────────────────────
+  // 대양 라벨 데이터
+  const OCEAN_LABELS = [
+    { lat: 0, lng: -140, name: '태평양', nameEn: 'Pacific Ocean', _type: 'ocean' },
+    { lat: 30, lng: -45, name: '대서양', nameEn: 'Atlantic Ocean', _type: 'ocean' },
+    { lat: -15, lng: 75, name: '인도양', nameEn: 'Indian Ocean', _type: 'ocean' },
+    { lat: 75, lng: 0, name: '북극해', nameEn: 'Arctic Ocean', _type: 'ocean' },
+    { lat: -60, lng: 0, name: '남극해', nameEn: 'Southern Ocean', _type: 'ocean' },
+    { lat: -30, lng: -140, name: '남태평양', nameEn: 'South Pacific', _type: 'ocean' },
+    { lat: -30, lng: -15, name: '남대서양', nameEn: 'South Atlantic', _type: 'ocean' },
+    // 지리 기준선 라벨
+    { lat: 0.8, lng: 50, name: '적도 (Equator)', _type: 'geoline' },
+    { lat: 24.2, lng: 50, name: '북회귀선', _type: 'geoline' },
+    { lat: -24.2, lng: 50, name: '남회귀선', _type: 'geoline' },
+    { lat: 10, lng: 178, name: '날짜변경선', _type: 'geoline' },
+  ]
+
   useEffect(() => {
     if (!globeRef.current) return
     const globe = globeRef.current
 
     if (!selectedCountry) {
-      // 국가 라벨만 표시 (도시 라벨 제거)
       const labelItems = countries.map(feat => ({
         lat: feat.properties.LABEL_Y || 0,
         lng: feat.properties.LABEL_X || 0,
@@ -2988,14 +3345,12 @@ function App() {
         nameEn: feat.properties.NAME,
         _type: 'country',
       })).filter(d => d.lat !== 0 || d.lng !== 0)
-      globe.htmlElementsData(labelItems)
+      globe.htmlElementsData([...labelItems, ...OCEAN_LABELS])
       return
     }
 
     const countryEn = selectedCountry.properties.NAME
     const cities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, countryEn, _type: 'city' }))
-
-    // 국가 라벨 + 선택된 국가의 도시 라벨 합침
     const countryLabels = countries.map(feat => ({
       lat: feat.properties.LABEL_Y || 0,
       lng: feat.properties.LABEL_X || 0,
@@ -3004,7 +3359,7 @@ function App() {
       _type: 'country',
     })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn)
 
-    globe.htmlElementsData([...countryLabels, ...cities])
+    globe.htmlElementsData([...countryLabels, ...cities, ...OCEAN_LABELS])
   }, [selectedCountry, selectedCity, countries])
 
   // HTML 요소 렌더링
@@ -3015,11 +3370,39 @@ function App() {
     globe
       .htmlLat(d => d.lat)
       .htmlLng(d => d.lng)
-      .htmlAltitude(d => d._type === 'city' ? 0.012 : 0.005)
+      .htmlAltitude(d => d._type === 'city' ? 0.012 : d._type === 'ocean' ? 0.003 : d._type === 'geoline' ? 0.002 : 0.005)
       .htmlElement(d => {
         const el = document.createElement('div')
 
-        if (d._type === 'city') {
+        if (d._type === 'geoline') {
+          el.style.cssText = 'pointer-events:none;'
+          const isEquator = d.name.includes('적도')
+          const isDate = d.name.includes('날짜')
+          el.innerHTML = `<div style="
+            transform:translate(-50%,-50%);
+            font-family:Pretendard,Inter,sans-serif;
+            font-size:8px;
+            font-weight:600;
+            letter-spacing:2px;
+            color:${isEquator ? 'rgba(239,68,68,0.45)' : isDate ? 'rgba(251,191,36,0.4)' : 'rgba(255,255,255,0.25)'};
+            white-space:nowrap;
+            user-select:none;
+          ">${d.name}</div>`
+        } else if (d._type === 'ocean') {
+          el.style.cssText = 'pointer-events:none;'
+          el.innerHTML = `<div style="
+            transform:translate(-50%,-50%);
+            font-family:Pretendard,Inter,sans-serif;
+            font-size:11px;
+            font-weight:400;
+            font-style:italic;
+            letter-spacing:6px;
+            color:rgba(120,180,255,0.4);
+            text-shadow:0 0 8px rgba(0,40,100,0.5);
+            white-space:nowrap;
+            user-select:none;
+          ">${d.name}</div>`
+        } else if (d._type === 'city') {
           const isSelected = selectedCity?.name === d.name
           el.style.cssText = 'cursor:pointer;pointer-events:all;'
           const inner = document.createElement('div')
@@ -3072,6 +3455,47 @@ function App() {
         return el
       })
   }, [countries, selectedCountry, selectedCity])
+
+  // ── 지리 기준선 (적도, 회귀선, 날짜변경선) ──────────────────────
+  useEffect(() => {
+    if (!globeRef.current) return
+    const globe = globeRef.current
+    const lines = []
+    const step = 10
+
+    // 적도 (latitude 0)
+    for (let lng = -180; lng < 180; lng += step) {
+      lines.push({ startLat: 0, startLng: lng, endLat: 0, endLng: lng + step, _line: 'equator' })
+    }
+    // 북회귀선 (23.5°N)
+    for (let lng = -180; lng < 180; lng += step) {
+      lines.push({ startLat: 23.44, startLng: lng, endLat: 23.44, endLng: lng + step, _line: 'tropic' })
+    }
+    // 남회귀선 (23.5°S)
+    for (let lng = -180; lng < 180; lng += step) {
+      lines.push({ startLat: -23.44, startLng: lng, endLat: -23.44, endLng: lng + step, _line: 'tropic' })
+    }
+    // 날짜변경선 (대략 경도 180°, 약간 지그재그)
+    const dlPoints = [
+      [65,169],[51,180],[0,180],[-10,180],[-45,180],[-65,180]
+    ]
+    for (let i = 0; i < dlPoints.length - 1; i++) {
+      lines.push({
+        startLat: dlPoints[i][0], startLng: dlPoints[i][1],
+        endLat: dlPoints[i+1][0], endLng: dlPoints[i+1][1],
+        _line: 'dateline'
+      })
+    }
+
+    globe
+      .arcsData(lines)
+      .arcColor(d => d._line === 'equator' ? 'rgba(239,68,68,0.35)' : d._line === 'dateline' ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.15)')
+      .arcStroke(d => d._line === 'equator' ? 0.4 : 0.2)
+      .arcDashLength(d => d._line === 'equator' ? 1 : 0.5)
+      .arcDashGap(d => d._line === 'equator' ? 0 : 0.5)
+      .arcDashAnimateTime(0)
+      .arcAltitude(0.001)
+  }, [])
 
   // Update polygons
   useEffect(() => {
@@ -3607,7 +4031,16 @@ function App() {
                                     <div style={{fontSize:13.5,fontWeight:700,color:'white',textShadow:'0 1px 4px rgba(0,0,0,.6)'}}>{spot.name}</div>
                                     <div style={{display:'inline-block',fontSize:10,padding:'2px 9px',borderRadius:20,background:TYPE_COLORS[spot.type]||'#64748b',color:'white',marginTop:4,fontWeight:700}}>{spot.type}</div>
                                   </div>
-                                  {spot.rating > 0 && <div style={{fontSize:13,color:'#fbbf24',fontWeight:700}}>★ {spot.rating}</div>}
+                                  {spot.rating > 0 && (
+                                    <a href={`https://www.google.com/maps/search/${encodeURIComponent(spot.wikiTitle || spot.name)}+${encodeURIComponent(selectedCity?.name || '')}`}
+                                      target="_blank" rel="noopener noreferrer"
+                                      onClick={e => e.stopPropagation()}
+                                      style={{textDecoration:'none',display:'flex',alignItems:'center',gap:3}}
+                                      title="Google Maps에서 최신 별점 확인"
+                                    >
+                                      <span style={{fontSize:13,color:'#fbbf24',fontWeight:700}}>★ {spot.rating}</span>
+                                    </a>
+                                  )}
                                 </div>
                               </div>
 
