@@ -1128,11 +1128,7 @@ const T = {
   loading:{ko:'관광 정보 불러오는 중...',en:'Loading travel info...',ja:'観光情報を読み込み中...',zh:'正在加载旅游信息...'},
   loadingShort:{ko:'관광 정보를 불러오는 중입니다...',en:'Loading travel information...',ja:'観光情報を読み込んでいます...',zh:'正在加载旅游信息...'},
   retry:{ko:'다시 불러오기',en:'Retry',ja:'再読み込み',zh:'重新加载'},
-  retryMsg:{ko:'관광 정보를 불러오지 못했어요.
-다시 시도해볼게요!',en:'Failed to load travel info.
-Let\'s try again!',ja:'観光情報の取得に失敗しました。
-もう一度お試しください！',zh:'加载旅游信息失败。
-让我们再试一次！'},
+  retryMsg:{ko:'관광 정보를 불러오지 못했어요.\n다시 시도해볼게요!',en:'Failed to load travel info.\nLet us try again!',ja:'観光情報の取得に失敗しました。\nもう一度お試しください！',zh:'加载旅游信息失败。\n让我们再试一次！'},
   mapsBtn:{ko:'최신 운영시간 · 리뷰 보기',en:'Hours · Reviews on Maps',ja:'最新営業時間・レビュー',zh:'最新营业时间·评价'},
   official:{ko:'공식 홈페이지',en:'Official Site',ja:'公式サイト',zh:'官方网站'},
   wikiDetail:{ko:'상세 정보',en:'Details',ja:'詳細情報',zh:'详细信息'},
@@ -3771,7 +3767,7 @@ function App() {
             user-select:none;
           ">${d.name}</div>`
         } else if (d._type === 'city') {
-          const isSelected = selectedCity?.name === d.name
+          const isSelected = (selectedCity?._koName || selectedCity?.name) === (d._koName || d.name)
           el.style.cssText = 'cursor:pointer;pointer-events:all;'
           const inner = document.createElement('div')
           inner.style.cssText = `
@@ -4230,7 +4226,7 @@ function App() {
   )
   // Build spot search index
   const allSpots = Object.entries(CITY_DATA).flatMap(([cityName, data]) => {
-    const city = allCities.find(c => c.name === cityName)
+    const city = allCities.find(c => (c._koName || c.name) === cityName)
     if (!city || !data.spots) return []
     return data.spots.map(spot => ({
       ...city,
@@ -4330,7 +4326,7 @@ function App() {
                     setTimeout(() => handleCityClick(c), 300)
                     if (c._searchType === 'spot') {
                       // 관광지 검색 → 도시로 이동 후 해당 관광지 펼침
-                      const spotData = CITY_DATA[c.name]
+                      const spotData = CITY_DATA[c._koName || c.name]
                       if (spotData) {
                         setTimeout(() => {
                           const spot = spotData.spots?.find(s => s.name === c.spotName)
@@ -4545,7 +4541,7 @@ function App() {
                                   <SpotGallery
                                     wikiTitle={spot.wikiTitle}
                                     spotName={spot.name}
-                                    cityName={selectedCity?.name}
+                                    cityName={CITY_I18N[selectedCity?._koName||selectedCity?.name]?.[0] || selectedCity?.name}
                                     fallback={spot.img || getImg(spot.type)}
                                     style={{width:'100%',height:'100%'}}
                                   />
@@ -4554,7 +4550,7 @@ function App() {
                                     className="cimg"
                                     wikiTitle={spot.wikiTitle}
                                     spotName={spot.name}
-                                    cityName={selectedCity?.name}
+                                    cityName={CITY_I18N[selectedCity?._koName||selectedCity?.name]?.[0] || selectedCity?.name}
                                     alt={spot.name}
                                     fallback={spot.img || getImg(spot.type)}
                                     style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
