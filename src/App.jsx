@@ -3571,8 +3571,9 @@ function App() {
         return 0.004
       })
       .polygonLabel(feat => {
-        if (hasSelection) return ''
         const name = feat.properties.NAME
+        // 선택된 국가 위에서는 툴팁 숨김
+        if (hasSelection && name === selectedCountry?.properties?.NAME) return ''
         const koName = COUNTRY_KO[name] || name
         const hasCities = COUNTRY_CITIES[name]
         return `<div style="background:rgba(15,23,42,0.92);border-radius:10px;padding:8px 14px;font-family:Pretendard,Inter,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);">
@@ -3581,12 +3582,14 @@ function App() {
         </div>`
       })
       .onPolygonHover(feat => {
-        // 국가 선택 상태에서는 호버 끄기
-        if (!hasSelection) setHoveredCountry(feat ? feat.properties.NAME : null)
+        // 선택된 국가 위에서는 호버 끄기 (도시 클릭 우선), 다른 국가는 호버 허용
+        if (feat && hasSelection && feat.properties?.NAME === selectedCountry?.properties?.NAME) return
+        setHoveredCountry(feat ? feat.properties.NAME : null)
       })
       .onPolygonClick(feat => {
-        // 국가 선택 상태에서는 폴리곤 클릭 무시 (도시 라벨 클릭 우선)
-        if (!hasSelection) handleCountryClick(feat)
+        // 현재 선택된 국가 클릭은 무시 (도시 라벨 클릭 우선), 다른 국가는 바로 이동
+        if (hasSelection && feat?.properties?.NAME === selectedCountry?.properties?.NAME) return
+        handleCountryClick(feat)
       })
   }, [countries, hoveredCountry, selectedCountry])
 
