@@ -3546,9 +3546,9 @@ function App() {
       .polygonsData(countries)
       .polygonCapColor(feat => {
         const name = feat.properties.NAME
-        // 국가 선택 상태에서는 선택된 국가만 연한 표시, 나머지 숨김
         if (hasSelection) {
           if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.15)'
+          if (hoveredCountry === name) return 'rgba(255,220,50,0.35)'
           return 'rgba(0,0,0,0)'
         }
         if (hoveredCountry === name) return 'rgba(255,220,50,0.35)'
@@ -3559,6 +3559,7 @@ function App() {
         const name = feat.properties.NAME
         if (hasSelection) {
           if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.5)'
+          if (hoveredCountry === name) return 'rgba(255,220,50,0.6)'
           return 'rgba(255,255,255,0.05)'
         }
         if (hoveredCountry === name) return 'rgba(255,220,50,0.6)'
