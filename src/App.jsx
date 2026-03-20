@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 
-// ── 실제 관광지 사진 (Wikipedia API + Search 폴백) ─────────────────────
-function SpotImage({ wikiTitle, spotName, fallback, className, style, alt }) {
+// ── 실제 관광지 사진 (Wikipedia + Wikimedia Commons 검색) ─────────────
+function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, alt }) {
   const [src, setSrc] = useState(null)
 
   useEffect(() => {
@@ -11,7 +11,6 @@ function SpotImage({ wikiTitle, spotName, fallback, className, style, alt }) {
     const keyword = wikiTitle || spotName || ''
     if (!keyword) { setSrc(fallback); return }
 
-    // 정확한 제목으로 이미지 조회
     const tryWiki = async (title) => {
       try {
         const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=600&origin=*`)
@@ -21,10 +20,9 @@ function SpotImage({ wikiTitle, spotName, fallback, className, style, alt }) {
       } catch { return null }
     }
 
-    // 키워드로 Wikipedia 검색 후 첫 결과의 이미지 조회
     const searchWiki = async (query) => {
       try {
-        const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=3&prop=pageimages&format=json&pithumbsize=600&origin=*`)
+        const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=5&prop=pageimages&format=json&pithumbsize=600&origin=*`)
         const data = await res.json()
         const pages = Object.values(data?.query?.pages || {})
         for (const page of pages) {
@@ -34,19 +32,33 @@ function SpotImage({ wikiTitle, spotName, fallback, className, style, alt }) {
       } catch { return null }
     }
 
+    // Wikimedia Commons에서 실사진 검색
+    const searchCommons = async (query) => {
+      try {
+        const res = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&gsrlimit=5&prop=imageinfo&iiprop=url|mime&iiurlwidth=600&format=json&origin=*`)
+        const data = await res.json()
+        const pages = Object.values(data?.query?.pages || {})
+        for (const p of pages) {
+          const info = p?.imageinfo?.[0]
+          if (info?.thumburl && info.mime?.startsWith('image/jpeg')) return info.thumburl
+        }
+        return null
+      } catch { return null }
+    }
+
     const loadImage = async () => {
-      // 1차: wikiTitle 정확한 제목 검색
+      // 1차: wikiTitle 정확 매칭
       let img = await tryWiki(keyword)
       if (!cancelled && img) { setSrc(img); return }
 
-      // 2차: 한글 제거 후 영어만으로 재시도
+      // 2차: 영어만 추출
       const enKeyword = keyword.replace(/[가-힣]+/g, '').trim()
       if (enKeyword && enKeyword !== keyword) {
         img = await tryWiki(enKeyword)
         if (!cancelled && img) { setSrc(img); return }
       }
 
-      // 3차: spotName으로 시도
+      // 3차: spotName
       if (spotName && spotName !== keyword) {
         const enSpot = spotName.replace(/[가-힣]+/g, '').trim()
         if (enSpot) {
@@ -55,10 +67,20 @@ function SpotImage({ wikiTitle, spotName, fallback, className, style, alt }) {
         }
       }
 
-      // 4차: Wikipedia 검색 API로 관련 문서 이미지 찾기
-      const searchQuery = (wikiTitle || '') + ' ' + (spotName || '')
-      img = await searchWiki(searchQuery.trim())
+      // 4차: Wikipedia 검색 (도시명 포함)
+      const searchQuery = keyword + (cityName ? ' ' + cityName : '')
+      img = await searchWiki(searchQuery)
       if (!cancelled && img) { setSrc(img); return }
+
+      // 5차: Wikimedia Commons 실사진 검색
+      img = await searchCommons(keyword + ' photo')
+      if (!cancelled && img) { setSrc(img); return }
+
+      // 6차: 도시명 + spotName으로 Commons 재검색
+      if (cityName) {
+        img = await searchCommons(spotName + ' ' + cityName)
+        if (!cancelled && img) { setSrc(img); return }
+      }
 
       // 최종 fallback
       if (!cancelled) setSrc(fallback)
@@ -66,7 +88,7 @@ function SpotImage({ wikiTitle, spotName, fallback, className, style, alt }) {
 
     loadImage()
     return () => { cancelled = true }
-  }, [wikiTitle, spotName, fallback])
+  }, [wikiTitle, spotName, cityName, fallback])
 
   return (
     <img
@@ -80,7 +102,7 @@ function SpotImage({ wikiTitle, spotName, fallback, className, style, alt }) {
 }
 
 // ── 관광지 사진 갤러리 (Wikimedia Commons 실사진 + 필터링 강화) ──────────
-function SpotGallery({ wikiTitle, spotName, fallback, style }) {
+function SpotGallery({ wikiTitle, spotName, cityName, fallback, style }) {
   const [images, setImages] = useState([])
   const [idx, setIdx] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -99,7 +121,7 @@ function SpotGallery({ wikiTitle, spotName, fallback, style }) {
 
       try {
         // 1단계: Wikimedia Commons에서 실사진 검색 (가장 좋은 소스)
-        const commonsRes = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(keyword + ' photo')}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=800&format=json&origin=*`)
+        const commonsRes = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(keyword + (cityName ? ' ' + cityName : '') + ' photo')}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=800&format=json&origin=*`)
         const commonsData = await commonsRes.json()
         const commonsPages = Object.values(commonsData?.query?.pages || {})
         for (const p of commonsPages) {
@@ -3187,48 +3209,21 @@ const DEFAULT_CITY_DATA = (cityName) => ({
   weather:{temp:Math.floor(Math.random()*20)+10,condition:"구름 조금",icon:"⛅",humidity:Math.floor(Math.random()*40)+45},
   description:`${cityName}은(는) 독특한 문화적 경험과 아름다운 자연 풍경, 잊을 수 없는 추억을 선사하는 매력적인 여행지입니다.`,
   spots:[
-    {name:`${cityName} 구시가지`,type:"역사",desc:"도시의 풍부한 문화 유산을 보여주는 아름답게 보존된 역사 지구입니다.",img:"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80",rating:4.5},
-    {name:`${cityName} 국립 박물관`,type:"문화",desc:"이 지역의 훌륭한 예술 작품과 유물, 역사를 전시하는 세계적 수준의 기관입니다.",img:"https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=400&q=80",rating:4.4},
-    {name:`${cityName} 시립 공원`,type:"자연",desc:"도시 중심부에 자리한 사랑받는 녹지 오아시스로 계절마다 다른 정원을 즐길 수 있습니다.",img:"https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80",rating:4.6},
-    {name:`${cityName} 전통 시장`,type:"음식",desc:"신선한 농산물과 길거리 음식, 수공예품이 가득한 활기찬 로컬 시장입니다.",img:"https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=80",rating:4.3},
+    {name:`${cityName} 구시가지`,wikiTitle:cityName,type:"역사",desc:"도시의 풍부한 문화 유산을 보여주는 아름답게 보존된 역사 지구입니다.",rating:4.5},
+    {name:`${cityName} 국립 박물관`,wikiTitle:`${cityName} museum`,type:"문화",desc:"이 지역의 훌륭한 예술 작품과 유물, 역사를 전시하는 세계적 수준의 기관입니다.",rating:4.4},
+    {name:`${cityName} 시립 공원`,wikiTitle:`${cityName} park`,type:"자연",desc:"도시 중심부에 자리한 사랑받는 녹지 오아시스로 계절마다 다른 정원을 즐길 수 있습니다.",rating:4.6},
+    {name:`${cityName} 전통 시장`,wikiTitle:`${cityName} market`,type:"음식",desc:"신선한 농산물과 길거리 음식, 수공예품이 가득한 활기찬 로컬 시장입니다.",rating:4.3},
   ]
 })
 
-// 카테고리별 실제 작동하는 Unsplash 이미지 풀
-const IMG_POOL = {
-  "문화": [
-    "photo-1545569341-9eb8b30979d9","photo-1528360983277-13d401cdc186","photo-1538485399081-7191377e8241",
-    "photo-1558618666-fcd25c85cd64","photo-1524413840807-0c3cb6fa808d","photo-1499856871958-5b9627545d1a",
-  ],
-  "역사": [
-    "photo-1552832230-c0197dd311b5","photo-1539650116574-75c0c6d73f6e","photo-1467269204594-9661b134dd2b",
-    "photo-1548115184-bc6544d06a58","photo-1583623025817-d180a2221d0a","photo-1531572753322-ad063cecc140",
-  ],
-  "자연": [
-    "photo-1441974231531-c6227db76b6e","photo-1506905925346-21bda4d32df4","photo-1559827260-dc66d52bef19",
-    "photo-1476514525535-07fb3b4ae5f1","photo-1523428461295-92770e70d7ae","photo-1533104816931-20fa691ff6ca",
-  ],
-  "랜드마크": [
-    "photo-1511739001486-6bfe10ce785f","photo-1485738422979-f5c462d49f74","photo-1512453979798-5ea266f8880c",
-    "photo-1513635269975-59663e0ac1ad","photo-1506905925346-21bda4d32df4","photo-1534430480872-3498386e7856",
-  ],
-  "도시": [
-    "photo-1540959733332-eab4deabeeaf","photo-1477959858617-67f85cf4f1df","photo-1546436836-07a91091f160",
-    "photo-1480714378408-67cf0d13bc1b","photo-1449824913935-59a10b8d2000","photo-1502602898657-3e91760cbb34",
-  ],
-  "음식": [
-    "photo-1555396273-367ea4eb4db5","photo-1504674900247-0877df9cc836","photo-1567620905732-2d1ec7ab7445",
-    "photo-1414235077428-338989a2e8c0","photo-1540189549336-e6e99c3679fe","photo-1565299624946-b28f40a0ae38",
-  ],
-}
-const getImg = (type, seed) => {
-  const pool = IMG_POOL[type] || IMG_POOL["랜드마크"]
-  // seed 기반 결정적 선택 (렌더 안정성)
-  let hash = 0
-  const s = seed || type || ''
-  for (let i = 0; i < s.length; i++) hash = ((hash << 5) - hash) + s.charCodeAt(i)
-  const idx = Math.abs(hash) % pool.length
-  return `https://images.unsplash.com/${pool[idx]}?w=400&q=80`
+// 카테고리별 폴백 플레이스홀더 (실사진 못 찾을 때만 사용)
+const TYPE_EMOJI = { "문화":"🎭","자연":"🌿","랜드마크":"⭐","도시":"🏙️","역사":"🏛️","음식":"🍽️" }
+const getImg = (type) => {
+  const colors = { "문화":"8b5cf6","자연":"10b981","랜드마크":"f59e0b","도시":"3b82f6","역사":"f97316","음식":"ec4899" }
+  const c = colors[type] || '64748b'
+  const emoji = TYPE_EMOJI[type] || '📍'
+  // SVG 플레이스홀더 (그라디언트 + 이모지)
+  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#${c}" stop-opacity="0.8"/><stop offset="100%" stop-color="#0f172a" stop-opacity="0.9"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><text x="200" y="140" text-anchor="middle" font-size="48">${emoji}</text><text x="200" y="185" text-anchor="middle" font-family="sans-serif" font-size="13" fill="rgba(255,255,255,0.5)">사진을 불러오는 중...</text></svg>`)}`
 }
 
 const TYPE_COLORS = {
@@ -4054,7 +4049,8 @@ function App() {
                                   <SpotGallery
                                     wikiTitle={spot.wikiTitle}
                                     spotName={spot.name}
-                                    fallback={spot.img || getImg(spot.type, spot.name)}
+                                    cityName={selectedCity?.name}
+                                    fallback={spot.img || getImg(spot.type)}
                                     style={{width:'100%',height:'100%'}}
                                   />
                                 ) : (
@@ -4062,8 +4058,9 @@ function App() {
                                     className="cimg"
                                     wikiTitle={spot.wikiTitle}
                                     spotName={spot.name}
+                                    cityName={selectedCity?.name}
                                     alt={spot.name}
-                                    fallback={spot.img || getImg(spot.type, spot.name)}
+                                    fallback={spot.img || getImg(spot.type)}
                                     style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
                                   />
                                 )}
