@@ -1104,6 +1104,78 @@ const COUNTRY_KO = {
   "Suriname": "수리남",
 }
 
+// ── 국가 기본정보 데이터 ──────────────────────────────────────────────
+const COUNTRY_INFO = {
+  "South Korea": { capital:"서울", population:"5,200만", area:"100,210 km²", lang:"한국어", currency:"원 (KRW)", timezone:"UTC+9", timeDiff:"—", visa:"—", voltage:"220V / 60Hz", callCode:"+82", drive:"우측", tagline:"한류와 전통이 공존하는 다이나믹 코리아", continent:"아시아", emoji:"🇰🇷" },
+  "Japan": { capital:"도쿄", population:"1억 2,500만", area:"377,975 km²", lang:"일본어", currency:"엔 (JPY)", timezone:"UTC+9", timeDiff:"시차 없음", visa:"90일 무비자", voltage:"100V / 50·60Hz", callCode:"+81", drive:"좌측", tagline:"전통과 첨단이 어우러진 사무라이의 나라", continent:"아시아", emoji:"🇯🇵" },
+  "China": { capital:"베이징", population:"14억 2,600만", area:"9,596,960 km²", lang:"중국어(보통화)", currency:"위안 (CNY)", timezone:"UTC+8", timeDiff:"-1시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+86", drive:"우측", tagline:"5천 년 문명의 대륙", continent:"아시아", emoji:"🇨🇳" },
+  "Thailand": { capital:"방콕", population:"7,200만", area:"513,120 km²", lang:"태국어", currency:"바트 (THB)", timezone:"UTC+7", timeDiff:"-2시간", visa:"90일 무비자", voltage:"220V / 50Hz", callCode:"+66", drive:"좌측", tagline:"미소의 나라, 황금빛 사원의 땅", continent:"아시아", emoji:"🇹🇭" },
+  "Vietnam": { capital:"하노이", population:"1억 30만", area:"331,210 km²", lang:"베트남어", currency:"동 (VND)", timezone:"UTC+7", timeDiff:"-2시간", visa:"45일 무비자", voltage:"220V / 50Hz", callCode:"+84", drive:"우측", tagline:"아시아의 떠오르는 보석", continent:"아시아", emoji:"🇻🇳" },
+  "India": { capital:"뉴델리", population:"14억 4,200만", area:"3,287,263 km²", lang:"힌디어·영어", currency:"루피 (INR)", timezone:"UTC+5:30", timeDiff:"-3.5시간", visa:"e-비자", voltage:"230V / 50Hz", callCode:"+91", drive:"좌측", tagline:"신비로운 색채의 다양성 대국", continent:"아시아", emoji:"🇮🇳" },
+  "Indonesia": { capital:"자카르타", population:"2억 7,800만", area:"1,904,569 km²", lang:"인도네시아어", currency:"루피아 (IDR)", timezone:"UTC+7~9", timeDiff:"-2~0시간", visa:"30일 무비자", voltage:"230V / 50Hz", callCode:"+62", drive:"좌측", tagline:"만 섬의 열대 낙원", continent:"아시아", emoji:"🇮🇩" },
+  "Malaysia": { capital:"쿠알라룸푸르", population:"3,400만", area:"330,803 km²", lang:"말레이어·영어", currency:"링깃 (MYR)", timezone:"UTC+8", timeDiff:"-1시간", visa:"90일 무비자", voltage:"240V / 50Hz", callCode:"+60", drive:"좌측", tagline:"다민족 문화의 열대 보석", continent:"아시아", emoji:"🇲🇾" },
+  "Singapore": { capital:"싱가포르", population:"592만", area:"733 km²", lang:"영어·중국어·말레이어·타밀어", currency:"싱가포르달러 (SGD)", timezone:"UTC+8", timeDiff:"-1시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+65", drive:"좌측", tagline:"아시아의 보석, 가든시티", continent:"아시아", emoji:"🇸🇬" },
+  "Cambodia": { capital:"프놈펜", population:"1,700만", area:"181,035 km²", lang:"크메르어", currency:"리엘 (KHR)", timezone:"UTC+7", timeDiff:"-2시간", visa:"도착 비자", voltage:"230V / 50Hz", callCode:"+855", drive:"우측", tagline:"앙코르 문명의 신비로운 나라", continent:"아시아", emoji:"🇰🇭" },
+  "Myanmar": { capital:"네피도", population:"5,400만", area:"676,578 km²", lang:"미얀마어", currency:"짯 (MMK)", timezone:"UTC+6:30", timeDiff:"-2.5시간", visa:"e-비자", voltage:"230V / 50Hz", callCode:"+95", drive:"우측", tagline:"황금빛 파고다의 나라", continent:"아시아", emoji:"🇲🇲" },
+  "Nepal": { capital:"카트만두", population:"3,000만", area:"147,181 km²", lang:"네팔어", currency:"루피 (NPR)", timezone:"UTC+5:45", timeDiff:"-3.25시간", visa:"도착 비자", voltage:"230V / 50Hz", callCode:"+977", drive:"좌측", tagline:"히말라야의 지붕 위 나라", continent:"아시아", emoji:"🇳🇵" },
+  "Sri Lanka": { capital:"스리자야와르데네푸라코테", population:"2,200만", area:"65,610 km²", lang:"싱할라어·타밀어", currency:"루피 (LKR)", timezone:"UTC+5:30", timeDiff:"-3.5시간", visa:"e-비자", voltage:"230V / 50Hz", callCode:"+94", drive:"좌측", tagline:"인도양의 진주, 차와 향신료의 섬", continent:"아시아", emoji:"🇱🇰" },
+  "Philippines": { capital:"마닐라", population:"1억 1,500만", area:"300,000 km²", lang:"필리핀어·영어", currency:"페소 (PHP)", timezone:"UTC+8", timeDiff:"-1시간", visa:"30일 무비자", voltage:"220V / 60Hz", callCode:"+63", drive:"우측", tagline:"7천 개 섬의 열대 낙원", continent:"아시아", emoji:"🇵🇭" },
+  "United Arab Emirates": { capital:"아부다비", population:"1,000만", area:"83,600 km²", lang:"아랍어·영어", currency:"디르함 (AED)", timezone:"UTC+4", timeDiff:"-5시간", visa:"30일 무비자", voltage:"230V / 50Hz", callCode:"+971", drive:"우측", tagline:"사막 위에 세운 미래 도시", continent:"아시아(중동)", emoji:"🇦🇪" },
+  "Turkey": { capital:"앙카라", population:"8,500만", area:"783,562 km²", lang:"터키어", currency:"리라 (TRY)", timezone:"UTC+3", timeDiff:"-6시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+90", drive:"우측", tagline:"동서양 문명의 교차로", continent:"아시아/유럽", emoji:"🇹🇷" },
+  "Jordan": { capital:"암만", population:"1,130만", area:"89,342 km²", lang:"아랍어", currency:"디나르 (JOD)", timezone:"UTC+3", timeDiff:"-6시간", visa:"도착 비자", voltage:"230V / 50Hz", callCode:"+962", drive:"우측", tagline:"페트라와 사해의 고대 왕국", continent:"아시아(중동)", emoji:"🇯🇴" },
+  "Israel": { capital:"예루살렘", population:"980만", area:"22,145 km²", lang:"히브리어·아랍어", currency:"셰켈 (ILS)", timezone:"UTC+2", timeDiff:"-7시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+972", drive:"우측", tagline:"세 종교의 성지, 역사의 땅", continent:"아시아(중동)", emoji:"🇮🇱" },
+  "France": { capital:"파리", population:"6,800만", area:"643,801 km²", lang:"프랑스어", currency:"유로 (EUR)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+33", drive:"우측", tagline:"예술과 낭만의 나라", continent:"유럽", emoji:"🇫🇷" },
+  "Italy": { capital:"로마", population:"5,900만", area:"301,340 km²", lang:"이탈리아어", currency:"유로 (EUR)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+39", drive:"우측", tagline:"로마 제국과 르네상스의 고향", continent:"유럽", emoji:"🇮🇹" },
+  "Spain": { capital:"마드리드", population:"4,750만", area:"505,370 km²", lang:"스페인어", currency:"유로 (EUR)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+34", drive:"우측", tagline:"태양과 정열의 나라", continent:"유럽", emoji:"🇪🇸" },
+  "Germany": { capital:"베를린", population:"8,400만", area:"357,022 km²", lang:"독일어", currency:"유로 (EUR)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+49", drive:"우측", tagline:"맥주와 기술, 동화의 나라", continent:"유럽", emoji:"🇩🇪" },
+  "United Kingdom": { capital:"런던", population:"6,740만", area:"242,495 km²", lang:"영어", currency:"파운드 (GBP)", timezone:"UTC+0", timeDiff:"-9시간", visa:"6개월 무비자", voltage:"230V / 50Hz", callCode:"+44", drive:"좌측", tagline:"해가 지지 않는 역사의 나라", continent:"유럽", emoji:"🇬🇧" },
+  "Portugal": { capital:"리스본", population:"1,030만", area:"92,212 km²", lang:"포르투갈어", currency:"유로 (EUR)", timezone:"UTC+0", timeDiff:"-9시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+351", drive:"우측", tagline:"대항해시대의 낭만적 시작점", continent:"유럽", emoji:"🇵🇹" },
+  "Netherlands": { capital:"암스테르담", population:"1,780만", area:"41,543 km²", lang:"네덜란드어", currency:"유로 (EUR)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+31", drive:"우측", tagline:"풍차와 튤립, 자유의 나라", continent:"유럽", emoji:"🇳🇱" },
+  "Czechia": { capital:"프라하", population:"1,080만", area:"78,867 km²", lang:"체코어", currency:"코루나 (CZK)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+420", drive:"우측", tagline:"동화 같은 중세 도시의 나라", continent:"유럽", emoji:"🇨🇿" },
+  "Austria": { capital:"빈", population:"910만", area:"83,871 km²", lang:"독일어", currency:"유로 (EUR)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+43", drive:"우측", tagline:"음악과 알프스의 나라", continent:"유럽", emoji:"🇦🇹" },
+  "Switzerland": { capital:"베른", population:"880만", area:"41,284 km²", lang:"독일어·프랑스어·이탈리아어·로만슈어", currency:"프랑 (CHF)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+41", drive:"우측", tagline:"알프스 중심의 정밀한 나라", continent:"유럽", emoji:"🇨🇭" },
+  "Hungary": { capital:"부다페스트", population:"970만", area:"93,028 km²", lang:"헝가리어", currency:"포린트 (HUF)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+36", drive:"우측", tagline:"다뉴브 강의 진주", continent:"유럽", emoji:"🇭🇺" },
+  "Croatia": { capital:"자그레브", population:"390만", area:"56,594 km²", lang:"크로아티아어", currency:"유로 (EUR)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+385", drive:"우측", tagline:"아드리아해의 보석", continent:"유럽", emoji:"🇭🇷" },
+  "Greece": { capital:"아테네", population:"1,050만", area:"131,957 km²", lang:"그리스어", currency:"유로 (EUR)", timezone:"UTC+2", timeDiff:"-7시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+30", drive:"우측", tagline:"서양 문명의 요람", continent:"유럽", emoji:"🇬🇷" },
+  "Norway": { capital:"오슬로", population:"550만", area:"385,207 km²", lang:"노르웨이어", currency:"크로네 (NOK)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+47", drive:"우측", tagline:"피오르드와 오로라의 나라", continent:"유럽", emoji:"🇳🇴" },
+  "Sweden": { capital:"스톡홀름", population:"1,050만", area:"450,295 km²", lang:"스웨덴어", currency:"크로나 (SEK)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+46", drive:"우측", tagline:"디자인과 복지의 스칸디나비아", continent:"유럽", emoji:"🇸🇪" },
+  "Denmark": { capital:"코펜하겐", population:"590만", area:"43,094 km²", lang:"덴마크어", currency:"크로네 (DKK)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+45", drive:"우측", tagline:"행복한 동화의 나라, 휘게의 본고장", continent:"유럽", emoji:"🇩🇰" },
+  "Finland": { capital:"헬싱키", population:"560만", area:"338,145 km²", lang:"핀란드어·스웨덴어", currency:"유로 (EUR)", timezone:"UTC+2", timeDiff:"-7시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+358", drive:"우측", tagline:"산타와 사우나, 오로라의 나라", continent:"유럽", emoji:"🇫🇮" },
+  "Iceland": { capital:"레이캬비크", population:"38만", area:"103,000 km²", lang:"아이슬란드어", currency:"크로나 (ISK)", timezone:"UTC+0", timeDiff:"-9시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+354", drive:"우측", tagline:"불과 얼음의 나라", continent:"유럽", emoji:"🇮🇸" },
+  "Poland": { capital:"바르샤바", population:"3,800만", area:"312,685 km²", lang:"폴란드어", currency:"즈워티 (PLN)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+48", drive:"우측", tagline:"중세 유럽의 숨은 보석", continent:"유럽", emoji:"🇵🇱" },
+  "Russia": { capital:"모스크바", population:"1억 4,600만", area:"17,098,242 km²", lang:"러시아어", currency:"루블 (RUB)", timezone:"UTC+3~12", timeDiff:"-6~+3시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+7", drive:"우측", tagline:"세계 최대 영토의 대국", continent:"유럽/아시아", emoji:"🇷🇺" },
+  "Egypt": { capital:"카이로", population:"1억 500만", area:"1,001,450 km²", lang:"아랍어", currency:"파운드 (EGP)", timezone:"UTC+2", timeDiff:"-7시간", visa:"도착 비자", voltage:"220V / 50Hz", callCode:"+20", drive:"우측", tagline:"피라미드와 나일강의 고대 문명", continent:"아프리카", emoji:"🇪🇬" },
+  "Morocco": { capital:"라바트", population:"3,700만", area:"446,550 km²", lang:"아랍어·베르베르어·프랑스어", currency:"디르함 (MAD)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"220V / 50Hz", callCode:"+212", drive:"우측", tagline:"아프리카와 유럽이 만나는 이색 왕국", continent:"아프리카", emoji:"🇲🇦" },
+  "South Africa": { capital:"프리토리아", population:"6,000만", area:"1,219,090 km²", lang:"영어 외 11개 공용어", currency:"랜드 (ZAR)", timezone:"UTC+2", timeDiff:"-7시간", visa:"30일 무비자", voltage:"230V / 50Hz", callCode:"+27", drive:"좌측", tagline:"무지개 나라, 야생과 문명의 조화", continent:"아프리카", emoji:"🇿🇦" },
+  "Kenya": { capital:"나이로비", population:"5,500만", area:"580,367 km²", lang:"스와힐리어·영어", currency:"실링 (KES)", timezone:"UTC+3", timeDiff:"-6시간", visa:"e-비자", voltage:"240V / 50Hz", callCode:"+254", drive:"좌측", tagline:"사파리의 본고장", continent:"아프리카", emoji:"🇰🇪" },
+  "Tanzania": { capital:"도도마", population:"6,500만", area:"945,087 km²", lang:"스와힐리어·영어", currency:"실링 (TZS)", timezone:"UTC+3", timeDiff:"-6시간", visa:"도착 비자", voltage:"230V / 50Hz", callCode:"+255", drive:"좌측", tagline:"킬리만자로와 세렝게티의 나라", continent:"아프리카", emoji:"🇹🇿" },
+  "United States of America": { capital:"워싱턴 D.C.", population:"3억 3,500만", area:"9,833,517 km²", lang:"영어", currency:"달러 (USD)", timezone:"UTC-5~-10", timeDiff:"-14~-19시간", visa:"ESTA 필요", voltage:"120V / 60Hz", callCode:"+1", drive:"우측", tagline:"자유와 다양성의 초강대국", continent:"북아메리카", emoji:"🇺🇸" },
+  "Canada": { capital:"오타와", population:"4,000만", area:"9,984,670 km²", lang:"영어·프랑스어", currency:"달러 (CAD)", timezone:"UTC-3.5~-8", timeDiff:"-12.5~-17시간", visa:"eTA 필요", voltage:"120V / 60Hz", callCode:"+1", drive:"우측", tagline:"대자연과 다문화의 나라", continent:"북아메리카", emoji:"🇨🇦" },
+  "Mexico": { capital:"멕시코시티", population:"1억 3,000만", area:"1,964,375 km²", lang:"스페인어", currency:"페소 (MXN)", timezone:"UTC-6~-8", timeDiff:"-15~-17시간", visa:"180일 무비자", voltage:"127V / 60Hz", callCode:"+52", drive:"우측", tagline:"마야·아즈텍 문명과 타코의 나라", continent:"북아메리카", emoji:"🇲🇽" },
+  "Cuba": { capital:"하바나", population:"1,100만", area:"110,861 km²", lang:"스페인어", currency:"페소 (CUP)", timezone:"UTC-5", timeDiff:"-14시간", visa:"관광카드 필요", voltage:"110/220V / 60Hz", callCode:"+53", drive:"우측", tagline:"시간이 멈춘 카리브해의 진주", continent:"북아메리카", emoji:"🇨🇺" },
+  "Brazil": { capital:"브라질리아", population:"2억 1,600만", area:"8,515,770 km²", lang:"포르투갈어", currency:"헤알 (BRL)", timezone:"UTC-3~-5", timeDiff:"-12~-14시간", visa:"90일 무비자", voltage:"127/220V / 60Hz", callCode:"+55", drive:"우측", tagline:"삼바와 아마존의 열정 대륙", continent:"남아메리카", emoji:"🇧🇷" },
+  "Argentina": { capital:"부에노스아이레스", population:"4,600만", area:"2,780,400 km²", lang:"스페인어", currency:"페소 (ARS)", timezone:"UTC-3", timeDiff:"-12시간", visa:"90일 무비자", voltage:"220V / 50Hz", callCode:"+54", drive:"우측", tagline:"탱고와 파타고니아의 나라", continent:"남아메리카", emoji:"🇦🇷" },
+  "Peru": { capital:"리마", population:"3,400만", area:"1,285,216 km²", lang:"스페인어·케추아어", currency:"솔 (PEN)", timezone:"UTC-5", timeDiff:"-14시간", visa:"90일 무비자", voltage:"220V / 60Hz", callCode:"+51", drive:"우측", tagline:"잉카 문명과 마추픽추의 나라", continent:"남아메리카", emoji:"🇵🇪" },
+  "Colombia": { capital:"보고타", population:"5,200만", area:"1,138,910 km²", lang:"스페인어", currency:"페소 (COP)", timezone:"UTC-5", timeDiff:"-14시간", visa:"90일 무비자", voltage:"110V / 60Hz", callCode:"+57", drive:"우측", tagline:"커피와 에메랄드의 나라", continent:"남아메리카", emoji:"🇨🇴" },
+  "Chile": { capital:"산티아고", population:"1,950만", area:"756,102 km²", lang:"스페인어", currency:"페소 (CLP)", timezone:"UTC-4", timeDiff:"-13시간", visa:"90일 무비자", voltage:"220V / 50Hz", callCode:"+56", drive:"우측", tagline:"세계에서 가장 긴 나라", continent:"남아메리카", emoji:"🇨🇱" },
+  "Australia": { capital:"캔버라", population:"2,620만", area:"7,692,024 km²", lang:"영어", currency:"달러 (AUD)", timezone:"UTC+8~+11", timeDiff:"-1~+2시간", visa:"ETA 필요", voltage:"230V / 50Hz", callCode:"+61", drive:"좌측", tagline:"코알라와 오페라하우스의 대륙", continent:"오세아니아", emoji:"🇦🇺" },
+  "New Zealand": { capital:"웰링턴", population:"520만", area:"268,021 km²", lang:"영어·마오리어", currency:"달러 (NZD)", timezone:"UTC+12", timeDiff:"+3시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+64", drive:"좌측", tagline:"반지의 제왕 촬영지, 청정 자연", continent:"오세아니아", emoji:"🇳🇿" },
+  "Maldives": { capital:"말레", population:"52만", area:"298 km²", lang:"디베히어", currency:"루피아 (MVR)", timezone:"UTC+5", timeDiff:"-4시간", visa:"30일 무비자", voltage:"230V / 50Hz", callCode:"+960", drive:"좌측", tagline:"인도양의 수중 파라다이스", continent:"아시아", emoji:"🇲🇻" },
+  "Taiwan": { capital:"타이베이", population:"2,380만", area:"36,193 km²", lang:"중국어(정체)", currency:"신 타이완 달러 (TWD)", timezone:"UTC+8", timeDiff:"-1시간", visa:"90일 무비자", voltage:"110V / 60Hz", callCode:"+886", drive:"우측", tagline:"야시장과 자연이 어우러진 보물섬", continent:"아시아", emoji:"🇹🇼" },
+  "Ireland": { capital:"더블린", population:"510만", area:"70,273 km²", lang:"영어·아일랜드어", currency:"유로 (EUR)", timezone:"UTC+0", timeDiff:"-9시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+353", drive:"좌측", tagline:"에메랄드빛 초원의 섬나라", continent:"유럽", emoji:"🇮🇪" },
+  "Belgium": { capital:"브뤼셀", population:"1,170만", area:"30,528 km²", lang:"네덜란드어·프랑스어·독일어", currency:"유로 (EUR)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+32", drive:"우측", tagline:"초콜릿과 와플, 유럽의 심장", continent:"유럽", emoji:"🇧🇪" },
+  "Costa Rica": { capital:"산호세", population:"520만", area:"51,100 km²", lang:"스페인어", currency:"콜론 (CRC)", timezone:"UTC-6", timeDiff:"-15시간", visa:"90일 무비자", voltage:"120V / 60Hz", callCode:"+506", drive:"우측", tagline:"생태관광의 천국, 푸라비다!", continent:"북아메리카", emoji:"🇨🇷" },
+  "Saudi Arabia": { capital:"리야드", population:"3,600만", area:"2,149,690 km²", lang:"아랍어", currency:"리얄 (SAR)", timezone:"UTC+3", timeDiff:"-6시간", visa:"e-비자", voltage:"220V / 60Hz", callCode:"+966", drive:"우측", tagline:"이슬람의 성지, 사막의 왕국", continent:"아시아(중동)", emoji:"🇸🇦" },
+  "Iran": { capital:"테헤란", population:"8,700만", area:"1,648,195 km²", lang:"페르시아어", currency:"리얄 (IRR)", timezone:"UTC+3:30", timeDiff:"-5.5시간", visa:"도착 비자", voltage:"220V / 50Hz", callCode:"+98", drive:"우측", tagline:"페르시아 문명의 찬란한 유산", continent:"아시아(중동)", emoji:"🇮🇷" },
+  "Uzbekistan": { capital:"타슈켄트", population:"3,500만", area:"448,978 km²", lang:"우즈베크어", currency:"숨 (UZS)", timezone:"UTC+5", timeDiff:"-4시간", visa:"30일 무비자", voltage:"220V / 50Hz", callCode:"+998", drive:"우측", tagline:"실크로드의 푸른 보석", continent:"아시아", emoji:"🇺🇿" },
+  "Laos": { capital:"비엔티안", population:"750만", area:"236,800 km²", lang:"라오어", currency:"킵 (LAK)", timezone:"UTC+7", timeDiff:"-2시간", visa:"15일 무비자", voltage:"230V / 50Hz", callCode:"+856", drive:"우측", tagline:"조용한 아침의 나라", continent:"아시아", emoji:"🇱🇦" },
+  "Mongolia": { capital:"울란바토르", population:"340만", area:"1,564,116 km²", lang:"몽골어", currency:"투그릭 (MNT)", timezone:"UTC+8", timeDiff:"-1시간", visa:"30일 무비자", voltage:"220V / 50Hz", callCode:"+976", drive:"우측", tagline:"칭기즈칸의 끝없는 초원", continent:"아시아", emoji:"🇲🇳" },
+  "Romania": { capital:"부쿠레슈티", population:"1,900만", area:"238,391 km²", lang:"루마니아어", currency:"레우 (RON)", timezone:"UTC+2", timeDiff:"-7시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+40", drive:"우측", tagline:"드라큘라 전설과 카르파티아 산맥", continent:"유럽", emoji:"🇷🇴" },
+  "Georgia": { capital:"트빌리시", population:"370만", area:"69,700 km²", lang:"조지아어", currency:"라리 (GEL)", timezone:"UTC+4", timeDiff:"-5시간", visa:"1년 무비자", voltage:"220V / 50Hz", callCode:"+995", drive:"우측", tagline:"와인의 발상지, 코카서스의 보석", continent:"아시아/유럽", emoji:"🇬🇪" },
+  "Ecuador": { capital:"키토", population:"1,800만", area:"283,561 km²", lang:"스페인어", currency:"달러 (USD)", timezone:"UTC-5", timeDiff:"-14시간", visa:"90일 무비자", voltage:"120V / 60Hz", callCode:"+593", drive:"우측", tagline:"적도의 나라, 갈라파고스의 고향", continent:"남아메리카", emoji:"🇪🇨" },
+  "Bolivia": { capital:"수크레", population:"1,200만", area:"1,098,581 km²", lang:"스페인어·케추아어·아이마라어", currency:"볼리비아노 (BOB)", timezone:"UTC-4", timeDiff:"-13시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+591", drive:"우측", tagline:"하늘의 거울, 우유니 소금사막", continent:"남아메리카", emoji:"🇧🇴" },
+}
+
 // 전 세계 도시 사전 관광 데이터
 const CITY_DATA = {
 
@@ -3246,6 +3318,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showDrop, setShowDrop] = useState(false)
   const [hoveredCountry, setHoveredCountry] = useState(null)
+  const [showCountryInfo, setShowCountryInfo] = useState(false)
 
 
   // Load world GeoJSON (110m 경량 + 폴리곤 구멍 제거 → 빠른 렌더링, 빈 공간 없음)
@@ -3766,6 +3839,7 @@ function App() {
     setSelectedCity(null)
     setCityData(null)
     setHoveredCountry(null)
+    setShowCountryInfo(false)
 
     const center = getCountryCenter(feat)
     const altitude = getCountryAltitude(feat)
@@ -3780,6 +3854,7 @@ function App() {
       setSelectedCity(city)
       setSelectedSpot(null)
       setCityData(null)
+      setShowCountryInfo(false)
       fetchCityData(city)
       // 국가 줌보다 더 가까이 줌인
       const countryName = city.countryEn || selectedCountry?.properties?.NAME
@@ -3865,18 +3940,36 @@ function App() {
   const closeCountry = () => {
     // 현재 국가 위치에서 줌아웃만 (대한민국으로 돌아가지 않음)
     const center = selectedCountry ? getCountryCenter(selectedCountry) : { lat: 36, lng: 127.8 }
-    setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null)
+    setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null); setShowCountryInfo(false)
     if (globeRef.current) {
       globeRef.current.pointOfView({ lat: center.lat, lng: center.lng, altitude: 2.2 }, 1000)
     }
   }
 
-  // Search: all cities across all countries
+  // Search: all cities + all spots across all countries
   const allCities = Object.entries(COUNTRY_CITIES).flatMap(([country, cities]) =>
-    cities.map(c => ({ ...c, countryEn: country, countryKo: COUNTRY_KO[country] || country }))
+    cities.map(c => ({ ...c, countryEn: country, countryKo: COUNTRY_KO[country] || country, _searchType: 'city' }))
   )
-  const filtered = searchQuery
-    ? allCities.filter(c => c.name.includes(searchQuery) || (c.countryKo && c.countryKo.includes(searchQuery)))
+  // Build spot search index
+  const allSpots = Object.entries(CITY_DATA).flatMap(([cityName, data]) => {
+    const city = allCities.find(c => c.name === cityName)
+    if (!city || !data.spots) return []
+    return data.spots.map(spot => ({
+      ...city,
+      spotName: spot.name,
+      spotType: spot.type,
+      _searchType: 'spot',
+    }))
+  })
+  const searchItems = [...allCities, ...allSpots]
+  const filtered = searchQuery.length >= 1
+    ? searchItems.filter(c => {
+        const q = searchQuery.toLowerCase()
+        if (c._searchType === 'spot') {
+          return c.spotName?.toLowerCase().includes(q) || c.name?.toLowerCase().includes(q)
+        }
+        return c.name?.includes(searchQuery) || c.countryKo?.includes(searchQuery) || c.countryEn?.toLowerCase().includes(q)
+      }).slice(0, 10)
     : []
 
   const countryKo = selectedCountry ? (COUNTRY_KO[selectedCountry.properties.NAME] || selectedCountry.properties.NAME) : ''
@@ -3888,6 +3981,8 @@ function App() {
         *{box-sizing:border-box;margin:0;padding:0}
         ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px}
         .panel{animation:sIn .42s cubic-bezier(.16,1,.3,1)}
+        .countryInfoPanel{animation:cInfoIn .35s cubic-bezier(.16,1,.3,1)}
+        @keyframes cInfoIn{from{opacity:0;transform:translateX(-50%) translateY(12px) scale(.97)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
         @keyframes sIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
         .card{transition:transform .18s,box-shadow .18s;cursor:pointer}
         .card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.13)!important}
@@ -3915,7 +4010,7 @@ function App() {
           </div>
           <div style={{marginLeft:'auto',position:'relative'}}>
             <span style={{position:'absolute',left:11,top:'50%',transform:'translateY(-50%)',fontSize:13,color:'#94a3b8',pointerEvents:'none'}}>🔍</span>
-            <input placeholder="도시 또는 국가 검색…" value={searchQuery}
+            <input placeholder="도시, 국가, 관광지 검색…" value={searchQuery}
               onChange={e=>{setSearchQuery(e.target.value);setShowDrop(true)}}
               onFocus={()=>setShowDrop(true)}
               onBlur={()=>setTimeout(()=>setShowDrop(false),150)}
@@ -3924,20 +4019,38 @@ function App() {
               <div style={{position:'absolute',top:'calc(100% + 7px)',right:0,background:'white',border:'1.5px solid #e2e8f0',borderRadius:14,overflow:'hidden',width:250,zIndex:2000,boxShadow:'0 12px 32px rgba(0,0,0,.15)'}}>
                 {filtered.slice(0,8).map((c,i)=>(
                   <div key={i} onMouseDown={()=>{
-                    // find country feature and fly there first
                     const feat = countries.find(f => f.properties.NAME === c.countryEn)
                     if (feat) { setSelectedCountry(feat); }
                     setTimeout(() => handleCityClick(c), 300)
+                    if (c._searchType === 'spot') {
+                      // 관광지 검색 → 도시로 이동 후 해당 관광지 펼침
+                      const spotData = CITY_DATA[c.name]
+                      if (spotData) {
+                        setTimeout(() => {
+                          const spot = spotData.spots?.find(s => s.name === c.spotName)
+                          if (spot) setSelectedSpot(spot)
+                        }, 800)
+                      }
+                    }
                     setSearchQuery(''); setShowDrop(false)
                   }}
-                    style={{padding:'10px 14px',cursor:'pointer',display:'flex',alignItems:'center',gap:10,borderBottom:i<filtered.length-1?'1px solid #f1f5f9':'none'}}
+                    style={{padding:'10px 14px',cursor:'pointer',display:'flex',alignItems:'center',gap:10,borderBottom:i<7?'1px solid #f1f5f9':'none'}}
                     onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
                     onMouseLeave={e=>e.currentTarget.style.background='white'}>
-                    <span style={{fontSize:20}}>{c.emoji}</span>
-                    <div>
-                      <div style={{fontSize:13,fontWeight:700,color:'#0f172a'}}>{c.name}</div>
-                      <div style={{fontSize:11,color:'#94a3b8'}}>{c.countryKo}</div>
+                    <span style={{fontSize:20}}>{c._searchType === 'spot' ? '📍' : c.emoji}</span>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:13,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                        {c._searchType === 'spot' ? c.spotName : c.name}
+                      </div>
+                      <div style={{fontSize:11,color:'#94a3b8'}}>
+                        {c._searchType === 'spot'
+                          ? `${c.name}, ${c.countryKo}`
+                          : c.countryKo}
+                      </div>
                     </div>
+                    {c._searchType === 'spot' && c.spotType && (
+                      <span style={{fontSize:9,padding:'2px 6px',borderRadius:8,background:TYPE_COLORS[c.spotType]||'#64748b',color:'white',fontWeight:700,flexShrink:0}}>{c.spotType}</span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -3946,28 +4059,105 @@ function App() {
         </div>
       </div>
 
-      {/* Country selected badge */}
-      {selectedCountry && !selectedCity && (
-        <div style={{
-          position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',
-          zIndex:1000,background:'rgba(255,255,255,.95)',backdropFilter:'blur(12px)',
-          border:'1.5px solid #e2e8f0',borderRadius:40,
-          padding:'10px 20px',fontSize:13,color:'#1e293b',
-          boxShadow:'0 4px 20px rgba(0,0,0,.15)',
-          display:'flex',alignItems:'center',gap:12,whiteSpace:'nowrap'
-        }}>
-          <span style={{fontWeight:700}}>{countryKo}</span>
-          <span style={{color:'#94a3b8',fontSize:12}}>
-            {COUNTRY_CITIES[selectedCountry.properties.NAME]
-              ? `${COUNTRY_CITIES[selectedCountry.properties.NAME].length}개 도시 · 핀을 클릭하세요`
-              : '등록된 도시 정보가 없습니다'}
-          </span>
-          <button onClick={closeCountry}
-            style={{background:'#f1f5f9',border:'none',borderRadius:20,padding:'4px 12px',cursor:'pointer',fontSize:12,color:'#64748b',fontWeight:600}}>
-            ✕ 닫기
-          </button>
-        </div>
-      )}
+      {/* Country selected badge + info panel */}
+      {selectedCountry && !selectedCity && (() => {
+        const cName = selectedCountry.properties.NAME
+        const info = COUNTRY_INFO[cName]
+        const cities = COUNTRY_CITIES[cName]
+        return (
+          <>
+            {/* Bottom bar */}
+            <div style={{
+              position:'absolute',bottom:24,
+              left:'50%',transform:'translateX(-50%)',
+              zIndex:1001,background:'rgba(255,255,255,.96)',backdropFilter:'blur(14px)',
+              border:'1.5px solid #e2e8f0',borderRadius:40,
+              padding:'10px 20px',fontSize:13,color:'#1e293b',
+              boxShadow:'0 4px 24px rgba(0,0,0,.18)',
+              display:'flex',alignItems:'center',gap:12,whiteSpace:'nowrap',
+            }}>
+              {info && <span style={{fontSize:20}}>{info.emoji}</span>}
+              <span style={{fontWeight:700,fontSize:15}}>{countryKo}</span>
+              {info && <span style={{fontSize:11,color:'#64748b',fontWeight:500}}>{info.tagline}</span>}
+              <span style={{color:'#94a3b8',fontSize:12}}>
+                {cities ? `${cities.length}개 도시` : ''}
+              </span>
+              {info && (
+                <button onClick={()=>setShowCountryInfo(v=>!v)}
+                  style={{background: showCountryInfo ? '#3b82f6' : '#f0f9ff',border: showCountryInfo ? '1.5px solid #3b82f6' : '1.5px solid #bae6fd',borderRadius:20,padding:'5px 14px',cursor:'pointer',fontSize:11.5,color: showCountryInfo ? 'white' : '#0369a1',fontWeight:700,transition:'all .2s',display:'flex',alignItems:'center',gap:4}}>
+                  📋 국가정보 {showCountryInfo ? '▾' : '▸'}
+                </button>
+              )}
+              <button onClick={closeCountry}
+                style={{background:'#f1f5f9',border:'none',borderRadius:20,padding:'5px 12px',cursor:'pointer',fontSize:12,color:'#64748b',fontWeight:600}}>
+                ✕
+              </button>
+            </div>
+
+            {/* Country Info Panel */}
+            {showCountryInfo && info && (
+              <div className="countryInfoPanel" style={{
+                position:'absolute',bottom:68,left:'50%',transform:'translateX(-50%)',
+                zIndex:1000,width:480,maxWidth:'92vw',
+                background:'rgba(255,255,255,.97)',backdropFilter:'blur(16px)',
+                border:'1.5px solid #e2e8f0',borderRadius:18,
+                boxShadow:'0 12px 48px rgba(0,0,0,.22)',
+                overflow:'hidden',
+              }}>
+                {/* Header */}
+                <div style={{
+                  background:`linear-gradient(135deg, ${cities?.[0]?.color || '#3b82f6'}18, ${cities?.[1]?.color || '#8b5cf6'}12)`,
+                  borderBottom:'1px solid #e2e8f0',padding:'16px 20px',
+                }}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
+                    <span style={{fontSize:28}}>{info.emoji}</span>
+                    <div>
+                      <div style={{fontSize:20,fontWeight:800,color:'#0f172a',letterSpacing:'-.3px'}}>{countryKo}</div>
+                      <div style={{fontSize:11.5,color:'#64748b',fontWeight:500}}>{cName} · {info.continent}</div>
+                    </div>
+                  </div>
+                  <div style={{fontSize:13,color:'#475569',fontStyle:'italic',lineHeight:1.5}}>"{info.tagline}"</div>
+                </div>
+
+                {/* Info Grid */}
+                <div style={{padding:'14px 20px 18px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0'}}>
+                  {[
+                    { icon:'🏛️', label:'수도', value:info.capital },
+                    { icon:'👥', label:'인구', value:info.population },
+                    { icon:'📐', label:'면적', value:info.area },
+                    { icon:'🗣️', label:'언어', value:info.lang },
+                    { icon:'💰', label:'통화', value:info.currency },
+                    { icon:'🕐', label:'시간대', value:info.timezone },
+                    { icon:'⏱️', label:'한국과 시차', value:info.timeDiff },
+                    { icon:'🛂', label:'비자(한국)', value:info.visa },
+                    { icon:'🔌', label:'전압', value:info.voltage },
+                    { icon:'📞', label:'국가번호', value:info.callCode },
+                    { icon:'🚗', label:'운전방향', value:info.drive },
+                    { icon:'🌍', label:'도시 수', value: cities ? `${cities.length}개 등록` : '—' },
+                  ].map((item, i) => (
+                    <div key={i} style={{
+                      display:'flex',alignItems:'center',gap:9,
+                      padding:'9px 4px',
+                      borderBottom: i < 10 ? '1px solid #f1f5f9' : 'none',
+                    }}>
+                      <span style={{fontSize:15,flexShrink:0,width:22,textAlign:'center'}}>{item.icon}</span>
+                      <div style={{minWidth:0}}>
+                        <div style={{fontSize:10,color:'#94a3b8',fontWeight:600,letterSpacing:'.5px',lineHeight:1}}>{item.label}</div>
+                        <div style={{fontSize:12.5,color:'#1e293b',fontWeight:600,marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.value}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Footer hint */}
+                <div style={{borderTop:'1px solid #f1f5f9',padding:'10px 20px',textAlign:'center'}}>
+                  <span style={{fontSize:11,color:'#94a3b8'}}>✦ 지도 위 도시 핀을 클릭하면 관광 정보를 볼 수 있어요</span>
+                </div>
+              </div>
+            )}
+          </>
+        )
+      })()}
 
       {/* Hint */}
       {!selectedCountry && (
