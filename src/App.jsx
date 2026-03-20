@@ -1104,6 +1104,155 @@ const COUNTRY_KO = {
   "Suriname": "수리남",
 }
 
+// ── 다국어 지원 시스템 ──────────────────────────────────────────────
+const LANG_OPTIONS = [
+  { code:'ko', label:'한국어', flag:'🇰🇷' },
+  { code:'en', label:'English', flag:'🇺🇸' },
+  { code:'ja', label:'日本語', flag:'🇯🇵' },
+  { code:'zh', label:'中文', flag:'🇨🇳' },
+]
+
+// UI 번역 문자열
+const T = {
+  appSub:{ko:'세계 여행 탐험가',en:'World Travel Explorer',ja:'世界旅行エクスプローラー',zh:'世界旅行探索家'},
+  search:{ko:'도시, 국가, 관광지 검색…',en:'Search city, country, attraction…',ja:'都市・国・観光地を検索…',zh:'搜索城市、国家、景点…'},
+  nCities:{ko:'개 도시',en:' cities',ja:'都市',zh:'个城市'},
+  countryInfo:{ko:'국가정보',en:'Country Info',ja:'国情報',zh:'国家信息'},
+  close:{ko:'✕',en:'✕',ja:'✕',zh:'✕'},
+  hintMain:{ko:'✦ 나라를 클릭하면 도시 핀이 나타납니다 · 드래그로 지구 회전',en:'✦ Click a country to see city pins · Drag to rotate the globe',ja:'✦ 国をクリックで都市ピン表示 · ドラッグで地球回転',zh:'✦ 点击国家显示城市标记 · 拖拽旋转地球'},
+  hintCity:{ko:'핀을 클릭하세요',en:'Click a pin',ja:'ピンをクリック',zh:'点击标记'},
+  clickExplore:{ko:'클릭하여 도시 탐색',en:'Click to explore cities',ja:'クリックして都市を探索',zh:'点击探索城市'},
+  noCity:{ko:'등록된 도시 정보가 없습니다',en:'No city data available',ja:'登録都市情報なし',zh:'暂无城市信息'},
+  spots:{ko:'추천 관광지',en:'Top Attractions',ja:'おすすめ観光地',zh:'推荐景点'},
+  spotsUnit:{ko:'곳',en:'',ja:'ヶ所',zh:'处'},
+  loading:{ko:'관광 정보 불러오는 중...',en:'Loading travel info...',ja:'観光情報を読み込み中...',zh:'正在加载旅游信息...'},
+  loadingShort:{ko:'관광 정보를 불러오는 중입니다...',en:'Loading travel information...',ja:'観光情報を読み込んでいます...',zh:'正在加载旅游信息...'},
+  retry:{ko:'다시 불러오기',en:'Retry',ja:'再読み込み',zh:'重新加载'},
+  retryMsg:{ko:'관광 정보를 불러오지 못했어요.
+다시 시도해볼게요!',en:'Failed to load travel info.
+Let\'s try again!',ja:'観光情報の取得に失敗しました。
+もう一度お試しください！',zh:'加载旅游信息失败。
+让我们再试一次！'},
+  mapsBtn:{ko:'최신 운영시간 · 리뷰 보기',en:'Hours · Reviews on Maps',ja:'最新営業時間・レビュー',zh:'最新营业时间·评价'},
+  official:{ko:'공식 홈페이지',en:'Official Site',ja:'公式サイト',zh:'官方网站'},
+  wikiDetail:{ko:'상세 정보',en:'Details',ja:'詳細情報',zh:'详细信息'},
+  refNote:{ko:'*참고용',en:'*Reference',ja:'*参考',zh:'*仅供参考'},
+  humidity:{ko:'습도',en:'Humidity',ja:'湿度',zh:'湿度'},
+  cityInfoHint:{ko:'✦ 지도 위 도시 핀을 클릭하면 관광 정보를 볼 수 있어요',en:'✦ Click a city pin on the map to see travel info',ja:'✦ 地図上の都市ピンをクリックで観光情報を表示',zh:'✦ 点击地图上的城市标记查看旅游信息'},
+  errTitle:{ko:'잠시 오류가 발생했어요',en:'Something went wrong',ja:'エラーが発生しました',zh:'出现了一些问题'},
+  errBtn:{ko:'새로고침',en:'Refresh',ja:'リロード',zh:'刷新'},
+  lCapital:{ko:'수도',en:'Capital',ja:'首都',zh:'首都'},
+  lPop:{ko:'인구',en:'Population',ja:'人口',zh:'人口'},
+  lArea:{ko:'면적',en:'Area',ja:'面積',zh:'面积'},
+  lLang:{ko:'언어',en:'Language',ja:'言語',zh:'语言'},
+  lCurrency:{ko:'통화',en:'Currency',ja:'通貨',zh:'货币'},
+  lTimezone:{ko:'시간대',en:'Timezone',ja:'時間帯',zh:'时区'},
+  lTimeDiff:{ko:'한국과 시차',en:'Time diff (KST)',ja:'韓国との時差',zh:'与韩国时差'},
+  lVisa:{ko:'비자(한국)',en:'Visa (Korea)',ja:'ビザ(韓国)',zh:'签证(韩国)'},
+  lVoltage:{ko:'전압',en:'Voltage',ja:'電圧',zh:'电压'},
+  lCallCode:{ko:'국가번호',en:'Dial code',ja:'国番号',zh:'国际区号'},
+  lDrive:{ko:'운전방향',en:'Driving side',ja:'走行方向',zh:'行驶方向'},
+  lCityCount:{ko:'도시 수',en:'Cities',ja:'都市数',zh:'城市数'},
+  registered:{ko:'개 등록',en:' listed',ja:'件登録',zh:'个已录入'},
+}
+
+// 관광지 유형 번역
+const SPOT_TYPE_I18N = {
+  "역사":{en:"History",ja:"歴史",zh:"历史"},
+  "문화":{en:"Culture",ja:"文化",zh:"文化"},
+  "자연":{en:"Nature",ja:"自然",zh:"自然"},
+  "음식":{en:"Food",ja:"グルメ",zh:"美食"},
+  "랜드마크":{en:"Landmark",ja:"ランドマーク",zh:"地标"},
+  "도시":{en:"City",ja:"都市",zh:"城市"},
+}
+
+// 국가명 다국어 (JA / ZH)
+const COUNTRY_JA = {
+"South Korea":"韓国","Japan":"日本","China":"中国","Thailand":"タイ","Vietnam":"ベトナム","India":"インド","Indonesia":"インドネシア","Malaysia":"マレーシア","Singapore":"シンガポール","Cambodia":"カンボジア","Myanmar":"ミャンマー","Nepal":"ネパール","Sri Lanka":"スリランカ","Philippines":"フィリピン","United Arab Emirates":"アラブ首長国連邦","Turkey":"トルコ","Jordan":"ヨルダン","Israel":"イスラエル","France":"フランス","Italy":"イタリア","Spain":"スペイン","Germany":"ドイツ","United Kingdom":"イギリス","Portugal":"ポルトガル","Netherlands":"オランダ","Czechia":"チェコ","Austria":"オーストリア","Switzerland":"スイス","Hungary":"ハンガリー","Croatia":"クロアチア","Greece":"ギリシャ","Norway":"ノルウェー","Sweden":"スウェーデン","Denmark":"デンマーク","Finland":"フィンランド","Iceland":"アイスランド","Poland":"ポーランド","Russia":"ロシア","Egypt":"エジプト","Morocco":"モロッコ","South Africa":"南アフリカ","Kenya":"ケニア","Tanzania":"タンザニア","United States of America":"アメリカ","Canada":"カナダ","Mexico":"メキシコ","Cuba":"キューバ","Brazil":"ブラジル","Argentina":"アルゼンチン","Peru":"ペルー","Colombia":"コロンビア","Chile":"チリ","Australia":"オーストラリア","New Zealand":"ニュージーランド","Maldives":"モルディブ","Taiwan":"台湾","Ireland":"アイルランド","Belgium":"ベルギー","Costa Rica":"コスタリカ","Saudi Arabia":"サウジアラビア","Iran":"イラン","Uzbekistan":"ウズベキスタン","Laos":"ラオス","Mongolia":"モンゴル","Romania":"ルーマニア","Georgia":"ジョージア","Ecuador":"エクアドル","Bolivia":"ボリビア","Ethiopia":"エチオピア","Ghana":"ガーナ","Panama":"パナマ","Montenegro":"モンテネグロ","Tunisia":"チュニジア","Oman":"オマーン","Qatar":"カタール","Dominican Republic":"ドミニカ共和国","Guatemala":"グアテマラ","Jamaica":"ジャマイカ","Latvia":"ラトビア","Lithuania":"リトアニア","Estonia":"エストニア","Cyprus":"キプロス","Albania":"アルバニア","Serbia":"セルビア","Namibia":"ナミビア","Zimbabwe":"ジンバブエ","Fiji":"フィジー","Madagascar":"マダガスカル","Mauritius":"モーリシャス","Lebanon":"レバノン","Ukraine":"ウクライナ","Pakistan":"パキスタン","Luxembourg":"ルクセンブルク","Slovakia":"スロバキア","Bulgaria":"ブルガリア","Rwanda":"ルワンダ","Senegal":"セネガル","Kazakhstan":"カザフスタン","Afghanistan":"アフガニスタン","Algeria":"アルジェリア","Angola":"アンゴラ","Armenia":"アルメニア","Azerbaijan":"アゼルバイジャン","Bahrain":"バーレーン","Bangladesh":"バングラデシュ","Belarus":"ベラルーシ","Belize":"ベリーズ","Benin":"ベナン","Bhutan":"ブータン","Bosnia and Herzegovina":"ボスニア・ヘルツェゴビナ","Botswana":"ボツワナ","Brunei":"ブルネイ","Burkina Faso":"ブルキナファソ","Burundi":"ブルンジ","Cabo Verde":"カーボベルデ","Cameroon":"カメルーン","Central African Republic":"中央アフリカ","Chad":"チャド","Comoros":"コモロ","Democratic Republic of the Congo":"コンゴ民主共和国","Djibouti":"ジブチ","El Salvador":"エルサルバドル","Equatorial Guinea":"赤道ギニア","Eritrea":"エリトリア","Eswatini":"エスワティニ","Gabon":"ガボン","Gambia":"ガンビア","Guinea":"ギニア","Guinea-Bissau":"ギニアビサウ","Guyana":"ガイアナ","Haiti":"ハイチ","Honduras":"ホンジュラス","Iraq":"イラク","Ivory Coast":"コートジボワール","Kosovo":"コソボ","Kuwait":"クウェート","Kyrgyzstan":"キルギス","Lesotho":"レソト","Liberia":"リベリア","Libya":"リビア","Malawi":"マラウイ","Mali":"マリ","Mauritania":"モーリタニア","Moldova":"モルドバ","Mozambique":"モザンビーク","Nicaragua":"ニカラグア","Niger":"ニジェール","Nigeria":"ナイジェリア","North Korea":"北朝鮮","North Macedonia":"北マケドニア","Papua New Guinea":"パプアニューギニア","Paraguay":"パラグアイ","Republic of the Congo":"コンゴ共和国","Sierra Leone":"シエラレオネ","Somalia":"ソマリア","South Sudan":"南スーダン","Sudan":"スーダン","Suriname":"スリナム","Syria":"シリア","Tajikistan":"タジキスタン","Timor-Leste":"東ティモール","Togo":"トーゴ","Trinidad and Tobago":"トリニダード・トバゴ","Turkmenistan":"トルクメニスタン","Uganda":"ウガンダ","Uruguay":"ウルグアイ","Venezuela":"ベネズエラ","Yemen":"イエメン","Zambia":"ザンビア",
+}
+const COUNTRY_ZH = {
+"South Korea":"韩国","Japan":"日本","China":"中国","Thailand":"泰国","Vietnam":"越南","India":"印度","Indonesia":"印度尼西亚","Malaysia":"马来西亚","Singapore":"新加坡","Cambodia":"柬埔寨","Myanmar":"缅甸","Nepal":"尼泊尔","Sri Lanka":"斯里兰卡","Philippines":"菲律宾","United Arab Emirates":"阿联酋","Turkey":"土耳其","Jordan":"约旦","Israel":"以色列","France":"法国","Italy":"意大利","Spain":"西班牙","Germany":"德国","United Kingdom":"英国","Portugal":"葡萄牙","Netherlands":"荷兰","Czechia":"捷克","Austria":"奥地利","Switzerland":"瑞士","Hungary":"匈牙利","Croatia":"克罗地亚","Greece":"希腊","Norway":"挪威","Sweden":"瑞典","Denmark":"丹麦","Finland":"芬兰","Iceland":"冰岛","Poland":"波兰","Russia":"俄罗斯","Egypt":"埃及","Morocco":"摩洛哥","South Africa":"南非","Kenya":"肯尼亚","Tanzania":"坦桑尼亚","United States of America":"美国","Canada":"加拿大","Mexico":"墨西哥","Cuba":"古巴","Brazil":"巴西","Argentina":"阿根廷","Peru":"秘鲁","Colombia":"哥伦比亚","Chile":"智利","Australia":"澳大利亚","New Zealand":"新西兰","Maldives":"马尔代夫","Taiwan":"台湾","Ireland":"爱尔兰","Belgium":"比利时","Costa Rica":"哥斯达黎加","Saudi Arabia":"沙特阿拉伯","Iran":"伊朗","Uzbekistan":"乌兹别克斯坦","Laos":"老挝","Mongolia":"蒙古","Romania":"罗马尼亚","Georgia":"格鲁吉亚","Ecuador":"厄瓜多尔","Bolivia":"玻利维亚","Ethiopia":"埃塞俄比亚","Ghana":"加纳","Panama":"巴拿马","Montenegro":"黑山","Tunisia":"突尼斯","Oman":"阿曼","Qatar":"卡塔尔","Dominican Republic":"多米尼加共和国","Guatemala":"危地马拉","Jamaica":"牙买加","Latvia":"拉脱维亚","Lithuania":"立陶宛","Estonia":"爱沙尼亚","Cyprus":"塞浦路斯","Albania":"阿尔巴尼亚","Serbia":"塞尔维亚","Namibia":"纳米比亚","Zimbabwe":"津巴布韦","Fiji":"斐济","Madagascar":"马达加斯加","Mauritius":"毛里求斯","Lebanon":"黎巴嫩","Ukraine":"乌克兰","Pakistan":"巴基斯坦","Luxembourg":"卢森堡","Slovakia":"斯洛伐克","Bulgaria":"保加利亚","Rwanda":"卢旺达","Senegal":"塞内加尔","Kazakhstan":"哈萨克斯坦","Afghanistan":"阿富汗","Algeria":"阿尔及利亚","Angola":"安哥拉","Armenia":"亚美尼亚","Azerbaijan":"阿塞拜疆","Bahrain":"巴林","Bangladesh":"孟加拉国","Belarus":"白俄罗斯","Belize":"伯利兹","Benin":"贝宁","Bhutan":"不丹","Bosnia and Herzegovina":"波黑","Botswana":"博茨瓦纳","Brunei":"文莱","Burkina Faso":"布基纳法索","Burundi":"布隆迪","Cabo Verde":"佛得角","Cameroon":"喀麦隆","Central African Republic":"中非","Chad":"乍得","Comoros":"科摩罗","Democratic Republic of the Congo":"刚果(金)","Djibouti":"吉布提","El Salvador":"萨尔瓦多","Equatorial Guinea":"赤道几内亚","Eritrea":"厄立特里亚","Eswatini":"斯威士兰","Gabon":"加蓬","Gambia":"冈比亚","Guinea":"几内亚","Guinea-Bissau":"几内亚比绍","Guyana":"圭亚那","Haiti":"海地","Honduras":"洪都拉斯","Iraq":"伊拉克","Ivory Coast":"科特迪瓦","Kosovo":"科索沃","Kuwait":"科威特","Kyrgyzstan":"吉尔吉斯斯坦","Lesotho":"莱索托","Liberia":"利比里亚","Libya":"利比亚","Malawi":"马拉维","Mali":"马里","Mauritania":"毛里塔尼亚","Moldova":"摩尔多瓦","Mozambique":"莫桑比克","Nicaragua":"尼加拉瓜","Niger":"尼日尔","Nigeria":"尼日利亚","North Korea":"朝鲜","North Macedonia":"北马其顿","Papua New Guinea":"巴布亚新几内亚","Paraguay":"巴拉圭","Republic of the Congo":"刚果(布)","Sierra Leone":"塞拉利昂","Somalia":"索马里","South Sudan":"南苏丹","Sudan":"苏丹","Suriname":"苏里南","Syria":"叙利亚","Tajikistan":"塔吉克斯坦","Timor-Leste":"东帝汶","Togo":"多哥","Trinidad and Tobago":"特立尼达和多巴哥","Turkmenistan":"土库曼斯坦","Uganda":"乌干达","Uruguay":"乌拉圭","Venezuela":"委内瑞拉","Yemen":"也门","Zambia":"赞比亚",
+}
+
+// 도시명 다국어 [en, ja, zh]
+const CITY_I18N = {
+// 한국
+"서울":["Seoul","ソウル","首尔"],"부산":["Busan","釜山","釜山"],"제주":["Jeju","済州","济州"],"경주":["Gyeongju","慶州","庆州"],"인천":["Incheon","仁川","仁川"],"대구":["Daegu","大邱","大邱"],"전주":["Jeonju","全州","全州"],"강릉":["Gangneung","江陵","江陵"],"수원":["Suwon","水原","水原"],"광주":["Gwangju","光州","光州"],"여수":["Yeosu","麗水","丽水"],"속초":["Sokcho","束草","束草"],"통영":["Tongyeong","統営","统营"],
+// 일본
+"도쿄":["Tokyo","東京","东京"],"교토":["Kyoto","京都","京都"],"오사카":["Osaka","大阪","大阪"],"삿포로":["Sapporo","札幌","札幌"],"나라":["Nara","奈良","奈良"],"나고야":["Nagoya","名古屋","名古屋"],"후쿠오카":["Fukuoka","福岡","福冈"],"히로시마":["Hiroshima","広島","广岛"],"고베":["Kobe","神戸","神户"],"오키나와":["Okinawa","沖縄","冲绳"],"가나자와":["Kanazawa","金沢","金泽"],"하코네":["Hakone","箱根","箱根"],
+// 중국
+"베이징":["Beijing","北京","北京"],"상하이":["Shanghai","上海","上海"],"시안":["Xi'an","西安","西安"],"구이린":["Guilin","桂林","桂林"],"청두":["Chengdu","成都","成都"],"항저우":["Hangzhou","杭州","杭州"],"장자제":["Zhangjiajie","張家界","张家界"],"리장":["Lijiang","麗江","丽江"],"황산":["Huangshan","黄山","黄山"],"홍콩":["Hong Kong","香港","香港"],"마카오":["Macau","マカオ","澳门"],"쑤저우":["Suzhou","蘇州","苏州"],
+// 프랑스
+"파리":["Paris","パリ","巴黎"],"니스":["Nice","ニース","尼斯"],"리옹":["Lyon","リヨン","里昂"],"보르도":["Bordeaux","ボルドー","波尔多"],"마르세유":["Marseille","マルセイユ","马赛"],"몽생미셸":["Mont-Saint-Michel","モン・サン・ミシェル","圣米歇尔山"],"스트라스부르":["Strasbourg","ストラスブール","斯特拉斯堡"],"앙시":["Annecy","アヌシー","安纳西"],"툴루즈":["Toulouse","トゥールーズ","图卢兹"],
+// 이탈리아
+"로마":["Rome","ローマ","罗马"],"베네치아":["Venice","ヴェネツィア","威尼斯"],"피렌체":["Florence","フィレンツェ","佛罗伦萨"],"밀라노":["Milan","ミラノ","米兰"],"나폴리":["Naples","ナポリ","那不勒斯"],"아말피":["Amalfi","アマルフィ","阿马尔菲"],"시칠리아":["Sicily","シチリア","西西里"],"친퀘테레":["Cinque Terre","チンクエテッレ","五渔村"],"볼로냐":["Bologna","ボローニャ","博洛尼亚"],"시에나":["Siena","シエナ","锡耶纳"],"폼페이":["Pompeii","ポンペイ","庞贝"],
+// 스페인
+"바르셀로나":["Barcelona","バルセロナ","巴塞罗那"],"마드리드":["Madrid","マドリード","马德里"],"세비야":["Seville","セビリア","塞维利亚"],"그라나다":["Granada","グラナダ","格拉纳达"],"발렌시아":["Valencia","バレンシア","巴伦西亚"],"빌바오":["Bilbao","ビルバオ","毕尔巴鄂"],"산세바스티안":["San Sebastián","サンセバスチャン","圣塞巴斯蒂安"],"말라가":["Málaga","マラガ","马拉加"],"톨레도":["Toledo","トレド","托莱多"],"산티아고데콤포스텔라":["Santiago de Compostela","サンティアゴ・デ・コンポステーラ","圣地亚哥-德孔波斯特拉"],
+// 독일
+"베를린":["Berlin","ベルリン","柏林"],"뮌헨":["Munich","ミュンヘン","慕尼黑"],"함부르크":["Hamburg","ハンブルク","汉堡"],"로텐부르크":["Rothenburg","ローテンブルク","罗滕堡"],"프랑크푸르트":["Frankfurt","フランクフルト","法兰克福"],"쾰른":["Cologne","ケルン","科隆"],"드레스덴":["Dresden","ドレスデン","德累斯顿"],"하이델베르크":["Heidelberg","ハイデルベルク","海德堡"],"퓌센":["Füssen","フュッセン","菲森"],
+// 영국
+"런던":["London","ロンドン","伦敦"],"에든버러":["Edinburgh","エディンバラ","爱丁堡"],"맨체스터":["Manchester","マンチェスター","曼彻斯特"],"바스":["Bath","バース","巴斯"],"옥스퍼드":["Oxford","オックスフォード","牛津"],"케임브리지":["Cambridge","ケンブリッジ","剑桥"],"요크":["York","ヨーク","约克"],"리버풀":["Liverpool","リバプール","利物浦"],"코츠월즈":["Cotswolds","コッツウォルズ","科茨沃尔德"],"글래스고":["Glasgow","グラスゴー","格拉斯哥"],
+// 미국
+"뉴욕":["New York","ニューヨーク","纽约"],"로스앤젤레스":["Los Angeles","ロサンゼルス","洛杉矶"],"샌프란시스코":["San Francisco","サンフランシスコ","旧金山"],"라스베이거스":["Las Vegas","ラスベガス","拉斯维加斯"],"마이애미":["Miami","マイアミ","迈阿密"],"시카고":["Chicago","シカゴ","芝加哥"],"워싱턴DC":["Washington D.C.","ワシントンD.C.","华盛顿"],"보스턴":["Boston","ボストン","波士顿"],"뉴올리언스":["New Orleans","ニューオーリンズ","新奥尔良"],"시애틀":["Seattle","シアトル","西雅图"],"하와이":["Hawaii","ハワイ","夏威夷"],"그랜드캐니언":["Grand Canyon","グランドキャニオン","大峡谷"],"옐로스톤":["Yellowstone","イエローストーン","黄石"],"샌디에이고":["San Diego","サンディエゴ","圣迭戈"],
+// 호주
+"시드니":["Sydney","シドニー","悉尼"],"멜버른":["Melbourne","メルボルン","墨尔本"],"케언즈":["Cairns","ケアンズ","凯恩斯"],"울루루":["Uluru","ウルル","乌卢鲁"],"브리즈번":["Brisbane","ブリスベン","布里斯班"],"퍼스":["Perth","パース","珀斯"],"골드코스트":["Gold Coast","ゴールドコースト","黄金海岸"],"그레이트배리어리프":["Great Barrier Reef","グレートバリアリーフ","大堡礁"],"태즈메이니아":["Tasmania","タスマニア","塔斯马尼亚"],
+// 태국
+"방콕":["Bangkok","バンコク","曼谷"],"치앙마이":["Chiang Mai","チェンマイ","清迈"],"푸켓":["Phuket","プーケット","普吉岛"],"파타야":["Pattaya","パタヤ","芭提雅"],"코사무이":["Koh Samui","サムイ島","苏梅岛"],"아유타야":["Ayutthaya","アユタヤ","大城"],"크라비":["Krabi","クラビ","甲米"],"치앙라이":["Chiang Rai","チェンライ","清莱"],"코피피":["Koh Phi Phi","ピピ島","皮皮岛"],
+// 인도
+"뭄바이":["Mumbai","ムンバイ","孟买"],"뉴델리":["New Delhi","ニューデリー","新德里"],"아그라":["Agra","アグラ","阿格拉"],"바라나시":["Varanasi","バラナシ","瓦拉纳西"],"고아":["Goa","ゴア","果阿"],"자이푸르":["Jaipur","ジャイプール","斋浦尔"],"우다이푸르":["Udaipur","ウダイプル","乌代浦尔"],"콜카타":["Kolkata","コルカタ","加尔各答"],"케랄라":["Kerala","ケララ","喀拉拉"],"암리차르":["Amritsar","アムリトサル","阿姆利则"],
+// UAE
+"두바이":["Dubai","ドバイ","迪拜"],"아부다비":["Abu Dhabi","アブダビ","阿布扎比"],"샤르자":["Sharjah","シャールジャ","沙迦"],
+// 터키
+"이스탄불":["Istanbul","イスタンブール","伊斯坦布尔"],"카파도키아":["Cappadocia","カッパドキア","卡帕多奇亚"],"파묵칼레":["Pamukkale","パムッカレ","棉花堡"],"안탈리아":["Antalya","アンタルヤ","安塔利亚"],"에페소":["Ephesus","エフェソス","以弗所"],"보드룸":["Bodrum","ボドルム","博德鲁姆"],"트라브존":["Trabzon","トラブゾン","特拉布宗"],
+// 그리스
+"산토리니":["Santorini","サントリーニ","圣托里尼"],"아테네":["Athens","アテネ","雅典"],"미코노스":["Mykonos","ミコノス","米科诺斯"],"크레타":["Crete","クレタ","克里特"],"로도스":["Rhodes","ロドス","罗德岛"],"코르푸":["Corfu","コルフ","科孚"],"메테오라":["Meteora","メテオラ","迈泰奥拉"],
+// 이집트
+"카이로":["Cairo","カイロ","开罗"],"룩소르":["Luxor","ルクソール","卢克索"],"아스완":["Aswan","アスワン","阿斯旺"],"알렉산드리아":["Alexandria","アレクサンドリア","亚历山大"],"후르가다":["Hurghada","フルガダ","赫尔格达"],"샤름엘셰이크":["Sharm El Sheikh","シャルム・エル・シェイク","沙姆沙伊赫"],
+// 모로코
+"마라케시":["Marrakech","マラケシュ","马拉喀什"],"페스":["Fes","フェズ","非斯"],"카사블랑카":["Casablanca","カサブランカ","卡萨布兰卡"],"셰프샤우엔":["Chefchaouen","シャウエン","舍夫沙万"],"에사우이라":["Essaouira","エッサウィラ","索维拉"],"메르주가":["Merzouga","メルズーガ","梅尔祖卡"],
+// 베트남
+"하노이":["Hanoi","ハノイ","河内"],"호찌민시":["Ho Chi Minh City","ホーチミン","胡志明市"],"하롱베이":["Ha Long Bay","ハロン湾","下龙湾"],"호이안":["Hoi An","ホイアン","会安"],"다낭":["Da Nang","ダナン","岘港"],"후에":["Hue","フエ","顺化"],"사파":["Sapa","サパ","沙巴"],"푸꾸옥":["Phu Quoc","フーコック","富国岛"],"나트랑":["Nha Trang","ニャチャン","芽庄"],"닌빈":["Ninh Binh","ニンビン","宁平"],
+// 인도네시아
+"발리":["Bali","バリ","巴厘岛"],"자카르타":["Jakarta","ジャカルタ","雅加达"],"족자카르타":["Yogyakarta","ジョグジャカルタ","日惹"],"코모도":["Komodo","コモド","科莫多"],"롬복":["Lombok","ロンボク","龙目岛"],"보로부두르":["Borobudur","ボロブドゥール","婆罗浮屠"],"라자암팟":["Raja Ampat","ラジャ・アンパット","拉贾安帕特"],
+// 말레이시아
+"쿠알라룸푸르":["Kuala Lumpur","クアラルンプール","吉隆坡"],"페낭":["Penang","ペナン","槟城"],"코타키나발루":["Kota Kinabalu","コタキナバル","哥打京那巴鲁"],"랑카위":["Langkawi","ランカウイ","兰卡威"],"말라카":["Malacca","マラッカ","马六甲"],
+// 싱가포르·캄보디아·미얀마
+"싱가포르":["Singapore","シンガポール","新加坡"],"씨엠립":["Siem Reap","シェムリアップ","暹粒"],"프놈펜":["Phnom Penh","プノンペン","金边"],"시아누크빌":["Sihanoukville","シアヌークビル","西哈努克"],"양곤":["Yangon","ヤンゴン","仰光"],"바간":["Bagan","バガン","蒲甘"],"만달레이":["Mandalay","マンダレー","曼德勒"],"인레호수":["Inle Lake","インレー湖","茵莱湖"],
+// 네팔·스리랑카·필리핀
+"카트만두":["Kathmandu","カトマンズ","加德满都"],"포카라":["Pokhara","ポカラ","博卡拉"],"치트완":["Chitwan","チトワン","奇特旺"],"룸비니":["Lumbini","ルンビニ","蓝毗尼"],"콜롬보":["Colombo","コロンボ","科伦坡"],"캔디":["Kandy","キャンディ","康提"],"갈레":["Galle","ゴール","加勒"],"시기리야":["Sigiriya","シーギリヤ","狮子岩"],"누와라엘리야":["Nuwara Eliya","ヌワラエリヤ","努沃勒埃利耶"],"마닐라":["Manila","マニラ","马尼拉"],"팔라완":["Palawan","パラワン","巴拉望"],"보라카이":["Boracay","ボラカイ","长滩岛"],"세부":["Cebu","セブ","宿务"],"시아르가오":["Siargao","シアルガオ","锡亚高"],
+// 포르투갈·네덜란드·체코·오스트리아·스위스
+"리스본":["Lisbon","リスボン","里斯本"],"포르투":["Porto","ポルト","波尔图"],"신트라":["Sintra","シントラ","辛特拉"],"알가르브":["Algarve","アルガルヴェ","阿尔加维"],"코임브라":["Coimbra","コインブラ","科英布拉"],"마데이라":["Madeira","マデイラ","马德拉"],"암스테르담":["Amsterdam","アムステルダム","阿姆斯特丹"],"로테르담":["Rotterdam","ロッテルダム","鹿特丹"],"헤이그":["The Hague","ハーグ","海牙"],"위트레흐트":["Utrecht","ユトレヒト","乌得勒支"],"마스트리흐트":["Maastricht","マーストリヒト","马斯特里赫特"],"프라하":["Prague","プラハ","布拉格"],"체스키크룸로프":["Český Krumlov","チェスキー・クルムロフ","克鲁姆洛夫"],"브르노":["Brno","ブルノ","布尔诺"],"빈":["Vienna","ウィーン","维也纳"],"잘츠부르크":["Salzburg","ザルツブルク","萨尔茨堡"],"인스브루크":["Innsbruck","インスブルック","因斯布鲁克"],"할슈타트":["Hallstatt","ハルシュタット","哈尔施塔特"],"그라츠":["Graz","グラーツ","格拉茨"],"취리히":["Zurich","チューリッヒ","苏黎世"],"제네바":["Geneva","ジュネーヴ","日内瓦"],"인터라켄":["Interlaken","インターラーケン","因特拉肯"],"루체른":["Lucerne","ルツェルン","卢塞恩"],"체르마트":["Zermatt","ツェルマット","采尔马特"],"베른":["Bern","ベルン","伯尔尼"],
+// 헝가리·크로아티아
+"부다페스트":["Budapest","ブダペスト","布达佩斯"],"에게르":["Eger","エゲル","埃格尔"],"두브로브니크":["Dubrovnik","ドゥブロヴニク","杜布罗夫尼克"],"자그레브":["Zagreb","ザグレブ","萨格勒布"],"플리트비체":["Plitvice","プリトヴィツェ","普利特维采"],"스플리트":["Split","スプリト","斯普利特"],"흐바르":["Hvar","フヴァル","赫瓦尔"],
+// 북유럽
+"오슬로":["Oslo","オスロ","奥斯陆"],"베르겐":["Bergen","ベルゲン","卑尔根"],"플롬":["Flåm","フロム","弗洛姆"],"트롬쇠":["Tromsø","トロムソ","特罗姆瑟"],"로포텐":["Lofoten","ロフォーテン","罗弗敦"],"게이랑에르":["Geiranger","ガイランゲル","盖朗厄尔"],"스톡홀름":["Stockholm","ストックホルム","斯德哥尔摩"],"예테보리":["Gothenburg","ヨーテボリ","哥德堡"],"말뫼":["Malmö","マルメ","马尔默"],"아비스코":["Abisko","アビスコ","阿比斯库"],"코펜하겐":["Copenhagen","コペンハーゲン","哥本哈根"],"오르후스":["Aarhus","オーフス","奥胡斯"],"오덴세":["Odense","オーデンセ","欧登塞"],"헬싱키":["Helsinki","ヘルシンキ","赫尔辛基"],"로바니에미":["Rovaniemi","ロヴァニエミ","罗瓦涅米"],"탐페레":["Tampere","タンペレ","坦佩雷"],"레이캬비크":["Reykjavik","レイキャヴィーク","雷克雅未克"],"아퀴레이리":["Akureyri","アークレイリ","阿库雷里"],"블루라군":["Blue Lagoon","ブルーラグーン","蓝湖"],"요쿨살론":["Jökulsárlón","ヨークルスアゥルロゥン","杰古沙龙"],"골든서클":["Golden Circle","ゴールデンサークル","黄金圈"],
+// 폴란드·러시아
+"크라쿠프":["Kraków","クラクフ","克拉科夫"],"바르샤바":["Warsaw","ワルシャワ","华沙"],"브로츠와프":["Wrocław","ヴロツワフ","弗罗茨瓦夫"],"그단스크":["Gdańsk","グダンスク","格但斯克"],"자코파네":["Zakopane","ザコパネ","扎科帕内"],"모스크바":["Moscow","モスクワ","莫斯科"],"상트페테르부르크":["St. Petersburg","サンクトペテルブルク","圣彼得堡"],"바이칼호":["Lake Baikal","バイカル湖","贝加尔湖"],"소치":["Sochi","ソチ","索契"],"블라디보스토크":["Vladivostok","ウラジオストク","海参崴"],
+// 아프리카
+"케이프타운":["Cape Town","ケープタウン","开普敦"],"요하네스버그":["Johannesburg","ヨハネスブルグ","约翰内斯堡"],"더반":["Durban","ダーバン","德班"],"크루거국립공원":["Kruger National Park","クルーガー国立公園","克鲁格国家公园"],"드라켄즈버그":["Drakensberg","ドラケンスバーグ","德拉肯斯堡"],"나이로비":["Nairobi","ナイロビ","内罗毕"],"마사이마라":["Masai Mara","マサイマラ","马赛马拉"],"몸바사":["Mombasa","モンバサ","蒙巴萨"],"암보셀리":["Amboseli","アンボセリ","安博塞利"],"라무":["Lamu","ラム","拉穆"],"잔지바르":["Zanzibar","ザンジバル","桑给巴尔"],"세렝게티":["Serengeti","セレンゲティ","塞伦盖蒂"],"킬리만자로":["Kilimanjaro","キリマンジャロ","乞力马扎罗"],"응고롱고로":["Ngorongoro","ンゴロンゴロ","恩戈罗恩戈罗"],
+// 중동
+"페트라":["Petra","ペトラ","佩特拉"],"암만":["Amman","アンマン","安曼"],"와디럼":["Wadi Rum","ワディ・ラム","瓦迪拉姆"],"아카바":["Aqaba","アカバ","亚喀巴"],"예루살렘":["Jerusalem","エルサレム","耶路撒冷"],"텔아비브":["Tel Aviv","テルアビブ","特拉维夫"],"마사다":["Masada","マサダ","马萨达"],"사해":["Dead Sea","死海","死海"],
+// 캐나다
+"밴쿠버":["Vancouver","バンクーバー","温哥华"],"토론토":["Toronto","トロント","多伦多"],"퀘벡시티":["Quebec City","ケベックシティ","魁北克城"],"밴프":["Banff","バンフ","班夫"],"몬트리올":["Montreal","モントリオール","蒙特利尔"],"오타와":["Ottawa","オタワ","渥太华"],"나이아가라폴스":["Niagara Falls","ナイアガラの滝","尼亚加拉瀑布"],"빅토리아":["Victoria","ビクトリア","维多利亚"],
+// 쿠바·아르헨·브라질
+"하바나":["Havana","ハバナ","哈瓦那"],"트리니다드":["Trinidad","トリニダード","特立尼达"],"바라데로":["Varadero","バラデロ","巴拉德罗"],"비냘레스":["Viñales","ビニャーレス","维尼亚莱斯"],"부에노스아이레스":["Buenos Aires","ブエノスアイレス","布宜诺斯艾利斯"],"파타고니아":["Patagonia","パタゴニア","巴塔哥尼亚"],"이과수":["Iguazu","イグアス","伊瓜苏"],"멘도사":["Mendoza","メンドーサ","门多萨"],"우수아이아":["Ushuaia","ウシュアイア","乌斯怀亚"],"살타":["Salta","サルタ","萨尔塔"],"리우데자네이루":["Rio de Janeiro","リオデジャネイロ","里约热内卢"],"상파울루":["São Paulo","サンパウロ","圣保罗"],"마나우스":["Manaus","マナウス","马瑙斯"],"포스두이과수":["Foz do Iguaçu","フォス・ド・イグアス","伊瓜苏瀑布"],"살바도르":["Salvador","サルヴァドール","萨尔瓦多"],"브라질리아":["Brasília","ブラジリア","巴西利亚"],"포르탈레자":["Fortaleza","フォルタレザ","福塔雷萨"],
+// 멕시코·콜롬비아·페루·칠레
+"멕시코시티":["Mexico City","メキシコシティ","墨西哥城"],"칸쿤":["Cancún","カンクン","坎昆"],"과달라하라":["Guadalajara","グアダラハラ","瓜达拉哈拉"],"오악사카":["Oaxaca","オアハカ","瓦哈卡"],"툴룸":["Tulum","トゥルム","图卢姆"],"과나후아토":["Guanajuato","グアナフアト","瓜纳华托"],"치첸이트사":["Chichén Itzá","チチェン・イッツァ","奇琴伊察"],"보고타":["Bogotá","ボゴタ","波哥大"],"카르타헤나":["Cartagena","カルタヘナ","卡塔赫纳"],"메데인":["Medellín","メデジン","麦德林"],"살렌토":["Salento","サレント","萨伦托"],"마추픽추":["Machu Picchu","マチュ・ピチュ","马丘比丘"],"쿠스코":["Cusco","クスコ","库斯科"],"리마":["Lima","リマ","利马"],"나스카":["Nazca","ナスカ","纳斯卡"],"티티카카호수":["Lake Titicaca","チチカカ湖","的的喀喀湖"],"아레키파":["Arequipa","アレキパ","阿雷基帕"],"산티아고":["Santiago","サンティアゴ","圣地亚哥"],"발파라이소":["Valparaíso","バルパライソ","瓦尔帕莱索"],"아타카마":["Atacama","アタカマ","阿塔卡马"],"토레스델파이네":["Torres del Paine","トレス・デル・パイネ","百内"],"이스터섬":["Easter Island","イースター島","复活节岛"],
+// 뉴질랜드
+"퀸스타운":["Queenstown","クイーンズタウン","皇后镇"],"오클랜드":["Auckland","オークランド","奥克兰"],"로토루아":["Rotorua","ロトルア","罗托鲁瓦"],"웰링턴":["Wellington","ウェリントン","惠灵顿"],"밀포드사운드":["Milford Sound","ミルフォード・サウンド","米尔福德峡湾"],"호비튼":["Hobbiton","ホビトン","霍比屯"],"크라이스트처치":["Christchurch","クライストチャーチ","基督城"],
+// 사우디·이란·우즈벡
+"리야드":["Riyadh","リヤド","利雅得"],"제다":["Jeddah","ジェッダ","吉达"],"알울라":["AlUla","アルウラ","欧拉"],"메카":["Mecca","メッカ","麦加"],"테헤란":["Tehran","テヘラン","德黑兰"],"이스파한":["Isfahan","イスファハーン","伊斯法罕"],"시라즈":["Shiraz","シーラーズ","设拉子"],"페르세폴리스":["Persepolis","ペルセポリス","波斯波利斯"],"사마르칸트":["Samarkand","サマルカンド","撒马尔罕"],"부하라":["Bukhara","ブハラ","布哈拉"],"히바":["Khiva","ヒヴァ","希瓦"],"타슈켄트":["Tashkent","タシケント","塔什干"],
+// 에티오피아·가나·아일랜드·벨기에·대만·몰디브
+"아디스아바바":["Addis Ababa","アディスアベバ","亚的斯亚贝巴"],"랄리벨라":["Lalibela","ラリベラ","拉利贝拉"],"악숨":["Axum","アクスム","阿克苏姆"],"다나킬사막":["Danakil Desert","ダナキル砂漠","达纳基尔沙漠"],"아크라":["Accra","アクラ","阿克拉"],"케이프코스트":["Cape Coast","ケープコースト","海岸角"],"쿠마시":["Kumasi","クマシ","库马西"],"더블린":["Dublin","ダブリン","都柏林"],"골웨이":["Galway","ゴールウェイ","戈尔韦"],"브뤼셀":["Brussels","ブリュッセル","布鲁塞尔"],"브뤼헤":["Bruges","ブルージュ","布鲁日"],"타이베이":["Taipei","台北","台北"],"지우펀":["Jiufen","九份","九份"],"말레":["Malé","マレ","马累"],
+// 코스타리카·파나마·에콰도르·루마니아·조지아·몬테네그로·몽골·라오스
+"산호세":["San José","サンホセ","圣何塞"],"아레날":["Arenal","アレナル","阿雷纳尔"],"파나마시티":["Panama City","パナマシティ","巴拿马城"],"키토":["Quito","キト","基多"],"갈라파고스":["Galápagos","ガラパゴス","加拉帕戈斯"],"부쿠레슈티":["Bucharest","ブカレスト","布加勒斯特"],"브라쇼프":["Brașov","ブラショフ","布拉索夫"],"트빌리시":["Tbilisi","トビリシ","第比利斯"],"코토르":["Kotor","コトル","科托尔"],"울란바토르":["Ulaanbaatar","ウランバートル","乌兰巴托"],"루앙프라방":["Luang Prabang","ルアンパバーン","琅勃拉邦"],"비엔티안":["Vientiane","ビエンチャン","万象"],
+// 소규모 국가 수도 등
+"튀니스":["Tunis","チュニス","突尼斯"],"무스카트":["Muscat","マスカット","马斯喀特"],"도하":["Doha","ドーハ","多哈"],"라파스":["La Paz","ラパス","拉巴斯"],"우유니":["Uyuni","ウユニ","乌尤尼"],"푼타카나":["Punta Cana","プンタカナ","蓬塔卡纳"],"안티구아":["Antigua","アンティグア","安提瓜"],"킹스턴":["Kingston","キングストン","金斯敦"],"몬테고베이":["Montego Bay","モンテゴ・ベイ","蒙特哥湾"],"리가":["Riga","リガ","里加"],"빌뉴스":["Vilnius","ヴィリニュス","维尔纽斯"],"탈린":["Tallinn","タリン","塔林"],"파포스":["Paphos","パフォス","帕福斯"],"티라나":["Tirana","ティラナ","地拉那"],"베오그라드":["Belgrade","ベオグラード","贝尔格莱德"],"빈트후크":["Windhoek","ウィントフック","温得和克"],"소수스블레이":["Sossusvlei","ソッサスフレイ","索苏斯弗莱"],"빅토리아폴스":["Victoria Falls","ヴィクトリアフォールズ","维多利亚瀑布"],"나디":["Nadi","ナンディ","楠迪"],"안타나나리보":["Antananarivo","アンタナナリボ","塔那那利佛"],"포트루이스":["Port Louis","ポートルイス","路易港"],"베이루트":["Beirut","ベイルート","贝鲁特"],"키이우":["Kyiv","キーウ","基辅"],"르비우":["Lviv","リヴィウ","利沃夫"],"라호르":["Lahore","ラホール","拉合尔"],"이슬라마바드":["Islamabad","イスラマバード","伊斯兰堡"],"룩셈부르크시티":["Luxembourg City","ルクセンブルク","卢森堡"],"브라티슬라바":["Bratislava","ブラチスラバ","布拉迪斯拉发"],"소피아":["Sofia","ソフィア","索菲亚"],"키갈리":["Kigali","キガリ","基加利"],"다카르":["Dakar","ダカール","达喀尔"],"알마티":["Almaty","アルマトイ","阿拉木图"],
+// 나머지 수도 도시
+"카불":["Kabul","カブール","喀布尔"],"알제":["Algiers","アルジェ","阿尔及尔"],"루안다":["Luanda","ルアンダ","罗安达"],"예레반":["Yerevan","エレバン","埃里温"],"바쿠":["Baku","バクー","巴库"],"마나마":["Manama","マナーマ","麦纳麦"],"다카":["Dhaka","ダッカ","达卡"],"민스크":["Minsk","ミンスク","明斯克"],"벨리즈시티":["Belize City","ベリーズシティ","伯利兹城"],"코토누":["Cotonou","コトヌー","科托努"],"팀부":["Thimphu","ティンプー","廷布"],"사라예보":["Sarajevo","サラエボ","萨拉热窝"],"가보로네":["Gaborone","ハボローネ","哈博罗内"],"반다르스리브가완":["Bandar Seri Begawan","バンダルスリブガワン","斯里巴加湾"],"와가두구":["Ouagadougou","ワガドゥグー","瓦加杜古"],"기테가":["Gitega","ギテガ","基特加"],"프라이아":["Praia","プライア","普拉亚"],"야운데":["Yaoundé","ヤウンデ","雅温得"],"방기":["Bangui","バンギ","班吉"],"은자메나":["N'Djamena","ンジャメナ","恩贾梅纳"],"모로니":["Moroni","モロニ","莫罗尼"],"킨샤사":["Kinshasa","キンシャサ","金沙萨"],"지부티시":["Djibouti City","ジブチ","吉布提"],"산살바도르":["San Salvador","サンサルバドル","圣萨尔瓦多"],"말라보":["Malabo","マラボ","马拉博"],"아스마라":["Asmara","アスマラ","阿斯马拉"],"음바바네":["Mbabane","ムババネ","姆巴巴内"],"리브르빌":["Libreville","リーブルヴィル","利伯维尔"],"반줄":["Banjul","バンジュール","班珠尔"],"코나크리":["Conakry","コナクリ","科纳克里"],"비사우":["Bissau","ビサウ","比绍"],"조지타운":["Georgetown","ジョージタウン","乔治敦"],"포르토프랭스":["Port-au-Prince","ポルトープランス","太子港"],"테구시갈파":["Tegucigalpa","テグシガルパ","特古西加尔巴"],"바그다드":["Baghdad","バグダッド","巴格达"],"아비장":["Abidjan","アビジャン","阿比让"],"프리슈티나":["Pristina","プリシュティナ","普里什蒂纳"],"쿠웨이트시티":["Kuwait City","クウェート","科威特城"],"비슈케크":["Bishkek","ビシュケク","比什凯克"],"마세루":["Maseru","マセル","马塞卢"],"몬로비아":["Monrovia","モンロビア","蒙罗维亚"],"트리폴리":["Tripoli","トリポリ","的黎波里"],"릴롱궤":["Lilongwe","リロングウェ","利隆圭"],"바마코":["Bamako","バマコ","巴马科"],"누악쇼트":["Nouakchott","ヌアクショット","努瓦克肖特"],"키시나우":["Chișinău","キシナウ","基希讷乌"],"마푸토":["Maputo","マプト","马普托"],"마나과":["Managua","マナグア","马那瓜"],"니아메":["Niamey","ニアメ","尼亚美"],"라고스":["Lagos","ラゴス","拉各斯"],"아부자":["Abuja","アブジャ","阿布贾"],"평양":["Pyongyang","平壌","平壤"],"스코페":["Skopje","スコピエ","斯科普里"],"포트모르즈비":["Port Moresby","ポートモレスビー","莫尔兹比港"],"아순시온":["Asunción","アスンシオン","亚松森"],"브라자빌":["Brazzaville","ブラザヴィル","布拉柴维尔"],"프리타운":["Freetown","フリータウン","弗里敦"],"모가디슈":["Mogadishu","モガディシュ","摩加迪沙"],"주바":["Juba","ジュバ","朱巴"],"하르툼":["Khartoum","ハルツーム","喀土穆"],"파라마리보":["Paramaribo","パラマリボ","帕拉马里博"],"다마스쿠스":["Damascus","ダマスカス","大马士革"],"두샨베":["Dushanbe","ドゥシャンベ","杜尚别"],"딜리":["Dili","ディリ","帝力"],"로메":["Lomé","ロメ","洛美"],"포트오브스페인":["Port of Spain","ポートオブスペイン","西班牙港"],"아시가바트":["Ashgabat","アシガバート","阿什哈巴德"],"캄팔라":["Kampala","カンパラ","坎帕拉"],"몬테비데오":["Montevideo","モンテビデオ","蒙得维的亚"],"카라카스":["Caracas","カラカス","加拉加斯"],"사나":["Sana'a","サナア","萨那"],"루사카":["Lusaka","ルサカ","卢萨卡"],
+}
+
+
 // ── 국가 기본정보 데이터 ──────────────────────────────────────────────
 const COUNTRY_INFO = {
   "South Korea": { capital:"서울", population:"5,200만", area:"100,210 km²", lang:"한국어", currency:"원 (KRW)", timezone:"UTC+9", timeDiff:"—", visa:"—", voltage:"220V / 60Hz", callCode:"+82", drive:"우측", tagline:"한류와 전통이 공존하는 다이나믹 코리아", continent:"아시아", emoji:"🇰🇷" },
@@ -1174,6 +1323,108 @@ const COUNTRY_INFO = {
   "Georgia": { capital:"트빌리시", population:"370만", area:"69,700 km²", lang:"조지아어", currency:"라리 (GEL)", timezone:"UTC+4", timeDiff:"-5시간", visa:"1년 무비자", voltage:"220V / 50Hz", callCode:"+995", drive:"우측", tagline:"와인의 발상지, 코카서스의 보석", continent:"아시아/유럽", emoji:"🇬🇪" },
   "Ecuador": { capital:"키토", population:"1,800만", area:"283,561 km²", lang:"스페인어", currency:"달러 (USD)", timezone:"UTC-5", timeDiff:"-14시간", visa:"90일 무비자", voltage:"120V / 60Hz", callCode:"+593", drive:"우측", tagline:"적도의 나라, 갈라파고스의 고향", continent:"남아메리카", emoji:"🇪🇨" },
   "Bolivia": { capital:"수크레", population:"1,200만", area:"1,098,581 km²", lang:"스페인어·케추아어·아이마라어", currency:"볼리비아노 (BOB)", timezone:"UTC-4", timeDiff:"-13시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+591", drive:"우측", tagline:"하늘의 거울, 우유니 소금사막", continent:"남아메리카", emoji:"🇧🇴" },
+  // ── 추가 국가 (101개) ──
+  "Ethiopia": { capital:"아디스아바바", population:"1억 2,700만", area:"1,104,300 km²", lang:"암하라어", currency:"비르 (ETB)", timezone:"UTC+3", timeDiff:"-6시간", visa:"e-비자", voltage:"220V / 50Hz", callCode:"+251", drive:"우측", tagline:"커피의 발상지, 아프리카의 지붕", continent:"아프리카", emoji:"🇪🇹" },
+  "Ghana": { capital:"아크라", population:"3,400만", area:"238,533 km²", lang:"영어", currency:"세디 (GHS)", timezone:"UTC+0", timeDiff:"-9시간", visa:"도착 비자", voltage:"230V / 50Hz", callCode:"+233", drive:"우측", tagline:"서아프리카의 금빛 해안", continent:"아프리카", emoji:"🇬🇭" },
+  "Panama": { capital:"파나마시티", population:"440만", area:"75,417 km²", lang:"스페인어", currency:"발보아 (PAB)·달러 (USD)", timezone:"UTC-5", timeDiff:"-14시간", visa:"180일 무비자", voltage:"120V / 60Hz", callCode:"+507", drive:"우측", tagline:"두 대양을 잇는 운하의 나라", continent:"북아메리카", emoji:"🇵🇦" },
+  "Montenegro": { capital:"포드고리차", population:"62만", area:"13,812 km²", lang:"몬테네그로어", currency:"유로 (EUR)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+382", drive:"우측", tagline:"아드리아해의 숨은 보석", continent:"유럽", emoji:"🇲🇪" },
+  "Tunisia": { capital:"튀니스", population:"1,200만", area:"163,610 km²", lang:"아랍어·프랑스어", currency:"디나르 (TND)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+216", drive:"우측", tagline:"카르타고의 유산이 남은 지중해 보석", continent:"아프리카", emoji:"🇹🇳" },
+  "Oman": { capital:"무스카트", population:"540만", area:"309,500 km²", lang:"아랍어", currency:"리얄 (OMR)", timezone:"UTC+4", timeDiff:"-5시간", visa:"e-비자", voltage:"240V / 50Hz", callCode:"+968", drive:"우측", tagline:"아라비아의 숨겨진 보물", continent:"아시아(중동)", emoji:"🇴🇲" },
+  "Qatar": { capital:"도하", population:"280만", area:"11,586 km²", lang:"아랍어", currency:"리얄 (QAR)", timezone:"UTC+3", timeDiff:"-6시간", visa:"도착 비자", voltage:"240V / 50Hz", callCode:"+974", drive:"우측", tagline:"사막 위의 초현대적 도시", continent:"아시아(중동)", emoji:"🇶🇦" },
+  "Dominican Republic": { capital:"산토도밍고", population:"1,100만", area:"48,671 km²", lang:"스페인어", currency:"페소 (DOP)", timezone:"UTC-4", timeDiff:"-13시간", visa:"30일 무비자", voltage:"120V / 60Hz", callCode:"+1-809", drive:"우측", tagline:"카리브해의 열대 파라다이스", continent:"북아메리카", emoji:"🇩🇴" },
+  "Guatemala": { capital:"과테말라시티", population:"1,800만", area:"108,889 km²", lang:"스페인어", currency:"케찰 (GTQ)", timezone:"UTC-6", timeDiff:"-15시간", visa:"90일 무비자", voltage:"120V / 60Hz", callCode:"+502", drive:"우측", tagline:"마야 문명의 심장부", continent:"북아메리카", emoji:"🇬🇹" },
+  "Jamaica": { capital:"킹스턴", population:"300만", area:"10,991 km²", lang:"영어", currency:"달러 (JMD)", timezone:"UTC-5", timeDiff:"-14시간", visa:"90일 무비자", voltage:"110V / 50Hz", callCode:"+1-876", drive:"좌측", tagline:"레게 음악과 블루마운틴의 섬", continent:"북아메리카", emoji:"🇯🇲" },
+  "Latvia": { capital:"리가", population:"190만", area:"64,589 km²", lang:"라트비아어", currency:"유로 (EUR)", timezone:"UTC+2", timeDiff:"-7시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+371", drive:"우측", tagline:"발트해의 아르누보 보석", continent:"유럽", emoji:"🇱🇻" },
+  "Lithuania": { capital:"빌뉴스", population:"280만", area:"65,300 km²", lang:"리투아니아어", currency:"유로 (EUR)", timezone:"UTC+2", timeDiff:"-7시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+370", drive:"우측", tagline:"발트 3국의 역사적 중심", continent:"유럽", emoji:"🇱🇹" },
+  "Estonia": { capital:"탈린", population:"136만", area:"45,228 km²", lang:"에스토니아어", currency:"유로 (EUR)", timezone:"UTC+2", timeDiff:"-7시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+372", drive:"우측", tagline:"디지털 강국, 중세 동화의 도시", continent:"유럽", emoji:"🇪🇪" },
+  "Cyprus": { capital:"니코시아", population:"130만", area:"9,251 km²", lang:"그리스어·터키어", currency:"유로 (EUR)", timezone:"UTC+2", timeDiff:"-7시간", visa:"90일 무비자", voltage:"240V / 50Hz", callCode:"+357", drive:"좌측", tagline:"아프로디테가 태어난 지중해의 섬", continent:"유럽/아시아", emoji:"🇨🇾" },
+  "Albania": { capital:"티라나", population:"290만", area:"28,748 km²", lang:"알바니아어", currency:"레크 (ALL)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+355", drive:"우측", tagline:"유럽의 마지막 비밀 해변", continent:"유럽", emoji:"🇦🇱" },
+  "Serbia": { capital:"베오그라드", population:"670만", area:"77,474 km²", lang:"세르비아어", currency:"디나르 (RSD)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+381", drive:"우측", tagline:"발칸의 활기찬 심장", continent:"유럽", emoji:"🇷🇸" },
+  "Namibia": { capital:"빈트후크", population:"260만", area:"824,292 km²", lang:"영어", currency:"달러 (NAD)", timezone:"UTC+2", timeDiff:"-7시간", visa:"90일 무비자", voltage:"220V / 50Hz", callCode:"+264", drive:"좌측", tagline:"붉은 사막과 별하늘의 나라", continent:"아프리카", emoji:"🇳🇦" },
+  "Zimbabwe": { capital:"하라레", population:"1,600만", area:"390,757 km²", lang:"영어·쇼나어·은데벨레어", currency:"달러 (ZWL)", timezone:"UTC+2", timeDiff:"-7시간", visa:"도착 비자", voltage:"220V / 50Hz", callCode:"+263", drive:"좌측", tagline:"빅토리아 폭포의 나라", continent:"아프리카", emoji:"🇿🇼" },
+  "Fiji": { capital:"수바", population:"93만", area:"18,274 km²", lang:"영어·피지어·힌디어", currency:"달러 (FJD)", timezone:"UTC+12", timeDiff:"+3시간", visa:"120일 무비자", voltage:"240V / 50Hz", callCode:"+679", drive:"좌측", tagline:"남태평양의 열대 낙원", continent:"오세아니아", emoji:"🇫🇯" },
+  "Madagascar": { capital:"안타나나리보", population:"3,000만", area:"587,041 km²", lang:"말라가시어·프랑스어", currency:"아리아리 (MGA)", timezone:"UTC+3", timeDiff:"-6시간", visa:"도착 비자", voltage:"220V / 50Hz", callCode:"+261", drive:"우측", tagline:"독특한 생태계의 보물섬", continent:"아프리카", emoji:"🇲🇬" },
+  "Mauritius": { capital:"포트루이스", population:"130만", area:"2,040 km²", lang:"영어·프랑스어·크레올어", currency:"루피 (MUR)", timezone:"UTC+4", timeDiff:"-5시간", visa:"무비자", voltage:"230V / 50Hz", callCode:"+230", drive:"좌측", tagline:"인도양의 무지개빛 낙원", continent:"아프리카", emoji:"🇲🇺" },
+  "Lebanon": { capital:"베이루트", population:"540만", area:"10,400 km²", lang:"아랍어·프랑스어", currency:"파운드 (LBP)", timezone:"UTC+2", timeDiff:"-7시간", visa:"도착 비자", voltage:"220V / 50Hz", callCode:"+961", drive:"우측", tagline:"중동의 파리, 페니키아의 후예", continent:"아시아(중동)", emoji:"🇱🇧" },
+  "Ukraine": { capital:"키이우", population:"3,700만", area:"603,550 km²", lang:"우크라이나어", currency:"흐리브냐 (UAH)", timezone:"UTC+2", timeDiff:"-7시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+380", drive:"우측", tagline:"동유럽의 광활한 대지", continent:"유럽", emoji:"🇺🇦" },
+  "Pakistan": { capital:"이슬라마바드", population:"2억 4,000만", area:"881,913 km²", lang:"우르두어·영어", currency:"루피 (PKR)", timezone:"UTC+5", timeDiff:"-4시간", visa:"e-비자", voltage:"230V / 50Hz", callCode:"+92", drive:"좌측", tagline:"인더스 문명의 요람", continent:"아시아", emoji:"🇵🇰" },
+  "Luxembourg": { capital:"룩셈부르크시티", population:"66만", area:"2,586 km²", lang:"룩셈부르크어·프랑스어·독일어", currency:"유로 (EUR)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+352", drive:"우측", tagline:"작지만 부유한 유럽의 심장", continent:"유럽", emoji:"🇱🇺" },
+  "Slovakia": { capital:"브라티슬라바", population:"550만", area:"49,035 km²", lang:"슬로바키아어", currency:"유로 (EUR)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+421", drive:"우측", tagline:"타트라 산맥과 고성의 나라", continent:"유럽", emoji:"🇸🇰" },
+  "Bulgaria": { capital:"소피아", population:"650만", area:"110,879 km²", lang:"불가리아어", currency:"레프 (BGN)", timezone:"UTC+2", timeDiff:"-7시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+359", drive:"우측", tagline:"장미와 요구르트의 나라", continent:"유럽", emoji:"🇧🇬" },
+  "Rwanda": { capital:"키갈리", population:"1,400만", area:"26,338 km²", lang:"키냐르완다어·영어·프랑스어", currency:"프랑 (RWF)", timezone:"UTC+2", timeDiff:"-7시간", visa:"도착 비자", voltage:"230V / 50Hz", callCode:"+250", drive:"우측", tagline:"천 개의 언덕, 고릴라의 안식처", continent:"아프리카", emoji:"🇷🇼" },
+  "Senegal": { capital:"다카르", population:"1,800만", area:"196,722 km²", lang:"프랑스어·월로프어", currency:"세파프랑 (XOF)", timezone:"UTC+0", timeDiff:"-9시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+221", drive:"우측", tagline:"서아프리카의 활기찬 관문", continent:"아프리카", emoji:"🇸🇳" },
+  "Kazakhstan": { capital:"아스타나", population:"2,000만", area:"2,724,900 km²", lang:"카자흐어·러시아어", currency:"텡게 (KZT)", timezone:"UTC+5~6", timeDiff:"-4~-3시간", visa:"30일 무비자", voltage:"220V / 50Hz", callCode:"+7", drive:"우측", tagline:"중앙아시아의 대초원 강국", continent:"아시아", emoji:"🇰🇿" },
+  "Afghanistan": { capital:"카불", population:"4,200만", area:"652,230 km²", lang:"다리어·파슈토어", currency:"아프가니 (AFN)", timezone:"UTC+4:30", timeDiff:"-4.5시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+93", drive:"우측", tagline:"실크로드의 교차로", continent:"아시아", emoji:"🇦🇫" },
+  "Algeria": { capital:"알제", population:"4,600만", area:"2,381,741 km²", lang:"아랍어·베르베르어", currency:"디나르 (DZD)", timezone:"UTC+1", timeDiff:"-8시간", visa:"비자 필요", voltage:"230V / 50Hz", callCode:"+213", drive:"우측", tagline:"아프리카 최대 영토의 사하라 나라", continent:"아프리카", emoji:"🇩🇿" },
+  "Angola": { capital:"루안다", population:"3,600만", area:"1,246,700 km²", lang:"포르투갈어", currency:"콴자 (AOA)", timezone:"UTC+1", timeDiff:"-8시간", visa:"e-비자", voltage:"220V / 50Hz", callCode:"+244", drive:"우측", tagline:"아프리카 서남부의 떠오르는 나라", continent:"아프리카", emoji:"🇦🇴" },
+  "Armenia": { capital:"예레반", population:"300만", area:"29,743 km²", lang:"아르메니아어", currency:"드람 (AMD)", timezone:"UTC+4", timeDiff:"-5시간", visa:"180일 무비자", voltage:"230V / 50Hz", callCode:"+374", drive:"우측", tagline:"노아의 방주가 머문 아라라트의 나라", continent:"아시아/유럽", emoji:"🇦🇲" },
+  "Azerbaijan": { capital:"바쿠", population:"1,040만", area:"86,600 km²", lang:"아제르바이잔어", currency:"마나트 (AZN)", timezone:"UTC+4", timeDiff:"-5시간", visa:"e-비자", voltage:"220V / 50Hz", callCode:"+994", drive:"우측", tagline:"불의 나라, 카스피해의 보석", continent:"아시아/유럽", emoji:"🇦🇿" },
+  "Bahrain": { capital:"마나마", population:"150만", area:"786 km²", lang:"아랍어", currency:"디나르 (BHD)", timezone:"UTC+3", timeDiff:"-6시간", visa:"e-비자", voltage:"230V / 50Hz", callCode:"+973", drive:"우측", tagline:"페르시아만의 진주 섬나라", continent:"아시아(중동)", emoji:"🇧🇭" },
+  "Bangladesh": { capital:"다카", population:"1억 7,300만", area:"147,570 km²", lang:"벵골어", currency:"타카 (BDT)", timezone:"UTC+6", timeDiff:"-3시간", visa:"도착 비자", voltage:"220V / 50Hz", callCode:"+880", drive:"좌측", tagline:"황금빛 벵골, 물의 나라", continent:"아시아", emoji:"🇧🇩" },
+  "Belarus": { capital:"민스크", population:"930만", area:"207,600 km²", lang:"벨라루스어·러시아어", currency:"루블 (BYN)", timezone:"UTC+3", timeDiff:"-6시간", visa:"30일 무비자", voltage:"220V / 50Hz", callCode:"+375", drive:"우측", tagline:"동유럽의 녹색 심장", continent:"유럽", emoji:"🇧🇾" },
+  "Belize": { capital:"벨모판", population:"43만", area:"22,966 km²", lang:"영어", currency:"달러 (BZD)", timezone:"UTC-6", timeDiff:"-15시간", visa:"90일 무비자", voltage:"110/220V / 60Hz", callCode:"+501", drive:"우측", tagline:"카리브해의 마야 유적과 블루홀", continent:"북아메리카", emoji:"🇧🇿" },
+  "Benin": { capital:"포르토노보", population:"1,350만", area:"112,622 km²", lang:"프랑스어", currency:"세파프랑 (XOF)", timezone:"UTC+1", timeDiff:"-8시간", visa:"e-비자", voltage:"220V / 50Hz", callCode:"+229", drive:"우측", tagline:"부두교의 발상지", continent:"아프리카", emoji:"🇧🇯" },
+  "Bhutan": { capital:"팀부", population:"78만", area:"38,394 km²", lang:"종카어", currency:"눌트럼 (BTN)", timezone:"UTC+6", timeDiff:"-3시간", visa:"관광세 필요", voltage:"230V / 50Hz", callCode:"+975", drive:"좌측", tagline:"행복지수의 나라, 히말라야의 왕국", continent:"아시아", emoji:"🇧🇹" },
+  "Bosnia and Herzegovina": { capital:"사라예보", population:"320만", area:"51,197 km²", lang:"보스니아어·크로아티아어·세르비아어", currency:"마르카 (BAM)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+387", drive:"우측", tagline:"동서양 문화가 교차하는 발칸의 보석", continent:"유럽", emoji:"🇧🇦" },
+  "Botswana": { capital:"가보로네", population:"260만", area:"581,730 km²", lang:"영어·츠와나어", currency:"풀라 (BWP)", timezone:"UTC+2", timeDiff:"-7시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+267", drive:"좌측", tagline:"오카방고 델타의 야생 왕국", continent:"아프리카", emoji:"🇧🇼" },
+  "Brunei": { capital:"반다르스리브가완", population:"45만", area:"5,765 km²", lang:"말레이어·영어", currency:"달러 (BND)", timezone:"UTC+8", timeDiff:"-1시간", visa:"90일 무비자", voltage:"240V / 50Hz", callCode:"+673", drive:"좌측", tagline:"보르네오의 황금빛 모스크 왕국", continent:"아시아", emoji:"🇧🇳" },
+  "Burkina Faso": { capital:"와가두구", population:"2,300만", area:"274,200 km²", lang:"프랑스어", currency:"세파프랑 (XOF)", timezone:"UTC+0", timeDiff:"-9시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+226", drive:"우측", tagline:"정직한 사람들의 나라", continent:"아프리카", emoji:"🇧🇫" },
+  "Burundi": { capital:"기테가", population:"1,300만", area:"27,834 km²", lang:"키룬디어·프랑스어", currency:"프랑 (BIF)", timezone:"UTC+2", timeDiff:"-7시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+257", drive:"우측", tagline:"아프리카의 심장부", continent:"아프리카", emoji:"🇧🇮" },
+  "Cabo Verde": { capital:"프라이아", population:"60만", area:"4,033 km²", lang:"포르투갈어", currency:"에스쿠도 (CVE)", timezone:"UTC-1", timeDiff:"-10시간", visa:"도착 비자", voltage:"220V / 50Hz", callCode:"+238", drive:"우측", tagline:"대서양의 화산섬 군도", continent:"아프리카", emoji:"🇨🇻" },
+  "Cameroon": { capital:"야운데", population:"2,900만", area:"475,442 km²", lang:"프랑스어·영어", currency:"세파프랑 (XAF)", timezone:"UTC+1", timeDiff:"-8시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+237", drive:"우측", tagline:"아프리카의 축소판", continent:"아프리카", emoji:"🇨🇲" },
+  "Central African Republic": { capital:"방기", population:"550만", area:"622,984 km²", lang:"프랑스어·상고어", currency:"세파프랑 (XAF)", timezone:"UTC+1", timeDiff:"-8시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+236", drive:"우측", tagline:"아프리카 대륙의 중심", continent:"아프리카", emoji:"🇨🇫" },
+  "Chad": { capital:"은자메나", population:"1,800만", area:"1,284,000 km²", lang:"프랑스어·아랍어", currency:"세파프랑 (XAF)", timezone:"UTC+1", timeDiff:"-8시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+235", drive:"우측", tagline:"사하라와 사헬의 만남", continent:"아프리카", emoji:"🇹🇩" },
+  "Comoros": { capital:"모로니", population:"90만", area:"2,235 km²", lang:"코모로어·아랍어·프랑스어", currency:"프랑 (KMF)", timezone:"UTC+3", timeDiff:"-6시간", visa:"도착 비자", voltage:"220V / 50Hz", callCode:"+269", drive:"우측", tagline:"인도양의 향기로운 섬", continent:"아프리카", emoji:"🇰🇲" },
+  "Democratic Republic of the Congo": { capital:"킨샤사", population:"1억 200만", area:"2,344,858 km²", lang:"프랑스어", currency:"프랑 (CDF)", timezone:"UTC+1~2", timeDiff:"-8~-7시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+243", drive:"우측", tagline:"콩고강의 거대한 초록빛 심장", continent:"아프리카", emoji:"🇨🇩" },
+  "Djibouti": { capital:"지부티시", population:"110만", area:"23,200 km²", lang:"프랑스어·아랍어", currency:"프랑 (DJF)", timezone:"UTC+3", timeDiff:"-6시간", visa:"e-비자", voltage:"220V / 50Hz", callCode:"+253", drive:"우측", tagline:"아프리카의 뿔 관문", continent:"아프리카", emoji:"🇩🇯" },
+  "El Salvador": { capital:"산살바도르", population:"640만", area:"21,041 km²", lang:"스페인어", currency:"달러 (USD)", timezone:"UTC-6", timeDiff:"-15시간", visa:"90일 무비자", voltage:"115V / 60Hz", callCode:"+503", drive:"우측", tagline:"중미의 화산과 서핑의 나라", continent:"북아메리카", emoji:"🇸🇻" },
+  "Equatorial Guinea": { capital:"말라보", population:"170만", area:"28,051 km²", lang:"스페인어·프랑스어·포르투갈어", currency:"세파프랑 (XAF)", timezone:"UTC+1", timeDiff:"-8시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+240", drive:"우측", tagline:"기니만의 열대 왕국", continent:"아프리카", emoji:"🇬🇶" },
+  "Eritrea": { capital:"아스마라", population:"360만", area:"117,600 km²", lang:"티그리냐어·아랍어", currency:"낙파 (ERN)", timezone:"UTC+3", timeDiff:"-6시간", visa:"비자 필요", voltage:"230V / 50Hz", callCode:"+291", drive:"우측", tagline:"홍해의 아르데코 수도", continent:"아프리카", emoji:"🇪🇷" },
+  "Eswatini": { capital:"음바바네", population:"120만", area:"17,364 km²", lang:"스와티어·영어", currency:"릴랑게니 (SZL)", timezone:"UTC+2", timeDiff:"-7시간", visa:"30일 무비자", voltage:"230V / 50Hz", callCode:"+268", drive:"좌측", tagline:"아프리카 마지막 절대왕정", continent:"아프리카", emoji:"🇸🇿" },
+  "Gabon": { capital:"리브르빌", population:"240만", area:"267,668 km²", lang:"프랑스어", currency:"세파프랑 (XAF)", timezone:"UTC+1", timeDiff:"-8시간", visa:"e-비자", voltage:"220V / 50Hz", callCode:"+241", drive:"우측", tagline:"적도 아프리카의 초록 보석", continent:"아프리카", emoji:"🇬🇦" },
+  "Gambia": { capital:"반줄", population:"270만", area:"11,295 km²", lang:"영어", currency:"달라시 (GMD)", timezone:"UTC+0", timeDiff:"-9시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+220", drive:"우측", tagline:"아프리카 대륙 최소 국가", continent:"아프리카", emoji:"🇬🇲" },
+  "Guinea": { capital:"코나크리", population:"1,400만", area:"245,857 km²", lang:"프랑스어", currency:"프랑 (GNF)", timezone:"UTC+0", timeDiff:"-9시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+224", drive:"우측", tagline:"서아프리카의 물의 탑", continent:"아프리카", emoji:"🇬🇳" },
+  "Guinea-Bissau": { capital:"비사우", population:"210만", area:"36,125 km²", lang:"포르투갈어", currency:"세파프랑 (XOF)", timezone:"UTC+0", timeDiff:"-9시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+245", drive:"우측", tagline:"비자고스 군도의 자연 낙원", continent:"아프리카", emoji:"🇬🇼" },
+  "Guyana": { capital:"조지타운", population:"80만", area:"214,969 km²", lang:"영어", currency:"달러 (GYD)", timezone:"UTC-4", timeDiff:"-13시간", visa:"90일 무비자", voltage:"240V / 60Hz", callCode:"+592", drive:"좌측", tagline:"남미의 영어권 열대 우림", continent:"남아메리카", emoji:"🇬🇾" },
+  "Haiti": { capital:"포르토프랭스", population:"1,200만", area:"27,750 km²", lang:"프랑스어·아이티크레올어", currency:"구르드 (HTG)", timezone:"UTC-5", timeDiff:"-14시간", visa:"90일 무비자", voltage:"110V / 60Hz", callCode:"+509", drive:"우측", tagline:"카리브해 최초의 흑인 공화국", continent:"북아메리카", emoji:"🇭🇹" },
+  "Honduras": { capital:"테구시갈파", population:"1,050만", area:"112,090 km²", lang:"스페인어", currency:"렘피라 (HNL)", timezone:"UTC-6", timeDiff:"-15시간", visa:"90일 무비자", voltage:"120V / 60Hz", callCode:"+504", drive:"우측", tagline:"마야 유적 코판의 나라", continent:"북아메리카", emoji:"🇭🇳" },
+  "Iraq": { capital:"바그다드", population:"4,400만", area:"438,317 km²", lang:"아랍어·쿠르드어", currency:"디나르 (IQD)", timezone:"UTC+3", timeDiff:"-6시간", visa:"도착 비자", voltage:"230V / 50Hz", callCode:"+964", drive:"우측", tagline:"메소포타미아 문명의 발상지", continent:"아시아(중동)", emoji:"🇮🇶" },
+  "Ivory Coast": { capital:"야무수크로", population:"2,900만", area:"322,463 km²", lang:"프랑스어", currency:"세파프랑 (XOF)", timezone:"UTC+0", timeDiff:"-9시간", visa:"e-비자", voltage:"220V / 50Hz", callCode:"+225", drive:"우측", tagline:"서아프리카의 경제 수도", continent:"아프리카", emoji:"🇨🇮" },
+  "Kosovo": { capital:"프리슈티나", population:"180만", area:"10,887 km²", lang:"알바니아어·세르비아어", currency:"유로 (EUR)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+383", drive:"우측", tagline:"발칸의 젊은 나라", continent:"유럽", emoji:"🇽🇰" },
+  "Kuwait": { capital:"쿠웨이트시티", population:"470만", area:"17,818 km²", lang:"아랍어", currency:"디나르 (KWD)", timezone:"UTC+3", timeDiff:"-6시간", visa:"e-비자", voltage:"240V / 50Hz", callCode:"+965", drive:"우측", tagline:"페르시아만의 석유 부국", continent:"아시아(중동)", emoji:"🇰🇼" },
+  "Kyrgyzstan": { capital:"비슈케크", population:"700만", area:"199,951 km²", lang:"키르기스어·러시아어", currency:"솜 (KGS)", timezone:"UTC+6", timeDiff:"-3시간", visa:"60일 무비자", voltage:"220V / 50Hz", callCode:"+996", drive:"우측", tagline:"중앙아시아의 스위스", continent:"아시아", emoji:"🇰🇬" },
+  "Lesotho": { capital:"마세루", population:"230만", area:"30,355 km²", lang:"소토어·영어", currency:"로티 (LSL)", timezone:"UTC+2", timeDiff:"-7시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+266", drive:"좌측", tagline:"하늘의 왕국, 아프리카의 스위스", continent:"아프리카", emoji:"🇱🇸" },
+  "Liberia": { capital:"몬로비아", population:"540만", area:"111,369 km²", lang:"영어", currency:"달러 (LRD)", timezone:"UTC+0", timeDiff:"-9시간", visa:"비자 필요", voltage:"120V / 60Hz", callCode:"+231", drive:"우측", tagline:"자유의 땅, 아프리카 최초 공화국", continent:"아프리카", emoji:"🇱🇷" },
+  "Libya": { capital:"트리폴리", population:"700만", area:"1,759,540 km²", lang:"아랍어", currency:"디나르 (LYD)", timezone:"UTC+2", timeDiff:"-7시간", visa:"비자 필요", voltage:"230V / 50Hz", callCode:"+218", drive:"우측", tagline:"사하라와 지중해가 만나는 땅", continent:"아프리카", emoji:"🇱🇾" },
+  "Malawi": { capital:"릴롱궤", population:"2,100만", area:"118,484 km²", lang:"영어·체와어", currency:"콰차 (MWK)", timezone:"UTC+2", timeDiff:"-7시간", visa:"도착 비자", voltage:"230V / 50Hz", callCode:"+265", drive:"좌측", tagline:"아프리카의 따뜻한 심장", continent:"아프리카", emoji:"🇲🇼" },
+  "Mali": { capital:"바마코", population:"2,300만", area:"1,240,192 km²", lang:"프랑스어", currency:"세파프랑 (XOF)", timezone:"UTC+0", timeDiff:"-9시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+223", drive:"우측", tagline:"팀북투와 사하라의 나라", continent:"아프리카", emoji:"🇲🇱" },
+  "Mauritania": { capital:"누악쇼트", population:"480만", area:"1,030,700 km²", lang:"아랍어", currency:"우기야 (MRU)", timezone:"UTC+0", timeDiff:"-9시간", visa:"도착 비자", voltage:"220V / 50Hz", callCode:"+222", drive:"우측", tagline:"사하라 서쪽 끝의 사막 나라", continent:"아프리카", emoji:"🇲🇷" },
+  "Moldova": { capital:"키시나우", population:"260만", area:"33,851 km²", lang:"루마니아어", currency:"레우 (MDL)", timezone:"UTC+2", timeDiff:"-7시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+373", drive:"우측", tagline:"유럽의 숨겨진 와인 나라", continent:"유럽", emoji:"🇲🇩" },
+  "Mozambique": { capital:"마푸토", population:"3,300만", area:"801,590 km²", lang:"포르투갈어", currency:"메티칼 (MZN)", timezone:"UTC+2", timeDiff:"-7시간", visa:"도착 비자", voltage:"220V / 50Hz", callCode:"+258", drive:"좌측", tagline:"인도양의 긴 해안선", continent:"아프리카", emoji:"🇲🇿" },
+  "Nicaragua": { capital:"마나과", population:"690만", area:"130,373 km²", lang:"스페인어", currency:"코르도바 (NIO)", timezone:"UTC-6", timeDiff:"-15시간", visa:"90일 무비자", voltage:"120V / 60Hz", callCode:"+505", drive:"우측", tagline:"호수와 화산의 나라", continent:"북아메리카", emoji:"🇳🇮" },
+  "Niger": { capital:"니아메", population:"2,700만", area:"1,267,000 km²", lang:"프랑스어", currency:"세파프랑 (XOF)", timezone:"UTC+1", timeDiff:"-8시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+227", drive:"우측", tagline:"사하라 남쪽 사헬의 나라", continent:"아프리카", emoji:"🇳🇪" },
+  "Nigeria": { capital:"아부자", population:"2억 2,400만", area:"923,768 km²", lang:"영어", currency:"나이라 (NGN)", timezone:"UTC+1", timeDiff:"-8시간", visa:"비자 필요", voltage:"240V / 50Hz", callCode:"+234", drive:"우측", tagline:"아프리카의 거인, 놀리우드의 나라", continent:"아프리카", emoji:"🇳🇬" },
+  "North Korea": { capital:"평양", population:"2,600만", area:"120,538 km²", lang:"한국어", currency:"원 (KPW)", timezone:"UTC+9", timeDiff:"시차 없음", visa:"특별 비자 필요", voltage:"220V / 50Hz", callCode:"+850", drive:"우측", tagline:"한반도 북쪽의 폐쇄된 나라", continent:"아시아", emoji:"🇰🇵" },
+  "North Macedonia": { capital:"스코페", population:"210만", area:"25,713 km²", lang:"마케도니아어", currency:"디나르 (MKD)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+389", drive:"우측", tagline:"알렉산더 대왕의 고향", continent:"유럽", emoji:"🇲🇰" },
+  "Papua New Guinea": { capital:"포트모르즈비", population:"1,000만", area:"462,840 km²", lang:"영어·톡피신어·히리모투어", currency:"키나 (PGK)", timezone:"UTC+10", timeDiff:"+1시간", visa:"도착 비자", voltage:"240V / 50Hz", callCode:"+675", drive:"좌측", tagline:"800개 언어의 열대 다양성", continent:"오세아니아", emoji:"🇵🇬" },
+  "Paraguay": { capital:"아순시온", population:"720만", area:"406,752 km²", lang:"스페인어·과라니어", currency:"과라니 (PYG)", timezone:"UTC-4", timeDiff:"-13시간", visa:"90일 무비자", voltage:"220V / 50Hz", callCode:"+595", drive:"우측", tagline:"남미의 심장, 이중 언어의 나라", continent:"남아메리카", emoji:"🇵🇾" },
+  "Republic of the Congo": { capital:"브라자빌", population:"600만", area:"342,000 km²", lang:"프랑스어", currency:"세파프랑 (XAF)", timezone:"UTC+1", timeDiff:"-8시간", visa:"비자 필요", voltage:"230V / 50Hz", callCode:"+242", drive:"우측", tagline:"콩고강변의 열대림 나라", continent:"아프리카", emoji:"🇨🇬" },
+  "Sierra Leone": { capital:"프리타운", population:"870만", area:"71,740 km²", lang:"영어", currency:"레온 (SLE)", timezone:"UTC+0", timeDiff:"-9시간", visa:"도착 비자", voltage:"230V / 50Hz", callCode:"+232", drive:"우측", tagline:"서아프리카의 해변 보석", continent:"아프리카", emoji:"🇸🇱" },
+  "Somalia": { capital:"모가디슈", population:"1,800만", area:"637,657 km²", lang:"소말리어·아랍어", currency:"실링 (SOS)", timezone:"UTC+3", timeDiff:"-6시간", visa:"도착 비자", voltage:"220V / 50Hz", callCode:"+252", drive:"우측", tagline:"아프리카의 뿔", continent:"아프리카", emoji:"🇸🇴" },
+  "South Sudan": { capital:"주바", population:"1,100만", area:"644,329 km²", lang:"영어", currency:"파운드 (SSP)", timezone:"UTC+2", timeDiff:"-7시간", visa:"비자 필요", voltage:"230V / 50Hz", callCode:"+211", drive:"우측", tagline:"세계에서 가장 젊은 나라", continent:"아프리카", emoji:"🇸🇸" },
+  "Sudan": { capital:"하르툼", population:"4,800만", area:"1,861,484 km²", lang:"아랍어·영어", currency:"파운드 (SDG)", timezone:"UTC+2", timeDiff:"-7시간", visa:"비자 필요", voltage:"230V / 50Hz", callCode:"+249", drive:"우측", tagline:"나일강이 만나는 누비아의 땅", continent:"아프리카", emoji:"🇸🇩" },
+  "Suriname": { capital:"파라마리보", population:"62만", area:"163,820 km²", lang:"네덜란드어", currency:"달러 (SRD)", timezone:"UTC-3", timeDiff:"-12시간", visa:"관광카드 필요", voltage:"127/220V / 60Hz", callCode:"+597", drive:"좌측", tagline:"남미의 네덜란드 유산", continent:"남아메리카", emoji:"🇸🇷" },
+  "Syria": { capital:"다마스쿠스", population:"2,200만", area:"185,180 km²", lang:"아랍어", currency:"파운드 (SYP)", timezone:"UTC+3", timeDiff:"-6시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+963", drive:"우측", tagline:"세계에서 가장 오래된 수도", continent:"아시아(중동)", emoji:"🇸🇾" },
+  "Tajikistan": { capital:"두샨베", population:"1,000만", area:"143,100 km²", lang:"타지크어", currency:"소모니 (TJS)", timezone:"UTC+5", timeDiff:"-4시간", visa:"e-비자", voltage:"220V / 50Hz", callCode:"+992", drive:"우측", tagline:"파미르 고원의 지붕", continent:"아시아", emoji:"🇹🇯" },
+  "Timor-Leste": { capital:"딜리", population:"140만", area:"14,874 km²", lang:"테툼어·포르투갈어", currency:"달러 (USD)", timezone:"UTC+9", timeDiff:"시차 없음", visa:"도착 비자", voltage:"220V / 50Hz", callCode:"+670", drive:"좌측", tagline:"동남아시아의 가장 젊은 나라", continent:"아시아", emoji:"🇹🇱" },
+  "Togo": { capital:"로메", population:"900만", area:"56,785 km²", lang:"프랑스어", currency:"세파프랑 (XOF)", timezone:"UTC+0", timeDiff:"-9시간", visa:"도착 비자", voltage:"220V / 50Hz", callCode:"+228", drive:"우측", tagline:"서아프리카의 가늘고 긴 나라", continent:"아프리카", emoji:"🇹🇬" },
+  "Trinidad and Tobago": { capital:"포트오브스페인", population:"140만", area:"5,130 km²", lang:"영어", currency:"달러 (TTD)", timezone:"UTC-4", timeDiff:"-13시간", visa:"90일 무비자", voltage:"115V / 60Hz", callCode:"+1-868", drive:"좌측", tagline:"카리브해 카니발의 섬", continent:"남아메리카", emoji:"🇹🇹" },
+  "Turkmenistan": { capital:"아시가바트", population:"640만", area:"488,100 km²", lang:"투르크멘어", currency:"마나트 (TMT)", timezone:"UTC+5", timeDiff:"-4시간", visa:"비자 필요", voltage:"220V / 50Hz", callCode:"+993", drive:"우측", tagline:"카라쿰 사막의 하얀 대리석 도시", continent:"아시아", emoji:"🇹🇲" },
+  "Uganda": { capital:"캄팔라", population:"4,800만", area:"241,038 km²", lang:"영어·스와힐리어", currency:"실링 (UGX)", timezone:"UTC+3", timeDiff:"-6시간", visa:"e-비자", voltage:"240V / 50Hz", callCode:"+256", drive:"좌측", tagline:"아프리카의 진주, 마운틴고릴라의 나라", continent:"아프리카", emoji:"🇺🇬" },
+  "Uruguay": { capital:"몬테비데오", population:"350만", area:"176,215 km²", lang:"스페인어", currency:"페소 (UYU)", timezone:"UTC-3", timeDiff:"-12시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+598", drive:"우측", tagline:"남미의 스위스, 진보의 나라", continent:"남아메리카", emoji:"🇺🇾" },
+  "Venezuela": { capital:"카라카스", population:"2,850만", area:"916,445 km²", lang:"스페인어", currency:"볼리바르 (VES)", timezone:"UTC-4", timeDiff:"-13시간", visa:"90일 무비자", voltage:"120V / 60Hz", callCode:"+58", drive:"우측", tagline:"앙헬 폭포와 카리브 해변의 나라", continent:"남아메리카", emoji:"🇻🇪" },
+  "Yemen": { capital:"사나", population:"3,400만", area:"527,968 km²", lang:"아랍어", currency:"리얄 (YER)", timezone:"UTC+3", timeDiff:"-6시간", visa:"비자 필요", voltage:"230V / 50Hz", callCode:"+967", drive:"우측", tagline:"아라비아 반도의 고대 왕국", continent:"아시아(중동)", emoji:"🇾🇪" },
+  "Zambia": { capital:"루사카", population:"2,000만", area:"752,618 km²", lang:"영어", currency:"콰차 (ZMW)", timezone:"UTC+2", timeDiff:"-7시간", visa:"e-비자", voltage:"230V / 50Hz", callCode:"+260", drive:"좌측", tagline:"빅토리아 폭포의 또 다른 관문", continent:"아프리카", emoji:"🇿🇲" },
 }
 
 // 전 세계 도시 사전 관광 데이터
@@ -3319,6 +3570,31 @@ function App() {
   const [showDrop, setShowDrop] = useState(false)
   const [hoveredCountry, setHoveredCountry] = useState(null)
   const [showCountryInfo, setShowCountryInfo] = useState(false)
+  const [lang, setLang] = useState('ko')
+  const [showLangMenu, setShowLangMenu] = useState(false)
+
+  // 다국어 헬퍼
+  const t = (key) => T[key]?.[lang] || T[key]?.['ko'] || key
+  const getCountryName = (enName) => {
+    if (lang === 'ko') return COUNTRY_KO[enName] || enName
+    if (lang === 'en') return enName
+    if (lang === 'ja') return COUNTRY_JA[enName] || enName
+    if (lang === 'zh') return COUNTRY_ZH[enName] || enName
+    return enName
+  }
+  const getCityName = (koName) => {
+    if (lang === 'ko') return koName
+    const tr = CITY_I18N[koName]
+    if (!tr) return koName
+    if (lang === 'en') return tr[0] || koName
+    if (lang === 'ja') return tr[1] || koName
+    if (lang === 'zh') return tr[2] || koName
+    return koName
+  }
+  const getSpotType = (koType) => {
+    if (lang === 'ko') return koType
+    return SPOT_TYPE_I18N[koType]?.[lang] || koType
+  }
 
 
   // Load world GeoJSON (110m 경량 + 폴리곤 구멍 제거 → 빠른 렌더링, 빈 공간 없음)
@@ -3431,7 +3707,7 @@ function App() {
       const labelItems = countries.map(feat => ({
         lat: feat.properties.LABEL_Y || 0,
         lng: feat.properties.LABEL_X || 0,
-        name: COUNTRY_KO[feat.properties.NAME] || feat.properties.NAME,
+        name: getCountryName(feat.properties.NAME),
         nameEn: feat.properties.NAME,
         _type: 'country',
       })).filter(d => d.lat !== 0 || d.lng !== 0)
@@ -3440,17 +3716,17 @@ function App() {
     }
 
     const countryEn = selectedCountry.properties.NAME
-    const cities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, countryEn, _type: 'city' }))
+    const cities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city' }))
     const countryLabels = countries.map(feat => ({
       lat: feat.properties.LABEL_Y || 0,
       lng: feat.properties.LABEL_X || 0,
-      name: COUNTRY_KO[feat.properties.NAME] || feat.properties.NAME,
+      name: getCountryName(feat.properties.NAME),
       nameEn: feat.properties.NAME,
       _type: 'country',
     })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn)
 
     globe.htmlElementsData([...countryLabels, ...cities, ...OCEAN_LABELS])
-  }, [selectedCountry, selectedCity, countries])
+  }, [selectedCountry, selectedCity, countries, lang])
 
   // HTML 요소 렌더링
   useEffect(() => {
@@ -3643,11 +3919,11 @@ function App() {
         const name = feat.properties.NAME
         // 선택된 국가 위에서는 툴팁 숨김
         if (hasSelection && name === selectedCountry?.properties?.NAME) return ''
-        const koName = COUNTRY_KO[name] || name
+        const koName = getCountryName(name)
         const hasCities = COUNTRY_CITIES[name]
         return `<div style="background:rgba(15,23,42,0.92);border-radius:10px;padding:8px 14px;font-family:Pretendard,Inter,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);">
           <div style="font-size:15px;font-weight:700;color:white">${koName}</div>
-          ${hasCities ? `<div style="font-size:11px;color:#94a3b8;margin-top:2px">클릭하여 도시 탐색</div>` : ''}
+          ${hasCities ? `<div style="font-size:11px;color:#94a3b8;margin-top:2px">${T.clickExplore[lang]||T.clickExplore.ko}</div>` : ''}
         </div>`
       })
       .onPolygonHover(feat => {
@@ -3660,7 +3936,7 @@ function App() {
         if (hasSelection && feat?.properties?.NAME === selectedCountry?.properties?.NAME) return
         handleCountryClick(feat)
       })
-  }, [countries, hoveredCountry, selectedCountry])
+  }, [countries, hoveredCountry, selectedCountry, lang])
 
 
   // 국가별 최적 줌 레벨 (수동 튜닝)
@@ -3871,7 +4147,8 @@ function App() {
   const fetchCityData = async (city) => {
     try {
       // 1. 사전 데이터 (240개 도시 전체 포함)
-      const staticData = CITY_DATA[city.name]
+      const cityKey = city._koName || city.name
+      const staticData = CITY_DATA[cityKey]
       if (staticData) {
         const base = { ...staticData }
         if (!base.weather) base.weather = { temp: '—', condition: '날씨 로딩 중', icon: '🌤️', humidity: '—' }
@@ -3884,7 +4161,7 @@ function App() {
       }
 
       // 2. 사전 데이터 없는 경우 기본 데이터 사용
-      const fallback = DEFAULT_CITY_DATA(city.name)
+      const fallback = DEFAULT_CITY_DATA(cityKey)
       setCityData(fallback)
       setLoading(false)
       fetchWeather(city.lat, city.lng).then(w => {
@@ -3892,10 +4169,11 @@ function App() {
       }).catch(() => {})
     } catch(e) {
       console.error('fetchCityData error:', e)
+      const cityKey2 = city._koName || city.name
       setCityData({
         weather: { temp: '—', condition: '—', icon: '🌤️', humidity: '—' },
-        description: `${city.name}의 관광 정보입니다.`,
-        spots: DEFAULT_CITY_DATA(city.name).spots,
+        description: `${cityKey2}`,
+        spots: DEFAULT_CITY_DATA(cityKey2).spots,
       })
       setLoading(false)
     }
@@ -3948,7 +4226,7 @@ function App() {
 
   // Search: all cities + all spots across all countries
   const allCities = Object.entries(COUNTRY_CITIES).flatMap(([country, cities]) =>
-    cities.map(c => ({ ...c, countryEn: country, countryKo: COUNTRY_KO[country] || country, _searchType: 'city' }))
+    cities.map(c => ({ ...c, _koName: c.name, countryEn: country, countryKo: getCountryName(country), _searchType: 'city' }))
   )
   // Build spot search index
   const allSpots = Object.entries(CITY_DATA).flatMap(([cityName, data]) => {
@@ -3965,14 +4243,16 @@ function App() {
   const filtered = searchQuery.length >= 1
     ? searchItems.filter(c => {
         const q = searchQuery.toLowerCase()
+        const koName = c._koName || c.name
+        const trName = getCityName(koName)?.toLowerCase() || ''
         if (c._searchType === 'spot') {
-          return c.spotName?.toLowerCase().includes(q) || c.name?.toLowerCase().includes(q)
+          return c.spotName?.toLowerCase().includes(q) || koName?.toLowerCase().includes(q) || trName.includes(q)
         }
-        return c.name?.includes(searchQuery) || c.countryKo?.includes(searchQuery) || c.countryEn?.toLowerCase().includes(q)
+        return koName?.includes(searchQuery) || trName.includes(q) || c.countryKo?.toLowerCase().includes(q) || c.countryEn?.toLowerCase().includes(q)
       }).slice(0, 10)
     : []
 
-  const countryKo = selectedCountry ? (COUNTRY_KO[selectedCountry.properties.NAME] || selectedCountry.properties.NAME) : ''
+  const countryKo = selectedCountry ? getCountryName(selectedCountry.properties.NAME) : ''
 
   return (
     <div style={{width:'100vw',height:'100vh',overflow:'hidden',position:'relative',fontFamily:"'Pretendard','Inter',system-ui,sans-serif",background:'#000'}}>
@@ -4005,12 +4285,38 @@ function App() {
             <div style={{width:40,height:40,borderRadius:11,background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,boxShadow:'0 4px 16px rgba(37,99,235,.4)'}}>🌐</div>
             <div>
               <div style={{fontSize:20,fontWeight:800,letterSpacing:'-.5px',color:'white',lineHeight:1}}>ATLAS</div>
-              <div style={{fontSize:9,color:'rgba(255,255,255,.6)',letterSpacing:'2.5px',textTransform:'uppercase'}}>세계 여행 탐험가</div>
+              <div style={{fontSize:9,color:'rgba(255,255,255,.6)',letterSpacing:'2.5px',textTransform:'uppercase'}}>{t('appSub')}</div>
             </div>
+          </div>
+          {/* Language Selector */}
+          <div style={{position:'relative',marginLeft:8}}>
+            <button onClick={()=>setShowLangMenu(v=>!v)}
+              style={{display:'flex',alignItems:'center',gap:5,background:'rgba(255,255,255,.12)',border:'1px solid rgba(255,255,255,.2)',borderRadius:20,padding:'5px 12px 5px 8px',cursor:'pointer',color:'white',fontSize:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s'}}
+              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.22)'}
+              onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}>
+              <span style={{fontSize:16}}>{LANG_OPTIONS.find(l=>l.code===lang)?.flag}</span>
+              <span>{LANG_OPTIONS.find(l=>l.code===lang)?.label}</span>
+              <span style={{fontSize:8,marginLeft:2}}>{showLangMenu?'▲':'▼'}</span>
+            </button>
+            {showLangMenu && (
+              <div style={{position:'absolute',top:'calc(100% + 6px)',left:0,background:'rgba(15,23,42,.95)',backdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,.15)',borderRadius:12,overflow:'hidden',zIndex:2001,boxShadow:'0 8px 24px rgba(0,0,0,.4)',minWidth:140}}>
+                {LANG_OPTIONS.map(l=>(
+                  <div key={l.code}
+                    onClick={()=>{setLang(l.code);setShowLangMenu(false)}}
+                    style={{display:'flex',alignItems:'center',gap:8,padding:'9px 14px',cursor:'pointer',background:lang===l.code?'rgba(59,130,246,.25)':'transparent',borderLeft:lang===l.code?'3px solid #3b82f6':'3px solid transparent',transition:'all .15s'}}
+                    onMouseEnter={e=>{if(lang!==l.code)e.currentTarget.style.background='rgba(255,255,255,.08)'}}
+                    onMouseLeave={e=>{if(lang!==l.code)e.currentTarget.style.background='transparent'}}>
+                    <span style={{fontSize:18}}>{l.flag}</span>
+                    <span style={{color:'white',fontSize:13,fontWeight:lang===l.code?700:500}}>{l.label}</span>
+                    {lang===l.code && <span style={{marginLeft:'auto',fontSize:11,color:'#60a5fa'}}>✓</span>}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div style={{marginLeft:'auto',position:'relative'}}>
             <span style={{position:'absolute',left:11,top:'50%',transform:'translateY(-50%)',fontSize:13,color:'#94a3b8',pointerEvents:'none'}}>🔍</span>
-            <input placeholder="도시, 국가, 관광지 검색…" value={searchQuery}
+            <input placeholder={t('search')} value={searchQuery}
               onChange={e=>{setSearchQuery(e.target.value);setShowDrop(true)}}
               onFocus={()=>setShowDrop(true)}
               onBlur={()=>setTimeout(()=>setShowDrop(false),150)}
@@ -4040,16 +4346,16 @@ function App() {
                     <span style={{fontSize:20}}>{c._searchType === 'spot' ? '📍' : c.emoji}</span>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:13,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                        {c._searchType === 'spot' ? c.spotName : c.name}
+                        {c._searchType === 'spot' ? c.spotName : getCityName(c._koName || c.name)}
                       </div>
                       <div style={{fontSize:11,color:'#94a3b8'}}>
                         {c._searchType === 'spot'
-                          ? `${c.name}, ${c.countryKo}`
+                          ? `${getCityName(c._koName || c.name)}, ${c.countryKo}`
                           : c.countryKo}
                       </div>
                     </div>
                     {c._searchType === 'spot' && c.spotType && (
-                      <span style={{fontSize:9,padding:'2px 6px',borderRadius:8,background:TYPE_COLORS[c.spotType]||'#64748b',color:'white',fontWeight:700,flexShrink:0}}>{c.spotType}</span>
+                      <span style={{fontSize:9,padding:'2px 6px',borderRadius:8,background:TYPE_COLORS[c.spotType]||'#64748b',color:'white',fontWeight:700,flexShrink:0}}>{getSpotType(c.spotType)}</span>
                     )}
                   </div>
                 ))}
@@ -4080,12 +4386,12 @@ function App() {
               <span style={{fontWeight:700,fontSize:15}}>{countryKo}</span>
               {info && <span style={{fontSize:11,color:'#64748b',fontWeight:500}}>{info.tagline}</span>}
               <span style={{color:'#94a3b8',fontSize:12}}>
-                {cities ? `${cities.length}개 도시` : ''}
+                {cities ? `${cities.length}${t('nCities')}` : ''}
               </span>
               {info && (
                 <button onClick={()=>setShowCountryInfo(v=>!v)}
                   style={{background: showCountryInfo ? '#3b82f6' : '#f0f9ff',border: showCountryInfo ? '1.5px solid #3b82f6' : '1.5px solid #bae6fd',borderRadius:20,padding:'5px 14px',cursor:'pointer',fontSize:11.5,color: showCountryInfo ? 'white' : '#0369a1',fontWeight:700,transition:'all .2s',display:'flex',alignItems:'center',gap:4}}>
-                  📋 국가정보 {showCountryInfo ? '▾' : '▸'}
+                  📋 {t('countryInfo')} {showCountryInfo ? '▾' : '▸'}
                 </button>
               )}
               <button onClick={closeCountry}
@@ -4122,18 +4428,18 @@ function App() {
                 {/* Info Grid */}
                 <div style={{padding:'14px 20px 18px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0'}}>
                   {[
-                    { icon:'🏛️', label:'수도', value:info.capital },
-                    { icon:'👥', label:'인구', value:info.population },
-                    { icon:'📐', label:'면적', value:info.area },
-                    { icon:'🗣️', label:'언어', value:info.lang },
-                    { icon:'💰', label:'통화', value:info.currency },
-                    { icon:'🕐', label:'시간대', value:info.timezone },
-                    { icon:'⏱️', label:'한국과 시차', value:info.timeDiff },
-                    { icon:'🛂', label:'비자(한국)', value:info.visa },
-                    { icon:'🔌', label:'전압', value:info.voltage },
-                    { icon:'📞', label:'국가번호', value:info.callCode },
-                    { icon:'🚗', label:'운전방향', value:info.drive },
-                    { icon:'🌍', label:'도시 수', value: cities ? `${cities.length}개 등록` : '—' },
+                    { icon:'🏛️', label:t('lCapital'), value:info.capital },
+                    { icon:'👥', label:t('lPop'), value:info.population },
+                    { icon:'📐', label:t('lArea'), value:info.area },
+                    { icon:'🗣️', label:t('lLang'), value:info.lang },
+                    { icon:'💰', label:t('lCurrency'), value:info.currency },
+                    { icon:'🕐', label:t('lTimezone'), value:info.timezone },
+                    { icon:'⏱️', label:t('lTimeDiff'), value:info.timeDiff },
+                    { icon:'🛂', label:t('lVisa'), value:info.visa },
+                    { icon:'🔌', label:t('lVoltage'), value:info.voltage },
+                    { icon:'📞', label:t('lCallCode'), value:info.callCode },
+                    { icon:'🚗', label:t('lDrive'), value:info.drive },
+                    { icon:'🌍', label:t('lCityCount'), value: cities ? `${cities.length}${t('registered')}` : '—' },
                   ].map((item, i) => (
                     <div key={i} style={{
                       display:'flex',alignItems:'center',gap:9,
@@ -4151,7 +4457,7 @@ function App() {
 
                 {/* Footer hint */}
                 <div style={{borderTop:'1px solid #f1f5f9',padding:'10px 20px',textAlign:'center'}}>
-                  <span style={{fontSize:11,color:'#94a3b8'}}>✦ 지도 위 도시 핀을 클릭하면 관광 정보를 볼 수 있어요</span>
+                  <span style={{fontSize:11,color:'#94a3b8'}}>{t('cityInfoHint')}</span>
                 </div>
               </div>
             )}
@@ -4162,7 +4468,7 @@ function App() {
       {/* Hint */}
       {!selectedCountry && (
         <div style={{position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:1000,background:'rgba(255,255,255,.9)',backdropFilter:'blur(12px)',border:'1.5px solid rgba(255,255,255,.5)',borderRadius:40,padding:'9px 20px',fontSize:12,color:'#475569',whiteSpace:'nowrap',boxShadow:'0 4px 20px rgba(0,0,0,.2)',pointerEvents:'none'}}>
-          ✦ 나라를 클릭하면 도시 핀이 나타납니다 · 드래그로 지구 회전
+          {t('hintMain')}
         </div>
       )}
 
@@ -4177,7 +4483,7 @@ function App() {
                 <div style={{fontSize:11,color:'#94a3b8',letterSpacing:'2px',textTransform:'uppercase',marginBottom:4}}>
                   {selectedCity?.emoji || '📍'} {countryKo}
                 </div>
-                <div style={{fontSize:26,fontWeight:800,letterSpacing:'-.5px',color:'#0f172a'}}>{selectedCity?.name || ''}</div>
+                <div style={{fontSize:26,fontWeight:800,letterSpacing:'-.5px',color:'#0f172a'}}>{getCityName(selectedCity?._koName || selectedCity?.name) || ''}</div>
               </div>
               <button onClick={closePanel}
                 style={{background:'#f1f5f9',border:'1.5px solid #e2e8f0',color:'#64748b',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
@@ -4193,7 +4499,7 @@ function App() {
                 </div>
                 <div style={{marginLeft:'auto',textAlign:'right'}}>
                   <div style={{fontSize:13,color:'#475569'}}>💧 {cityData.weather.humidity !== undefined ? `${cityData.weather.humidity}%` : '—'}</div>
-                  <div style={{fontSize:11,color:'#94a3b8'}}>습도</div>
+                  <div style={{fontSize:11,color:'#94a3b8'}}>{t('humidity')}</div>
                 </div>
               </div>
             )}
@@ -4204,7 +4510,7 @@ function App() {
                 {loading && (
                   <div style={{display:'flex',alignItems:'center',gap:8,background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,padding:'10px 14px',marginBottom:14}}>
                     <div style={{width:16,height:16,borderRadius:'50%',border:'2px solid #bae6fd',borderTopColor:'#0ea5e9',animation:'spin .7s linear infinite',flexShrink:0}}/>
-                    <span style={{fontSize:12,color:'#0369a1',fontWeight:600}}>관광 정보를 불러오는 중입니다...</span>
+                    <span style={{fontSize:12,color:'#0369a1',fontWeight:600}}>{t('loadingShort')}</span>
                   </div>
                 )}
 
@@ -4212,11 +4518,11 @@ function App() {
                 {cityData.loadFailed ? (
                   <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:280,gap:16,textAlign:'center'}}>
                     <div style={{fontSize:40}}>🔄</div>
-                    <div style={{fontSize:14,color:'#64748b',lineHeight:1.6}}>관광 정보를 불러오지 못했어요.<br/>다시 시도해볼게요!</div>
+                    <div style={{fontSize:14,color:'#64748b',lineHeight:1.6}}>{t('retryMsg').split('\n').map((l,i)=><span key={i}>{l}{i===0&&<br/>}</span>)}</div>
                     <button
                       onClick={() => { setCityData(null); setLoading(true); fetchCityData(cityData.city || selectedCity) }}
                       style={{background:'#3b82f6',color:'white',border:'none',borderRadius:12,padding:'12px 28px',cursor:'pointer',fontSize:14,fontWeight:700,boxShadow:'0 4px 12px rgba(59,130,246,0.4)'}}>
-                      다시 불러오기
+                      {t('retry')}
                     </button>
                   </div>
                 ) : (
@@ -4227,7 +4533,7 @@ function App() {
                     {cityData.spots?.length > 0 && (
                       <>
                         <div style={{fontSize:10,color:'#94a3b8',letterSpacing:'2.5px',textTransform:'uppercase',marginBottom:12}}>
-                          추천 관광지 · {cityData.spots.length}곳
+                          {t('spots')} · {cityData.spots.length}{t('spotsUnit')}
                         </div>
                         <div style={{display:'flex',flexDirection:'column',gap:11}}>
                           {cityData.spots.map((spot,i)=>(
@@ -4259,7 +4565,7 @@ function App() {
                                 <div style={{position:'absolute',bottom:10,left:12,right:12,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
                                   <div>
                                     <div style={{fontSize:13.5,fontWeight:700,color:'white',textShadow:'0 1px 4px rgba(0,0,0,.6)'}}>{spot.name}</div>
-                                    <div style={{display:'inline-block',fontSize:10,padding:'2px 9px',borderRadius:20,background:TYPE_COLORS[spot.type]||'#64748b',color:'white',marginTop:4,fontWeight:700}}>{spot.type}</div>
+                                    <div style={{display:'inline-block',fontSize:10,padding:'2px 9px',borderRadius:20,background:TYPE_COLORS[spot.type]||'#64748b',color:'white',marginTop:4,fontWeight:700}}>{getSpotType(spot.type)}</div>
                                   </div>
                                   {spot.rating > 0 && (
                                     <a href={`https://www.google.com/maps/search/${encodeURIComponent(spot.wikiTitle || spot.name)}+${encodeURIComponent(selectedCity?.name || '')}`}
@@ -4290,7 +4596,7 @@ function App() {
                                           🎫 {spot.price}
                                         </div>
                                       )}
-                                      <span style={{fontSize:9,color:'#94a3b8',fontStyle:'italic'}}>*참고용</span>
+                                      <span style={{fontSize:9,color:'#94a3b8',fontStyle:'italic'}}>{t('refNote')}</span>
                                     </div>
                                   )}
                                   <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
@@ -4310,7 +4616,7 @@ function App() {
                                       }}
                                     >
                                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#ea4335"/></svg>
-                                      최신 운영시간 · 리뷰 보기
+                                      {t('mapsBtn')}
                                     </a>
                                   {spot.website && (
                                     <a
@@ -4327,7 +4633,7 @@ function App() {
                                         boxShadow:`0 2px 8px ${spot.website?.includes('wikipedia.org') ? '#47556944' : (selectedCity?.color || '#3b82f6') + '44'}`
                                       }}
                                     >
-                                      {spot.website?.includes('wikipedia.org') ? '📖 상세 정보' : '🌐 공식 홈페이지'}
+                                      {spot.website?.includes('wikipedia.org') ? `📖 ${t('wikiDetail')}` : `🌐 ${t('official')}`}
                                     </a>
                                   )}
                                   </div>
@@ -4344,7 +4650,7 @@ function App() {
             ) : (
               <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:320,gap:16}}>
                 <div style={{width:38,height:38,borderRadius:'50%',border:'3px solid #e2e8f0',borderTopColor:(selectedCity?.color||'#3b82f6'),animation:'spin .8s linear infinite'}}/>
-                <div style={{fontSize:13,color:'#94a3b8'}}>관광 정보 불러오는 중...</div>
+                <div style={{fontSize:13,color:'#94a3b8'}}>{t('loading')}</div>
               </div>
             )}
           </div>
