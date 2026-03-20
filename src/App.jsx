@@ -3308,12 +3308,36 @@ function App() {
     // 초기 화면: 대한민국 중심
     setTimeout(() => globe.pointOfView({ lat: 36, lng: 127.8, altitude: 2.2 }), 300)
 
+    // ── 뒷면 라벨 숨기기 (지구 뒤쪽 라벨 안 보이게) ──
+    const hideBackLabels = () => {
+      if (!globeRef.current) return
+      const pov = globeRef.current.pointOfView()
+      const camLat = pov.lat * Math.PI / 180
+      const camLng = pov.lng * Math.PI / 180
+      // 시야각 좁게: 정면 ~45도 이내만 표시
+      const maxAngle = Math.min(0.75, 0.35 + pov.altitude * 0.18)
+
+      const container = globeContainerRef.current
+      if (!container) return
+      container.querySelectorAll('[data-lat]').forEach(el => {
+        const lat = parseFloat(el.dataset.lat) * Math.PI / 180
+        const lng = parseFloat(el.dataset.lng) * Math.PI / 180
+        const angle = Math.acos(Math.max(-1, Math.min(1,
+          Math.sin(camLat) * Math.sin(lat) +
+          Math.cos(camLat) * Math.cos(lat) * Math.cos(lng - camLng)
+        )))
+        el.style.opacity = angle < maxAngle ? '1' : '0'
+        el.style.transition = 'opacity 0.3s'
+      })
+    }
+    const labelInterval = setInterval(hideBackLabels, 100)
+
     const onResize = () => {
       globe.width(window.innerWidth)
       globe.height(window.innerHeight)
     }
     window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+    return () => { window.removeEventListener('resize', onResize); clearInterval(labelInterval) }
   }, [])
 
   // ── 도시 라벨 (지구본 표면에 HTML로 표시) ──────────────────────────
@@ -3328,8 +3352,6 @@ function App() {
     { lat: -30, lng: -15, name: '남대서양', nameEn: 'South Atlantic', _type: 'ocean' },
     // 지리 기준선 라벨
     { lat: 0.8, lng: 50, name: '적도 (Equator)', _type: 'geoline' },
-    { lat: 24.2, lng: 50, name: '북회귀선', _type: 'geoline' },
-    { lat: -24.2, lng: 50, name: '남회귀선', _type: 'geoline' },
     { lat: 10, lng: 178, name: '날짜변경선', _type: 'geoline' },
   ]
 
@@ -3373,6 +3395,8 @@ function App() {
       .htmlAltitude(d => d._type === 'city' ? 0.012 : d._type === 'ocean' ? 0.003 : d._type === 'geoline' ? 0.002 : 0.005)
       .htmlElement(d => {
         const el = document.createElement('div')
+        el.dataset.lat = d.lat
+        el.dataset.lng = d.lng
 
         if (d._type === 'geoline') {
           el.style.cssText = 'pointer-events:none;'
@@ -3456,29 +3480,19 @@ function App() {
       })
   }, [countries, selectedCountry, selectedCity])
 
-  // ── 지리 기준선 (적도, 회귀선, 날짜변경선) ──────────────────────
+  // ── 지리 기준선 (적도, 날짜변경선) ───────────────────────────────
   useEffect(() => {
     if (!globeRef.current) return
     const globe = globeRef.current
     const lines = []
-    const step = 10
+    const step = 5
 
-    // 적도 (latitude 0)
+    // 적도 (latitude 0) - 점선
     for (let lng = -180; lng < 180; lng += step) {
       lines.push({ startLat: 0, startLng: lng, endLat: 0, endLng: lng + step, _line: 'equator' })
     }
-    // 북회귀선 (23.5°N)
-    for (let lng = -180; lng < 180; lng += step) {
-      lines.push({ startLat: 23.44, startLng: lng, endLat: 23.44, endLng: lng + step, _line: 'tropic' })
-    }
-    // 남회귀선 (23.5°S)
-    for (let lng = -180; lng < 180; lng += step) {
-      lines.push({ startLat: -23.44, startLng: lng, endLat: -23.44, endLng: lng + step, _line: 'tropic' })
-    }
-    // 날짜변경선 (대략 경도 180°, 약간 지그재그)
-    const dlPoints = [
-      [65,169],[51,180],[0,180],[-10,180],[-45,180],[-65,180]
-    ]
+    // 날짜변경선 (경도 180°)
+    const dlPoints = [[65,180],[45,180],[20,180],[0,180],[-20,180],[-45,180],[-65,180]]
     for (let i = 0; i < dlPoints.length - 1; i++) {
       lines.push({
         startLat: dlPoints[i][0], startLng: dlPoints[i][1],
@@ -3489,10 +3503,10 @@ function App() {
 
     globe
       .arcsData(lines)
-      .arcColor(d => d._line === 'equator' ? 'rgba(239,68,68,0.35)' : d._line === 'dateline' ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.15)')
-      .arcStroke(d => d._line === 'equator' ? 0.4 : 0.2)
-      .arcDashLength(d => d._line === 'equator' ? 1 : 0.5)
-      .arcDashGap(d => d._line === 'equator' ? 0 : 0.5)
+      .arcColor(d => d._line === 'equator' ? 'rgba(239,68,68,0.7)' : 'rgba(251,191,36,0.6)')
+      .arcStroke(0.4)
+      .arcDashLength(0.15)
+      .arcDashGap(0.15)
       .arcDashAnimateTime(0)
       .arcAltitude(0.001)
   }, [])
