@@ -6,7 +6,7 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
   const [src, setSrc] = useState(null)
 
 
-  // URL 파라미터에서 도시 읽기
+  // URL 파라미터에서 도시 자동 선택
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const cityName = params.get('city')
@@ -14,23 +14,21 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
     const lng = params.get('lng')
     
     if (cityName && lat && lng) {
-      const city = CITY_DATA.find(c => 
-        c.name.toLowerCase() === cityName.toLowerCase()
-      )
-      
+      const city = CITY_DATA.find(c => c.name.toLowerCase() === cityName.toLowerCase())
       if (city) {
-        setSelectedCity(city)
-        if (globeRef.current) {
-          globeRef.current.pointOfView({
-            lat: parseFloat(lat),
-            lng: parseFloat(lng),
-            altitude: 1.5
-          }, 1000)
-        }
+        setTimeout(() => {
+          setSelectedCity(city)
+          if (globeRef.current) {
+            globeRef.current.pointOfView({
+              lat: parseFloat(lat),
+              lng: parseFloat(lng),
+              altitude: 1.5
+            }, 1000)
+          }
+        }, 500)
       }
     }
   }, [])
-
 
   useEffect(() => {
     setSrc(null)
@@ -3733,10 +3731,9 @@ function App() {
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [selectedCity, setSelectedCity] = useState(null)
-    const [activeTab, setActiveTab] = useState('hotspots')
-  const [tabsCollapsed, setTabsCollapsed] = useState(false)
-  const [userLocation, setUserLocation] = useState(null)
-  const [nearestCity, setNearestCity] = useState(null)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [activeTab, setActiveTab] = useState('hotspots')
+  const [tabsCollapsed, setTabsCollapsed] = useState(true)
   const [hotspots, setHotspots] = useState([])
   const [restaurants, setRestaurants] = useState([])
   const [loadingPlaces, setLoadingPlaces] = useState(false)
@@ -4432,155 +4429,36 @@ function App() {
 
   // Google Places API 호출
 
-  // 거리 계산 함수 (Haversine)
-  const calculateDistance = (lat1, lng1, lat2, lng2) => {
-    const R = 6371 // 지구 반지름 (km)
-    const dLat = (lat2 - lat1) * Math.PI / 180
-    const dLng = (lng2 - lng1) * Math.PI / 180
-    
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLng/2) * Math.sin(dLng/2)
-    
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-    return R * c // km
-  }
-
-  // 가장 가까운 도시 찾기
-  const findNearestCity = (userLat, userLng) => {
-    let nearest = null
-    let minDistance = Infinity
-    
-    CITY_DATA.forEach(city => {
-      const distance = calculateDistance(userLat, userLng, city.lat, city.lng)
-      if (distance < minDistance) {
-        minDistance = distance
-        nearest = { ...city, distance }
-      }
-    })
-    
-    if (nearest) {
-      setNearestCity(nearest)
-      setSelectedCity(nearest)
-      
-      // 지구본 이동
-      if (globeRef.current) {
-        globeRef.current.pointOfView({
-          lat: nearest.lat,
-          lng: nearest.lng,
-          altitude: 1.5
-        }, 1000)
-      }
-      
-      console.log(`가장 가까운 도시: ${nearest.name} (${minDistance.toFixed(1)}km)`)
-    }
-  }
-
-  // GPS 위치 가져오기
-  const getUserLocation = () => {
-    if (!navigator.geolocation) {
-      alert('GPS를 지원하지 않는 브라우저입니다')
-      return
-    }
-    
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const userLat = position.coords.latitude
-        const userLng = position.coords.longitude
-        
-        setUserLocation({ lat: userLat, lng: userLng })
-        findNearestCity(userLat, userLng)
-      },
-      (error) => {
-        console.error('위치 가져오기 실패:', error)
-        alert('위치 정보를 가져올 수 없습니다. 위치 권한을 확인해주세요.')
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    )
-  }
-
-  // 링크 공유 함수
+  // 공유 함수
   const shareCity = (city) => {
-    const shareUrl = `${window.location.origin}${window.location.pathname}?city=${encodeURIComponent(city.name)}&lat=${city.lat}&lng=${city.lng}`
-    return shareUrl
+    return `${window.location.origin}${window.location.pathname}?city=${encodeURIComponent(city.name)}&lat=${city.lat}&lng=${city.lng}`
   }
-
+  
   const copyLink = (city) => {
-    const url = shareCity(city)
-    navigator.clipboard.writeText(url).then(() => {
+    navigator.clipboard.writeText(shareCity(city)).then(() => {
       alert('✅ 링크가 복사되었습니다!')
-    }).catch(() => {
-      alert('링크 복사에 실패했습니다')
     })
   }
-
-  const shareNative = async (city) => {
-    const shareUrl = shareCity(city)
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `ATLAS - ${city.name}`,
-          text: `${city.name}의 핫플레이스와 맛집을 확인해보세요!`,
-          url: shareUrl
-        })
-      } catch (error) {
-        if (error.name !== 'AbortError') {
-          copyLink(city)
-        }
-      }
-    } else {
-      copyLink(city)
-    }
-  }
-
-  // SNS 공유 함수들
+  
   const shareToKakao = (city) => {
-    const shareUrl = shareCity(city)
-    const message = `🌍 ATLAS - ${city.name}
-${city.name}의 핫플레이스와 맛집을 확인해보세요!
-${shareUrl}`
-    
-    // 카카오톡 설치 확인
-    if (/kakaotalk/i.test(navigator.userAgent)) {
-      window.location.href = `kakaotalk://send?text=${encodeURIComponent(message)}`
-    } else {
-      // 카카오톡이 없으면 링크 복사
-      copyLink(city)
-    }
+    const url = shareCity(city)
+    window.open(`https://story.kakao.com/share?url=${encodeURIComponent(url)}`, '_blank')
   }
-
-  const shareToLine = (city) => {
-    const shareUrl = shareCity(city)
-    const message = `🌍 ATLAS - ${city.name}
-${shareUrl}`
-    window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(message)}`, '_blank')
-  }
-
+  
   const shareToInstagram = (city) => {
-    // 인스타그램은 직접 공유 불가, 링크 복사
     copyLink(city)
-    alert('인스타그램 스토리에 링크를 붙여넣어주세요!')
+    alert('📷 링크가 복사되었습니다! 인스타그램에 붙여넣으세요')
   }
-
+  
+  const shareToLine = (city) => {
+    const url = shareCity(city)
+    window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`, '_blank')
+  }
+  
   const shareToFacebook = (city) => {
-    const shareUrl = shareCity(city)
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank', 'width=600,height=400')
+    const url = shareCity(city)
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank')
   }
-
-  const shareToTwitter = (city) => {
-    const shareUrl = shareCity(city)
-    const text = `🌍 ATLAS에서 ${city.name} 탐험하기!`
-    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`, '_blank', 'width=600,height=400')
-  }
-
-
-
 
   const fetchPlacesData = async (city) => {
     if (!city?.lat || !city?.lng) return
@@ -4851,59 +4729,6 @@ ${shareUrl}`
         const cities = COUNTRY_CITIES[cName]
         return (
           <>
-            {/* GPS 버튼 */}
-            <button
-              onClick={getUserLocation}
-              style={{
-                position:'absolute',
-                top:80,
-                left:24,
-                zIndex:1002,
-                background:'rgba(255,255,255,0.95)',
-                border:'1.5px solid #e2e8f0',
-                borderRadius:12,
-                padding:'10px 16px',
-                cursor:'pointer',
-                display:'flex',
-                alignItems:'center',
-                gap:8,
-                fontSize:13,
-                fontWeight:600,
-                color:'#3b82f6',
-                boxShadow:'0 4px 12px rgba(0,0,0,0.1)',
-                transition:'all .2s'
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = '#3b82f6'
-                e.currentTarget.style.color = 'white'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.95)'
-                e.currentTarget.style.color = '#3b82f6'
-              }}
-            >
-              📍 내 위치
-            </button>
-
-            {/* 가까운 도시 알림 */}
-            {nearestCity && (
-              <div style={{
-                position:'absolute',
-                top:140,
-                left:24,
-                zIndex:1002,
-                background:'#10b981',
-                color:'white',
-                padding:'12px 16px',
-                borderRadius:12,
-                fontSize:13,
-                fontWeight:600,
-                boxShadow:'0 4px 12px rgba(16,185,129,0.3)'
-              }}>
-                가장 가까운 도시: {nearestCity.name} ({nearestCity.distance?.toFixed(1)}km)
-              </div>
-            )}
-
             {/* Bottom bar */}
             <div style={{
               position:'absolute',bottom:24,
@@ -5063,123 +4888,41 @@ ${shareUrl}`
                       {trDesc(selectedCity?._koName||selectedCity?.name) || cityData.description}
                     </p>
 
-
                     {/* 공유 버튼 */}
-                    <div style={{
-                      marginTop:16,
-                      marginBottom:16
-                    }}>
-                      <div style={{fontSize:12,fontWeight:700,color:'#64748b',marginBottom:10}}>
+                    <div style={{display:'flex',gap:8,marginTop:16,marginBottom:16}}>
+                      <button
+                        onClick={() => copyLink(selectedCity)}
+                        style={{
+                          flex:1,
+                          padding:'12px',
+                          background:'#3b82f6',
+                          border:'none',
+                          borderRadius:10,
+                          color:'white',
+                          fontSize:14,
+                          fontWeight:600,
+                          cursor:'pointer'
+                        }}
+                      >
+                        🔗 링크 복사
+                      </button>
+                      
+                      <button
+                        onClick={() => setShowShareModal(true)}
+                        style={{
+                          flex:1,
+                          padding:'12px',
+                          background:'#10b981',
+                          border:'none',
+                          borderRadius:10,
+                          color:'white',
+                          fontSize:14,
+                          fontWeight:600,
+                          cursor:'pointer'
+                        }}
+                      >
                         📤 공유하기
-                      </div>
-                      
-                      {/* 첫 번째 줄: 카톡, 라인, 인스타 */}
-                      <div style={{display:'flex',gap:6,marginBottom:6}}>
-                        <button
-                          onClick={() => shareToKakao(selectedCity)}
-                          style={{
-                            flex:1,
-                            padding:'10px',
-                            background:'#FEE500',
-                            border:'none',
-                            borderRadius:8,
-                            fontSize:12,
-                            fontWeight:600,
-                            color:'#3C1E1E',
-                            cursor:'pointer'
-                          }}
-                        >
-                          💬 카톡
-                        </button>
-                        
-                        <button
-                          onClick={() => shareToLine(selectedCity)}
-                          style={{
-                            flex:1,
-                            padding:'10px',
-                            background:'#00B900',
-                            border:'none',
-                            borderRadius:8,
-                            fontSize:12,
-                            fontWeight:600,
-                            color:'white',
-                            cursor:'pointer'
-                          }}
-                        >
-                          📱 라인
-                        </button>
-                        
-                        <button
-                          onClick={() => shareToInstagram(selectedCity)}
-                          style={{
-                            flex:1,
-                            padding:'10px',
-                            background:'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
-                            border:'none',
-                            borderRadius:8,
-                            fontSize:12,
-                            fontWeight:600,
-                            color:'white',
-                            cursor:'pointer'
-                          }}
-                        >
-                          📷 인스타
-                        </button>
-                      </div>
-                      
-                      {/* 두 번째 줄: 페북, 트위터, 링크복사 */}
-                      <div style={{display:'flex',gap:6}}>
-                        <button
-                          onClick={() => shareToFacebook(selectedCity)}
-                          style={{
-                            flex:1,
-                            padding:'10px',
-                            background:'#1877F2',
-                            border:'none',
-                            borderRadius:8,
-                            fontSize:12,
-                            fontWeight:600,
-                            color:'white',
-                            cursor:'pointer'
-                          }}
-                        >
-                          📘 페북
-                        </button>
-                        
-                        <button
-                          onClick={() => shareToTwitter(selectedCity)}
-                          style={{
-                            flex:1,
-                            padding:'10px',
-                            background:'#1DA1F2',
-                            border:'none',
-                            borderRadius:8,
-                            fontSize:12,
-                            fontWeight:600,
-                            color:'white',
-                            cursor:'pointer'
-                          }}
-                        >
-                          🐦 X
-                        </button>
-                        
-                        <button
-                          onClick={() => copyLink(selectedCity)}
-                          style={{
-                            flex:1,
-                            padding:'10px',
-                            background:'#64748b',
-                            border:'none',
-                            borderRadius:8,
-                            fontSize:12,
-                            fontWeight:600,
-                            color:'white',
-                            cursor:'pointer'
-                          }}
-                        >
-                          🔗 복사
-                        </button>
-                      </div>
+                      </button>
                     </div>
 
                     {/* 핫플레이스 / 맛집 섹션 */}
@@ -5594,6 +5337,116 @@ ${shareUrl}`
     </div>
   )
 }
+
+      {/* 공유 모달 */}
+      {showShareModal && selectedCity && (
+        <>
+          <div
+            onClick={() => setShowShareModal(false)}
+            style={{
+              position:'fixed',
+              inset:0,
+              background:'rgba(0,0,0,0.5)',
+              zIndex:2000,
+              backdropFilter:'blur(4px)'
+            }}
+          />
+          <div style={{
+            position:'fixed',
+            top:'50%',
+            left:'50%',
+            transform:'translate(-50%, -50%)',
+            zIndex:2001,
+            background:'white',
+            borderRadius:20,
+            padding:24,
+            boxShadow:'0 20px 60px rgba(0,0,0,0.3)',
+            minWidth:320
+          }}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+              <div style={{fontSize:18,fontWeight:700}}>공유하기</div>
+              <button
+                onClick={() => setShowShareModal(false)}
+                style={{
+                  background:'none',
+                  border:'none',
+                  fontSize:24,
+                  cursor:'pointer',
+                  color:'#64748b'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:12}}>
+              <button
+                onClick={() => { shareToKakao(selectedCity); setShowShareModal(false) }}
+                style={{
+                  padding:'16px',
+                  background:'#FEE500',
+                  border:'none',
+                  borderRadius:12,
+                  fontSize:14,
+                  fontWeight:600,
+                  cursor:'pointer'
+                }}
+              >
+                💬 카카오톡
+              </button>
+              
+              <button
+                onClick={() => { shareToInstagram(selectedCity); setShowShareModal(false) }}
+                style={{
+                  padding:'16px',
+                  background:'#E4405F',
+                  color:'white',
+                  border:'none',
+                  borderRadius:12,
+                  fontSize:14,
+                  fontWeight:600,
+                  cursor:'pointer'
+                }}
+              >
+                📷 인스타그램
+              </button>
+              
+              <button
+                onClick={() => { shareToLine(selectedCity); setShowShareModal(false) }}
+                style={{
+                  padding:'16px',
+                  background:'#00B900',
+                  color:'white',
+                  border:'none',
+                  borderRadius:12,
+                  fontSize:14,
+                  fontWeight:600,
+                  cursor:'pointer'
+                }}
+              >
+                📱 라인
+              </button>
+              
+              <button
+                onClick={() => { shareToFacebook(selectedCity); setShowShareModal(false) }}
+                style={{
+                  padding:'16px',
+                  background:'#1877F2',
+                  color:'white',
+                  border:'none',
+                  borderRadius:12,
+                  fontSize:14,
+                  fontWeight:600,
+                  cursor:'pointer'
+                }}
+              >
+                📘 페이스북
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
 
 export default function AppWithBoundary() {
   return <ErrorBoundary><App /></ErrorBoundary>
