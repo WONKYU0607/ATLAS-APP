@@ -3708,7 +3708,6 @@ function App() {
   const [selectedCity, setSelectedCity] = useState(null)
   const [activeTab, setActiveTab] = useState('hotspots')
   const [tabsCollapsed, setTabsCollapsed] = useState(true)
-
   const [hotspots, setHotspots] = useState([])
   const [restaurants, setRestaurants] = useState([])
   const [loadingPlaces, setLoadingPlaces] = useState(false)
@@ -4432,12 +4431,7 @@ function App() {
       if (restaurantData.results) {
         const topRestaurants = restaurantData.results
           .filter(p => p.rating && p.rating >= 4.0)
-          .sort((a, b) => {
-          // 평점 4.0 이상 & 리뷰 많은 순
-          const scoreA = (a.rating || 0) * Math.log(a.user_ratings_total || 1)
-          const scoreB = (b.rating || 0) * Math.log(b.user_ratings_total || 1)
-          return scoreB - scoreA
-        })
+          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
           .slice(0, 8)
         setRestaurants(topRestaurants)
       }
@@ -4836,9 +4830,9 @@ function App() {
                       {trDesc(selectedCity?._koName||selectedCity?.name) || cityData.description}
                     </p>
 
-                    {/* 핫플레이스 / 맛집 탭 */}
+                    {/* 핫플레이스 / 맛집 섹션 */}
                     <div style={{marginTop:20,marginBottom:20}}>
-                      {/* 헤더 - 클릭하면 접기/펼치기 */}
+                      {/* 헤더 - 클릭으로 접기/펼치기 */}
                       <div 
                         onClick={() => setTabsCollapsed(!tabsCollapsed)}
                         style={{
@@ -4869,9 +4863,10 @@ function App() {
                         </span>
                       </div>
 
-                      {/* 탭 버튼 - 펼쳤을 때만 표시 */}
                       {!tabsCollapsed && (
-                        <div style={{display:'flex',gap:8,marginBottom:14}}>
+                        <>
+                          {/* 탭 버튼 */}
+                          <div style={{display:'flex',gap:8,marginBottom:14}}>
                         <button
                           onClick={() => setActiveTab('hotspots')}
                           style={{
@@ -4931,10 +4926,9 @@ function App() {
                           🍽️ 맛집
                         </button>
                       </div>
-                      )}
 
                       {/* 핫플레이스 리스트 */}
-                      {activeTab === 'hotspots' && !tabsCollapsed && (
+                      {activeTab === 'hotspots' && (
                         <div>
                           {loadingPlaces ? (
                             <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:40}}>
@@ -4943,13 +4937,12 @@ function App() {
                           ) : hotspots.length > 0 ? (
                             <div style={{display:'flex',flexDirection:'column',gap:10}}>
                               {hotspots.map((place, idx) => (
-                                <a 
-                                key={idx}
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id || ''}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                  textDecoration: 'none',
+                                <a key={idx}
+                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id || ''}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    textDecoration:'none',
                                   background:'white',
                                   border:'1.5px solid #e2e8f0',
                                   borderRadius:12,
@@ -5001,7 +4994,7 @@ function App() {
                                       )}
                                     </div>
                                   </div>
-                                </div>
+                                </a>
                               ))}
                             </div>
                           ) : (
@@ -5013,7 +5006,7 @@ function App() {
                       )}
 
                       {/* 맛집 리스트 */}
-                      {activeTab === 'restaurants' && !tabsCollapsed && (
+                      {activeTab === 'restaurants' && (
                         <div>
                           {loadingPlaces ? (
                             <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:40}}>
@@ -5022,13 +5015,12 @@ function App() {
                           ) : restaurants.length > 0 ? (
                             <div style={{display:'flex',flexDirection:'column',gap:10}}>
                               {restaurants.map((place, idx) => (
-                                <a
-                                key={idx}
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id || ''}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                  textDecoration: 'none',
+                                <a key={idx}
+                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id || ''}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    textDecoration:'none',
                                   background:'white',
                                   border:'1.5px solid #e2e8f0',
                                   borderRadius:12,
@@ -5085,7 +5077,7 @@ function App() {
                                       )}
                                     </div>
                                   </div>
-                                </div>
+                                </a>
                               ))}
                             </div>
                           ) : (
@@ -5096,9 +5088,11 @@ function App() {
                         </div>
                       )}
 
+                        </>
+                      )}
+
                       {/* API 사용량 표시 */}
                       <div style={{
-                      {!tabsCollapsed && (<div style={{
                         fontSize:10,
                         color: dailyUsage.count >= 250 ? '#ef4444' : dailyUsage.count >= 150 ? '#f59e0b' : '#64748b',
                         marginTop:12,
