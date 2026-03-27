@@ -4931,6 +4931,7 @@ function App() {
                           🍽️ 맛집
                         </button>
                       </div>
+                      )}
 
                       {/* 핫플레이스 리스트 */}
                       {activeTab === 'hotspots' && !tabsCollapsed && (
