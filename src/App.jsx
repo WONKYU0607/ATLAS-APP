@@ -3706,6 +3706,52 @@ function App() {
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [selectedCity, setSelectedCity] = useState(null)
+  const [activeTab, setActiveTab] = useState('hotspots')
+  const [hotspots, setHotspots] = useState([])
+  const [restaurants, setRestaurants] = useState([])
+  const [loadingPlaces, setLoadingPlaces] = useState(false)
+
+  // API 사용량 추적 및 제한
+  const MAX_DAILY_CALLS = 300
+  const [dailyUsage, setDailyUsage] = useState({ count: 0, date: '' })
+  
+  const getApiUsage = () => {
+    try {
+      const stored = localStorage.getItem('api_daily_usage')
+      if (!stored) return { count: 0, date: new Date().toDateString() }
+      
+      const { count, date } = JSON.parse(stored)
+      const today = new Date().toDateString()
+      
+      // 날짜가 다르면 리셋
+      if (date !== today) {
+        return { count: 0, date: today }
+      }
+      
+      return { count, date }
+    } catch {
+      return { count: 0, date: new Date().toDateString() }
+    }
+  }
+  
+  const incrementApiUsage = (calls = 2) => {
+    const usage = getApiUsage()
+    const newUsage = {
+      count: usage.count + calls,
+      date: usage.date
+    }
+    localStorage.setItem('api_daily_usage', JSON.stringify(newUsage))
+    setDailyUsage(newUsage)
+    return newUsage
+  }
+  
+  const checkApiLimit = () => {
+    const usage = getApiUsage()
+    setDailyUsage(usage)
+    return usage.count < MAX_DAILY_CALLS
+  }
+
+
   const [cityData, setCityData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [selectedSpot, setSelectedSpot] = useState(null)
@@ -3877,6 +3923,28 @@ function App() {
 
     globe.htmlElementsData([...countryLabels, ...cities, ...OCEAN_LABELS])
   }, [selectedCountry, selectedCity, countries, lang])
+
+
+
+  // API 사용량 초기화
+  useEffect(() => {
+    const usage = getApiUsage()
+    setDailyUsage(usage)
+    console.log(`📊 오늘 API 사용량: ${usage.count}/300건`)
+  }, [])
+
+  // selectedCity 변경 시 핫플레이스/맛집 데이터 로드
+  useEffect(() => {
+    if (selectedCity) {
+      fetchPlacesData(selectedCity)
+    } else {
+      setHotspots([])
+      setRestaurants([])
+      setActiveTab('hotspots')
+    }
+  }, [selectedCity])
+
+
 
   // HTML 요소 렌더링
   useEffect(() => {
@@ -4294,6 +4362,97 @@ function App() {
   handleCityClickRef.current = handleCityClick
 
   // ── 도시 관광 데이터 로드 (사전 데이터 기반, AI 불필요) ──────────────────
+
+
+  // 캐시 관리 함수들
+  const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24시간
+  
+  const getCachedData = (key) => {
+    try {
+      const cached = localStorage.getItem(key)
+      if (!cached) return null
+      
+      const { data, timestamp } = JSON.parse(cached)
+      
+      // 24시간 이내면 캐시 사용
+      if (Date.now() - timestamp < CACHE_DURATION) {
+        return data
+      }
+      
+      // 만료된 캐시 삭제
+      localStorage.removeItem(key)
+      return null
+    } catch {
+      return null
+    }
+  }
+  
+  const setCachedData = (key, data) => {
+    try {
+      localStorage.setItem(key, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }))
+    } catch (error) {
+      console.warn('Cache storage failed:', error)
+    }
+  }
+
+
+
+  // Google Places API 호출
+  const fetchPlacesData = async (city) => {
+    if (!city?.lat || !city?.lng) return
+    
+    setLoadingPlaces(true)
+    const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || 'YOUR_API_KEY_HERE'
+    
+    try {
+      // 핫플레이스 (관광명소, 박물관, 공원 등)
+      const hotspotRes = await fetch(
+        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?` +
+        `location=${city.lat},${city.lng}&` +
+        `radius=3000&` +
+        `type=tourist_attraction|museum|park|point_of_interest&` +
+        `key=${GOOGLE_API_KEY}` +
+        `&language=ko`
+      )
+      const hotspotData = await hotspotRes.json()
+      
+      if (hotspotData.results) {
+        const topHotspots = hotspotData.results
+          .filter(p => p.rating && p.rating >= 4.0)
+          .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+          .slice(0, 8)
+        setHotspots(topHotspots)
+      }
+      
+      // 맛집 (레스토랑, 카페)
+      const restaurantRes = await fetch(
+        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?` +
+        `location=${city.lat},${city.lng}&` +
+        `radius=3000&` +
+        `type=restaurant|cafe&` +
+        `key=${GOOGLE_API_KEY}` +
+        `&language=ko`
+      )
+      const restaurantData = await restaurantRes.json()
+      
+      if (restaurantData.results) {
+        const topRestaurants = restaurantData.results
+          .filter(p => p.rating && p.rating >= 4.0)
+          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+          .slice(0, 8)
+        setRestaurants(topRestaurants)
+      }
+      
+    } catch (error) {
+      console.error('Failed to fetch places:', error)
+    } finally {
+      setLoadingPlaces(false)
+    }
+  }
+
   const fetchCityData = async (city) => {
     try {
       // 1. 사전 데이터 (240개 도시 전체 포함)
