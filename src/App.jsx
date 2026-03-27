@@ -4668,7 +4668,7 @@ function App() {
   const countryKo = selectedCountry ? getCountryName(selectedCountry.properties.NAME) : ''
 
   return (
-
+    <div style={{width:'100%',height:'100vh',position:'relative'}}>
         {/* 공유 모달 - 화면 중앙 */}
         {showShareModal && selectedCity && (
           <>
