@@ -3734,7 +3734,7 @@ function App() {
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [selectedCity, setSelectedCity] = useState(null)
     const [activeTab, setActiveTab] = useState('hotspots')
-  const [tabsCollapsed, setTabsCollapsed] = useState(true)
+  const [tabsCollapsed, setTabsCollapsed] = useState(false)
   const [userLocation, setUserLocation] = useState(null)
   const [nearestCity, setNearestCity] = useState(null)
   const [hotspots, setHotspots] = useState([])
@@ -4539,6 +4539,47 @@ function App() {
     }
   }
 
+  // SNS 공유 함수들
+  const shareToKakao = (city) => {
+    const shareUrl = shareCity(city)
+    const message = `🌍 ATLAS - ${city.name}
+${city.name}의 핫플레이스와 맛집을 확인해보세요!
+${shareUrl}`
+    
+    // 카카오톡 설치 확인
+    if (/kakaotalk/i.test(navigator.userAgent)) {
+      window.location.href = `kakaotalk://send?text=${encodeURIComponent(message)}`
+    } else {
+      // 카카오톡이 없으면 링크 복사
+      copyLink(city)
+    }
+  }
+
+  const shareToLine = (city) => {
+    const shareUrl = shareCity(city)
+    const message = `🌍 ATLAS - ${city.name}
+${shareUrl}`
+    window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(message)}`, '_blank')
+  }
+
+  const shareToInstagram = (city) => {
+    // 인스타그램은 직접 공유 불가, 링크 복사
+    copyLink(city)
+    alert('인스타그램 스토리에 링크를 붙여넣어주세요!')
+  }
+
+  const shareToFacebook = (city) => {
+    const shareUrl = shareCity(city)
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank', 'width=600,height=400')
+  }
+
+  const shareToTwitter = (city) => {
+    const shareUrl = shareCity(city)
+    const text = `🌍 ATLAS에서 ${city.name} 탐험하기!`
+    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`, '_blank', 'width=600,height=400')
+  }
+
+
 
 
   const fetchPlacesData = async (city) => {
@@ -4815,8 +4856,8 @@ function App() {
               onClick={getUserLocation}
               style={{
                 position:'absolute',
-                top:24,
-                right:24,
+                top:80,
+                left:24,
                 zIndex:1002,
                 background:'rgba(255,255,255,0.95)',
                 border:'1.5px solid #e2e8f0',
@@ -4848,8 +4889,8 @@ function App() {
             {nearestCity && (
               <div style={{
                 position:'absolute',
-                top:80,
-                right:24,
+                top:140,
+                left:24,
                 zIndex:1002,
                 background:'#10b981',
                 color:'white',
@@ -5022,72 +5063,123 @@ function App() {
                       {trDesc(selectedCity?._koName||selectedCity?.name) || cityData.description}
                     </p>
 
+
                     {/* 공유 버튼 */}
                     <div style={{
-                      display:'flex',
-                      gap:8,
                       marginTop:16,
                       marginBottom:16
                     }}>
-                      <button
-                        onClick={() => copyLink(selectedCity)}
-                        style={{
-                          flex:1,
-                          padding:'10px 14px',
-                          background:'#f8fafc',
-                          border:'1.5px solid #e2e8f0',
-                          borderRadius:10,
-                          fontSize:13,
-                          fontWeight:600,
-                          color:'#64748b',
-                          cursor:'pointer',
-                          display:'flex',
-                          alignItems:'center',
-                          justifyContent:'center',
-                          gap:6,
-                          transition:'all .2s'
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.background = '#3b82f6'
-                          e.currentTarget.style.color = 'white'
-                          e.currentTarget.style.borderColor = '#3b82f6'
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.background = '#f8fafc'
-                          e.currentTarget.style.color = '#64748b'
-                          e.currentTarget.style.borderColor = '#e2e8f0'
-                        }}
-                      >
-                        🔗 링크 복사
-                      </button>
-                      
-                      <button
-                        onClick={() => shareNative(selectedCity)}
-                        style={{
-                          flex:1,
-                          padding:'10px 14px',
-                          background:'#3b82f6',
-                          border:'none',
-                          borderRadius:10,
-                          fontSize:13,
-                          fontWeight:600,
-                          color:'white',
-                          cursor:'pointer',
-                          display:'flex',
-                          alignItems:'center',
-                          justifyContent:'center',
-                          gap:6,
-                          transition:'all .2s'
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.background = '#2563eb'
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.background = '#3b82f6'
-                        }}
-                      >
+                      <div style={{fontSize:12,fontWeight:700,color:'#64748b',marginBottom:10}}>
                         📤 공유하기
-                      </button>
+                      </div>
+                      
+                      {/* 첫 번째 줄: 카톡, 라인, 인스타 */}
+                      <div style={{display:'flex',gap:6,marginBottom:6}}>
+                        <button
+                          onClick={() => shareToKakao(selectedCity)}
+                          style={{
+                            flex:1,
+                            padding:'10px',
+                            background:'#FEE500',
+                            border:'none',
+                            borderRadius:8,
+                            fontSize:12,
+                            fontWeight:600,
+                            color:'#3C1E1E',
+                            cursor:'pointer'
+                          }}
+                        >
+                          💬 카톡
+                        </button>
+                        
+                        <button
+                          onClick={() => shareToLine(selectedCity)}
+                          style={{
+                            flex:1,
+                            padding:'10px',
+                            background:'#00B900',
+                            border:'none',
+                            borderRadius:8,
+                            fontSize:12,
+                            fontWeight:600,
+                            color:'white',
+                            cursor:'pointer'
+                          }}
+                        >
+                          📱 라인
+                        </button>
+                        
+                        <button
+                          onClick={() => shareToInstagram(selectedCity)}
+                          style={{
+                            flex:1,
+                            padding:'10px',
+                            background:'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+                            border:'none',
+                            borderRadius:8,
+                            fontSize:12,
+                            fontWeight:600,
+                            color:'white',
+                            cursor:'pointer'
+                          }}
+                        >
+                          📷 인스타
+                        </button>
+                      </div>
+                      
+                      {/* 두 번째 줄: 페북, 트위터, 링크복사 */}
+                      <div style={{display:'flex',gap:6}}>
+                        <button
+                          onClick={() => shareToFacebook(selectedCity)}
+                          style={{
+                            flex:1,
+                            padding:'10px',
+                            background:'#1877F2',
+                            border:'none',
+                            borderRadius:8,
+                            fontSize:12,
+                            fontWeight:600,
+                            color:'white',
+                            cursor:'pointer'
+                          }}
+                        >
+                          📘 페북
+                        </button>
+                        
+                        <button
+                          onClick={() => shareToTwitter(selectedCity)}
+                          style={{
+                            flex:1,
+                            padding:'10px',
+                            background:'#1DA1F2',
+                            border:'none',
+                            borderRadius:8,
+                            fontSize:12,
+                            fontWeight:600,
+                            color:'white',
+                            cursor:'pointer'
+                          }}
+                        >
+                          🐦 X
+                        </button>
+                        
+                        <button
+                          onClick={() => copyLink(selectedCity)}
+                          style={{
+                            flex:1,
+                            padding:'10px',
+                            background:'#64748b',
+                            border:'none',
+                            borderRadius:8,
+                            fontSize:12,
+                            fontWeight:600,
+                            color:'white',
+                            cursor:'pointer'
+                          }}
+                        >
+                          🔗 복사
+                        </button>
+                      </div>
                     </div>
 
                     {/* 핫플레이스 / 맛집 섹션 */}
