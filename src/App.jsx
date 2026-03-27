@@ -9,18 +9,6 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
   // URL 파라미터에서 도시 읽기
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const cityName = params.get('city'), lat = params.get('lat'), lng = params.get('lng')
-    if (cityName && lat && lng) {
-      const city = CITY_DATA.find(c => c.name.toLowerCase() === cityName.toLowerCase())
-      if (city) setTimeout(() => {
-        setSelectedCity(city)
-        if (globeRef.current) globeRef.current.pointOfView({lat: parseFloat(lat), lng: parseFloat(lng), altitude: 1.5}, 1000)
-      }, 500)
-    }
-  }, [])
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
     const cityName = params.get('city')
     const lat = params.get('lat')
     const lng = params.get('lng')
@@ -3745,7 +3733,6 @@ function App() {
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [selectedCity, setSelectedCity] = useState(null)
-  const [showShareModal, setShowShareModal] = useState(false)
     const [activeTab, setActiveTab] = useState('hotspots')
   const [tabsCollapsed, setTabsCollapsed] = useState(true)
   const [userLocation, setUserLocation] = useState(null)
@@ -4554,14 +4541,6 @@ function App() {
 
 
 
-
-  const shareCity = (city) => `${window.location.origin}${window.location.pathname}?city=${encodeURIComponent(city.name)}&lat=${city.lat}&lng=${city.lng}`
-  const copyLink = (city) => { navigator.clipboard.writeText(shareCity(city)); alert('✅ 링크 복사 완료!') }
-  const shareToKakao = (city) => window.open(`https://story.kakao.com/share?url=${encodeURIComponent(shareCity(city))}`, '_blank')
-  const shareToInstagram = (city) => { copyLink(city); alert('📷 인스타그램에 붙여넣으세요!') }
-  const shareToLine = (city) => window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareCity(city))}`, '_blank')
-  const shareToFacebook = (city) => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareCity(city))}`, '_blank')
-
   const fetchPlacesData = async (city) => {
     if (!city?.lat || !city?.lng) return
     
@@ -5042,10 +5021,6 @@ function App() {
                     <p style={{fontSize:13.5,color:'#475569',lineHeight:1.8,margin:'0 0 20px',borderLeft:`3px solid ${selectedCity?.color||'#3b82f6'}`,paddingLeft:14}}>
                       {trDesc(selectedCity?._koName||selectedCity?.name) || cityData.description}
                     </p>
-                    <div style={{display:'flex',gap:8,marginTop:16,marginBottom:16}}>
-                      <button onClick={() => copyLink(selectedCity)} style={{flex:1,padding:'12px',background:'#3b82f6',border:'none',borderRadius:10,color:'white',fontSize:14,fontWeight:600,cursor:'pointer'}}>🔗 링크 복사</button>
-                      <button onClick={() => setShowShareModal(true)} style={{flex:1,padding:'12px',background:'#10b981',border:'none',borderRadius:10,color:'white',fontSize:14,fontWeight:600,cursor:'pointer'}}>📤 공유하기</button>
-                    </div>
 
                     {/* 공유 버튼 */}
                     <div style={{
@@ -5527,8 +5502,6 @@ function App() {
     </div>
   )
 }
-      {showShareModal && selectedCity && (<><div onClick={() => setShowShareModal(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',zIndex:2000,backdropFilter:'blur(4px)'}} /><div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%, -50%)',zIndex:2001,background:'white',borderRadius:20,padding:24,boxShadow:'0 20px 60px rgba(0,0,0,0.3)',minWidth:320}}><div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}><div style={{fontSize:18,fontWeight:700}}>공유하기</div><button onClick={() => setShowShareModal(false)} style={{background:'none',border:'none',fontSize:24,cursor:'pointer',color:'#64748b'}}>✕</button></div><div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:12}}><button onClick={() => { shareToKakao(selectedCity); setShowShareModal(false) }} style={{padding:'16px',background:'#FEE500',border:'none',borderRadius:12,fontSize:14,fontWeight:600,cursor:'pointer'}}>💬 카카오톡</button><button onClick={() => { shareToInstagram(selectedCity); setShowShareModal(false) }} style={{padding:'16px',background:'#E4405F',color:'white',border:'none',borderRadius:12,fontSize:14,fontWeight:600,cursor:'pointer'}}>📷 인스타그램</button><button onClick={() => { shareToLine(selectedCity); setShowShareModal(false) }} style={{padding:'16px',background:'#00B900',color:'white',border:'none',borderRadius:12,fontSize:14,fontWeight:600,cursor:'pointer'}}>📱 라인</button><button onClick={() => { shareToFacebook(selectedCity); setShowShareModal(false) }} style={{padding:'16px',background:'#1877F2',color:'white',border:'none',borderRadius:12,fontSize:14,fontWeight:600,cursor:'pointer'}}>📘 페이스북</button></div></div></>)}
-
 
 export default function AppWithBoundary() {
   return <ErrorBoundary><App /></ErrorBoundary>
