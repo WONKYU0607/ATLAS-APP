@@ -6,7 +6,7 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
   const [src, setSrc] = useState(null)
 
 
-  // URL 파라미터에서 도시 읽기
+  // URL 파라미터에서 도시 자동 선택
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const cityName = params.get('city')
@@ -18,19 +18,18 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
         c.name.toLowerCase() === cityName.toLowerCase()
       )
       
-      if (city) {
-        setSelectedCity(city)
-        if (globeRef.current) {
+      if (city && globeRef.current) {
+        setTimeout(() => {
+          setSelectedCity(city)
           globeRef.current.pointOfView({
             lat: parseFloat(lat),
             lng: parseFloat(lng),
             altitude: 1.5
           }, 1000)
-        }
+        }, 500)
       }
     }
   }, [])
-
 
   useEffect(() => {
     setSrc(null)
@@ -3732,11 +3731,101 @@ function App() {
   const handleCityClickRef = useRef(null)  // ref to always-fresh click handler
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState(null)
-  const [selectedCity, setSelectedCity] = useState(null)
-    const [activeTab, setActiveTab] = useState('hotspots')
-  const [tabsCollapsed, setTabsCollapsed] = useState(false)
+
+  // 공유 함수
+  const [showShareMenu, setShowShareMenu] = useState(false)
+  const [showPlacesPanel, setShowPlacesPanel] = useState(null) // null, "hotspots", "restaurants"
+  
+  const shareCity = (city) => {
+    const shareUrl = `${window.location.origin}${window.location.pathname}?city=${encodeURIComponent(city.name)}&lat=${city.lat}&lng=${city.lng}`
+    return shareUrl
+  }
+
+  const copyLink = (city) => {
+    const url = shareCity(city)
+    navigator.clipboard.writeText(url).then(() => {
+      alert('✅ 링크가 복사되었습니다!')
+    })
+  }
+
+  const shareToKakao = (city) => {
+    const shareUrl = shareCity(city)
+    window.open(`https://story.kakao.com/share?url=${encodeURIComponent(shareUrl)}`, '_blank')
+  }
+
+  const shareToInstagram = (city) => {
+    copyLink(city)
+    alert('📷 링크가 복사되었습니다. 인스타그램에 붙여넣어주세요!')
+  }
+
+  const shareToLine = (city) => {
+    const shareUrl = shareCity(city)
+    window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}`, '_blank')
+  }
+
+  const shareToFacebook = (city) => {
+    const shareUrl = shareCity(city)
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank')
+  }
+
+
+  // GPS 위치
   const [userLocation, setUserLocation] = useState(null)
-  const [nearestCity, setNearestCity] = useState(null)
+  
+  const getUserLocation = () => {
+    if (!navigator.geolocation) {
+      alert('GPS를 지원하지 않는 브라우저입니다')
+      return
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const userLat = position.coords.latitude
+        const userLng = position.coords.longitude
+        setUserLocation({ lat: userLat, lng: userLng })
+        
+        // 가장 가까운 도시 찾기
+        let nearest = null
+        let minDistance = Infinity
+        
+        CITY_DATA.forEach(city => {
+          const R = 6371
+          const dLat = (city.lat - userLat) * Math.PI / 180
+          const dLng = (city.lng - userLng) * Math.PI / 180
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                   Math.cos(userLat * Math.PI / 180) * Math.cos(city.lat * Math.PI / 180) *
+                   Math.sin(dLng/2) * Math.sin(dLng/2)
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+          const distance = R * c
+          
+          if (distance < minDistance) {
+            minDistance = distance
+            nearest = city
+          }
+        })
+        
+        if (nearest && globeRef.current) {
+          setSelectedCity(nearest)
+          globeRef.current.pointOfView({
+            lat: nearest.lat,
+            lng: nearest.lng,
+            altitude: 1.5
+          }, 1000)
+          alert(`📍 가장 가까운 도시: ${nearest.name} (${minDistance.toFixed(1)}km)`)
+        }
+      },
+      (error) => {
+        alert('위치 정보를 가져올 수 없습니다. 브라우저 설정을 확인해주세요.')
+        console.error('GPS 에러:', error)
+      }
+    )
+  }
+
+
+
+  const [selectedCity, setSelectedCity] = useState(null)
+  const [activeTab, setActiveTab] = useState('hotspots')
+  const [tabsCollapsed, setTabsCollapsed] = useState(true)
   const [hotspots, setHotspots] = useState([])
   const [restaurants, setRestaurants] = useState([])
   const [loadingPlaces, setLoadingPlaces] = useState(false)
@@ -4431,157 +4520,6 @@ function App() {
 
 
   // Google Places API 호출
-
-  // 거리 계산 함수 (Haversine)
-  const calculateDistance = (lat1, lng1, lat2, lng2) => {
-    const R = 6371 // 지구 반지름 (km)
-    const dLat = (lat2 - lat1) * Math.PI / 180
-    const dLng = (lng2 - lng1) * Math.PI / 180
-    
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLng/2) * Math.sin(dLng/2)
-    
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-    return R * c // km
-  }
-
-  // 가장 가까운 도시 찾기
-  const findNearestCity = (userLat, userLng) => {
-    let nearest = null
-    let minDistance = Infinity
-    
-    CITY_DATA.forEach(city => {
-      const distance = calculateDistance(userLat, userLng, city.lat, city.lng)
-      if (distance < minDistance) {
-        minDistance = distance
-        nearest = { ...city, distance }
-      }
-    })
-    
-    if (nearest) {
-      setNearestCity(nearest)
-      setSelectedCity(nearest)
-      
-      // 지구본 이동
-      if (globeRef.current) {
-        globeRef.current.pointOfView({
-          lat: nearest.lat,
-          lng: nearest.lng,
-          altitude: 1.5
-        }, 1000)
-      }
-      
-      console.log(`가장 가까운 도시: ${nearest.name} (${minDistance.toFixed(1)}km)`)
-    }
-  }
-
-  // GPS 위치 가져오기
-  const getUserLocation = () => {
-    if (!navigator.geolocation) {
-      alert('GPS를 지원하지 않는 브라우저입니다')
-      return
-    }
-    
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const userLat = position.coords.latitude
-        const userLng = position.coords.longitude
-        
-        setUserLocation({ lat: userLat, lng: userLng })
-        findNearestCity(userLat, userLng)
-      },
-      (error) => {
-        console.error('위치 가져오기 실패:', error)
-        alert('위치 정보를 가져올 수 없습니다. 위치 권한을 확인해주세요.')
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    )
-  }
-
-  // 링크 공유 함수
-  const shareCity = (city) => {
-    const shareUrl = `${window.location.origin}${window.location.pathname}?city=${encodeURIComponent(city.name)}&lat=${city.lat}&lng=${city.lng}`
-    return shareUrl
-  }
-
-  const copyLink = (city) => {
-    const url = shareCity(city)
-    navigator.clipboard.writeText(url).then(() => {
-      alert('✅ 링크가 복사되었습니다!')
-    }).catch(() => {
-      alert('링크 복사에 실패했습니다')
-    })
-  }
-
-  const shareNative = async (city) => {
-    const shareUrl = shareCity(city)
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `ATLAS - ${city.name}`,
-          text: `${city.name}의 핫플레이스와 맛집을 확인해보세요!`,
-          url: shareUrl
-        })
-      } catch (error) {
-        if (error.name !== 'AbortError') {
-          copyLink(city)
-        }
-      }
-    } else {
-      copyLink(city)
-    }
-  }
-
-  // SNS 공유 함수들
-  const shareToKakao = (city) => {
-    const shareUrl = shareCity(city)
-    const message = `🌍 ATLAS - ${city.name}
-${city.name}의 핫플레이스와 맛집을 확인해보세요!
-${shareUrl}`
-    
-    // 카카오톡 설치 확인
-    if (/kakaotalk/i.test(navigator.userAgent)) {
-      window.location.href = `kakaotalk://send?text=${encodeURIComponent(message)}`
-    } else {
-      // 카카오톡이 없으면 링크 복사
-      copyLink(city)
-    }
-  }
-
-  const shareToLine = (city) => {
-    const shareUrl = shareCity(city)
-    const message = `🌍 ATLAS - ${city.name}
-${shareUrl}`
-    window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(message)}`, '_blank')
-  }
-
-  const shareToInstagram = (city) => {
-    // 인스타그램은 직접 공유 불가, 링크 복사
-    copyLink(city)
-    alert('인스타그램 스토리에 링크를 붙여넣어주세요!')
-  }
-
-  const shareToFacebook = (city) => {
-    const shareUrl = shareCity(city)
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank', 'width=600,height=400')
-  }
-
-  const shareToTwitter = (city) => {
-    const shareUrl = shareCity(city)
-    const text = `🌍 ATLAS에서 ${city.name} 탐험하기!`
-    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`, '_blank', 'width=600,height=400')
-  }
-
-
-
-
   const fetchPlacesData = async (city) => {
     if (!city?.lat || !city?.lng) return
     
@@ -4851,59 +4789,6 @@ ${shareUrl}`
         const cities = COUNTRY_CITIES[cName]
         return (
           <>
-            {/* GPS 버튼 */}
-            <button
-              onClick={getUserLocation}
-              style={{
-                position:'absolute',
-                top:80,
-                left:24,
-                zIndex:1002,
-                background:'rgba(255,255,255,0.95)',
-                border:'1.5px solid #e2e8f0',
-                borderRadius:12,
-                padding:'10px 16px',
-                cursor:'pointer',
-                display:'flex',
-                alignItems:'center',
-                gap:8,
-                fontSize:13,
-                fontWeight:600,
-                color:'#3b82f6',
-                boxShadow:'0 4px 12px rgba(0,0,0,0.1)',
-                transition:'all .2s'
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = '#3b82f6'
-                e.currentTarget.style.color = 'white'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.95)'
-                e.currentTarget.style.color = '#3b82f6'
-              }}
-            >
-              📍 내 위치
-            </button>
-
-            {/* 가까운 도시 알림 */}
-            {nearestCity && (
-              <div style={{
-                position:'absolute',
-                top:140,
-                left:24,
-                zIndex:1002,
-                background:'#10b981',
-                color:'white',
-                padding:'12px 16px',
-                borderRadius:12,
-                fontSize:13,
-                fontWeight:600,
-                boxShadow:'0 4px 12px rgba(16,185,129,0.3)'
-              }}>
-                가장 가까운 도시: {nearestCity.name} ({nearestCity.distance?.toFixed(1)}km)
-              </div>
-            )}
-
             {/* Bottom bar */}
             <div style={{
               position:'absolute',bottom:24,
@@ -5063,518 +4948,70 @@ ${shareUrl}`
                       {trDesc(selectedCity?._koName||selectedCity?.name) || cityData.description}
                     </p>
 
-
-                    {/* 공유 버튼 */}
-                    <div style={{
-                      marginTop:16,
-                      marginBottom:16
-                    }}>
-                      <div style={{fontSize:12,fontWeight:700,color:'#64748b',marginBottom:10}}>
-                        📤 공유하기
-                      </div>
+                    {/* 공유 버튼 - 2개만 */}
+                    <div style={{display:'flex',gap:8,marginTop:16,marginBottom:16}}>
+                      <button
+                        onClick={() => copyLink(selectedCity)}
+                        style={{
+                          flex:1,
+                          padding:'12px',
+                          background:'#3b82f6',
+                          border:'none',
+                          borderRadius:10,
+                          color:'white',
+                          fontSize:14,
+                          fontWeight:600,
+                          cursor:'pointer'
+                        }}
+                      >
+                        🔗 링크 복사
+                      </button>
                       
-                      {/* 첫 번째 줄: 카톡, 라인, 인스타 */}
-                      <div style={{display:'flex',gap:6,marginBottom:6}}>
-                        <button
-                          onClick={() => shareToKakao(selectedCity)}
-                          style={{
-                            flex:1,
-                            padding:'10px',
-                            background:'#FEE500',
-                            border:'none',
-                            borderRadius:8,
-                            fontSize:12,
-                            fontWeight:600,
-                            color:'#3C1E1E',
-                            cursor:'pointer'
-                          }}
-                        >
-                          💬 카톡
+                      <button
+                        onClick={() => setShowShareMenu(!showShareMenu)}
+                        style={{
+                          flex:1,
+                          padding:'12px',
+                          background:'#10b981',
+                          border:'none',
+                          borderRadius:10,
+                          color:'white',
+                          fontSize:14,
+                          fontWeight:600,
+                          cursor:'pointer'
+                        }}
+                      >
+                        📤 공유하기
+                      </button>
+                    </div>
+                    
+                    {/* 공유 메뉴 */}
+                    {showShareMenu && (
+                      <div style={{
+                        marginBottom:16,
+                        padding:12,
+                        background:'#f8fafc',
+                        borderRadius:10,
+                        display:'grid',
+                        gridTemplateColumns:'repeat(2, 1fr)',
+                        gap:8
+                      }}>
+                        <button onClick={() => shareToKakao(selectedCity)} style={{padding:'10px',background:'#FEE500',border:'none',borderRadius:8,fontSize:13,fontWeight:600,cursor:'pointer'}}>
+                          💬 카카오톡
                         </button>
-                        
-                        <button
-                          onClick={() => shareToLine(selectedCity)}
-                          style={{
-                            flex:1,
-                            padding:'10px',
-                            background:'#00B900',
-                            border:'none',
-                            borderRadius:8,
-                            fontSize:12,
-                            fontWeight:600,
-                            color:'white',
-                            cursor:'pointer'
-                          }}
-                        >
+                        <button onClick={() => shareToInstagram(selectedCity)} style={{padding:'10px',background:'#E4405F',color:'white',border:'none',borderRadius:8,fontSize:13,fontWeight:600,cursor:'pointer'}}>
+                          📷 인스타그램
+                        </button>
+                        <button onClick={() => shareToLine(selectedCity)} style={{padding:'10px',background:'#00B900',color:'white',border:'none',borderRadius:8,fontSize:13,fontWeight:600,cursor:'pointer'}}>
                           📱 라인
                         </button>
-                        
-                        <button
-                          onClick={() => shareToInstagram(selectedCity)}
-                          style={{
-                            flex:1,
-                            padding:'10px',
-                            background:'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
-                            border:'none',
-                            borderRadius:8,
-                            fontSize:12,
-                            fontWeight:600,
-                            color:'white',
-                            cursor:'pointer'
-                          }}
-                        >
-                          📷 인스타
+                        <button onClick={() => shareToFacebook(selectedCity)} style={{padding:'10px',background:'#1877F2',color:'white',border:'none',borderRadius:8,fontSize:13,fontWeight:600,cursor:'pointer'}}>
+                          📘 페이스북
                         </button>
                       </div>
-                      
-                      {/* 두 번째 줄: 페북, 트위터, 링크복사 */}
-                      <div style={{display:'flex',gap:6}}>
-                        <button
-                          onClick={() => shareToFacebook(selectedCity)}
-                          style={{
-                            flex:1,
-                            padding:'10px',
-                            background:'#1877F2',
-                            border:'none',
-                            borderRadius:8,
-                            fontSize:12,
-                            fontWeight:600,
-                            color:'white',
-                            cursor:'pointer'
-                          }}
-                        >
-                          📘 페북
-                        </button>
-                        
-                        <button
-                          onClick={() => shareToTwitter(selectedCity)}
-                          style={{
-                            flex:1,
-                            padding:'10px',
-                            background:'#1DA1F2',
-                            border:'none',
-                            borderRadius:8,
-                            fontSize:12,
-                            fontWeight:600,
-                            color:'white',
-                            cursor:'pointer'
-                          }}
-                        >
-                          🐦 X
-                        </button>
-                        
-                        <button
-                          onClick={() => copyLink(selectedCity)}
-                          style={{
-                            flex:1,
-                            padding:'10px',
-                            background:'#64748b',
-                            border:'none',
-                            borderRadius:8,
-                            fontSize:12,
-                            fontWeight:600,
-                            color:'white',
-                            cursor:'pointer'
-                          }}
-                        >
-                          🔗 복사
-                        </button>
-                      </div>
-                    </div>
+                    )}
 
-                    {/* 핫플레이스 / 맛집 섹션 */}
-                    <div style={{marginTop:20,marginBottom:20}}>
-                      {/* 헤더 - 클릭으로 접기/펼치기 */}
-                      <div 
-                        onClick={() => setTabsCollapsed(!tabsCollapsed)}
-                        style={{
-                          display:'flex',
-                          alignItems:'center',
-                          justifyContent:'space-between',
-                          padding:'12px 14px',
-                          background:'#f8fafc',
-                          borderRadius:10,
-                          border:'1.5px solid #e2e8f0',
-                          cursor:'pointer',
-                          marginBottom: tabsCollapsed ? 0 : 14,
-                          transition:'all .2s'
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
-                        onMouseLeave={e => e.currentTarget.style.background = '#f8fafc'}
-                      >
-                        <div style={{display:'flex',alignItems:'center',gap:8}}>
-                          <span style={{fontSize:14,fontWeight:700,color:'#475569'}}>
-                            {activeTab === 'hotspots' ? '🔥 핫플레이스' : '🍽️ 맛집'}
-                          </span>
-                          <span style={{fontSize:11,color:'#94a3b8'}}>
-                            {activeTab === 'hotspots' ? hotspots.length : restaurants.length}곳
-                          </span>
-                        </div>
-                        <span style={{fontSize:18,color:'#64748b',transition:'transform .2s',transform: tabsCollapsed ? 'rotate(0deg)' : 'rotate(180deg)'}}>
-                          ▼
-                        </span>
-                      </div>
-
-                      {!tabsCollapsed && (
-                        <>
-                          {/* 탭 버튼 */}
-                          <div style={{display:'flex',gap:8,marginBottom:14}}>
-                        <button
-                          onClick={() => setActiveTab('hotspots')}
-                          style={{
-                            flex:1,
-                            background: activeTab === 'hotspots' ? '#f59e0b' : '#f8fafc',
-                            color: activeTab === 'hotspots' ? 'white' : '#64748b',
-                            border: `1.5px solid ${activeTab === 'hotspots' ? '#f59e0b' : '#e2e8f0'}`,
-                            borderRadius:10,
-                            padding:'10px 14px',
-                            fontSize:13,
-                            fontWeight:700,
-                            cursor:'pointer',
-                            transition:'all .2s'
-                          }}
-                          onMouseEnter={e => {
-                            if (activeTab !== 'hotspots') {
-                              e.currentTarget.style.background = '#f1f5f9';
-                              e.currentTarget.style.borderColor = '#cbd5e1';
-                            }
-                          }}
-                          onMouseLeave={e => {
-                            if (activeTab !== 'hotspots') {
-                              e.currentTarget.style.background = '#f8fafc';
-                              e.currentTarget.style.borderColor = '#e2e8f0';
-                            }
-                          }}
-                        >
-                          🔥 핫플레이스
-                        </button>
-                        <button
-                          onClick={() => setActiveTab('restaurants')}
-                          style={{
-                            flex:1,
-                            background: activeTab === 'restaurants' ? '#10b981' : '#f8fafc',
-                            color: activeTab === 'restaurants' ? 'white' : '#64748b',
-                            border: `1.5px solid ${activeTab === 'restaurants' ? '#10b981' : '#e2e8f0'}`,
-                            borderRadius:10,
-                            padding:'10px 14px',
-                            fontSize:13,
-                            fontWeight:700,
-                            cursor:'pointer',
-                            transition:'all .2s'
-                          }}
-                          onMouseEnter={e => {
-                            if (activeTab !== 'restaurants') {
-                              e.currentTarget.style.background = '#f1f5f9';
-                              e.currentTarget.style.borderColor = '#cbd5e1';
-                            }
-                          }}
-                          onMouseLeave={e => {
-                            if (activeTab !== 'restaurants') {
-                              e.currentTarget.style.background = '#f8fafc';
-                              e.currentTarget.style.borderColor = '#e2e8f0';
-                            }
-                          }}
-                        >
-                          🍽️ 맛집
-                        </button>
-                      </div>
-
-                      {/* 핫플레이스 리스트 */}
-                      {activeTab === 'hotspots' && (
-                        <div>
-                          {loadingPlaces ? (
-                            <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:40}}>
-                              <div style={{width:24,height:24,borderRadius:'50%',border:'3px solid #fef3c7',borderTopColor:'#f59e0b',animation:'spin .7s linear infinite'}}/>
-                            </div>
-                          ) : hotspots.length > 0 ? (
-                            <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                              {hotspots.map((place, idx) => (
-                                <a key={idx}
-                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id || ''}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    textDecoration:'none',
-                                  background:'white',
-                                  border:'1.5px solid #e2e8f0',
-                                  borderRadius:12,
-                                  overflow:'hidden',
-                                  cursor:'pointer',
-                                  transition:'all .2s'
-                                }}
-                                onMouseEnter={e => {
-                                  e.currentTarget.style.borderColor = '#f59e0b';
-                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(245,158,11,0.15)';
-                                }}
-                                onMouseLeave={e => {
-                                  e.currentTarget.style.borderColor = '#e2e8f0';
-                                  e.currentTarget.style.boxShadow = 'none';
-                                }}>
-                                  <div style={{display:'flex',gap:12,padding:12}}>
-                                    {place.photos && place.photos.length > 0 ? (
-                                      <img 
-                                        src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photo_reference=${place.photos[0].photo_reference}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`}
-                                        alt={place.name}
-                                        style={{width:80,height:80,borderRadius:8,objectFit:'cover',flexShrink:0}}
-                                      />
-                                    ) : (
-                                      <div style={{width:80,height:80,borderRadius:8,background:'linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,flexShrink:0}}>
-                                        📍
-                                      </div>
-                                    )}
-                                    <div style={{flex:1,minWidth:0}}>
-                                      <div style={{fontSize:14,fontWeight:700,color:'#0f172a',marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                                        {place.name}
-                                      </div>
-                                      {place.rating && (
-                                        <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
-                                          <span style={{fontSize:12,color:'#f59e0b',fontWeight:700}}>★ {place.rating}</span>
-                                          {place.user_ratings_total && (
-                                            <span style={{fontSize:10,color:'#94a3b8'}}>({place.user_ratings_total.toLocaleString()})</span>
-                                          )}
-                                        </div>
-                                      )}
-                                      {place.vicinity && (
-                                        <div style={{fontSize:11,color:'#64748b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                                          📍 {place.vicinity}
-                                        </div>
-                                      )}
-                                      {place.opening_hours && (
-                                        <div style={{fontSize:10,color: place.opening_hours.open_now ? '#10b981' : '#ef4444',fontWeight:600,marginTop:4}}>
-                                          {place.opening_hours.open_now ? '● 영업중' : '● 영업종료'}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </a>
-                              ))}
-                            </div>
-                          ) : (
-                            <div style={{textAlign:'center',padding:40,color:'#94a3b8',fontSize:13}}>
-                              핫플레이스 데이터를 불러오는 중...
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* 맛집 리스트 */}
-                      {activeTab === 'restaurants' && (
-                        <div>
-                          {loadingPlaces ? (
-                            <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:40}}>
-                              <div style={{width:24,height:24,borderRadius:'50%',border:'3px solid #d1fae5',borderTopColor:'#10b981',animation:'spin .7s linear infinite'}}/>
-                            </div>
-                          ) : restaurants.length > 0 ? (
-                            <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                              {restaurants.map((place, idx) => (
-                                <a key={idx}
-                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id || ''}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    textDecoration:'none',
-                                  background:'white',
-                                  border:'1.5px solid #e2e8f0',
-                                  borderRadius:12,
-                                  overflow:'hidden',
-                                  cursor:'pointer',
-                                  transition:'all .2s'
-                                }}
-                                onMouseEnter={e => {
-                                  e.currentTarget.style.borderColor = '#10b981';
-                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(16,185,129,0.15)';
-                                }}
-                                onMouseLeave={e => {
-                                  e.currentTarget.style.borderColor = '#e2e8f0';
-                                  e.currentTarget.style.boxShadow = 'none';
-                                }}>
-                                  <div style={{display:'flex',gap:12,padding:12}}>
-                                    {place.photos && place.photos.length > 0 ? (
-                                      <img 
-                                        src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photo_reference=${place.photos[0].photo_reference}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`}
-                                        alt={place.name}
-                                        style={{width:80,height:80,borderRadius:8,objectFit:'cover',flexShrink:0}}
-                                      />
-                                    ) : (
-                                      <div style={{width:80,height:80,borderRadius:8,background:'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,flexShrink:0}}>
-                                        🍽️
-                                      </div>
-                                    )}
-                                    <div style={{flex:1,minWidth:0}}>
-                                      <div style={{fontSize:14,fontWeight:700,color:'#0f172a',marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                                        {place.name}
-                                      </div>
-                                      {place.rating && (
-                                        <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
-                                          <span style={{fontSize:12,color:'#10b981',fontWeight:700}}>★ {place.rating}</span>
-                                          {place.user_ratings_total && (
-                                            <span style={{fontSize:10,color:'#94a3b8'}}>({place.user_ratings_total.toLocaleString()})</span>
-                                          )}
-                                        </div>
-                                      )}
-                                      {place.price_level && (
-                                        <div style={{fontSize:11,color:'#64748b',marginBottom:2}}>
-                                          {'💰'.repeat(place.price_level)}
-                                        </div>
-                                      )}
-                                      {place.vicinity && (
-                                        <div style={{fontSize:11,color:'#64748b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                                          📍 {place.vicinity}
-                                        </div>
-                                      )}
-                                      {place.opening_hours && (
-                                        <div style={{fontSize:10,color: place.opening_hours.open_now ? '#10b981' : '#ef4444',fontWeight:600,marginTop:4}}>
-                                          {place.opening_hours.open_now ? '● 영업중' : '● 영업종료'}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </a>
-                              ))}
-                            </div>
-                          ) : (
-                            <div style={{textAlign:'center',padding:40,color:'#94a3b8',fontSize:13}}>
-                              맛집 데이터를 불러오는 중...
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                        </>
-                      )}
-
-                      {/* API 사용량 표시 */}
-                      <div style={{
-                        fontSize:10,
-                        color: dailyUsage.count >= 250 ? '#ef4444' : dailyUsage.count >= 150 ? '#f59e0b' : '#64748b',
-                        marginTop:12,
-                        padding:8,
-                        background: dailyUsage.count >= 250 ? '#fef2f2' : dailyUsage.count >= 150 ? '#fffbeb' : '#f8fafc',
-                        borderRadius:6,
-                        border:`1px solid ${dailyUsage.count >= 250 ? '#fecaca' : dailyUsage.count >= 150 ? '#fde68a' : '#e2e8f0'}`,
-                        display:'flex',
-                        alignItems:'center',
-                        justifyContent:'space-between'
-                      }}>
-                        <span>
-                          📊 오늘 API 사용: <strong>{dailyUsage.count || 0}/300건</strong>
-                        </span>
-                        {dailyUsage.count >= 250 && (
-                          <span style={{fontSize:11,color:'#dc2626',fontWeight:700}}>⚠️ 한도 임박</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {cityData.spots?.length > 0 && (
-                      <>
-                        <div style={{fontSize:10,color:'#94a3b8',letterSpacing:'2.5px',textTransform:'uppercase',marginBottom:12}}>
-                          {t('spots')} · {cityData.spots.length}{t('spotsUnit')}
-                        </div>
-                        <div style={{display:'flex',flexDirection:'column',gap:11}}>
-                          {cityData.spots.map((spot,i)=>(
-                            <div key={i} className="card"
-                              onClick={()=>setSelectedSpot(selectedSpot?.name===spot.name?null:spot)}
-                              style={{borderRadius:14,overflow:'hidden',background:'white',border:`1.5px solid ${selectedSpot?.name===spot.name?(selectedCity?.color||'#3b82f6'):'#e2e8f0'}`,boxShadow:'0 2px 8px rgba(0,0,0,.06)'}}>
-                              <div style={{height: selectedSpot?.name===spot.name ? 200 : 142,overflow:'hidden',position:'relative',transition:'height .3s'}}>
-                                {selectedSpot?.name===spot.name ? (
-                                  <SpotGallery
-                                    wikiTitle={spot.wikiTitle}
-                                    spotName={spot.name}
-                                    cityName={CITY_I18N[selectedCity?._koName||selectedCity?.name]?.[0] || selectedCity?.name}
-                                    fallback={spot.img || getImg(spot.type)}
-                                    style={{width:'100%',height:'100%'}}
-                                  />
-                                ) : (
-                                  <SpotImage
-                                    className="cimg"
-                                    wikiTitle={spot.wikiTitle}
-                                    spotName={spot.name}
-                                    cityName={CITY_I18N[selectedCity?._koName||selectedCity?.name]?.[0] || selectedCity?.name}
-                                    alt={spot.name}
-                                    fallback={spot.img || getImg(spot.type)}
-                                    style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
-                                  />
-                                )}
-                                {selectedSpot?.name!==spot.name && <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 55%)'}}/>}
-
-                                <div style={{position:'absolute',bottom:10,left:12,right:12,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
-                                  <div>
-                                    <div style={{fontSize:13.5,fontWeight:700,color:'white',textShadow:'0 1px 4px rgba(0,0,0,.6)'}}>{trSpot(selectedCity?._koName||selectedCity?.name,spot.name)?.name || spot.name}</div>
-                                    <div style={{display:'inline-block',fontSize:10,padding:'2px 9px',borderRadius:20,background:TYPE_COLORS[spot.type]||'#64748b',color:'white',marginTop:4,fontWeight:700}}>{getSpotType(spot.type)}</div>
-                                  </div>
-                                  {spot.rating > 0 && (
-                                    <a href={`https://www.google.com/maps/search/${encodeURIComponent(spot.wikiTitle || spot.name)}+${encodeURIComponent(selectedCity?.name || '')}`}
-                                      target="_blank" rel="noopener noreferrer"
-                                      onClick={e => e.stopPropagation()}
-                                      style={{textDecoration:'none',display:'flex',alignItems:'center',gap:3}}
-                                      title="Google Maps에서 최신 별점 확인"
-                                    >
-                                      <span style={{fontSize:13,color:'#fbbf24',fontWeight:700}}>★ {spot.rating}</span>
-                                    </a>
-                                  )}
-                                </div>
-                              </div>
-
-                              {selectedSpot?.name===spot.name && (
-                                <div style={{padding:'12px 14px',borderTop:`1px solid ${(selectedCity?.color||'#3b82f6')}22`,background:`${selectedCity?.color||'#3b82f6'}07`}}>
-                                  <p style={{fontSize:12.5,color:'#475569',lineHeight:1.75,marginBottom:10}}>{trSpot(selectedCity?._koName||selectedCity?.name,spot.name)?.desc || spot.desc}</p>
-                                  {/* 참고 정보 + Google 최신 정보 */}
-                                  {(spot.openTime || spot.price) && (
-                                    <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8,alignItems:'center'}}>
-                                      {spot.openTime && (
-                                        <div style={{display:'flex',alignItems:'center',gap:4,background:'white',borderRadius:8,padding:'4px 10px',fontSize:11,color:'#475569',border:'1px solid #e2e8f0'}}>
-                                          🕐 {spot.openTime}
-                                        </div>
-                                      )}
-                                      {spot.price && (
-                                        <div style={{display:'flex',alignItems:'center',gap:4,background:'white',borderRadius:8,padding:'4px 10px',fontSize:11,color:'#475569',border:'1px solid #e2e8f0'}}>
-                                          🎫 {spot.price}
-                                        </div>
-                                      )}
-                                      <span style={{fontSize:9,color:'#94a3b8',fontStyle:'italic'}}>{t('refNote')}</span>
-                                    </div>
-                                  )}
-                                  <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                                    {/* Google Maps 최신 운영정보 + 리뷰 (메인 버튼) */}
-                                    <a
-                                      href={`https://www.google.com/maps/search/${encodeURIComponent(spot.wikiTitle || spot.name)}+${encodeURIComponent(selectedCity?.name || '')}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={e => e.stopPropagation()}
-                                      style={{
-                                        display:'inline-flex',alignItems:'center',gap:6,
-                                        background:'#fff',color:'#1a73e8',borderRadius:8,
-                                        padding:'7px 14px',fontSize:12,fontWeight:700,
-                                        textDecoration:'none',
-                                        border:'1.5px solid #dadce0',
-                                        boxShadow:'0 1px 4px rgba(0,0,0,0.08)'
-                                      }}
-                                    >
-                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#ea4335"/></svg>
-                                      {t('mapsBtn')}
-                                    </a>
-                                  {spot.website && (
-                                    <a
-                                      href={spot.website}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={e => e.stopPropagation()}
-                                      style={{
-                                        display:'inline-flex',alignItems:'center',gap:6,
-                                        background: spot.website?.includes('wikipedia.org') ? '#475569' : (selectedCity?.color || '#3b82f6'),
-                                        color:'white',borderRadius:8,
-                                        padding:'7px 14px',fontSize:12,fontWeight:700,
-                                        textDecoration:'none',
-                                        boxShadow:`0 2px 8px ${spot.website?.includes('wikipedia.org') ? '#47556944' : (selectedCity?.color || '#3b82f6') + '44'}`
-                                      }}
-                                    >
-                                      {spot.website?.includes('wikipedia.org') ? `📖 ${t('wikiDetail')}` : `🌐 ${t('official')}`}
-                                    </a>
-                                  )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                    
                           ))}
                         </div>
                       </>
