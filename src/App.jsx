@@ -5,33 +5,15 @@ import Globe from 'globe.gl'
 function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, alt }) {
   const [src, setSrc] = useState(null)
 
-
-  // URL 파라미터에서 도시 자동 선택
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const cityName = params.get('city')
-    const lat = params.get('lat')
-    const lng = params.get('lng')
-    
+    const cityName = params.get('city'), lat = params.get('lat'), lng = params.get('lng')
     if (cityName && lat && lng) {
-      // CITY_DATA에서 도시 찾기
-      const city = CITY_DATA.find(c => 
-        c.name.toLowerCase() === cityName.toLowerCase()
-      )
-      
-      if (city) {
-        // 약간의 지연 후 선택 (globeRef가 준비될 때까지)
-        setTimeout(() => {
-          setSelectedCity(city)
-          if (globeRef.current) {
-            globeRef.current.pointOfView({
-              lat: parseFloat(lat),
-              lng: parseFloat(lng),
-              altitude: 1.5
-            }, 1000)
-          }
-        }, 500)
-      }
+      const city = CITY_DATA.find(c => c.name.toLowerCase() === cityName.toLowerCase())
+      if (city) setTimeout(() => {
+        setSelectedCity(city)
+        if (globeRef.current) globeRef.current.pointOfView({lat: parseFloat(lat), lng: parseFloat(lng), altitude: 1.5}, 1000)
+      }, 500)
     }
   }, [])
 
@@ -4436,84 +4418,29 @@ function App() {
 
   // Google Places API 호출
 
-  // 공유 함수
-  const shareCity = (city) => {
-    return `${window.location.origin}${window.location.pathname}?city=${encodeURIComponent(city.name)}&lat=${city.lat}&lng=${city.lng}`
-  }
-  
-  const copyLink = (city) => {
-    navigator.clipboard.writeText(shareCity(city)).then(() => {
-      alert('✅ 링크가 복사되었습니다!')
-    })
-  }
-  
-  const shareToKakao = (city) => {
-    const url = shareCity(city)
-    window.open(`https://story.kakao.com/share?url=${encodeURIComponent(url)}`, '_blank')
-  }
-  
-  const shareToInstagram = (city) => {
-    copyLink(city)
-    alert('📷 링크가 복사되었습니다! 인스타그램에 붙여넣으세요')
-  }
-  
-  const shareToLine = (city) => {
-    const url = shareCity(city)
-    window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`, '_blank')
-  }
-  
-  const shareToFacebook = (city) => {
-    const url = shareCity(city)
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank')
-  }
-  
-  // GPS 함수
+  const shareCity = (city) => `${window.location.origin}${window.location.pathname}?city=${encodeURIComponent(city.name)}&lat=${city.lat}&lng=${city.lng}`
+  const copyLink = (city) => { navigator.clipboard.writeText(shareCity(city)); alert('✅ 링크 복사!') }
+  const shareToKakao = (city) => window.open(`https://story.kakao.com/share?url=${encodeURIComponent(shareCity(city))}`, '_blank')
+  const shareToInstagram = (city) => { copyLink(city); alert('📷 인스타에 붙여넣기!') }
+  const shareToLine = (city) => window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareCity(city))}`, '_blank')
+  const shareToFacebook = (city) => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareCity(city))}`, '_blank')
   const getUserLocation = () => {
-    if (!navigator.geolocation) {
-      alert('GPS를 지원하지 않는 브라우저입니다')
-      return
-    }
-    
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const userLat = position.coords.latitude
-        const userLng = position.coords.longitude
-        setUserLocation({lat: userLat, lng: userLng})
-        
-        // 가장 가까운 도시 찾기
-        let nearest = null
-        let minDistance = Infinity
-        
-        CITY_DATA.forEach(city => {
-          const R = 6371
-          const dLat = (city.lat - userLat) * Math.PI / 180
-          const dLng = (city.lng - userLng) * Math.PI / 180
-          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                   Math.cos(userLat * Math.PI / 180) * Math.cos(city.lat * Math.PI / 180) *
-                   Math.sin(dLng/2) * Math.sin(dLng/2)
-          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-          const distance = R * c
-          
-          if (distance < minDistance) {
-            minDistance = distance
-            nearest = city
-          }
-        })
-        
-        if (nearest && globeRef.current) {
-          setSelectedCity(nearest)
-          globeRef.current.pointOfView({
-            lat: nearest.lat,
-            lng: nearest.lng,
-            altitude: 1.5
-          }, 1000)
-          alert(`📍 가장 가까운 도시: ${nearest.name} (${minDistance.toFixed(1)}km)`)
-        }
-      },
-      (error) => {
-        alert('위치 정보를 가져올 수 없습니다')
+    if (!navigator.geolocation) return alert('GPS 미지원')
+    navigator.geolocation.getCurrentPosition(pos => {
+      setUserLocation({lat: pos.coords.latitude, lng: pos.coords.longitude})
+      let nearest = null, minDist = Infinity
+      CITY_DATA.forEach(city => {
+        const R = 6371, dLat = (city.lat - pos.coords.latitude) * Math.PI / 180, dLng = (city.lng - pos.coords.longitude) * Math.PI / 180
+        const a = Math.sin(dLat/2)**2 + Math.cos(pos.coords.latitude * Math.PI / 180) * Math.cos(city.lat * Math.PI / 180) * Math.sin(dLng/2)**2
+        const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+        if (dist < minDist) { minDist = dist; nearest = city }
+      })
+      if (nearest && globeRef.current) {
+        setSelectedCity(nearest)
+        globeRef.current.pointOfView({lat: nearest.lat, lng: nearest.lng, altitude: 1.5}, 1000)
+        alert(`📍 ${nearest.name} (${minDist.toFixed(1)}km)`)
       }
-    )
+    }, () => alert('위치 가져오기 실패'))
   }
 
   const fetchPlacesData = async (city) => {
@@ -4668,116 +4595,6 @@ function App() {
   const countryKo = selectedCountry ? getCountryName(selectedCountry.properties.NAME) : ''
 
   return (
-    <div style={{width:'100%',height:'100vh',position:'relative'}}>
-        {/* 공유 모달 - 화면 중앙 */}
-        {showShareModal && selectedCity && (
-          <>
-            <div
-              onClick={() => setShowShareModal(false)}
-              style={{
-                position:'fixed',
-                inset:0,
-                background:'rgba(0,0,0,0.5)',
-                zIndex:2000,
-                backdropFilter:'blur(4px)'
-              }}
-            />
-            <div style={{
-              position:'fixed',
-              top:'50%',
-              left:'50%',
-              transform:'translate(-50%, -50%)',
-              zIndex:2001,
-              background:'white',
-              borderRadius:20,
-              padding:24,
-              boxShadow:'0 20px 60px rgba(0,0,0,0.3)',
-              minWidth:320
-            }}>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
-                <div style={{fontSize:18,fontWeight:700}}>공유하기</div>
-                <button
-                  onClick={() => setShowShareModal(false)}
-                  style={{
-                    background:'none',
-                    border:'none',
-                    fontSize:24,
-                    cursor:'pointer',
-                    color:'#64748b'
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-              
-              <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:12}}>
-                <button
-                  onClick={() => { shareToKakao(selectedCity); setShowShareModal(false) }}
-                  style={{
-                    padding:'16px',
-                    background:'#FEE500',
-                    border:'none',
-                    borderRadius:12,
-                    fontSize:14,
-                    fontWeight:600,
-                    cursor:'pointer'
-                  }}
-                >
-                  💬 카카오톡
-                </button>
-                
-                <button
-                  onClick={() => { shareToInstagram(selectedCity); setShowShareModal(false) }}
-                  style={{
-                    padding:'16px',
-                    background:'#E4405F',
-                    color:'white',
-                    border:'none',
-                    borderRadius:12,
-                    fontSize:14,
-                    fontWeight:600,
-                    cursor:'pointer'
-                  }}
-                >
-                  📷 인스타그램
-                </button>
-                
-                <button
-                  onClick={() => { shareToLine(selectedCity); setShowShareModal(false) }}
-                  style={{
-                    padding:'16px',
-                    background:'#00B900',
-                    color:'white',
-                    border:'none',
-                    borderRadius:12,
-                    fontSize:14,
-                    fontWeight:600,
-                    cursor:'pointer'
-                  }}
-                >
-                  📱 라인
-                </button>
-                
-                <button
-                  onClick={() => { shareToFacebook(selectedCity); setShowShareModal(false) }}
-                  style={{
-                    padding:'16px',
-                    background:'#1877F2',
-                    color:'white',
-                    border:'none',
-                    borderRadius:12,
-                    fontSize:14,
-                    fontWeight:600,
-                    cursor:'pointer'
-                  }}
-                >
-                  📘 페이스북
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-
     <div style={{width:'100vw',height:'100vh',overflow:'hidden',position:'relative',fontFamily:"'Pretendard','Inter',system-ui,sans-serif",background:'#000'}}>
       <style>{`
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -4889,17 +4706,7 @@ function App() {
       </div>
 
       {/* Country selected badge + info panel */}
-        {/* 핫플/맛집 버튼 */}
-        {selectedCity && (
-          <div style={{position:'fixed',left:480,top:'50%',transform:'translateY(-50%)',zIndex:1001,display:'flex',flexDirection:'column',gap:12}}>
-            <button onClick={() => setShowPlacesPanel(showPlacesPanel === 'hotspots' ? null : 'hotspots')} style={{width:70,height:70,background:showPlacesPanel === 'hotspots' ? '#f59e0b' : '#fff',border:'3px solid #f59e0b',borderRadius:'50%',color:showPlacesPanel === 'hotspots' ? 'white' : '#f59e0b',fontSize:14,fontWeight:700,cursor:'pointer',boxShadow:'0 4px 16px rgba(0,0,0,0.2)',lineHeight:1.3}}>
-              🔥<br/>핫플
-            </button>
-            <button onClick={() => setShowPlacesPanel(showPlacesPanel === 'restaurants' ? null : 'restaurants')} style={{width:70,height:70,background:showPlacesPanel === 'restaurants' ? '#10b981' : '#fff',border:'3px solid #10b981',borderRadius:'50%',color:showPlacesPanel === 'restaurants' ? 'white' : '#10b981',fontSize:14,fontWeight:700,cursor:'pointer',boxShadow:'0 4px 16px rgba(0,0,0,0.2)',lineHeight:1.3}}>
-              🍽️<br/>맛집
-            </button>
-          </div>
-        )}
+        {selectedCity && (<div style={{position:"fixed",left:480,top:"50%",transform:"translateY(-50%)",zIndex:1001,display:"flex",flexDirection:"column",gap:12}}><button onClick={() => setShowPlacesPanel(showPlacesPanel === "hotspots" ? null : "hotspots")} style={{width:70,height:70,background:showPlacesPanel === "hotspots" ? "#f59e0b" : "#fff",border:"3px solid #f59e0b",borderRadius:"50%",color:showPlacesPanel === "hotspots" ? "white" : "#f59e0b",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,0.2)",lineHeight:1.3}}>🔥<br/>핫플</button><button onClick={() => setShowPlacesPanel(showPlacesPanel === "restaurants" ? null : "restaurants")} style={{width:70,height:70,background:showPlacesPanel === "restaurants" ? "#10b981" : "#fff",border:"3px solid #10b981",borderRadius:"50%",color:showPlacesPanel === "restaurants" ? "white" : "#10b981",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,0.2)",lineHeight:1.3}}>🍽️<br/>맛집</button></div>)}
 
       {selectedCountry && !selectedCity && (() => {
         const cName = selectedCountry.properties.NAME
@@ -4907,27 +4714,7 @@ function App() {
         const cities = COUNTRY_CITIES[cName]
         return (
           <>
-            {/* GPS 버튼 */}
-            <button
-              onClick={getUserLocation}
-              style={{
-                position:'absolute',
-                top:80,
-                left:24,
-                zIndex:1002,
-                background:'#3b82f6',
-                border:'2px solid white',
-                borderRadius:12,
-                padding:'10px 16px',
-                color:'white',
-                fontSize:13,
-                fontWeight:700,
-                cursor:'pointer',
-                boxShadow:'0 4px 12px rgba(0,0,0,0.2)'
-              }}
-            >
-              📍 내 위치
-            </button>
+            <button onClick={getUserLocation} style={{position:"absolute",top:80,left:24,zIndex:1002,background:"#3b82f6",border:"2px solid white",borderRadius:12,padding:"10px 16px",color:"white",fontSize:13,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 12px rgba(0,0,0,0.2)"}}>📍 내 위치</button>
 
             {/* Bottom bar */}
             <div style={{
@@ -5087,45 +4874,120 @@ function App() {
                     <p style={{fontSize:13.5,color:'#475569',lineHeight:1.8,margin:'0 0 20px',borderLeft:`3px solid ${selectedCity?.color||'#3b82f6'}`,paddingLeft:14}}>
                       {trDesc(selectedCity?._koName||selectedCity?.name) || cityData.description}
                     </p>
+                    <div style={{display:"flex",gap:8,marginTop:16,marginBottom:16}}><button onClick={() => copyLink(selectedCity)} style={{flex:1,padding:"12px",background:"#3b82f6",border:"none",borderRadius:10,color:"white",fontSize:14,fontWeight:600,cursor:"pointer"}}>🔗 링크 복사</button><button onClick={() => setShowShareModal(true)} style={{flex:1,padding:"12px",background:"#10b981",border:"none",borderRadius:10,color:"white",fontSize:14,fontWeight:600,cursor:"pointer"}}>📤 공유하기</button></div>
 
-                    {/* 공유 버튼 - 2개 */}
-                    <div style={{display:'flex',gap:8,marginTop:16,marginBottom:16}}>
-                      <button
-                        onClick={() => copyLink(selectedCity)}
-                        style={{
-                          flex:1,
-                          padding:'12px',
-                          background:'#3b82f6',
-                          border:'none',
-                          borderRadius:10,
-                          color:'white',
-                          fontSize:14,
-                          fontWeight:600,
-                          cursor:'pointer'
-                        }}
-                      >
-                        🔗 링크 복사
-                      </button>
-                      
-                      <button
-                        onClick={() => setShowShareModal(true)}
-                        style={{
-                          flex:1,
-                          padding:'12px',
-                          background:'#10b981',
-                          border:'none',
-                          borderRadius:10,
-                          color:'white',
-                          fontSize:14,
-                          fontWeight:600,
-                          cursor:'pointer'
-                        }}
-                      >
-                        📤 공유하기
-                      </button>
                     </div>
 
-                    
+                    {cityData.spots?.length > 0 && (
+                      <>
+                        <div style={{fontSize:10,color:'#94a3b8',letterSpacing:'2.5px',textTransform:'uppercase',marginBottom:12}}>
+                          {t('spots')} · {cityData.spots.length}{t('spotsUnit')}
+                        </div>
+                        <div style={{display:'flex',flexDirection:'column',gap:11}}>
+                          {cityData.spots.map((spot,i)=>(
+                            <div key={i} className="card"
+                              onClick={()=>setSelectedSpot(selectedSpot?.name===spot.name?null:spot)}
+                              style={{borderRadius:14,overflow:'hidden',background:'white',border:`1.5px solid ${selectedSpot?.name===spot.name?(selectedCity?.color||'#3b82f6'):'#e2e8f0'}`,boxShadow:'0 2px 8px rgba(0,0,0,.06)'}}>
+                              <div style={{height: selectedSpot?.name===spot.name ? 200 : 142,overflow:'hidden',position:'relative',transition:'height .3s'}}>
+                                {selectedSpot?.name===spot.name ? (
+                                  <SpotGallery
+                                    wikiTitle={spot.wikiTitle}
+                                    spotName={spot.name}
+                                    cityName={CITY_I18N[selectedCity?._koName||selectedCity?.name]?.[0] || selectedCity?.name}
+                                    fallback={spot.img || getImg(spot.type)}
+                                    style={{width:'100%',height:'100%'}}
+                                  />
+                                ) : (
+                                  <SpotImage
+                                    className="cimg"
+                                    wikiTitle={spot.wikiTitle}
+                                    spotName={spot.name}
+                                    cityName={CITY_I18N[selectedCity?._koName||selectedCity?.name]?.[0] || selectedCity?.name}
+                                    alt={spot.name}
+                                    fallback={spot.img || getImg(spot.type)}
+                                    style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
+                                  />
+                                )}
+                                {selectedSpot?.name!==spot.name && <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 55%)'}}/>}
+
+                                <div style={{position:'absolute',bottom:10,left:12,right:12,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
+                                  <div>
+                                    <div style={{fontSize:13.5,fontWeight:700,color:'white',textShadow:'0 1px 4px rgba(0,0,0,.6)'}}>{trSpot(selectedCity?._koName||selectedCity?.name,spot.name)?.name || spot.name}</div>
+                                    <div style={{display:'inline-block',fontSize:10,padding:'2px 9px',borderRadius:20,background:TYPE_COLORS[spot.type]||'#64748b',color:'white',marginTop:4,fontWeight:700}}>{getSpotType(spot.type)}</div>
+                                  </div>
+                                  {spot.rating > 0 && (
+                                    <a href={`https://www.google.com/maps/search/${encodeURIComponent(spot.wikiTitle || spot.name)}+${encodeURIComponent(selectedCity?.name || '')}`}
+                                      target="_blank" rel="noopener noreferrer"
+                                      onClick={e => e.stopPropagation()}
+                                      style={{textDecoration:'none',display:'flex',alignItems:'center',gap:3}}
+                                      title="Google Maps에서 최신 별점 확인"
+                                    >
+                                      <span style={{fontSize:13,color:'#fbbf24',fontWeight:700}}>★ {spot.rating}</span>
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+
+                              {selectedSpot?.name===spot.name && (
+                                <div style={{padding:'12px 14px',borderTop:`1px solid ${(selectedCity?.color||'#3b82f6')}22`,background:`${selectedCity?.color||'#3b82f6'}07`}}>
+                                  <p style={{fontSize:12.5,color:'#475569',lineHeight:1.75,marginBottom:10}}>{trSpot(selectedCity?._koName||selectedCity?.name,spot.name)?.desc || spot.desc}</p>
+                                  {/* 참고 정보 + Google 최신 정보 */}
+                                  {(spot.openTime || spot.price) && (
+                                    <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8,alignItems:'center'}}>
+                                      {spot.openTime && (
+                                        <div style={{display:'flex',alignItems:'center',gap:4,background:'white',borderRadius:8,padding:'4px 10px',fontSize:11,color:'#475569',border:'1px solid #e2e8f0'}}>
+                                          🕐 {spot.openTime}
+                                        </div>
+                                      )}
+                                      {spot.price && (
+                                        <div style={{display:'flex',alignItems:'center',gap:4,background:'white',borderRadius:8,padding:'4px 10px',fontSize:11,color:'#475569',border:'1px solid #e2e8f0'}}>
+                                          🎫 {spot.price}
+                                        </div>
+                                      )}
+                                      <span style={{fontSize:9,color:'#94a3b8',fontStyle:'italic'}}>{t('refNote')}</span>
+                                    </div>
+                                  )}
+                                  <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                                    {/* Google Maps 최신 운영정보 + 리뷰 (메인 버튼) */}
+                                    <a
+                                      href={`https://www.google.com/maps/search/${encodeURIComponent(spot.wikiTitle || spot.name)}+${encodeURIComponent(selectedCity?.name || '')}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={e => e.stopPropagation()}
+                                      style={{
+                                        display:'inline-flex',alignItems:'center',gap:6,
+                                        background:'#fff',color:'#1a73e8',borderRadius:8,
+                                        padding:'7px 14px',fontSize:12,fontWeight:700,
+                                        textDecoration:'none',
+                                        border:'1.5px solid #dadce0',
+                                        boxShadow:'0 1px 4px rgba(0,0,0,0.08)'
+                                      }}
+                                    >
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#ea4335"/></svg>
+                                      {t('mapsBtn')}
+                                    </a>
+                                  {spot.website && (
+                                    <a
+                                      href={spot.website}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={e => e.stopPropagation()}
+                                      style={{
+                                        display:'inline-flex',alignItems:'center',gap:6,
+                                        background: spot.website?.includes('wikipedia.org') ? '#475569' : (selectedCity?.color || '#3b82f6'),
+                                        color:'white',borderRadius:8,
+                                        padding:'7px 14px',fontSize:12,fontWeight:700,
+                                        textDecoration:'none',
+                                        boxShadow:`0 2px 8px ${spot.website?.includes('wikipedia.org') ? '#47556944' : (selectedCity?.color || '#3b82f6') + '44'}`
+                                      }}
+                                    >
+                                      {spot.website?.includes('wikipedia.org') ? `📖 ${t('wikiDetail')}` : `🌐 ${t('official')}`}
+                                    </a>
+                                  )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </div>
                       </>
@@ -5142,6 +5004,8 @@ function App() {
           </div>
         </div>
       )}
+        {showShareModal && selectedCity && (<><div onClick={() => setShowShareModal(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:2000,backdropFilter:"blur(4px)"}} /><div style={{position:"fixed",top:"50%",left:"50%",transform:"translate(-50%, -50%)",zIndex:2001,background:"white",borderRadius:20,padding:24,boxShadow:"0 20px 60px rgba(0,0,0,0.3)",minWidth:320}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}><div style={{fontSize:18,fontWeight:700}}>공유하기</div><button onClick={() => setShowShareModal(false)} style={{background:"none",border:"none",fontSize:24,cursor:"pointer",color:"#64748b"}}>✕</button></div><div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12}}><button onClick={() => { shareToKakao(selectedCity); setShowShareModal(false) }} style={{padding:"16px",background:"#FEE500",border:"none",borderRadius:12,fontSize:14,fontWeight:600,cursor:"pointer"}}>💬 카카오톡</button><button onClick={() => { shareToInstagram(selectedCity); setShowShareModal(false) }} style={{padding:"16px",background:"#E4405F",color:"white",border:"none",borderRadius:12,fontSize:14,fontWeight:600,cursor:"pointer"}}>📷 인스타그램</button><button onClick={() => { shareToLine(selectedCity); setShowShareModal(false) }} style={{padding:"16px",background:"#00B900",color:"white",border:"none",borderRadius:12,fontSize:14,fontWeight:600,cursor:"pointer"}}>📱 라인</button><button onClick={() => { shareToFacebook(selectedCity); setShowShareModal(false) }} style={{padding:"16px",background:"#1877F2",color:"white",border:"none",borderRadius:12,fontSize:14,fontWeight:600,cursor:"pointer"}}>📘 페이스북</button></div></div></>)}
+
     </div>
   )
 }
