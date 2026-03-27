@@ -4944,11 +4944,11 @@ function App() {
                               {hotspots.map((place, idx) => (
                                 <a 
                                 key={idx}
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id || \'\'}`}
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id || ''}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{
-                                  textDecoration: \'none\',
+                                  textDecoration: 'none',
                                   background:'white',
                                   border:'1.5px solid #e2e8f0',
                                   borderRadius:12,
@@ -5023,11 +5023,11 @@ function App() {
                               {restaurants.map((place, idx) => (
                                 <a
                                 key={idx}
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id || \'\'}`}
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id || ''}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{
-                                  textDecoration: \'none\',
+                                  textDecoration: 'none',
                                   background:'white',
                                   border:'1.5px solid #e2e8f0',
                                   borderRadius:12,
