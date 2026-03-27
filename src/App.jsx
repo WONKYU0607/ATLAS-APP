@@ -4405,17 +4405,11 @@ function App() {
     if (!city?.lat || !city?.lng) return
     
     setLoadingPlaces(true)
-    const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || 'YOUR_API_KEY_HERE'
     
     try {
       // 핫플레이스 (관광명소, 박물관, 공원 등)
       const hotspotRes = await fetch(
-        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?` +
-        `location=${city.lat},${city.lng}&` +
-        `radius=3000&` +
-        `type=tourist_attraction|museum|park|point_of_interest&` +
-        `key=${GOOGLE_API_KEY}` +
-        `&language=ko`
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park|point_of_interest`
       )
       const hotspotData = await hotspotRes.json()
       
@@ -4429,12 +4423,7 @@ function App() {
       
       // 맛집 (레스토랑, 카페)
       const restaurantRes = await fetch(
-        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?` +
-        `location=${city.lat},${city.lng}&` +
-        `radius=3000&` +
-        `type=restaurant|cafe&` +
-        `key=${GOOGLE_API_KEY}` +
-        `&language=ko`
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=restaurant|cafe`
       )
       const restaurantData = await restaurantRes.json()
       
