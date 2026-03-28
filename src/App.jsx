@@ -3797,6 +3797,156 @@ function App() {
     return `${d.getMonth()+1}/${d.getDate()} (${days[d.getDay()]})`
   }
 
+  // ── AI 코스 자동 생성 (알고리즘 기반, 비용 없음) ──────────────
+  const [showAiModal, setShowAiModal] = useState(false)
+  const [aiCity, setAiCity] = useState(null)
+  const [aiTheme, setAiTheme] = useState('종합')
+  const [aiDays, setAiDays] = useState(2)
+  const [aiTransport, setAiTransport] = useState('transit')
+  const [aiIntensity, setAiIntensity] = useState('normal')
+  const [aiCitySearch, setAiCitySearch] = useState('')
+  const [aiGenerating, setAiGenerating] = useState(false)
+
+  const allCitiesFlat = Object.entries(COUNTRY_CITIES).flatMap(([co, cs]) =>
+    cs.map(c => ({ ...c, countryEn: co, countryKo: COUNTRY_KO[co] || co }))
+  )
+  const aiCityResults = aiCitySearch.length >= 1
+    ? allCitiesFlat.filter(c =>
+        c.name.includes(aiCitySearch) ||
+        (CITY_I18N[c.name]?.[0]||'').toLowerCase().includes(aiCitySearch.toLowerCase()) ||
+        c.countryKo?.includes(aiCitySearch)
+      ).slice(0, 8)
+    : []
+
+  const haversine = (lat1,lng1,lat2,lng2) => {
+    const R=6371,toR=Math.PI/180,dLat=(lat2-lat1)*toR,dLng=(lng2-lng1)*toR
+    const a=Math.sin(dLat/2)**2+Math.cos(lat1*toR)*Math.cos(lat2*toR)*Math.sin(dLng/2)**2
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
+  }
+  // 가까운 순서대로 정렬 (nearest neighbor)
+  const sortByProximity = (items, startLat, startLng) => {
+    if (items.length <= 1) return items
+    const sorted = []; const remaining = [...items]
+    let curLat = startLat, curLng = startLng
+    while (remaining.length > 0) {
+      let minDist = Infinity, minIdx = 0
+      remaining.forEach((it, i) => {
+        const d = haversine(curLat, curLng, it._lat||curLat, it._lng||curLng)
+        if (d < minDist) { minDist = d; minIdx = i }
+      })
+      const picked = remaining.splice(minIdx, 1)[0]
+      sorted.push(picked); curLat = picked._lat||curLat; curLng = picked._lng||curLng
+    }
+    return sorted
+  }
+
+  const generateAiCourse = () => {
+    if (!aiCity) return
+    setAiGenerating(true)
+    setTimeout(() => {
+      const cityKey = aiCity.name || aiCity._koName
+      const staticData = CITY_DATA[cityKey]
+      const cityLat = aiCity.lat, cityLng = aiCity.lng
+
+      // 1) 장소 수집
+      let attractions = []; let foodPlaces = []
+      if (staticData?.spots) {
+        staticData.spots.forEach(s => {
+          const item = {
+            source: 'spot', name: s.name, displayName: s.name,
+            cityName: cityKey, cityDisplayName: getCityName(cityKey),
+            type: s.type, rating: s.rating || 4.0, wikiTitle: s.wikiTitle,
+            lat: cityLat, lng: cityLng, _lat: cityLat, _lng: cityLng,
+            emoji: s.type==='자연'?'🌿':s.type==='역사'?'🏛️':s.type==='음식'?'🍽️':s.type==='문화'?'🎭':s.type==='랜드마크'?'🏙️':'📍'
+          }
+          if (s.type === '음식') foodPlaces.push(item)
+          else attractions.push(item)
+        })
+      }
+      // Google Places 데이터도 활용 (현재 로드된 것)
+      if (hotspots.length > 0) {
+        hotspots.forEach(p => {
+          if (!attractions.some(a => a.name === p.name)) {
+            attractions.push({
+              source:'hotspot', name:p.name, displayName:p.name,
+              cityName:cityKey, cityDisplayName:getCityName(cityKey),
+              rating:p.rating||4.0, place_id:p.place_id, vicinity:p.vicinity,
+              lat:cityLat, lng:cityLng, _lat:p.geometry?.location?.lat||cityLat, _lng:p.geometry?.location?.lng||cityLng,
+              emoji:'📍', photo_ref:p.photos?.[0]?.photo_reference||null
+            })
+          }
+        })
+      }
+      if (restaurants.length > 0) {
+        restaurants.forEach(p => {
+          if (!foodPlaces.some(f => f.name === p.name)) {
+            foodPlaces.push({
+              source:'restaurant', name:p.name, displayName:p.name,
+              cityName:cityKey, cityDisplayName:getCityName(cityKey),
+              rating:p.rating||4.0, place_id:p.place_id, vicinity:p.vicinity,
+              lat:cityLat, lng:cityLng, _lat:p.geometry?.location?.lat||cityLat, _lng:p.geometry?.location?.lng||cityLng,
+              emoji:'🍽️', photo_ref:p.photos?.[0]?.photo_reference||null
+            })
+          }
+        })
+      }
+
+      // 2) 테마 필터
+      if (aiTheme === '역사') attractions = attractions.filter(a => ['역사','문화','랜드마크'].includes(a.type) || a.source==='hotspot')
+      else if (aiTheme === '자연') attractions = attractions.filter(a => ['자연','랜드마크'].includes(a.type) || a.source==='hotspot')
+      else if (aiTheme === '음식') { attractions = [...attractions.slice(0,2), ...foodPlaces]; foodPlaces = foodPlaces.slice(2) }
+
+      // 3) 별점순 정렬
+      attractions.sort((a,b) => (b.rating||0) - (a.rating||0))
+      foodPlaces.sort((a,b) => (b.rating||0) - (a.rating||0))
+
+      // 4) 강도별 하루 장소 수
+      const perDay = aiIntensity === 'light' ? 3 : aiIntensity === 'normal' ? 5 : 7
+      const mealsPerDay = aiIntensity === 'light' ? 1 : 2
+
+      // 5) 날짜별 배분
+      const days = []
+      let attrIdx = 0, foodIdx = 0
+      for (let d = 0; d < aiDays; d++) {
+        const dayItems = []
+        // 오전 관광
+        const morningCount = Math.ceil(perDay * 0.4)
+        for (let i = 0; i < morningCount && attrIdx < attractions.length; i++) {
+          dayItems.push({ ...attractions[attrIdx], _slot: 'morning' }); attrIdx++
+        }
+        // 점심
+        if (foodIdx < foodPlaces.length) {
+          dayItems.push({ ...foodPlaces[foodIdx], _slot: 'lunch' }); foodIdx++
+        }
+        // 오후 관광
+        const afternoonCount = perDay - morningCount
+        for (let i = 0; i < afternoonCount && attrIdx < attractions.length; i++) {
+          dayItems.push({ ...attractions[attrIdx], _slot: 'afternoon' }); attrIdx++
+        }
+        // 저녁
+        if (mealsPerDay >= 2 && foodIdx < foodPlaces.length) {
+          dayItems.push({ ...foodPlaces[foodIdx], _slot: 'dinner' }); foodIdx++
+        }
+        // 동선 최적화 (시간대별 그룹 내에서 가까운 순)
+        const morning = sortByProximity(dayItems.filter(i=>i._slot==='morning'), cityLat, cityLng)
+        const lunch = dayItems.filter(i=>i._slot==='lunch')
+        const lastMorning = morning[morning.length-1]
+        const afternoon = sortByProximity(dayItems.filter(i=>i._slot==='afternoon'), lastMorning?._lat||cityLat, lastMorning?._lng||cityLng)
+        const dinner = dayItems.filter(i=>i._slot==='dinner')
+        const ordered = [...morning, ...lunch, ...afternoon, ...dinner].map(({_slot,_lat,_lng,...rest})=>({...rest, addedAt:Date.now()}))
+        days.push({ items: ordered })
+      }
+
+      // 6) 플래너에 로드
+      saveCourseDays(days)
+      setCourseTransport(aiTransport)
+      setActiveDayTab(0)
+      setShowAiModal(false)
+      setShowCoursePlanner(true)
+      setAiGenerating(false)
+    }, 600) // 약간의 딜레이로 생성 중 느낌
+  }
+
   const saveCourse = (items) => { setCourseItems(items); localStorage.setItem('atlas_course', JSON.stringify(items)) }
   const addToCourse = (item) => {
     if (courseItems.some(c => c.name === item.name && c.source === item.source)) return
@@ -4880,6 +5030,8 @@ function App() {
         @keyframes coursePop{0%{transform:scale(1)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
         @keyframes courseSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
         @keyframes coursePlannerIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+        @keyframes aiModalIn{from{opacity:0;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+        @keyframes aiPulse{0%,100%{opacity:.6}50%{opacity:1}}
         .drag-over{border-color:#3b82f6!important;background:#eff6ff!important}
         .card{transition:transform .18s,box-shadow .18s;cursor:pointer}
         .card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.13)!important}
@@ -4930,6 +5082,16 @@ function App() {
                 ))}
               </div>
             )}
+          </div>
+          {/* AI Course Button */}
+          <div style={{marginLeft:4}}>
+            <button onClick={()=>{setShowAiModal(true);setShowLangMenu(false);setShowFavorites(false)}}
+              style={{display:'flex',alignItems:'center',gap:5,background:showAiModal?'rgba(139,92,246,.3)':'rgba(255,255,255,.12)',border:showAiModal?'1px solid rgba(139,92,246,.5)':'1px solid rgba(255,255,255,.2)',borderRadius:20,padding:'5px 12px',cursor:'pointer',color:'white',fontSize:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s'}}
+              onMouseEnter={e=>e.currentTarget.style.background=showAiModal?'rgba(139,92,246,.4)':'rgba(255,255,255,.22)'}
+              onMouseLeave={e=>e.currentTarget.style.background=showAiModal?'rgba(139,92,246,.3)':'rgba(255,255,255,.12)'}>
+              <span style={{fontSize:14}}>🤖</span>
+              <span>AI코스</span>
+            </button>
           </div>
           {/* Course Planner Button */}
           {courseItems.length > 0 && (
@@ -5691,6 +5853,157 @@ function App() {
             )}
           </div>
         </div>
+        </>
+      )}
+
+      {/* ── AI 코스 생성 모달 ── */}
+      {showAiModal && (
+        <>
+          <div onClick={()=>setShowAiModal(false)} style={{position:'absolute',inset:0,background:'rgba(0,0,0,.5)',zIndex:1300,backdropFilter:'blur(4px)'}}/>
+          <div style={{
+            position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',
+            width:Math.min(440,typeof window!=='undefined'?window.innerWidth-40:400),
+            background:'white',borderRadius:22,border:'1.5px solid #e2e8f0',
+            boxShadow:'0 24px 80px rgba(0,0,0,.3)',zIndex:1301,overflow:'hidden',
+            animation:'aiModalIn .3s cubic-bezier(.16,1,.3,1)'
+          }}>
+            {/* 모달 헤더 */}
+            <div style={{padding:'22px 24px 16px',background:'linear-gradient(135deg,#7c3aed12,#3b82f612)',borderBottom:'1px solid #f1f5f9'}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                <div style={{display:'flex',alignItems:'center',gap:10}}>
+                  <div style={{width:42,height:42,borderRadius:12,background:'linear-gradient(135deg,#7c3aed,#3b82f6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,boxShadow:'0 4px 12px rgba(124,58,237,.3)'}}>🤖</div>
+                  <div>
+                    <div style={{fontSize:17,fontWeight:800,color:'#0f172a'}}>AI 코스 자동 생성</div>
+                    <div style={{fontSize:11,color:'#94a3b8',marginTop:1}}>도시와 조건을 선택하면 최적 코스를 짜드려요</div>
+                  </div>
+                </div>
+                <button onClick={()=>setShowAiModal(false)} style={{background:'#f1f5f9',border:'none',color:'#64748b',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+              </div>
+            </div>
+
+            {/* 모달 내용 */}
+            <div style={{padding:'18px 24px 24px',display:'flex',flexDirection:'column',gap:16}}>
+              {/* 도시 선택 */}
+              <div>
+                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>📍 도시 선택</div>
+                {aiCity ? (
+                  <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',background:'#eff6ff',border:'1.5px solid #93c5fd',borderRadius:10}}>
+                    <span style={{fontSize:18}}>{aiCity.emoji||'📍'}</span>
+                    <div style={{flex:1}}>
+                      <span style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>{aiCity.name}</span>
+                      <span style={{fontSize:11,color:'#64748b',marginLeft:6}}>{aiCity.countryKo}</span>
+                    </div>
+                    <button onClick={()=>{setAiCity(null);setAiCitySearch('')}} style={{background:'none',border:'none',color:'#94a3b8',cursor:'pointer',fontSize:14}}>✕</button>
+                  </div>
+                ) : (
+                  <div style={{position:'relative'}}>
+                    <input value={aiCitySearch} onChange={e=>setAiCitySearch(e.target.value)}
+                      placeholder="도시 이름 검색 (예: 파리, Tokyo, 서울)"
+                      style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box',transition:'border .2s'}}
+                      onFocus={e=>e.currentTarget.style.borderColor='#3b82f6'}
+                      onBlur={e=>e.currentTarget.style.borderColor='#e2e8f0'}/>
+                    {aiCityResults.length > 0 && (
+                      <div style={{position:'absolute',top:'calc(100% + 4px)',left:0,right:0,background:'white',border:'1.5px solid #e2e8f0',borderRadius:12,boxShadow:'0 8px 24px rgba(0,0,0,.12)',maxHeight:200,overflowY:'auto',zIndex:10}}>
+                        {aiCityResults.map((c,i)=>(
+                          <div key={i} onClick={()=>{setAiCity(c);setAiCitySearch('')}}
+                            style={{display:'flex',alignItems:'center',gap:8,padding:'9px 14px',cursor:'pointer',transition:'background .1s',borderBottom:i<aiCityResults.length-1?'1px solid #f8fafc':'none'}}
+                            onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
+                            onMouseLeave={e=>e.currentTarget.style.background='white'}>
+                            <span style={{fontSize:16}}>{c.emoji||'📍'}</span>
+                            <span style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{c.name}</span>
+                            <span style={{fontSize:11,color:'#94a3b8'}}>{c.countryKo}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* 테마 */}
+              <div>
+                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>🎨 관광 테마</div>
+                <div style={{display:'flex',gap:6}}>
+                  {[{k:'종합',icon:'🌍'},{k:'역사',icon:'🏛️'},{k:'자연',icon:'🌿'},{k:'음식',icon:'🍽️'}].map(t=>(
+                    <button key={t.k} onClick={()=>setAiTheme(t.k)} style={{
+                      flex:1,padding:'9px 0',fontSize:12,fontWeight:aiTheme===t.k?700:500,
+                      background:aiTheme===t.k?'#1e293b':'#f8fafc',color:aiTheme===t.k?'white':'#64748b',
+                      border:aiTheme===t.k?'none':'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',
+                      display:'flex',alignItems:'center',justifyContent:'center',gap:4,transition:'all .15s'
+                    }}>{t.icon} {t.k}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 일수 + 강도 */}
+              <div style={{display:'flex',gap:12}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>📅 여행 일수</div>
+                  <div style={{display:'flex',gap:4}}>
+                    {[1,2,3,4,5].map(n=>(
+                      <button key={n} onClick={()=>setAiDays(n)} style={{
+                        flex:1,padding:'9px 0',fontSize:13,fontWeight:aiDays===n?700:500,
+                        background:aiDays===n?'#3b82f6':'#f8fafc',color:aiDays===n?'white':'#64748b',
+                        border:aiDays===n?'none':'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',transition:'all .15s'
+                      }}>{n}일</button>
+                    ))}
+                  </div>
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>💪 여행 강도</div>
+                  <div style={{display:'flex',gap:4}}>
+                    {[{k:'light',l:'여유'},{k:'normal',l:'보통'},{k:'hard',l:'빡빡'}].map(t=>(
+                      <button key={t.k} onClick={()=>setAiIntensity(t.k)} style={{
+                        flex:1,padding:'9px 0',fontSize:12,fontWeight:aiIntensity===t.k?700:500,
+                        background:aiIntensity===t.k?'#1e293b':'#f8fafc',color:aiIntensity===t.k?'white':'#64748b',
+                        border:aiIntensity===t.k?'none':'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',transition:'all .15s'
+                      }}>{t.l}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 이동수단 */}
+              <div>
+                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>🚌 이동 수단</div>
+                <div style={{display:'flex',gap:6}}>
+                  {[{k:'transit',l:'대중교통',i:'🚇'},{k:'walking',l:'도보',i:'🚶'},{k:'driving',l:'차량',i:'🚗'}].map(t=>(
+                    <button key={t.k} onClick={()=>setAiTransport(t.k)} style={{
+                      flex:1,padding:'9px 0',fontSize:12,fontWeight:aiTransport===t.k?700:500,
+                      background:aiTransport===t.k?'#1e293b':'#f8fafc',color:aiTransport===t.k?'white':'#64748b',
+                      border:aiTransport===t.k?'none':'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',
+                      display:'flex',alignItems:'center',justifyContent:'center',gap:4,transition:'all .15s'
+                    }}>{t.i} {t.l}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 미리보기 요약 */}
+              {aiCity && (
+                <div style={{padding:'10px 14px',background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,fontSize:12,color:'#0369a1',lineHeight:1.7}}>
+                  💡 <strong>{aiCity.name}</strong>에서 <strong>{aiDays}일</strong> 동안 <strong>{aiTheme}</strong> 테마로,
+                  {aiIntensity==='light'?' 하루 3~4곳씩 여유롭게':aiIntensity==='normal'?' 하루 5~6곳씩 알차게':' 하루 7곳 이상 빡빡하게'} 돌아보는 코스를 생성합니다.
+                </div>
+              )}
+
+              {/* 생성 버튼 */}
+              <button onClick={generateAiCourse} disabled={!aiCity||aiGenerating}
+                style={{
+                  width:'100%',padding:'14px',fontSize:15,fontWeight:800,
+                  background:aiCity?'linear-gradient(135deg,#7c3aed,#3b82f6)':'#e2e8f0',
+                  color:aiCity?'white':'#94a3b8',border:'none',borderRadius:12,
+                  cursor:aiCity&&!aiGenerating?'pointer':'not-allowed',
+                  boxShadow:aiCity?'0 6px 20px rgba(124,58,237,.3)':'none',
+                  transition:'all .2s',display:'flex',alignItems:'center',justifyContent:'center',gap:8
+                }}>
+                {aiGenerating ? (
+                  <><div style={{width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,.3)',borderTopColor:'white',animation:'spin .7s linear infinite'}}/> 코스 생성 중...</>
+                ) : (
+                  <>🤖 코스 자동 생성</>
+                )}
+              </button>
+            </div>
+          </div>
         </>
       )}
 
