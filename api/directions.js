@@ -3,7 +3,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET')
   
-  const { origin, destination, mode = 'transit' } = req.query
+  const { origin, destination, mode = 'transit', language = 'ko' } = req.query
   
   if (!origin || !destination) {
     return res.status(400).json({ error: 'origin and destination are required' })
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   }
   
   try {
-    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&mode=${mode}&language=ko&key=${apiKey}`
+    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&mode=${mode}&language=${language}&key=${apiKey}`
     
     const response = await fetch(url)
     const data = await response.json()
