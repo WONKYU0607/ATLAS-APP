@@ -4916,6 +4916,18 @@ function App() {
               </div>
             )}
           </div>
+          {/* Course Planner Button */}
+          {courseItems.length > 0 && (
+            <div style={{marginLeft:4}}>
+              <button onClick={openCoursePlanner}
+                style={{display:'flex',alignItems:'center',gap:5,background:showCoursePlanner?'rgba(59,130,246,.3)':'rgba(255,255,255,.12)',border:showCoursePlanner?'1px solid rgba(59,130,246,.5)':'1px solid rgba(255,255,255,.2)',borderRadius:20,padding:'5px 12px',cursor:'pointer',color:'white',fontSize:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s'}}
+                onMouseEnter={e=>e.currentTarget.style.background=showCoursePlanner?'rgba(59,130,246,.4)':'rgba(255,255,255,.22)'}
+                onMouseLeave={e=>e.currentTarget.style.background=showCoursePlanner?'rgba(59,130,246,.3)':'rgba(255,255,255,.12)'}>
+                <span style={{fontSize:14}}>🗺️</span>
+                <span style={{background:'#3b82f6',borderRadius:8,padding:'0px 6px',fontSize:10,fontWeight:800,lineHeight:'18px'}}>{courseItems.length}</span>
+              </button>
+            </div>
+          )}
           {/* Favorites Button */}
           <div style={{position:'relative',marginLeft:4}}>
             <button onClick={()=>{setShowFavorites(v=>!v);setShowLangMenu(false)}}
@@ -5337,12 +5349,14 @@ function App() {
                             </div>
                           )}
                         </div>
-                        <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav({type:sidePanel==='hotspots'?'hotspot':'restaurant',name:place.name,place_id:place.place_id,rating:place.rating,user_ratings_total:place.user_ratings_total,vicinity:place.vicinity,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name)})}}
-                          style={{background:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#fef3c7':'#f8fafc',border:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'1.5px solid #fbbf24':'1.5px solid #e2e8f0',color:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#f59e0b':'#cbd5e1',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:15,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
-                          title="즐겨찾기">{isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'⭐':'☆'}</button>
-                        <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:sidePanel==='hotspots'?'hotspot':'restaurant',name:place.name,displayName:place.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:place.rating,place_id:place.place_id,vicinity:place.vicinity,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:sidePanel==='hotspots'?'📍':foodCategory==='cafe'?'☕':foodCategory==='bar'?'🍻':'🍽️',photo_ref:place.photos?.[0]?.photo_reference||null})}}
-                          style={{background:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'#3b82f6':'#f8fafc',border:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'1.5px solid #3b82f6':'1.5px solid #e2e8f0',color:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'white':'#cbd5e1',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:15,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
-                          title="코스에 추가">{isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'✓':'＋'}</button>
+                        <div style={{display:'flex',flexDirection:'column',gap:4,flexShrink:0}}>
+                          <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:sidePanel==='hotspots'?'hotspot':'restaurant',name:place.name,displayName:place.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:place.rating,place_id:place.place_id,vicinity:place.vicinity,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:sidePanel==='hotspots'?'📍':foodCategory==='cafe'?'☕':foodCategory==='bar'?'🍻':'🍽️',photo_ref:place.photos?.[0]?.photo_reference||null})}}
+                            style={{background:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'#3b82f6':'#f8fafc',border:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'1.5px solid #3b82f6':'1.5px solid #e2e8f0',color:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'white':'#cbd5e1',width:28,height:28,borderRadius:6,cursor:'pointer',fontSize:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
+                            title="코스에 추가">{isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'✓':'＋'}</button>
+                          <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav({type:sidePanel==='hotspots'?'hotspot':'restaurant',name:place.name,place_id:place.place_id,rating:place.rating,user_ratings_total:place.user_ratings_total,vicinity:place.vicinity,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name)})}}
+                            style={{background:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#fef3c7':'#f8fafc',border:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'1.5px solid #fbbf24':'1.5px solid #e2e8f0',color:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#f59e0b':'#cbd5e1',width:28,height:28,borderRadius:6,cursor:'pointer',fontSize:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
+                            title="즐겨찾기">{isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'⭐':'☆'}</button>
+                        </div>
                       </div>
                     </a>
                   ))}
@@ -5366,6 +5380,9 @@ function App() {
                 <div style={{fontSize:26,fontWeight:800,letterSpacing:'-.5px',color:'#0f172a'}}>{getCityName(selectedCity?._koName || selectedCity?.name) || ''}</div>
               </div>
               <div style={{display:'flex',gap:6,flexShrink:0}}>
+                <button onClick={()=>addToCourse({source:'city',name:selectedCity?._koName||selectedCity?.name,displayName:getCityName(selectedCity?._koName||selectedCity?.name),cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),emoji:selectedCity?.emoji||'📍',lat:selectedCity?.lat,lng:selectedCity?.lng,rating:null})}
+                  style={{background:isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'#3b82f6':'#f1f5f9',border:isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'1.5px solid #3b82f6':'1.5px solid #e2e8f0',color:isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'white':'#94a3b8',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
+                  title="코스에 추가">{isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'✓':'＋'}</button>
                 <button onClick={()=>toggleFav({type:'city',name:selectedCity?._koName||selectedCity?.name,_koName:selectedCity?._koName||selectedCity?.name,displayName:getCityName(selectedCity?._koName||selectedCity?.name),emoji:selectedCity?.emoji,color:selectedCity?.color,countryEn:selectedCity?.countryEn,countryName:countryKo,lat:selectedCity?.lat,lng:selectedCity?.lng})}
                   style={{background:isFav('city',selectedCity?._koName||selectedCity?.name)?'#fef3c7':'#f1f5f9',border:isFav('city',selectedCity?._koName||selectedCity?.name)?'1.5px solid #fbbf24':'1.5px solid #e2e8f0',color:isFav('city',selectedCity?._koName||selectedCity?.name)?'#f59e0b':'#94a3b8',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
                   title="즐겨찾기">{isFav('city',selectedCity?._koName||selectedCity?.name)?'⭐':'☆'}</button>
@@ -5662,28 +5679,9 @@ function App() {
         </>
       )}
 
-      {/* ── 코스 아이콘 (좌상단) ── */}
-      {courseItems.length > 0 && !showCoursePlanner && (
-        <button onClick={openCoursePlanner} style={{
-          position:'absolute',top:18,left:18,zIndex:1100,
-          display:'flex',alignItems:'center',gap:6,
-          background:'linear-gradient(135deg,#1e293b,#334155)',color:'white',
-          border:'2px solid rgba(255,255,255,.2)',borderRadius:14,
-          padding:'10px 14px',fontSize:13,fontWeight:700,cursor:'pointer',
-          boxShadow:'0 4px 20px rgba(0,0,0,.35)',backdropFilter:'blur(12px)',
-          transition:'all .2s',animation:'courseBasketIn .4s cubic-bezier(.16,1,.3,1)'
-        }}
-        onMouseEnter={e=>{e.currentTarget.style.transform='scale(1.05)';e.currentTarget.style.boxShadow='0 6px 28px rgba(0,0,0,.45)'}}
-        onMouseLeave={e=>{e.currentTarget.style.transform='scale(1)';e.currentTarget.style.boxShadow='0 4px 20px rgba(0,0,0,.35)'}}
-        >
-          <span style={{fontSize:16}}>🗺️</span>
-          <span style={{background:'#3b82f6',borderRadius:10,padding:'1px 8px',fontSize:11,fontWeight:800,minWidth:18,textAlign:'center'}}>{courseItems.length}</span>
-        </button>
-      )}
-
       {/* ── 코스 플래너 패널 ── */}
       {showCoursePlanner && courseDays.length > 0 && (
-        <div style={{position:'absolute',top:0,left:0,bottom:0,width:Math.min(540,typeof window!=='undefined'?window.innerWidth-30:500),zIndex:1200,background:'rgba(255,255,255,.97)',backdropFilter:'blur(20px)',borderRight:'1.5px solid #e2e8f0',boxShadow:'12px 0 40px rgba(0,0,0,.12)',display:'flex',flexDirection:'column',animation:'coursePlannerIn .35s cubic-bezier(.16,1,.3,1)'}}>
+        <div style={{position:'absolute',top:72,left:0,bottom:0,width:Math.min(540,typeof window!=='undefined'?window.innerWidth-30:500),zIndex:1100,background:'rgba(255,255,255,.97)',backdropFilter:'blur(20px)',borderRight:'1.5px solid #e2e8f0',boxShadow:'12px 0 40px rgba(0,0,0,.12)',display:'flex',flexDirection:'column',animation:'coursePlannerIn .35s cubic-bezier(.16,1,.3,1)',borderRadius:'0 18px 0 0'}}>
           {/* 플래너 헤더 */}
           <div style={{padding:'18px 20px 14px',borderBottom:'1px solid #e2e8f0',flexShrink:0}}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
