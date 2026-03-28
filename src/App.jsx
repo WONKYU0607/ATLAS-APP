@@ -3767,6 +3767,25 @@ function App() {
   const [sidePanel, setSidePanel] = useState(null) // 'hotspots' | 'restaurants' | null
   const [showFavorites, setShowFavorites] = useState(false)
 
+  // 코스 담기 (장바구니)
+  const [courseItems, setCourseItems] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('atlas_course') || '[]') } catch { return [] }
+  })
+  const [showCourseBasket, setShowCourseBasket] = useState(false)
+  const saveCourse = (items) => { setCourseItems(items); localStorage.setItem('atlas_course', JSON.stringify(items)) }
+  const addToCourse = (item) => {
+    if (courseItems.some(c => c.name === item.name && c.source === item.source)) return
+    saveCourse([...courseItems, { ...item, addedAt: Date.now() }])
+  }
+  const removeFromCourse = (idx) => { saveCourse(courseItems.filter((_, i) => i !== idx)) }
+  const isInCourse = (name, source) => courseItems.some(c => c.name === name && c.source === source)
+  const reorderCourse = (fromIdx, toIdx) => {
+    const arr = [...courseItems]
+    const [moved] = arr.splice(fromIdx, 1)
+    arr.splice(toIdx, 0, moved)
+    saveCourse(arr)
+  }
+
   // 즐겨찾기 (localStorage 저장)
   const [favorites, setFavorites] = useState(() => {
     try { return JSON.parse(localStorage.getItem('atlas_favorites') || '[]') } catch { return [] }
@@ -4743,6 +4762,9 @@ function App() {
         @keyframes sIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
         @keyframes sharePopIn{from{opacity:0;transform:translateY(-8px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes sidePanelIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+        @keyframes courseBasketIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes coursePop{0%{transform:scale(1)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
+        @keyframes courseSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
         .card{transition:transform .18s,box-shadow .18s;cursor:pointer}
         .card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.13)!important}
         .cimg{transition:transform .4s}.card:hover .cimg{transform:scale(1.06)}
@@ -5059,7 +5081,7 @@ function App() {
 
       {/* Hint */}
       {!selectedCountry && (
-        <div style={{position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:1000,background:'rgba(255,255,255,.9)',backdropFilter:'blur(12px)',border:'1.5px solid rgba(255,255,255,.5)',borderRadius:40,padding:'9px 20px',fontSize:12,color:'#475569',whiteSpace:'nowrap',boxShadow:'0 4px 20px rgba(0,0,0,.2)',pointerEvents:'none'}}>
+        <div style={{position:'absolute',bottom:courseItems.length>0?72:24,left:'50%',transform:'translateX(-50%)',zIndex:1000,background:'rgba(255,255,255,.9)',backdropFilter:'blur(12px)',border:'1.5px solid rgba(255,255,255,.5)',borderRadius:40,padding:'9px 20px',fontSize:12,color:'#475569',whiteSpace:'nowrap',boxShadow:'0 4px 20px rgba(0,0,0,.2)',pointerEvents:'none',transition:'bottom .3s'}}>
           {t('hintMain')}
         </div>
       )}
@@ -5217,6 +5239,9 @@ function App() {
                         <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav({type:sidePanel==='hotspots'?'hotspot':'restaurant',name:place.name,place_id:place.place_id,rating:place.rating,user_ratings_total:place.user_ratings_total,vicinity:place.vicinity,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name)})}}
                           style={{background:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#fef3c7':'#f8fafc',border:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'1.5px solid #fbbf24':'1.5px solid #e2e8f0',color:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#f59e0b':'#cbd5e1',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:15,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
                           title="즐겨찾기">{isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'⭐':'☆'}</button>
+                        <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:sidePanel==='hotspots'?'hotspot':'restaurant',name:place.name,displayName:place.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:place.rating,place_id:place.place_id,vicinity:place.vicinity,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:sidePanel==='hotspots'?'📍':foodCategory==='cafe'?'☕':foodCategory==='bar'?'🍻':'🍽️',photo_ref:place.photos?.[0]?.photo_reference||null})}}
+                          style={{background:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'#3b82f6':'#f8fafc',border:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'1.5px solid #3b82f6':'1.5px solid #e2e8f0',color:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'white':'#cbd5e1',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:15,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s',animation:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'coursePop .3s':'none'}}
+                          title="코스에 추가">{isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'✓':'＋'}</button>
                       </div>
                     </a>
                   ))}
@@ -5436,6 +5461,9 @@ function App() {
                                 <button onClick={e=>{e.stopPropagation();toggleFav({type:'spot',name:spot.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),wikiTitle:spot.wikiTitle,spotType:spot.type,rating:spot.rating})}}
                                   style={{position:'absolute',top:8,right:8,width:30,height:30,borderRadius:8,background:isFav('spot',spot.name)?'rgba(251,191,36,.9)':'rgba(0,0,0,.4)',border:'none',color:isFav('spot',spot.name)?'white':'rgba(255,255,255,.7)',fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',transition:'all .2s',zIndex:2}}
                                   title="즐겨찾기">{isFav('spot',spot.name)?'⭐':'☆'}</button>
+                                <button onClick={e=>{e.stopPropagation();addToCourse({source:'spot',name:spot.name,displayName:trSpot(selectedCity?._koName||selectedCity?.name,spot.name)?.name||spot.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),type:spot.type,rating:spot.rating,wikiTitle:spot.wikiTitle,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:spot.type==='자연'?'🌿':spot.type==='역사'?'🏛️':spot.type==='음식'?'🍽️':spot.type==='문화'?'🎭':'📍'})}}
+                                  style={{position:'absolute',top:8,right:44,width:30,height:30,borderRadius:8,background:isInCourse(spot.name,'spot')?'rgba(59,130,246,.9)':'rgba(0,0,0,.4)',border:'none',color:'white',fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',transition:'all .2s',zIndex:2,animation:isInCourse(spot.name,'spot')?'coursePop .3s':'none'}}
+                                  title="코스에 추가">{isInCourse(spot.name,'spot')?'✓':'＋'}</button>
 
                                 <div style={{position:'absolute',bottom:10,left:12,right:12,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
                                   <div>
@@ -5532,6 +5560,133 @@ function App() {
         </div>
         </>
       )}
+
+      {/* 코스 플로팅 바스켓 바 */}
+      {courseItems.length > 0 && (
+        <div style={{
+          position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:1100,
+          animation:'courseBasketIn .4s cubic-bezier(.16,1,.3,1)'
+        }}>
+          <button onClick={()=>setShowCourseBasket(v=>!v)} style={{
+            display:'flex',alignItems:'center',gap:10,
+            background:'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+            color:'white',border:'2px solid rgba(255,255,255,.15)',borderRadius:50,
+            padding:'12px 24px',fontSize:14,fontWeight:700,cursor:'pointer',
+            boxShadow:'0 8px 32px rgba(0,0,0,.35)',backdropFilter:'blur(12px)',
+            transition:'all .2s',whiteSpace:'nowrap'
+          }}
+          onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'}
+          onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}
+          >
+            <span style={{fontSize:18}}>🗺️</span>
+            <span>내 코스</span>
+            <span style={{
+              background:'#3b82f6',color:'white',borderRadius:20,
+              padding:'2px 10px',fontSize:12,fontWeight:800,
+              minWidth:22,textAlign:'center'
+            }}>{courseItems.length}</span>
+            <span style={{fontSize:12,opacity:.7}}>{showCourseBasket?'▼':'▲'}</span>
+          </button>
+        </div>
+      )}
+
+      {/* 코스 바스켓 패널 */}
+      {showCourseBasket && courseItems.length > 0 && (
+        <div style={{
+          position:'absolute',bottom:72,left:'50%',transform:'translateX(-50%)',
+          width:Math.min(460, typeof window!=='undefined'?window.innerWidth-40:420),maxHeight:'55vh',
+          background:'rgba(255,255,255,.98)',backdropFilter:'blur(20px)',
+          borderRadius:20,border:'1.5px solid #e2e8f0',
+          boxShadow:'0 20px 60px rgba(0,0,0,.25)',
+          zIndex:1100,overflow:'hidden',
+          animation:'courseSlideUp .35s cubic-bezier(.16,1,.3,1)'
+        }}>
+          {/* 바스켓 헤더 */}
+          <div style={{
+            padding:'16px 20px 12px',borderBottom:'1px solid #f1f5f9',
+            display:'flex',alignItems:'center',justifyContent:'space-between',
+            background:'linear-gradient(white 90%, transparent)'
+          }}>
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <span style={{fontSize:18}}>🗺️</span>
+              <span style={{fontSize:16,fontWeight:800,color:'#0f172a'}}>내 코스</span>
+              <span style={{fontSize:12,color:'#94a3b8',fontWeight:500}}>{courseItems.length}곳</span>
+            </div>
+            <div style={{display:'flex',gap:6}}>
+              <button onClick={()=>{if(confirm('코스를 모두 비울까요?'))saveCourse([])}}
+                style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',
+                  padding:'5px 12px',borderRadius:8,fontSize:11,fontWeight:600,cursor:'pointer'}}>
+                전체삭제
+              </button>
+              <button onClick={()=>setShowCourseBasket(false)}
+                style={{background:'#f1f5f9',border:'none',color:'#64748b',width:30,height:30,
+                  borderRadius:8,cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                ✕
+              </button>
+            </div>
+          </div>
+
+          {/* 바스켓 리스트 */}
+          <div style={{padding:'10px 14px 16px',overflowY:'auto',maxHeight:'calc(55vh - 120px)'}}>
+            {courseItems.map((item, idx) => (
+              <div key={item.name+'-'+idx} style={{
+                display:'flex',alignItems:'center',gap:10,padding:'10px 10px',
+                background:idx%2===0?'#fafbfc':'white',
+                borderRadius:10,marginBottom:4,
+                border:'1px solid #f1f5f9',transition:'all .15s'
+              }}>
+                <div style={{
+                  width:26,height:26,borderRadius:'50%',flexShrink:0,
+                  background:'linear-gradient(135deg, #3b82f6, #6366f1)',
+                  color:'white',fontSize:12,fontWeight:800,
+                  display:'flex',alignItems:'center',justifyContent:'center'
+                }}>{idx+1}</div>
+                <span style={{fontSize:18,flexShrink:0}}>{item.emoji||'📍'}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                    {item.displayName}
+                  </div>
+                  <div style={{display:'flex',alignItems:'center',gap:6,marginTop:2}}>
+                    <span style={{fontSize:10,color:'#94a3b8'}}>{item.cityDisplayName}</span>
+                    <span style={{fontSize:9,padding:'1px 6px',borderRadius:4,
+                      background:item.source==='spot'?'#dbeafe':item.source==='hotspot'?'#fef3c7':'#dcfce7',
+                      color:item.source==='spot'?'#2563eb':item.source==='hotspot'?'#d97706':'#16a34a',
+                      fontWeight:600
+                    }}>{item.source==='spot'?'관광지':item.source==='hotspot'?'핫플':'맛집'}</span>
+                    {item.rating && <span style={{fontSize:10,color:'#f59e0b'}}>★{item.rating}</span>}
+                  </div>
+                </div>
+                <div style={{display:'flex',flexDirection:'column',gap:1,flexShrink:0}}>
+                  <button onClick={()=>{if(idx>0)reorderCourse(idx,idx-1)}}
+                    disabled={idx===0}
+                    style={{background:'none',border:'none',cursor:idx===0?'default':'pointer',
+                      color:idx===0?'#e2e8f0':'#94a3b8',fontSize:11,padding:'1px 4px',lineHeight:1}}>▲</button>
+                  <button onClick={()=>{if(idx<courseItems.length-1)reorderCourse(idx,idx+1)}}
+                    disabled={idx===courseItems.length-1}
+                    style={{background:'none',border:'none',cursor:idx===courseItems.length-1?'default':'pointer',
+                      color:idx===courseItems.length-1?'#e2e8f0':'#94a3b8',fontSize:11,padding:'1px 4px',lineHeight:1}}>▼</button>
+                </div>
+                <button onClick={()=>removeFromCourse(idx)}
+                  style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',
+                    width:26,height:26,borderRadius:6,cursor:'pointer',fontSize:12,flexShrink:0,
+                    display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
+                  onMouseEnter={e=>{e.currentTarget.style.background='#ef4444';e.currentTarget.style.color='white'}}
+                  onMouseLeave={e=>{e.currentTarget.style.background='#fef2f2';e.currentTarget.style.color='#ef4444'}}
+                >✕</button>
+              </div>
+            ))}
+          </div>
+
+          {/* 바스켓 푸터 */}
+          <div style={{padding:'12px 16px',borderTop:'1px solid #f1f5f9',background:'#fafbfc',
+            display:'flex',gap:8}}>
+            <div style={{flex:1,fontSize:11,color:'#94a3b8',display:'flex',alignItems:'center'}}>
+              💡 2단계에서 날짜별 코스 편집 기능이 추가됩니다
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
