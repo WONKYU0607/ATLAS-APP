@@ -4523,11 +4523,17 @@ function App() {
       const hotspotData = await hotspotRes.json()
       
       if (hotspotData.results) {
-        const topHotspots = hotspotData.results
+        const filterHotspots = (minReviews) => hotspotData.results
           .filter(p => p.rating && p.rating >= 4.0)
-          .filter(p => p.user_ratings_total && p.user_ratings_total >= 1000)
+          .filter(p => p.user_ratings_total && p.user_ratings_total >= minReviews)
           .filter(p => !isDuplicate(p.name))
           .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+
+        let topHotspots = filterHotspots(1000)
+        if (topHotspots.length < 3) topHotspots = filterHotspots(500)
+        if (topHotspots.length < 3) topHotspots = filterHotspots(100)
+        if (topHotspots.length < 3) topHotspots = filterHotspots(30)
+        
         setHotspots(topHotspots)
       }
       
@@ -4538,23 +4544,26 @@ function App() {
       const restaurantData = await restaurantRes.json()
       
       if (restaurantData.results) {
-        // 호텔/숙박 키워드 필터
-        const hotelKeywords = ['hotel', 'hostel', 'resort', 'motel', 'inn', 'lodge', 'suites', '호텔', '리조트', '모텔', 'guesthouse', 'pension', '펜션']
+        // 호텔/숙박 키워드 필터 (inn 제외 - Cinnamon 등 오탐 방지, lodging 타입으로 충분)
+        const hotelKeywords = ['hotel', 'hostel', 'resort', 'motel', 'lodge', 'suites', '호텔', '리조트', '모텔', 'guesthouse', 'pension', '펜션']
         
-        const topRestaurants = restaurantData.results
+        const filterRestaurants = (minReviews) => restaurantData.results
           .filter(p => {
-            // 평점 4.0 이상
             if (!p.rating || p.rating < 3.0) return false
-            // 리뷰 최소 50개 이상 (관광지라 너무 높으면 안됨)
-            if (!p.user_ratings_total || p.user_ratings_total < 1000) return false
-            // 호텔/숙박업소 제외 (이름 기반)
+            if (!p.user_ratings_total || p.user_ratings_total < minReviews) return false
             const nameLower = (p.name || '').toLowerCase()
             if (hotelKeywords.some(kw => nameLower.includes(kw))) return false
-            // Google types에 lodging이 포함되면 제외
             if (p.types && p.types.some(t => ['lodging', 'hotel', 'resort'].includes(t))) return false
             return true
           })
           .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+
+        // 리뷰 기준 유연 적용: 1000 → 500 → 100 → 50
+        let topRestaurants = filterRestaurants(1000)
+        if (topRestaurants.length < 3) topRestaurants = filterRestaurants(500)
+        if (topRestaurants.length < 3) topRestaurants = filterRestaurants(100)
+        if (topRestaurants.length < 3) topRestaurants = filterRestaurants(50)
+        
         setRestaurants(topRestaurants)
       }
       
