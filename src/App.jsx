@@ -4519,14 +4519,23 @@ function App() {
 
     try {
       if (isKorean) {
-        // ── 한국: 카카오 로컬 API ──
-        // 핫플레이스 (관광명소 AT4)
+        // ── 한국: 카카오 로컬 API (실패 시 Google 폴백) ──
+        let kakaoSuccess = false
+        
         try {
+          // 핫플레이스 (관광명소 AT4)
           const hotspotRes = await fetch(
             `/api/kakao-places?lng=${city.lng}&lat=${city.lat}&category=AT4&radius=5000`
           )
+          
+          if (!hotspotRes.ok) {
+            console.error('Kakao hotspot API error:', hotspotRes.status, await hotspotRes.text().catch(()=>''))
+            throw new Error('Kakao API failed')
+          }
+          
           const hotspotData = await hotspotRes.json()
-          if (hotspotData.documents) {
+          
+          if (hotspotData.documents && hotspotData.documents.length > 0) {
             const kakaoHotspots = hotspotData.documents
               .filter(d => !isDuplicate(d.place_name))
               .map(d => ({
@@ -4539,16 +4548,24 @@ function App() {
                 _source: 'kakao'
               }))
             setHotspots(kakaoHotspots)
+            kakaoSuccess = true
+          } else {
+            console.warn('Kakao hotspot: no documents returned', hotspotData)
           }
-        } catch { setHotspots([]) }
 
-        // 맛집 (음식점 FD6)
-        try {
+          // 맛집 (음식점 FD6)
           const restaurantRes = await fetch(
             `/api/kakao-places?lng=${city.lng}&lat=${city.lat}&category=FD6&radius=3000&size=15`
           )
+          
+          if (!restaurantRes.ok) {
+            console.error('Kakao restaurant API error:', restaurantRes.status)
+            throw new Error('Kakao API failed')
+          }
+          
           const restaurantData = await restaurantRes.json()
-          if (restaurantData.documents) {
+          
+          if (restaurantData.documents && restaurantData.documents.length > 0) {
             const kakaoRestaurants = restaurantData.documents
               .map(d => ({
                 name: d.place_name,
@@ -4560,8 +4577,48 @@ function App() {
                 _source: 'kakao'
               }))
             setRestaurants(kakaoRestaurants)
+            kakaoSuccess = true
+          } else {
+            console.warn('Kakao restaurant: no documents returned', restaurantData)
           }
-        } catch { setRestaurants([]) }
+          
+        } catch (kakaoError) {
+          console.error('Kakao API 실패, Google로 폴백:', kakaoError)
+          kakaoSuccess = false
+        }
+
+        // 카카오 실패 시 Google Places로 폴백
+        if (!kakaoSuccess) {
+          console.log('한국 도시 Google 폴백 실행')
+          try {
+            const hotspotRes = await fetch(
+              `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park|point_of_interest`
+            )
+            const hotspotData = await hotspotRes.json()
+            if (hotspotData.results) {
+              const filtered = hotspotData.results
+                .filter(p => p.rating && p.rating >= 3.5 && p.user_ratings_total >= 10)
+                .filter(p => !isDuplicate(p.name))
+                .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+              setHotspots(filtered)
+            }
+            
+            const restaurantRes = await fetch(
+              `/api/places?lat=${city.lat}&lng=${city.lng}&type=restaurant`
+            )
+            const restaurantData = await restaurantRes.json()
+            if (restaurantData.results) {
+              const filtered = restaurantData.results
+                .filter(p => p.rating && p.rating >= 3.0 && p.user_ratings_total >= 10)
+                .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+              setRestaurants(filtered)
+            }
+          } catch (googleError) {
+            console.error('Google 폴백도 실패:', googleError)
+            setHotspots([])
+            setRestaurants([])
+          }
+        }
 
       } else {
         // ── 해외: Google Places API (기존) ──
