@@ -4754,7 +4754,7 @@ function App() {
 
       {/* Header */}
       <div style={{
-        position:'absolute',top:0,left:0,right:selectedCity?(sidePanel?760:420):0,zIndex:1000,
+        position:'absolute',top:0,left:0,right:selectedCity?(sidePanel?800:420):0,zIndex:1000,
         background:'linear-gradient(to bottom,rgba(0,0,0,.65) 0%,transparent 100%)',
         padding:'16px 20px 50px',pointerEvents:'none',
         transition:'right .42s cubic-bezier(.16,1,.3,1)'
@@ -5102,7 +5102,7 @@ function App() {
         {/* 사이드 슬라이드 패널 (핫플/맛집 리스트) */}
         {sidePanel && (
           <div style={{
-            position:'absolute',top:0,right:420,bottom:0,width:340,zIndex:1000,
+            position:'absolute',top:0,right:420,bottom:0,width:380,zIndex:1000,
             background:'white',borderLeft:'1.5px solid #e2e8f0',
             overflowY:'auto',
             boxShadow:'-8px 0 24px rgba(0,0,0,.1)',
@@ -5244,7 +5244,7 @@ function App() {
               <div style={{display:'flex',gap:6,flexShrink:0}}>
                 <button onClick={()=>toggleFav({type:'city',name:selectedCity?._koName||selectedCity?.name,_koName:selectedCity?._koName||selectedCity?.name,displayName:getCityName(selectedCity?._koName||selectedCity?.name),emoji:selectedCity?.emoji,color:selectedCity?.color,countryEn:selectedCity?.countryEn,countryName:countryKo,lat:selectedCity?.lat,lng:selectedCity?.lng})}
                   style={{background:isFav('city',selectedCity?._koName||selectedCity?.name)?'#fef3c7':'#f1f5f9',border:isFav('city',selectedCity?._koName||selectedCity?.name)?'1.5px solid #fbbf24':'1.5px solid #e2e8f0',color:isFav('city',selectedCity?._koName||selectedCity?.name)?'#f59e0b':'#94a3b8',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
-                  title="즐겨찾기">⭐</button>
+                  title="즐겨찾기">{isFav('city',selectedCity?._koName||selectedCity?.name)?'⭐':'☆'}</button>
                 <button onClick={closePanel}
                   style={{background:'#f1f5f9',border:'1.5px solid #e2e8f0',color:'#64748b',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
                   onMouseEnter={e=>e.currentTarget.style.background='#e2e8f0'}
