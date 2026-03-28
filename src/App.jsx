@@ -5182,7 +5182,7 @@ function App() {
 
       {/* Hint */}
       {!selectedCountry && (
-        <div style={{position:'absolute',bottom:courseItems.length>0?72:24,left:'50%',transform:'translateX(-50%)',zIndex:1000,background:'rgba(255,255,255,.9)',backdropFilter:'blur(12px)',border:'1.5px solid rgba(255,255,255,.5)',borderRadius:40,padding:'9px 20px',fontSize:12,color:'#475569',whiteSpace:'nowrap',boxShadow:'0 4px 20px rgba(0,0,0,.2)',pointerEvents:'none',transition:'bottom .3s'}}>
+        <div style={{position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:1000,background:'rgba(255,255,255,.9)',backdropFilter:'blur(12px)',border:'1.5px solid rgba(255,255,255,.5)',borderRadius:40,padding:'9px 20px',fontSize:12,color:'#475569',whiteSpace:'nowrap',boxShadow:'0 4px 20px rgba(0,0,0,.2)',pointerEvents:'none'}}>
           {t('hintMain')}
         </div>
       )}
@@ -5662,69 +5662,23 @@ function App() {
         </>
       )}
 
-      {/* ── 코스 플로팅 바스켓 바 ── */}
+      {/* ── 코스 아이콘 (좌상단) ── */}
       {courseItems.length > 0 && !showCoursePlanner && (
-        <div style={{position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:1100,animation:'courseBasketIn .4s cubic-bezier(.16,1,.3,1)'}}>
-          <button onClick={()=>setShowCourseBasket(v=>!v)} style={{
-            display:'flex',alignItems:'center',gap:10,
-            background:'linear-gradient(135deg,#1e293b,#334155)',color:'white',
-            border:'2px solid rgba(255,255,255,.15)',borderRadius:50,
-            padding:'12px 24px',fontSize:14,fontWeight:700,cursor:'pointer',
-            boxShadow:'0 8px 32px rgba(0,0,0,.35)',transition:'all .2s',whiteSpace:'nowrap'
-          }}
-          onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'}
-          onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}
-          >
-            <span style={{fontSize:18}}>🗺️</span><span>내 코스</span>
-            <span style={{background:'#3b82f6',borderRadius:20,padding:'2px 10px',fontSize:12,fontWeight:800,minWidth:22,textAlign:'center'}}>{courseItems.length}</span>
-            <span style={{fontSize:12,opacity:.7}}>{showCourseBasket?'▼':'▲'}</span>
-          </button>
-        </div>
-      )}
-
-      {/* ── 코스 바스켓 패널 ── */}
-      {showCourseBasket && courseItems.length > 0 && !showCoursePlanner && (
-        <div style={{position:'absolute',bottom:72,left:'50%',transform:'translateX(-50%)',width:Math.min(460,typeof window!=='undefined'?window.innerWidth-40:420),maxHeight:'55vh',background:'rgba(255,255,255,.98)',backdropFilter:'blur(20px)',borderRadius:20,border:'1.5px solid #e2e8f0',boxShadow:'0 20px 60px rgba(0,0,0,.25)',zIndex:1100,overflow:'hidden',animation:'courseSlideUp .35s cubic-bezier(.16,1,.3,1)'}}>
-          <div style={{padding:'16px 20px 12px',borderBottom:'1px solid #f1f5f9',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-            <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <span style={{fontSize:18}}>🗺️</span>
-              <span style={{fontSize:16,fontWeight:800,color:'#0f172a'}}>내 코스</span>
-              <span style={{fontSize:12,color:'#94a3b8',fontWeight:500}}>{courseItems.length}곳</span>
-            </div>
-            <div style={{display:'flex',gap:6}}>
-              <button onClick={()=>{if(confirm('코스를 모두 비울까요?')){saveCourse([]);saveCourseDays([]);setRouteCache({})}}}
-                style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',padding:'5px 12px',borderRadius:8,fontSize:11,fontWeight:600,cursor:'pointer'}}>전체삭제</button>
-              <button onClick={()=>setShowCourseBasket(false)} style={{background:'#f1f5f9',border:'none',color:'#64748b',width:30,height:30,borderRadius:8,cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
-            </div>
-          </div>
-          <div style={{padding:'10px 14px 16px',overflowY:'auto',maxHeight:'calc(55vh - 130px)'}}>
-            {courseItems.map((item,idx) => (
-              <div key={item.name+'-'+idx} style={{display:'flex',alignItems:'center',gap:10,padding:'10px',background:idx%2===0?'#fafbfc':'white',borderRadius:10,marginBottom:4,border:'1px solid #f1f5f9'}}>
-                <div style={{width:26,height:26,borderRadius:'50%',flexShrink:0,background:'linear-gradient(135deg,#3b82f6,#6366f1)',color:'white',fontSize:12,fontWeight:800,display:'flex',alignItems:'center',justifyContent:'center'}}>{idx+1}</div>
-                <span style={{fontSize:18,flexShrink:0}}>{item.emoji||'📍'}</span>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.displayName}</div>
-                  <div style={{display:'flex',alignItems:'center',gap:6,marginTop:2}}>
-                    <span style={{fontSize:10,color:'#94a3b8'}}>{item.cityDisplayName}</span>
-                    <span style={{fontSize:9,padding:'1px 6px',borderRadius:4,background:item.source==='spot'?'#dbeafe':item.source==='hotspot'?'#fef3c7':'#dcfce7',color:item.source==='spot'?'#2563eb':item.source==='hotspot'?'#d97706':'#16a34a',fontWeight:600}}>{item.source==='spot'?'관광지':item.source==='hotspot'?'핫플':'맛집'}</span>
-                    {item.rating && <span style={{fontSize:10,color:'#f59e0b'}}>★{item.rating}</span>}
-                  </div>
-                </div>
-                <div style={{display:'flex',flexDirection:'column',gap:1,flexShrink:0}}>
-                  <button onClick={()=>{if(idx>0)reorderCourse(idx,idx-1)}} disabled={idx===0} style={{background:'none',border:'none',cursor:idx===0?'default':'pointer',color:idx===0?'#e2e8f0':'#94a3b8',fontSize:11,padding:'1px 4px',lineHeight:1}}>▲</button>
-                  <button onClick={()=>{if(idx<courseItems.length-1)reorderCourse(idx,idx+1)}} disabled={idx===courseItems.length-1} style={{background:'none',border:'none',cursor:idx===courseItems.length-1?'default':'pointer',color:idx===courseItems.length-1?'#e2e8f0':'#94a3b8',fontSize:11,padding:'1px 4px',lineHeight:1}}>▼</button>
-                </div>
-                <button onClick={()=>removeFromCourse(idx)} style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',width:26,height:26,borderRadius:6,cursor:'pointer',fontSize:12,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
-                  onMouseEnter={e=>{e.currentTarget.style.background='#ef4444';e.currentTarget.style.color='white'}} onMouseLeave={e=>{e.currentTarget.style.background='#fef2f2';e.currentTarget.style.color='#ef4444'}}>✕</button>
-              </div>
-            ))}
-          </div>
-          <div style={{padding:'12px 16px',borderTop:'1px solid #f1f5f9',background:'#fafbfc',display:'flex',gap:8}}>
-            <button onClick={openCoursePlanner} style={{flex:1,padding:'11px',background:'linear-gradient(135deg,#3b82f6,#6366f1)',color:'white',border:'none',borderRadius:10,fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(59,130,246,.3)'}}>
-              🗺️ 코스 편집하기
-            </button>
-          </div>
-        </div>
+        <button onClick={openCoursePlanner} style={{
+          position:'absolute',top:18,left:18,zIndex:1100,
+          display:'flex',alignItems:'center',gap:6,
+          background:'linear-gradient(135deg,#1e293b,#334155)',color:'white',
+          border:'2px solid rgba(255,255,255,.2)',borderRadius:14,
+          padding:'10px 14px',fontSize:13,fontWeight:700,cursor:'pointer',
+          boxShadow:'0 4px 20px rgba(0,0,0,.35)',backdropFilter:'blur(12px)',
+          transition:'all .2s',animation:'courseBasketIn .4s cubic-bezier(.16,1,.3,1)'
+        }}
+        onMouseEnter={e=>{e.currentTarget.style.transform='scale(1.05)';e.currentTarget.style.boxShadow='0 6px 28px rgba(0,0,0,.45)'}}
+        onMouseLeave={e=>{e.currentTarget.style.transform='scale(1)';e.currentTarget.style.boxShadow='0 4px 20px rgba(0,0,0,.35)'}}
+        >
+          <span style={{fontSize:16}}>🗺️</span>
+          <span style={{background:'#3b82f6',borderRadius:10,padding:'1px 8px',fontSize:11,fontWeight:800,minWidth:18,textAlign:'center'}}>{courseItems.length}</span>
+        </button>
       )}
 
       {/* ── 코스 플래너 패널 ── */}
@@ -5886,14 +5840,9 @@ function App() {
 
           {/* 플래너 푸터 */}
           <div style={{padding:'14px 16px',borderTop:'1px solid #e2e8f0',background:'#fafbfc',flexShrink:0}}>
-            <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>fetchAllRoutes(courseDays,courseTransport)} disabled={loadingRoutes} style={{flex:1,padding:'10px',background:'white',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:12,fontWeight:600,color:'#475569',cursor:loadingRoutes?'wait':'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
-                {loadingRoutes?'⏳ 계산 중...':'🔄 경로 재계산'}
-              </button>
-              <button onClick={()=>{setShowCoursePlanner(false);setShowCourseBasket(false)}} style={{flex:1,padding:'10px',background:'linear-gradient(135deg,#1e293b,#334155)',border:'none',borderRadius:10,fontSize:12,fontWeight:700,color:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
-                ✓ 완료
-              </button>
-            </div>
+            <button onClick={()=>{setShowCoursePlanner(false);setShowCourseBasket(false)}} style={{width:'100%',padding:'11px',background:'linear-gradient(135deg,#1e293b,#334155)',border:'none',borderRadius:10,fontSize:13,fontWeight:700,color:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+              ✓ 완료
+            </button>
           </div>
         </div>
       )}
