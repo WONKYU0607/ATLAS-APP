@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
+import { AUTO_I18N } from './auto-i18n'
 
 // ── 실제 관광지 사진 (Wikipedia + Wikimedia Commons 검색) ─────────────
 function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, alt }) {
@@ -1187,6 +1188,8 @@ const T = {
   aiThemeHistory:{ko:'역사',en:'History',ja:'歴史',zh:'历史'},
   aiThemeNature:{ko:'자연',en:'Nature',ja:'自然',zh:'自然'},
   aiThemeFood:{ko:'음식',en:'Food',ja:'グルメ',zh:'美食'},
+  aiThemeHotspot:{ko:'핫플',en:'Hot Place',ja:'注目スポット',zh:'热门'},
+  aiThemeRestaurant:{ko:'맛집',en:'Restaurant',ja:'名店',zh:'美食店'},
   aiDaysLabel:{ko:'여행 일수',en:'Trip Days',ja:'旅行日数',zh:'旅行天数'},
   aiDayUnit:{ko:'일',en:'D',ja:'日',zh:'天'},
   aiIntensity:{ko:'여행 강도',en:'Intensity',ja:'旅行強度',zh:'旅行强度'},
@@ -3878,7 +3881,15 @@ function App() {
   // ── AI 코스 자동 생성 (알고리즘 기반, 비용 없음) ──────────────
   const [showAiModal, setShowAiModal] = useState(false)
   const [aiCity, setAiCity] = useState(null)
-  const [aiTheme, setAiTheme] = useState('종합')
+  const [aiTheme, setAiTheme] = useState(['종합'])
+  const toggleAiTheme = (key) => {
+    if (key === '종합') { setAiTheme(['종합']); return }
+    let next = aiTheme.filter(k => k !== '종합')
+    if (next.includes(key)) next = next.filter(k => k !== key)
+    else next = [...next, key]
+    if (next.length === 0) next = ['종합']
+    setAiTheme(next)
+  }
   const [aiDays, setAiDays] = useState(2)
   const [aiTransport, setAiTransport] = useState('transit')
   const [aiIntensity, setAiIntensity] = useState('normal')
@@ -3970,9 +3981,30 @@ function App() {
       }
 
       // 2) 테마 필터
-      if (aiTheme === '역사') attractions = attractions.filter(a => ['역사','문화','랜드마크'].includes(a.type) || a.source==='hotspot')
-      else if (aiTheme === '자연') attractions = attractions.filter(a => ['자연','랜드마크'].includes(a.type) || a.source==='hotspot')
-      else if (aiTheme === '음식') { attractions = [...attractions.slice(0,2), ...foodPlaces]; foodPlaces = foodPlaces.slice(2) }
+      const themes = aiTheme
+      if (!themes.includes('종합')) {
+        let filteredAttr = []
+        let extraFood = []
+        if (themes.includes('역사')) filteredAttr.push(...attractions.filter(a => ['역사','문화','랜드마크'].includes(a.type)))
+        if (themes.includes('자연')) filteredAttr.push(...attractions.filter(a => ['자연'].includes(a.type)))
+        if (themes.includes('핫플')) filteredAttr.push(...attractions.filter(a => a.source === 'hotspot'))
+        if (themes.includes('음식')) extraFood.push(...foodPlaces.slice(0, 6))
+        if (themes.includes('맛집')) extraFood.push(...foodPlaces.slice(0, 8))
+        // 중복 제거
+        const seen = new Set()
+        filteredAttr = filteredAttr.filter(a => { if (seen.has(a.name)) return false; seen.add(a.name); return true })
+        extraFood = extraFood.filter(f => { if (seen.has(f.name)) return false; seen.add(f.name); return true })
+        // 테마에 관광지 유형이 없으면 기존 관광지에서 보충
+        if (filteredAttr.length < 3 && !themes.includes('음식') && !themes.includes('맛집')) {
+          attractions.forEach(a => { if (!seen.has(a.name)) { filteredAttr.push(a); seen.add(a.name) } })
+        }
+        if (themes.includes('음식') || themes.includes('맛집')) {
+          attractions = [...filteredAttr.slice(0, Math.max(2, filteredAttr.length)), ...extraFood]
+          foodPlaces = foodPlaces.filter(f => !seen.has(f.name))
+        } else {
+          attractions = filteredAttr
+        }
+      }
 
       // 3) 별점순 정렬
       attractions.sort((a,b) => (b.rating||0) - (a.rating||0))
@@ -4164,10 +4196,34 @@ function App() {
   // 관광 패널 번역 헬퍼
   const trCity = (cityKey) => {
     if (lang === 'ko' || !cityKey) return null
-    return CITY_DATA_I18N[cityKey]?.[lang] || null
+    // 1차: CITY_DATA_I18N 수동 번역
+    const manual = CITY_DATA_I18N[cityKey]?.[lang]
+    if (manual) return manual
+    // 2차: 영어 fallback (ja/zh도 영어 번역이라도 표시)
+    if (lang !== 'en') {
+      const enFallback = CITY_DATA_I18N[cityKey]?.['en']
+      if (enFallback) return enFallback
+    }
+    // 3차: AUTO_I18N 자동 번역 데이터
+    const autoData = AUTO_I18N?.[cityKey]
+    if (autoData) {
+      const autoLang = autoData[lang] || autoData['en']
+      if (autoLang) return autoLang
+    }
+    return null
   }
   const trDesc = (cityKey) => trCity(cityKey)?.description || null
-  const trSpot = (cityKey, spotName) => trCity(cityKey)?.spots?.[spotName] || null
+  const trSpot = (cityKey, spotName) => {
+    const manual = trCity(cityKey)?.spots?.[spotName]
+    if (manual) return manual
+    // wikiTitle fallback for names
+    if (lang !== 'ko') {
+      const cityData2 = CITY_DATA[cityKey]
+      const spot = cityData2?.spots?.find(s => s.name === spotName)
+      if (spot?.wikiTitle) return { name: spot.wikiTitle, desc: null }
+    }
+    return null
+  }
 
 
   // Load world GeoJSON (110m 경량 + 폴리곤 구멍 제거 → 빠른 렌더링, 빈 공간 없음)
@@ -6004,15 +6060,19 @@ function App() {
 
               {/* 테마 */}
               <div>
-                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>🎨 {t('aiTheme')}</div>
-                <div style={{display:'flex',gap:6}}>
-                  {[{k:'종합',icon:'🌍',l:t('aiThemeAll')},{k:'역사',icon:'🏛️',l:t('aiThemeHistory')},{k:'자연',icon:'🌿',l:t('aiThemeNature')},{k:'음식',icon:'🍽️',l:t('aiThemeFood')}].map(t=>(
-                    <button key={t.k} onClick={()=>setAiTheme(t.k)} style={{
-                      flex:1,padding:'9px 0',fontSize:12,fontWeight:aiTheme===t.k?700:500,
-                      background:aiTheme===t.k?'#1e293b':'#f8fafc',color:aiTheme===t.k?'white':'#64748b',
-                      border:aiTheme===t.k?'none':'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',
-                      display:'flex',alignItems:'center',justifyContent:'center',gap:4,transition:'all .15s'
-                    }}>{t.icon} {t.l}</button>
+                <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
+                  <div style={{fontSize:12,fontWeight:700,color:'#475569'}}>🎨 {t('aiTheme')}</div>
+                  <span style={{fontSize:10,color:'#94a3b8',fontWeight:500}}>({lang==='ko'?'중복 선택 가능':lang==='ja'?'複数選択可':'Multi-select'})</span>
+                </div>
+                <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+                  {[{k:'종합',icon:'🌍',l:t('aiThemeAll')},{k:'역사',icon:'🏛️',l:t('aiThemeHistory')},{k:'자연',icon:'🌿',l:t('aiThemeNature')},{k:'음식',icon:'🍽️',l:t('aiThemeFood')},{k:'핫플',icon:'🔥',l:t('aiThemeHotspot')},{k:'맛집',icon:'🍴',l:t('aiThemeRestaurant')}].map(tm=>(
+                    <button key={tm.k} onClick={()=>toggleAiTheme(tm.k)} style={{
+                      padding:'8px 14px',fontSize:12,fontWeight:aiTheme.includes(tm.k)?700:500,
+                      background:aiTheme.includes(tm.k)?tm.k==='종합'?'#1e293b':'#3b82f6':'#f8fafc',
+                      color:aiTheme.includes(tm.k)?'white':'#64748b',
+                      border:aiTheme.includes(tm.k)?'none':'1px solid #e2e8f0',borderRadius:20,cursor:'pointer',
+                      display:'flex',alignItems:'center',gap:4,transition:'all .15s'
+                    }}>{tm.icon} {tm.l}</button>
                   ))}
                 </div>
               </div>
@@ -6072,7 +6132,7 @@ function App() {
               {/* 미리보기 요약 */}
               {aiCity && (
                 <div style={{padding:'10px 14px',background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,fontSize:12,color:'#0369a1',lineHeight:1.7}}>
-                  💡 <strong>{aiCity.name}</strong>에서 <strong>{aiDays}일</strong> 동안 <strong>{aiTheme}</strong> 테마로,
+                  💡 <strong>{aiCity.name}</strong>에서 <strong>{aiDays}{t('aiDayUnit')}</strong> 동안 <strong>{aiTheme.map(k=>({종합:t('aiThemeAll'),역사:t('aiThemeHistory'),자연:t('aiThemeNature'),음식:t('aiThemeFood'),핫플:t('aiThemeHotspot'),맛집:t('aiThemeRestaurant')}[k]||k)).join(' + ')}</strong>,
                   {aiIntensity==='light'?t('aiPreviewLight'):aiIntensity==='normal'?t('aiPreviewNormal'):t('aiPreviewHard')} {t('aiPreviewText')}
                   {courseTripStart && <><br/>📅 {formatDate(getDayDate(0))} ~ {formatDate(getDayDate(aiDays-1))}</>}
                 </div>
