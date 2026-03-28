@@ -3767,24 +3767,123 @@ function App() {
   const [sidePanel, setSidePanel] = useState(null) // 'hotspots' | 'restaurants' | null
   const [showFavorites, setShowFavorites] = useState(false)
 
-  // 코스 담기 (장바구니)
+  // ── 코스 담기 + 플래너 ──────────────────────────────────
   const [courseItems, setCourseItems] = useState(() => {
     try { return JSON.parse(localStorage.getItem('atlas_course') || '[]') } catch { return [] }
   })
   const [showCourseBasket, setShowCourseBasket] = useState(false)
+  const [courseDays, setCourseDays] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('atlas_course_days') || '[]') } catch { return [] }
+  })
+  const [showCoursePlanner, setShowCoursePlanner] = useState(false)
+  const [routeCache, setRouteCache] = useState({})
+  const [loadingRoutes, setLoadingRoutes] = useState(false)
+  const [courseTransport, setCourseTransport] = useState('transit')
+  const [dragItem, setDragItem] = useState(null)
+  const [activeDayTab, setActiveDayTab] = useState(0)
+
   const saveCourse = (items) => { setCourseItems(items); localStorage.setItem('atlas_course', JSON.stringify(items)) }
   const addToCourse = (item) => {
     if (courseItems.some(c => c.name === item.name && c.source === item.source)) return
-    saveCourse([...courseItems, { ...item, addedAt: Date.now() }])
+    const newItems = [...courseItems, { ...item, addedAt: Date.now() }]
+    saveCourse(newItems)
+    // 플래너가 이미 열렸었으면 마지막 날에 추가
+    if (courseDays.length > 0) {
+      const days = courseDays.map(d => ({ ...d, items: [...d.items] }))
+      days[days.length - 1].items.push({ ...item, addedAt: Date.now() })
+      setCourseDays(days); localStorage.setItem('atlas_course_days', JSON.stringify(days))
+    }
   }
-  const removeFromCourse = (idx) => { saveCourse(courseItems.filter((_, i) => i !== idx)) }
+  const removeFromCourse = (idx) => {
+    const item = courseItems[idx]
+    saveCourse(courseItems.filter((_, i) => i !== idx))
+    if (courseDays.length > 0) {
+      const days = courseDays.map(d => ({ ...d, items: d.items.filter(di => !(di.name === item.name && di.source === item.source)) }))
+      setCourseDays(days); localStorage.setItem('atlas_course_days', JSON.stringify(days))
+    }
+  }
   const isInCourse = (name, source) => courseItems.some(c => c.name === name && c.source === source)
-  const reorderCourse = (fromIdx, toIdx) => {
-    const arr = [...courseItems]
-    const [moved] = arr.splice(fromIdx, 1)
-    arr.splice(toIdx, 0, moved)
-    saveCourse(arr)
+  const reorderCourse = (fromIdx, toIdx) => { const arr = [...courseItems]; const [m] = arr.splice(fromIdx, 1); arr.splice(toIdx, 0, m); saveCourse(arr) }
+
+  // 코스 플래너 helpers
+  const saveCourseDays = (days) => {
+    setCourseDays(days); localStorage.setItem('atlas_course_days', JSON.stringify(days))
+    const flat = days.flatMap(d => d.items); saveCourse(flat)
   }
+  const openCoursePlanner = () => {
+    if (courseDays.length === 0 && courseItems.length > 0) {
+      const days = [{ items: [...courseItems] }]
+      setCourseDays(days); localStorage.setItem('atlas_course_days', JSON.stringify(days))
+    }
+    setShowCoursePlanner(true); setShowCourseBasket(false); setActiveDayTab(0)
+  }
+  const addCourseDay = () => { saveCourseDays([...courseDays, { items: [] }]) }
+  const removeCourseDay = (dayIdx) => {
+    const days = courseDays.map(d => ({ ...d, items: [...d.items] }))
+    const removed = days.splice(dayIdx, 1)[0].items
+    if (days.length === 0) days.push({ items: removed })
+    else days[Math.min(dayIdx, days.length - 1)].items.push(...removed)
+    saveCourseDays(days)
+    if (activeDayTab >= days.length) setActiveDayTab(Math.max(0, days.length - 1))
+  }
+  const reorderInDay = (dayIdx, fromIdx, toIdx) => {
+    if (fromIdx === toIdx) return
+    const days = courseDays.map(d => ({ ...d, items: [...d.items] }))
+    const [m] = days[dayIdx].items.splice(fromIdx, 1); days[dayIdx].items.splice(toIdx, 0, m)
+    saveCourseDays(days)
+  }
+  const moveToDayFn = (fromDay, itemIdx, toDay) => {
+    const days = courseDays.map(d => ({ ...d, items: [...d.items] }))
+    const [m] = days[fromDay].items.splice(itemIdx, 1); days[toDay].items.push(m)
+    saveCourseDays(days)
+  }
+  const removeFromDay = (dayIdx, itemIdx) => {
+    const days = courseDays.map(d => ({ ...d, items: [...d.items] }))
+    days[dayIdx].items.splice(itemIdx, 1)
+    saveCourseDays(days)
+  }
+
+  // Directions API
+  const getDirQuery = (item) => item.place_id ? `place_id:${item.place_id}` : `${item.wikiTitle || item.name}, ${item.cityDisplayName || item.cityName}`
+  const getRouteKey = (a, b, mode) => `${getDirQuery(a)}|${getDirQuery(b)}|${mode}`
+
+  const fetchAllRoutes = async (days, mode) => {
+    setLoadingRoutes(true)
+    const results = {}; const fetches = []
+    days.forEach(day => {
+      for (let i = 0; i < day.items.length - 1; i++) {
+        const key = getRouteKey(day.items[i], day.items[i + 1], mode)
+        if (!routeCache[key] && !fetches.some(f => f.key === key)) {
+          fetches.push({ key, o: getDirQuery(day.items[i]), d: getDirQuery(day.items[i + 1]) })
+        }
+      }
+    })
+    await Promise.all(fetches.map(async ({ key, o, d }) => {
+      try {
+        const res = await fetch(`/api/directions?origin=${encodeURIComponent(o)}&destination=${encodeURIComponent(d)}&mode=${mode}`)
+        const data = await res.json()
+        if (data.routes?.[0]?.legs?.[0]) {
+          const leg = data.routes[0].legs[0]
+          results[key] = { distance: leg.distance.text, duration: leg.duration.text, durationSec: leg.duration.value }
+        } else { results[key] = { distance: '—', duration: '경로 없음', durationSec: 0 } }
+      } catch { results[key] = { distance: '—', duration: '오류', durationSec: 0 } }
+    }))
+    setRouteCache(prev => ({ ...prev, ...results }))
+    setLoadingRoutes(false)
+  }
+
+  // 플래너 열릴 때/day 변경 시 경로 자동 로드
+  useEffect(() => {
+    if (showCoursePlanner && courseDays.length > 0) {
+      const hasUncached = courseDays.some(day => {
+        for (let i = 0; i < day.items.length - 1; i++) {
+          if (!routeCache[getRouteKey(day.items[i], day.items[i + 1], courseTransport)]) return true
+        }
+        return false
+      })
+      if (hasUncached) fetchAllRoutes(courseDays, courseTransport)
+    }
+  }, [showCoursePlanner, courseDays, courseTransport])
 
   // 즐겨찾기 (localStorage 저장)
   const [favorites, setFavorites] = useState(() => {
@@ -4765,6 +4864,8 @@ function App() {
         @keyframes courseBasketIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
         @keyframes coursePop{0%{transform:scale(1)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
         @keyframes courseSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
+        @keyframes coursePlannerIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+        .drag-over{border-color:#3b82f6!important;background:#eff6ff!important}
         .card{transition:transform .18s,box-shadow .18s;cursor:pointer}
         .card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.13)!important}
         .cimg{transition:transform .4s}.card:hover .cimg{transform:scale(1.06)}
@@ -5240,7 +5341,7 @@ function App() {
                           style={{background:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#fef3c7':'#f8fafc',border:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'1.5px solid #fbbf24':'1.5px solid #e2e8f0',color:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#f59e0b':'#cbd5e1',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:15,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
                           title="즐겨찾기">{isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'⭐':'☆'}</button>
                         <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:sidePanel==='hotspots'?'hotspot':'restaurant',name:place.name,displayName:place.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:place.rating,place_id:place.place_id,vicinity:place.vicinity,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:sidePanel==='hotspots'?'📍':foodCategory==='cafe'?'☕':foodCategory==='bar'?'🍻':'🍽️',photo_ref:place.photos?.[0]?.photo_reference||null})}}
-                          style={{background:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'#3b82f6':'#f8fafc',border:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'1.5px solid #3b82f6':'1.5px solid #e2e8f0',color:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'white':'#cbd5e1',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:15,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s',animation:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'coursePop .3s':'none'}}
+                          style={{background:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'#3b82f6':'#f8fafc',border:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'1.5px solid #3b82f6':'1.5px solid #e2e8f0',color:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'white':'#cbd5e1',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:15,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
                           title="코스에 추가">{isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'✓':'＋'}</button>
                       </div>
                     </a>
@@ -5561,127 +5662,237 @@ function App() {
         </>
       )}
 
-      {/* 코스 플로팅 바스켓 바 */}
-      {courseItems.length > 0 && (
-        <div style={{
-          position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:1100,
-          animation:'courseBasketIn .4s cubic-bezier(.16,1,.3,1)'
-        }}>
+      {/* ── 코스 플로팅 바스켓 바 ── */}
+      {courseItems.length > 0 && !showCoursePlanner && (
+        <div style={{position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:1100,animation:'courseBasketIn .4s cubic-bezier(.16,1,.3,1)'}}>
           <button onClick={()=>setShowCourseBasket(v=>!v)} style={{
             display:'flex',alignItems:'center',gap:10,
-            background:'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-            color:'white',border:'2px solid rgba(255,255,255,.15)',borderRadius:50,
+            background:'linear-gradient(135deg,#1e293b,#334155)',color:'white',
+            border:'2px solid rgba(255,255,255,.15)',borderRadius:50,
             padding:'12px 24px',fontSize:14,fontWeight:700,cursor:'pointer',
-            boxShadow:'0 8px 32px rgba(0,0,0,.35)',backdropFilter:'blur(12px)',
-            transition:'all .2s',whiteSpace:'nowrap'
+            boxShadow:'0 8px 32px rgba(0,0,0,.35)',transition:'all .2s',whiteSpace:'nowrap'
           }}
           onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'}
           onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}
           >
-            <span style={{fontSize:18}}>🗺️</span>
-            <span>내 코스</span>
-            <span style={{
-              background:'#3b82f6',color:'white',borderRadius:20,
-              padding:'2px 10px',fontSize:12,fontWeight:800,
-              minWidth:22,textAlign:'center'
-            }}>{courseItems.length}</span>
+            <span style={{fontSize:18}}>🗺️</span><span>내 코스</span>
+            <span style={{background:'#3b82f6',borderRadius:20,padding:'2px 10px',fontSize:12,fontWeight:800,minWidth:22,textAlign:'center'}}>{courseItems.length}</span>
             <span style={{fontSize:12,opacity:.7}}>{showCourseBasket?'▼':'▲'}</span>
           </button>
         </div>
       )}
 
-      {/* 코스 바스켓 패널 */}
-      {showCourseBasket && courseItems.length > 0 && (
-        <div style={{
-          position:'absolute',bottom:72,left:'50%',transform:'translateX(-50%)',
-          width:Math.min(460, typeof window!=='undefined'?window.innerWidth-40:420),maxHeight:'55vh',
-          background:'rgba(255,255,255,.98)',backdropFilter:'blur(20px)',
-          borderRadius:20,border:'1.5px solid #e2e8f0',
-          boxShadow:'0 20px 60px rgba(0,0,0,.25)',
-          zIndex:1100,overflow:'hidden',
-          animation:'courseSlideUp .35s cubic-bezier(.16,1,.3,1)'
-        }}>
-          {/* 바스켓 헤더 */}
-          <div style={{
-            padding:'16px 20px 12px',borderBottom:'1px solid #f1f5f9',
-            display:'flex',alignItems:'center',justifyContent:'space-between',
-            background:'linear-gradient(white 90%, transparent)'
-          }}>
+      {/* ── 코스 바스켓 패널 ── */}
+      {showCourseBasket && courseItems.length > 0 && !showCoursePlanner && (
+        <div style={{position:'absolute',bottom:72,left:'50%',transform:'translateX(-50%)',width:Math.min(460,typeof window!=='undefined'?window.innerWidth-40:420),maxHeight:'55vh',background:'rgba(255,255,255,.98)',backdropFilter:'blur(20px)',borderRadius:20,border:'1.5px solid #e2e8f0',boxShadow:'0 20px 60px rgba(0,0,0,.25)',zIndex:1100,overflow:'hidden',animation:'courseSlideUp .35s cubic-bezier(.16,1,.3,1)'}}>
+          <div style={{padding:'16px 20px 12px',borderBottom:'1px solid #f1f5f9',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
             <div style={{display:'flex',alignItems:'center',gap:8}}>
               <span style={{fontSize:18}}>🗺️</span>
               <span style={{fontSize:16,fontWeight:800,color:'#0f172a'}}>내 코스</span>
               <span style={{fontSize:12,color:'#94a3b8',fontWeight:500}}>{courseItems.length}곳</span>
             </div>
             <div style={{display:'flex',gap:6}}>
-              <button onClick={()=>{if(confirm('코스를 모두 비울까요?'))saveCourse([])}}
-                style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',
-                  padding:'5px 12px',borderRadius:8,fontSize:11,fontWeight:600,cursor:'pointer'}}>
-                전체삭제
-              </button>
-              <button onClick={()=>setShowCourseBasket(false)}
-                style={{background:'#f1f5f9',border:'none',color:'#64748b',width:30,height:30,
-                  borderRadius:8,cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                ✕
-              </button>
+              <button onClick={()=>{if(confirm('코스를 모두 비울까요?')){saveCourse([]);saveCourseDays([]);setRouteCache({})}}}
+                style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',padding:'5px 12px',borderRadius:8,fontSize:11,fontWeight:600,cursor:'pointer'}}>전체삭제</button>
+              <button onClick={()=>setShowCourseBasket(false)} style={{background:'#f1f5f9',border:'none',color:'#64748b',width:30,height:30,borderRadius:8,cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
             </div>
           </div>
-
-          {/* 바스켓 리스트 */}
-          <div style={{padding:'10px 14px 16px',overflowY:'auto',maxHeight:'calc(55vh - 120px)'}}>
-            {courseItems.map((item, idx) => (
-              <div key={item.name+'-'+idx} style={{
-                display:'flex',alignItems:'center',gap:10,padding:'10px 10px',
-                background:idx%2===0?'#fafbfc':'white',
-                borderRadius:10,marginBottom:4,
-                border:'1px solid #f1f5f9',transition:'all .15s'
-              }}>
-                <div style={{
-                  width:26,height:26,borderRadius:'50%',flexShrink:0,
-                  background:'linear-gradient(135deg, #3b82f6, #6366f1)',
-                  color:'white',fontSize:12,fontWeight:800,
-                  display:'flex',alignItems:'center',justifyContent:'center'
-                }}>{idx+1}</div>
+          <div style={{padding:'10px 14px 16px',overflowY:'auto',maxHeight:'calc(55vh - 130px)'}}>
+            {courseItems.map((item,idx) => (
+              <div key={item.name+'-'+idx} style={{display:'flex',alignItems:'center',gap:10,padding:'10px',background:idx%2===0?'#fafbfc':'white',borderRadius:10,marginBottom:4,border:'1px solid #f1f5f9'}}>
+                <div style={{width:26,height:26,borderRadius:'50%',flexShrink:0,background:'linear-gradient(135deg,#3b82f6,#6366f1)',color:'white',fontSize:12,fontWeight:800,display:'flex',alignItems:'center',justifyContent:'center'}}>{idx+1}</div>
                 <span style={{fontSize:18,flexShrink:0}}>{item.emoji||'📍'}</span>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                    {item.displayName}
-                  </div>
+                  <div style={{fontSize:13,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.displayName}</div>
                   <div style={{display:'flex',alignItems:'center',gap:6,marginTop:2}}>
                     <span style={{fontSize:10,color:'#94a3b8'}}>{item.cityDisplayName}</span>
-                    <span style={{fontSize:9,padding:'1px 6px',borderRadius:4,
-                      background:item.source==='spot'?'#dbeafe':item.source==='hotspot'?'#fef3c7':'#dcfce7',
-                      color:item.source==='spot'?'#2563eb':item.source==='hotspot'?'#d97706':'#16a34a',
-                      fontWeight:600
-                    }}>{item.source==='spot'?'관광지':item.source==='hotspot'?'핫플':'맛집'}</span>
+                    <span style={{fontSize:9,padding:'1px 6px',borderRadius:4,background:item.source==='spot'?'#dbeafe':item.source==='hotspot'?'#fef3c7':'#dcfce7',color:item.source==='spot'?'#2563eb':item.source==='hotspot'?'#d97706':'#16a34a',fontWeight:600}}>{item.source==='spot'?'관광지':item.source==='hotspot'?'핫플':'맛집'}</span>
                     {item.rating && <span style={{fontSize:10,color:'#f59e0b'}}>★{item.rating}</span>}
                   </div>
                 </div>
                 <div style={{display:'flex',flexDirection:'column',gap:1,flexShrink:0}}>
-                  <button onClick={()=>{if(idx>0)reorderCourse(idx,idx-1)}}
-                    disabled={idx===0}
-                    style={{background:'none',border:'none',cursor:idx===0?'default':'pointer',
-                      color:idx===0?'#e2e8f0':'#94a3b8',fontSize:11,padding:'1px 4px',lineHeight:1}}>▲</button>
-                  <button onClick={()=>{if(idx<courseItems.length-1)reorderCourse(idx,idx+1)}}
-                    disabled={idx===courseItems.length-1}
-                    style={{background:'none',border:'none',cursor:idx===courseItems.length-1?'default':'pointer',
-                      color:idx===courseItems.length-1?'#e2e8f0':'#94a3b8',fontSize:11,padding:'1px 4px',lineHeight:1}}>▼</button>
+                  <button onClick={()=>{if(idx>0)reorderCourse(idx,idx-1)}} disabled={idx===0} style={{background:'none',border:'none',cursor:idx===0?'default':'pointer',color:idx===0?'#e2e8f0':'#94a3b8',fontSize:11,padding:'1px 4px',lineHeight:1}}>▲</button>
+                  <button onClick={()=>{if(idx<courseItems.length-1)reorderCourse(idx,idx+1)}} disabled={idx===courseItems.length-1} style={{background:'none',border:'none',cursor:idx===courseItems.length-1?'default':'pointer',color:idx===courseItems.length-1?'#e2e8f0':'#94a3b8',fontSize:11,padding:'1px 4px',lineHeight:1}}>▼</button>
                 </div>
-                <button onClick={()=>removeFromCourse(idx)}
-                  style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',
-                    width:26,height:26,borderRadius:6,cursor:'pointer',fontSize:12,flexShrink:0,
-                    display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
-                  onMouseEnter={e=>{e.currentTarget.style.background='#ef4444';e.currentTarget.style.color='white'}}
-                  onMouseLeave={e=>{e.currentTarget.style.background='#fef2f2';e.currentTarget.style.color='#ef4444'}}
-                >✕</button>
+                <button onClick={()=>removeFromCourse(idx)} style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',width:26,height:26,borderRadius:6,cursor:'pointer',fontSize:12,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
+                  onMouseEnter={e=>{e.currentTarget.style.background='#ef4444';e.currentTarget.style.color='white'}} onMouseLeave={e=>{e.currentTarget.style.background='#fef2f2';e.currentTarget.style.color='#ef4444'}}>✕</button>
               </div>
             ))}
           </div>
+          <div style={{padding:'12px 16px',borderTop:'1px solid #f1f5f9',background:'#fafbfc',display:'flex',gap:8}}>
+            <button onClick={openCoursePlanner} style={{flex:1,padding:'11px',background:'linear-gradient(135deg,#3b82f6,#6366f1)',color:'white',border:'none',borderRadius:10,fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(59,130,246,.3)'}}>
+              🗺️ 코스 편집하기
+            </button>
+          </div>
+        </div>
+      )}
 
-          {/* 바스켓 푸터 */}
-          <div style={{padding:'12px 16px',borderTop:'1px solid #f1f5f9',background:'#fafbfc',
-            display:'flex',gap:8}}>
-            <div style={{flex:1,fontSize:11,color:'#94a3b8',display:'flex',alignItems:'center'}}>
-              💡 2단계에서 날짜별 코스 편집 기능이 추가됩니다
+      {/* ── 코스 플래너 패널 ── */}
+      {showCoursePlanner && courseDays.length > 0 && (
+        <div style={{position:'absolute',top:0,left:0,bottom:0,width:Math.min(540,typeof window!=='undefined'?window.innerWidth-30:500),zIndex:1200,background:'rgba(255,255,255,.97)',backdropFilter:'blur(20px)',borderRight:'1.5px solid #e2e8f0',boxShadow:'12px 0 40px rgba(0,0,0,.12)',display:'flex',flexDirection:'column',animation:'coursePlannerIn .35s cubic-bezier(.16,1,.3,1)'}}>
+          {/* 플래너 헤더 */}
+          <div style={{padding:'18px 20px 14px',borderBottom:'1px solid #e2e8f0',flexShrink:0}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <span style={{fontSize:22}}>🗺️</span>
+                <div>
+                  <div style={{fontSize:18,fontWeight:800,color:'#0f172a',letterSpacing:'-.3px'}}>코스 플래너</div>
+                  <div style={{fontSize:11,color:'#94a3b8',marginTop:1}}>{courseItems.length}곳 · {courseDays.length}일</div>
+                </div>
+              </div>
+              <button onClick={()=>setShowCoursePlanner(false)} style={{background:'#f1f5f9',border:'1.5px solid #e2e8f0',color:'#64748b',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}}
+                onMouseEnter={e=>e.currentTarget.style.background='#e2e8f0'} onMouseLeave={e=>e.currentTarget.style.background='#f1f5f9'}>✕</button>
+            </div>
+
+            {/* 이동수단 선택 */}
+            <div style={{display:'flex',gap:4,marginBottom:12}}>
+              {[{key:'transit',label:'대중교통',icon:'🚇'},{key:'walking',label:'도보',icon:'🚶'},{key:'driving',label:'차량',icon:'🚗'}].map(m=>(
+                <button key={m.key} onClick={()=>setCourseTransport(m.key)} style={{
+                  flex:1,padding:'7px 0',fontSize:11,fontWeight:courseTransport===m.key?700:500,
+                  background:courseTransport===m.key?'#1e293b':'#f1f5f9',color:courseTransport===m.key?'white':'#64748b',
+                  border:'none',borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4,transition:'all .2s'
+                }}>{m.icon} {m.label}</button>
+              ))}
+            </div>
+
+            {/* Day 탭 */}
+            <div style={{display:'flex',gap:4,overflowX:'auto',paddingBottom:4}}>
+              {courseDays.map((_,i)=>(
+                <button key={i} onClick={()=>setActiveDayTab(i)} style={{
+                  padding:'6px 14px',fontSize:12,fontWeight:activeDayTab===i?700:500,
+                  background:activeDayTab===i?'#3b82f6':'#f8fafc',color:activeDayTab===i?'white':'#64748b',
+                  border:activeDayTab===i?'none':'1px solid #e2e8f0',borderRadius:20,cursor:'pointer',whiteSpace:'nowrap',transition:'all .15s'
+                }}>Day {i+1} <span style={{fontSize:10,opacity:.8}}>({courseDays[i].items.length})</span></button>
+              ))}
+              <button onClick={addCourseDay} style={{padding:'6px 12px',fontSize:14,background:'#f0fdf4',color:'#16a34a',border:'1px dashed #86efac',borderRadius:20,cursor:'pointer',fontWeight:700}}>＋</button>
+            </div>
+          </div>
+
+          {/* Day 내용 */}
+          <div style={{flex:1,overflowY:'auto',padding:'14px 16px'}}>
+            {(() => {
+              const day = courseDays[activeDayTab]
+              if (!day) return null
+              const items = day.items
+              if (items.length === 0) return (
+                <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:200,color:'#94a3b8',gap:8}}>
+                  <span style={{fontSize:32}}>📭</span>
+                  <span style={{fontSize:13}}>이 날에 장소가 없습니다</span>
+                  <span style={{fontSize:11}}>다른 Day에서 이동하거나 지도에서 ＋ 버튼으로 추가하세요</span>
+                </div>
+              )
+              // 총 이동시간 계산
+              let totalSec = 0
+              for (let i = 0; i < items.length - 1; i++) {
+                const rk = getRouteKey(items[i], items[i+1], courseTransport)
+                if (routeCache[rk]?.durationSec) totalSec += routeCache[rk].durationSec
+              }
+              const totalMin = Math.round(totalSec / 60)
+              const totalHr = Math.floor(totalMin / 60)
+              const totalMinRem = totalMin % 60
+              return (
+                <>
+                  {/* Day 요약 바 */}
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',background:'#f8fafc',borderRadius:12,marginBottom:12,border:'1px solid #e2e8f0'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:6}}>
+                      <span style={{fontSize:14,fontWeight:800,color:'#1e293b'}}>Day {activeDayTab+1}</span>
+                      <span style={{fontSize:11,color:'#94a3b8'}}>{items.length}곳</span>
+                    </div>
+                    <div style={{display:'flex',alignItems:'center',gap:10}}>
+                      {totalMin > 0 && <span style={{fontSize:11,color:'#3b82f6',fontWeight:600}}>🕐 총 {totalHr > 0 ? `${totalHr}시간 ${totalMinRem}분` : `${totalMin}분`}</span>}
+                      {loadingRoutes && <div style={{width:14,height:14,borderRadius:'50%',border:'2px solid #e2e8f0',borderTopColor:'#3b82f6',animation:'spin .7s linear infinite'}}/>}
+                      {courseDays.length > 1 && (
+                        <button onClick={()=>removeCourseDay(activeDayTab)} style={{fontSize:10,background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',padding:'3px 8px',borderRadius:6,cursor:'pointer',fontWeight:600}}>삭제</button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 장소 리스트 + 경로 정보 */}
+                  {items.map((item, idx) => {
+                    const rk = idx < items.length - 1 ? getRouteKey(items[idx], items[idx+1], courseTransport) : null
+                    const route = rk ? routeCache[rk] : null
+                    return (
+                      <div key={item.name+'-'+idx}>
+                        {/* 장소 카드 (드래그 가능) */}
+                        <div
+                          draggable
+                          onDragStart={e=>{e.dataTransfer.setData('text/plain',JSON.stringify({dayIdx:activeDayTab,itemIdx:idx}));setDragItem({dayIdx:activeDayTab,itemIdx:idx})}}
+                          onDragOver={e=>{e.preventDefault();e.currentTarget.classList.add('drag-over')}}
+                          onDragLeave={e=>e.currentTarget.classList.remove('drag-over')}
+                          onDrop={e=>{e.preventDefault();e.currentTarget.classList.remove('drag-over');try{const from=JSON.parse(e.dataTransfer.getData('text/plain'));if(from.dayIdx===activeDayTab)reorderInDay(activeDayTab,from.itemIdx,idx);else moveToDayFn(from.dayIdx,from.itemIdx,activeDayTab)}catch{};setDragItem(null)}}
+                          onDragEnd={()=>setDragItem(null)}
+                          style={{
+                            display:'flex',alignItems:'center',gap:10,padding:'12px 12px',
+                            background:'white',borderRadius:12,border:'1.5px solid #e2e8f0',
+                            cursor:'grab',transition:'all .15s',
+                            opacity:dragItem?.dayIdx===activeDayTab&&dragItem?.itemIdx===idx?0.4:1
+                          }}
+                        >
+                          {/* 순서 번호 */}
+                          <div style={{width:30,height:30,borderRadius:'50%',flexShrink:0,background:'linear-gradient(135deg,#3b82f6,#6366f1)',color:'white',fontSize:13,fontWeight:800,display:'flex',alignItems:'center',justifyContent:'center'}}>{idx+1}</div>
+                          {/* 드래그 핸들 */}
+                          <span style={{fontSize:14,color:'#cbd5e1',flexShrink:0,cursor:'grab',userSelect:'none'}}>⠿</span>
+                          {/* 아이콘 */}
+                          <span style={{fontSize:20,flexShrink:0}}>{item.emoji||'📍'}</span>
+                          {/* 정보 */}
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{fontSize:13.5,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.displayName}</div>
+                            <div style={{display:'flex',alignItems:'center',gap:6,marginTop:3}}>
+                              <span style={{fontSize:10,color:'#94a3b8'}}>{item.cityDisplayName}</span>
+                              <span style={{fontSize:9,padding:'1px 6px',borderRadius:4,background:item.source==='spot'?'#dbeafe':item.source==='hotspot'?'#fef3c7':'#dcfce7',color:item.source==='spot'?'#2563eb':item.source==='hotspot'?'#d97706':'#16a34a',fontWeight:600}}>{item.source==='spot'?'관광지':item.source==='hotspot'?'핫플':'맛집'}</span>
+                              {item.rating && <span style={{fontSize:10,color:'#f59e0b'}}>★{item.rating}</span>}
+                            </div>
+                          </div>
+                          {/* Day 이동 */}
+                          {courseDays.length > 1 && (
+                            <select value="" onChange={e=>{if(e.target.value!=='')moveToDayFn(activeDayTab,idx,parseInt(e.target.value));e.target.value=''}} style={{width:60,fontSize:10,padding:'4px 2px',border:'1px solid #e2e8f0',borderRadius:6,color:'#64748b',background:'#f8fafc',cursor:'pointer',flexShrink:0}}>
+                              <option value="">이동</option>
+                              {courseDays.map((_,di)=>di!==activeDayTab&&<option key={di} value={di}>Day {di+1}</option>)}
+                            </select>
+                          )}
+                          {/* 삭제 */}
+                          <button onClick={()=>removeFromDay(activeDayTab,idx)} style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',width:28,height:28,borderRadius:7,cursor:'pointer',fontSize:12,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
+                            onMouseEnter={e=>{e.currentTarget.style.background='#ef4444';e.currentTarget.style.color='white'}} onMouseLeave={e=>{e.currentTarget.style.background='#fef2f2';e.currentTarget.style.color='#ef4444'}}>✕</button>
+                        </div>
+
+                        {/* 경로 정보 (다음 장소까지) */}
+                        {idx < items.length - 1 && (
+                          <div style={{display:'flex',alignItems:'center',gap:8,padding:'6px 0 6px 18px',position:'relative'}}>
+                            {/* 세로 연결선 */}
+                            <div style={{position:'absolute',left:30,top:0,bottom:0,width:2,background:'linear-gradient(#3b82f6,#6366f1)',opacity:.3}}/>
+                            <div style={{width:20,display:'flex',justifyContent:'center',flexShrink:0}}>
+                              <span style={{fontSize:12,color:'#94a3b8'}}>{courseTransport==='transit'?'🚇':courseTransport==='walking'?'🚶':'🚗'}</span>
+                            </div>
+                            {route ? (
+                              <div style={{display:'flex',alignItems:'center',gap:8,fontSize:11,color:'#64748b',background:'#f8fafc',borderRadius:8,padding:'4px 12px',border:'1px solid #f1f5f9'}}>
+                                <span style={{fontWeight:700,color:'#3b82f6'}}>{route.duration}</span>
+                                <span style={{color:'#cbd5e1'}}>·</span>
+                                <span>{route.distance}</span>
+                              </div>
+                            ) : loadingRoutes ? (
+                              <div style={{width:14,height:14,borderRadius:'50%',border:'2px solid #e2e8f0',borderTopColor:'#3b82f6',animation:'spin .7s linear infinite'}}/>
+                            ) : (
+                              <span style={{fontSize:10,color:'#cbd5e1'}}>경로 계산 중...</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </>
+              )
+            })()}
+          </div>
+
+          {/* 플래너 푸터 */}
+          <div style={{padding:'14px 16px',borderTop:'1px solid #e2e8f0',background:'#fafbfc',flexShrink:0}}>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>fetchAllRoutes(courseDays,courseTransport)} disabled={loadingRoutes} style={{flex:1,padding:'10px',background:'white',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:12,fontWeight:600,color:'#475569',cursor:loadingRoutes?'wait':'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                {loadingRoutes?'⏳ 계산 중...':'🔄 경로 재계산'}
+              </button>
+              <button onClick={()=>{setShowCoursePlanner(false);setShowCourseBasket(false)}} style={{flex:1,padding:'10px',background:'linear-gradient(135deg,#1e293b,#334155)',border:'none',borderRadius:10,fontSize:12,fontWeight:700,color:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                ✓ 완료
+              </button>
             </div>
           </div>
         </div>
