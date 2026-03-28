@@ -4754,7 +4754,7 @@ function App() {
 
       {/* Header */}
       <div style={{
-        position:'absolute',top:0,left:0,right:selectedCity?(sidePanel?800:420):0,zIndex:1000,
+        position:'absolute',top:0,left:0,right:selectedCity?(sidePanel?840:420):0,zIndex:1000,
         background:'linear-gradient(to bottom,rgba(0,0,0,.65) 0%,transparent 100%)',
         padding:'16px 20px 50px',pointerEvents:'none',
         transition:'right .42s cubic-bezier(.16,1,.3,1)'
@@ -5102,7 +5102,7 @@ function App() {
         {/* 사이드 슬라이드 패널 (핫플/맛집 리스트) */}
         {sidePanel && (
           <div style={{
-            position:'absolute',top:0,right:420,bottom:0,width:380,zIndex:1000,
+            position:'absolute',top:0,right:420,bottom:0,width:420,zIndex:1000,
             background:'white',borderLeft:'1.5px solid #e2e8f0',
             overflowY:'auto',
             boxShadow:'-8px 0 24px rgba(0,0,0,.1)',
@@ -5176,7 +5176,7 @@ function App() {
                         e.currentTarget.style.borderColor = '#e2e8f0'
                         e.currentTarget.style.boxShadow = 'none'
                       }}>
-                      <div style={{display:'flex',gap:10,padding:10}}>
+                      <div style={{display:'flex',gap:10,padding:10,alignItems:'center'}}>
                         {place.photos && place.photos.length > 0 ? (
                           <img 
                             src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photo_reference=${place.photos[0].photo_reference}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`}
@@ -5189,13 +5189,8 @@ function App() {
                           </div>
                         )}
                         <div style={{flex:1,minWidth:0}}>
-                          <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:3}}>
-                            <div style={{fontSize:13,fontWeight:700,color:'#0f172a',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                              {place.name}
-                            </div>
-                            <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav({type:sidePanel==='hotspots'?'hotspot':'restaurant',name:place.name,place_id:place.place_id,rating:place.rating,user_ratings_total:place.user_ratings_total,vicinity:place.vicinity,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name)})}}
-                              style={{background:'none',border:'none',color:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#fbbf24':'#cbd5e1',fontSize:16,cursor:'pointer',padding:2,flexShrink:0,transition:'color .2s'}}
-                              title="즐겨찾기">{isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'⭐':'☆'}</button>
+                          <div style={{fontSize:13,fontWeight:700,color:'#0f172a',marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                            {place.name}
                           </div>
                           {place.rating && (
                             <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:3}}>
@@ -5219,6 +5214,9 @@ function App() {
                             </div>
                           )}
                         </div>
+                        <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav({type:sidePanel==='hotspots'?'hotspot':'restaurant',name:place.name,place_id:place.place_id,rating:place.rating,user_ratings_total:place.user_ratings_total,vicinity:place.vicinity,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name)})}}
+                          style={{background:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#fef3c7':'#f8fafc',border:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'1.5px solid #fbbf24':'1.5px solid #e2e8f0',color:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#f59e0b':'#cbd5e1',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:15,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
+                          title="즐겨찾기">{isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'⭐':'☆'}</button>
                       </div>
                     </a>
                   ))}
