@@ -3711,6 +3711,7 @@ function App() {
   const [hotspots, setHotspots] = useState([])
   const [restaurants, setRestaurants] = useState([])
   const [loadingPlaces, setLoadingPlaces] = useState(false)
+  const [foodCategory, setFoodCategory] = useState('restaurant') // 'restaurant' | 'cafe' | 'bar'
 
   // API 사용량 추적 및 제한
   const MAX_DAILY_CALLS = 300
@@ -3981,12 +3982,22 @@ function App() {
       fetchPlacesData(selectedCity)
       setShowSharePopup(false)
       setSidePanel(null)
+      setFoodCategory('restaurant')
     } else {
       setHotspots([])
       setRestaurants([])
       setActiveTab('hotspots')
     }
   }, [selectedCity])
+
+  // 맛집 카테고리 변경 시 다시 로드
+  useEffect(() => {
+    if (selectedCity && sidePanel === 'restaurants') {
+      setRestaurants([])
+      setLoadingPlaces(true)
+      fetchFoodData(selectedCity, foodCategory).finally(() => setLoadingPlaces(false))
+    }
+  }, [foodCategory])
 
 
 
@@ -4533,16 +4544,37 @@ function App() {
         setHotspots(topHotspots)
       }
       
-      // 맛집 (레스토랑)
-      const restaurantRes = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=restaurant`
-      )
-      const restaurantData = await restaurantRes.json()
+      // 맛집도 함께 로드
+      await fetchFoodData(city, foodCategory)
       
-      if (restaurantData.results) {
+    } catch (error) {
+      console.error('Failed to fetch places:', error)
+    } finally {
+      setLoadingPlaces(false)
+    }
+  }
+
+  // 맛집 카테고리별 데이터 로드
+  const fetchFoodData = async (city, category) => {
+    if (!city?.lat || !city?.lng) return
+    
+    const typeMap = {
+      restaurant: 'restaurant',
+      cafe: 'cafe',
+      bar: 'bar|night_club'
+    }
+    const apiType = typeMap[category] || 'restaurant'
+    
+    try {
+      const res = await fetch(
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=${apiType}`
+      )
+      const data = await res.json()
+      
+      if (data.results) {
         const hotelKeywords = ['hotel', 'hostel', 'resort', 'motel', 'lodge', 'suites', '호텔', '리조트', '모텔', 'guesthouse', 'pension', '펜션']
         
-        const filterRestaurants = (minReviews) => restaurantData.results
+        const filterResults = (minReviews) => data.results
           .filter(p => {
             if (!p.rating || p.rating < 3.0) return false
             if (!p.user_ratings_total || p.user_ratings_total < minReviews) return false
@@ -4553,17 +4585,14 @@ function App() {
           })
           .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
 
-        let topRestaurants = filterRestaurants(1000)
-        if (topRestaurants.length < 3) topRestaurants = filterRestaurants(500)
-        if (topRestaurants.length < 3) topRestaurants = filterRestaurants(300)
+        let results = filterResults(1000)
+        if (results.length < 3) results = filterResults(500)
+        if (results.length < 3) results = filterResults(300)
         
-        setRestaurants(topRestaurants)
+        setRestaurants(results)
       }
-      
     } catch (error) {
-      console.error('Failed to fetch places:', error)
-    } finally {
-      setLoadingPlaces(false)
+      console.error('Failed to fetch food data:', error)
     }
   }
 
@@ -4945,9 +4974,9 @@ function App() {
             <div style={{position:'sticky',top:0,zIndex:10,padding:'16px 16px 12px',background:'linear-gradient(white 87%,transparent)',borderBottom:'1px solid #f1f5f9'}}>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                 <div style={{display:'flex',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:18}}>{sidePanel === 'hotspots' ? '🔥' : '🍽️'}</span>
+                  <span style={{fontSize:18}}>{sidePanel === 'hotspots' ? '🔥' : foodCategory === 'cafe' ? '☕' : foodCategory === 'bar' ? '🍻' : '🍽️'}</span>
                   <span style={{fontSize:16,fontWeight:800,color:'#334155'}}>
-                    {sidePanel === 'hotspots' ? '핫플레이스' : '맛집'}
+                    {sidePanel === 'hotspots' ? '핫플레이스' : foodCategory === 'cafe' ? '카페' : foodCategory === 'bar' ? '술집' : '맛집'}
                   </span>
                   <span style={{fontSize:12,color:'#94a3b8',fontWeight:500}}>
                     {sidePanel === 'hotspots' ? hotspots.length : restaurants.length}곳
@@ -4959,6 +4988,29 @@ function App() {
                   onMouseLeave={e=>e.currentTarget.style.background='#f1f5f9'}
                 >✕</button>
               </div>
+              {/* 맛집 카테고리 탭 */}
+              {sidePanel === 'restaurants' && (
+                <div style={{display:'flex',gap:6,marginTop:10}}>
+                  {[
+                    {key:'restaurant', label:'음식점', emoji:'🍴'},
+                    {key:'cafe', label:'카페', emoji:'☕'},
+                    {key:'bar', label:'술집', emoji:'🍻'},
+                  ].map(cat => (
+                    <button key={cat.key}
+                      onClick={() => setFoodCategory(cat.key)}
+                      style={{
+                        flex:1,padding:'7px 0',fontSize:12,fontWeight:foodCategory===cat.key?700:500,
+                        background:foodCategory===cat.key?'#1e293b':'#f1f5f9',
+                        color:foodCategory===cat.key?'white':'#64748b',
+                        border:'none',borderRadius:8,cursor:'pointer',
+                        transition:'all .2s',display:'flex',alignItems:'center',justifyContent:'center',gap:4
+                      }}
+                      onMouseEnter={e=>{if(foodCategory!==cat.key)e.currentTarget.style.background='#e2e8f0'}}
+                      onMouseLeave={e=>{if(foodCategory!==cat.key)e.currentTarget.style.background='#f1f5f9'}}
+                    >{cat.emoji} {cat.label}</button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* 리스트 */}
@@ -4995,7 +5047,7 @@ function App() {
                           />
                         ) : (
                           <div style={{width:70,height:70,borderRadius:8,background:'linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,flexShrink:0}}>
-                            {sidePanel === 'hotspots' ? '📍' : '🍽️'}
+                            {sidePanel === 'hotspots' ? '📍' : foodCategory === 'cafe' ? '☕' : foodCategory === 'bar' ? '🍻' : '🍽️'}
                           </div>
                         )}
                         <div style={{flex:1,minWidth:0}}>
@@ -5030,7 +5082,7 @@ function App() {
                 </div>
               ) : (
                 <div style={{textAlign:'center',padding:50,color:'#94a3b8',fontSize:13}}>
-                  {sidePanel === 'hotspots' ? '핫플레이스' : '맛집'} 데이터를 불러오는 중...
+                  {sidePanel === 'hotspots' ? '핫플레이스' : foodCategory === 'cafe' ? '카페' : foodCategory === 'bar' ? '술집' : '맛집'} 데이터가 없습니다
                 </div>
               )}
             </div>
