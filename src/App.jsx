@@ -3781,6 +3781,21 @@ function App() {
   const [courseTransport, setCourseTransport] = useState('transit')
   const [dragItem, setDragItem] = useState(null)
   const [activeDayTab, setActiveDayTab] = useState(0)
+  const [courseTripStart, setCourseTripStart] = useState(() => {
+    try { return localStorage.getItem('atlas_trip_start') || '' } catch { return '' }
+  })
+  const saveTripStart = (d) => { setCourseTripStart(d); localStorage.setItem('atlas_trip_start', d) }
+  const getDayDate = (dayIdx) => {
+    if (!courseTripStart) return null
+    const d = new Date(courseTripStart)
+    d.setDate(d.getDate() + dayIdx)
+    return d
+  }
+  const formatDate = (d) => {
+    if (!d) return ''
+    const days = ['일','월','화','수','목','금','토']
+    return `${d.getMonth()+1}/${d.getDate()} (${days[d.getDay()]})`
+  }
 
   const saveCourse = (items) => { setCourseItems(items); localStorage.setItem('atlas_course', JSON.stringify(items)) }
   const addToCourse = (item) => {
@@ -5205,7 +5220,7 @@ function App() {
       {selectedCity && (
         <>
         {/* 사이드 탭 (핫플 / 맛집) - 패널 왼쪽에 고정 */}
-        <div style={{position:'absolute',top:120,right:420,zIndex:1001,display:'flex',flexDirection:'column',gap:6}}>
+        <div style={{position:'absolute',top:120,right:sidePanel?840:420,zIndex:1001,display:'flex',flexDirection:'column',gap:6,transition:'right .3s cubic-bezier(.16,1,.3,1)'}}>
           <button
             onClick={() => setSidePanel(sidePanel === 'hotspots' ? null : 'hotspots')}
             style={{
@@ -5689,11 +5704,26 @@ function App() {
                 <span style={{fontSize:22}}>🗺️</span>
                 <div>
                   <div style={{fontSize:18,fontWeight:800,color:'#0f172a',letterSpacing:'-.3px'}}>코스 플래너</div>
-                  <div style={{fontSize:11,color:'#94a3b8',marginTop:1}}>{courseItems.length}곳 · {courseDays.length}일</div>
+                  <div style={{fontSize:11,color:'#94a3b8',marginTop:1}}>{courseItems.length}곳 · {courseDays.length}일{courseTripStart ? ` · ${formatDate(getDayDate(0))}~${formatDate(getDayDate(courseDays.length-1))}` : ''}</div>
                 </div>
               </div>
-              <button onClick={()=>setShowCoursePlanner(false)} style={{background:'#f1f5f9',border:'1.5px solid #e2e8f0',color:'#64748b',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}}
-                onMouseEnter={e=>e.currentTarget.style.background='#e2e8f0'} onMouseLeave={e=>e.currentTarget.style.background='#f1f5f9'}>✕</button>
+              <div style={{display:'flex',gap:6}}>
+                <button onClick={()=>{if(confirm('코스를 모두 비울까요?')){saveCourse([]);saveCourseDays([]);setRouteCache({});setShowCoursePlanner(false)}}}
+                  style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',padding:'5px 10px',borderRadius:8,fontSize:11,fontWeight:600,cursor:'pointer'}}
+                  onMouseEnter={e=>{e.currentTarget.style.background='#ef4444';e.currentTarget.style.color='white'}}
+                  onMouseLeave={e=>{e.currentTarget.style.background='#fef2f2';e.currentTarget.style.color='#ef4444'}}>전체삭제</button>
+                <button onClick={()=>setShowCoursePlanner(false)} style={{background:'#f1f5f9',border:'1.5px solid #e2e8f0',color:'#64748b',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}}
+                  onMouseEnter={e=>e.currentTarget.style.background='#e2e8f0'} onMouseLeave={e=>e.currentTarget.style.background='#f1f5f9'}>✕</button>
+              </div>
+            </div>
+
+            {/* 여행 날짜 설정 */}
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12,padding:'8px 12px',background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0'}}>
+              <span style={{fontSize:14}}>📅</span>
+              <span style={{fontSize:12,color:'#64748b',fontWeight:600,flexShrink:0}}>출발일</span>
+              <input type="date" value={courseTripStart} onChange={e=>saveTripStart(e.target.value)}
+                style={{flex:1,fontSize:12,border:'1px solid #e2e8f0',borderRadius:6,padding:'4px 8px',color:'#1e293b',fontWeight:600,outline:'none',cursor:'pointer',background:'white'}}/>
+              {courseTripStart && <button onClick={()=>saveTripStart('')} style={{background:'none',border:'none',color:'#94a3b8',fontSize:12,cursor:'pointer',padding:2}}>✕</button>}
             </div>
 
             {/* 이동수단 선택 */}
@@ -5714,7 +5744,7 @@ function App() {
                   padding:'6px 14px',fontSize:12,fontWeight:activeDayTab===i?700:500,
                   background:activeDayTab===i?'#3b82f6':'#f8fafc',color:activeDayTab===i?'white':'#64748b',
                   border:activeDayTab===i?'none':'1px solid #e2e8f0',borderRadius:20,cursor:'pointer',whiteSpace:'nowrap',transition:'all .15s'
-                }}>Day {i+1} <span style={{fontSize:10,opacity:.8}}>({courseDays[i].items.length})</span></button>
+                }}>Day {i+1}{courseTripStart ? <span style={{fontSize:9,opacity:.7,marginLeft:3}}>{formatDate(getDayDate(i))}</span> : null} <span style={{fontSize:10,opacity:.8}}>({courseDays[i].items.length})</span></button>
               ))}
               <button onClick={addCourseDay} style={{padding:'6px 12px',fontSize:14,background:'#f0fdf4',color:'#16a34a',border:'1px dashed #86efac',borderRadius:20,cursor:'pointer',fontWeight:700}}>＋</button>
             </div>
@@ -5748,6 +5778,7 @@ function App() {
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',background:'#f8fafc',borderRadius:12,marginBottom:12,border:'1px solid #e2e8f0'}}>
                     <div style={{display:'flex',alignItems:'center',gap:6}}>
                       <span style={{fontSize:14,fontWeight:800,color:'#1e293b'}}>Day {activeDayTab+1}</span>
+                      {courseTripStart && <span style={{fontSize:11,color:'#3b82f6',fontWeight:600}}>{formatDate(getDayDate(activeDayTab))}</span>}
                       <span style={{fontSize:11,color:'#94a3b8'}}>{items.length}곳</span>
                     </div>
                     <div style={{display:'flex',alignItems:'center',gap:10}}>
