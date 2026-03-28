@@ -4488,6 +4488,33 @@ function App() {
     
     setLoadingPlaces(true)
     
+    // 관광 패널 spots 이름 수집 (중복 필터용)
+    const cityKey = city._koName || city.name
+    const staticSpots = CITY_DATA[cityKey]?.spots || []
+    const spotNames = new Set()
+    staticSpots.forEach(s => {
+      if (s.name) spotNames.add(s.name.toLowerCase().replace(/\s+/g, ''))
+      if (s.wikiTitle) spotNames.add(s.wikiTitle.toLowerCase().replace(/\s+/g, ''))
+      // 부분 매칭용 키워드도 추가 (예: "경복궁" → "gyeongbokgung")
+      if (s.wikiTitle) {
+        s.wikiTitle.split(/[\s_()]+/).forEach(w => {
+          if (w.length >= 4) spotNames.add(w.toLowerCase())
+        })
+      }
+    })
+
+    const isDuplicate = (placeName) => {
+      const normalized = placeName.toLowerCase().replace(/\s+/g, '')
+      // 정확 매칭
+      if (spotNames.has(normalized)) return true
+      // 부분 매칭: Google Places 이름에 관광지 키워드가 포함되어 있는지
+      for (const keyword of spotNames) {
+        if (keyword.length >= 4 && normalized.includes(keyword)) return true
+        if (keyword.length >= 4 && keyword.includes(normalized.replace(/\s+/g, ''))) return true
+      }
+      return false
+    }
+
     try {
       // 핫플레이스 (관광명소, 박물관, 공원 등)
       const hotspotRes = await fetch(
@@ -4498,22 +4525,36 @@ function App() {
       if (hotspotData.results) {
         const topHotspots = hotspotData.results
           .filter(p => p.rating && p.rating >= 4.0)
+          .filter(p => p.user_ratings_total && p.user_ratings_total >= 1000)
+          .filter(p => !isDuplicate(p.name))
           .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
-          .slice(0, 8)
         setHotspots(topHotspots)
       }
       
-      // 맛집 (레스토랑, 카페)
+      // 맛집 (레스토랑만, 카페 별도)
       const restaurantRes = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=restaurant|cafe`
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=restaurant`
       )
       const restaurantData = await restaurantRes.json()
       
       if (restaurantData.results) {
+        // 호텔/숙박 키워드 필터
+        const hotelKeywords = ['hotel', 'hostel', 'resort', 'motel', 'inn', 'lodge', 'suites', '호텔', '리조트', '모텔', 'guesthouse', 'pension', '펜션']
+        
         const topRestaurants = restaurantData.results
-          .filter(p => p.rating && p.rating >= 4.0)
-          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-          .slice(0, 8)
+          .filter(p => {
+            // 평점 4.0 이상
+            if (!p.rating || p.rating < 4.0) return false
+            // 리뷰 최소 50개 이상 (관광지라 너무 높으면 안됨)
+            if (!p.user_ratings_total || p.user_ratings_total < 1000) return false
+            // 호텔/숙박업소 제외 (이름 기반)
+            const nameLower = (p.name || '').toLowerCase()
+            if (hotelKeywords.some(kw => nameLower.includes(kw))) return false
+            // Google types에 lodging이 포함되면 제외
+            if (p.types && p.types.some(t => ['lodging', 'hotel', 'resort'].includes(t))) return false
+            return true
+          })
+          .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
         setRestaurants(topRestaurants)
       }
       
