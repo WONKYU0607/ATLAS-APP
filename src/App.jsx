@@ -1150,6 +1150,84 @@ const T = {
   lDrive:{ko:'운전방향',en:'Driving side',ja:'走行方向',zh:'行驶方向'},
   lCityCount:{ko:'도시 수',en:'Cities',ja:'都市数',zh:'城市数'},
   registered:{ko:'개 등록',en:' listed',ja:'件登録',zh:'个已录入'},
+  // ── 코스 플래너 번역 ──
+  myCourse:{ko:'내 코스',en:'My Course',ja:'マイコース',zh:'我的路线'},
+  coursePlanner:{ko:'코스 플래너',en:'Course Planner',ja:'コースプランナー',zh:'行程规划'},
+  coursePlace:{ko:'곳',en:' places',ja:'ヶ所',zh:'处'},
+  courseDay:{ko:'일',en:' days',ja:'日間',zh:'天'},
+  courseDeleteAll:{ko:'전체삭제',en:'Clear all',ja:'全削除',zh:'全部删除'},
+  courseDeleteConfirm:{ko:'코스를 모두 비울까요?',en:'Clear all course items?',ja:'コースを全て削除しますか？',zh:'清空所有路线？'},
+  courseComplete:{ko:'✓ 완료',en:'✓ Done',ja:'✓ 完了',zh:'✓ 完成'},
+  courseEmptyTitle:{ko:'이 날에 장소가 없습니다',en:'No places for this day',ja:'この日の予定はありません',zh:'这一天没有安排'},
+  courseEmptyDesc:{ko:'다른 Day에서 이동하거나 지도에서 ＋ 버튼으로 추가하세요',en:'Move from another day or add from the map with ＋',ja:'他のDayから移動するか、地図の＋で追加してください',zh:'从其他天移动或在地图上用＋添加'},
+  courseMove:{ko:'이동',en:'Move',ja:'移動',zh:'移动'},
+  courseDelete:{ko:'삭제',en:'Delete',ja:'削除',zh:'删除'},
+  courseTotal:{ko:'총',en:'Total',ja:'合計',zh:'共'},
+  courseHour:{ko:'시간',en:'h',ja:'時間',zh:'小时'},
+  courseMin:{ko:'분',en:'m',ja:'分',zh:'分钟'},
+  courseAddToTrip:{ko:'코스에 추가',en:'Add to course',ja:'コースに追加',zh:'添加到路线'},
+  courseDeparture:{ko:'출발일',en:'Departure',ja:'出発日',zh:'出发日'},
+  courseDepartureOpt:{ko:'출발일 (선택)',en:'Departure date (optional)',ja:'出発日（任意）',zh:'出发日（选填）'},
+  courseSpot:{ko:'관광지',en:'Attraction',ja:'観光地',zh:'景点'},
+  courseHotspot:{ko:'핫플',en:'Hot spot',ja:'ホットスポット',zh:'热门'},
+  courseRestaurant:{ko:'맛집',en:'Restaurant',ja:'グルメ',zh:'美食'},
+  courseTransit:{ko:'대중교통',en:'Transit',ja:'公共交通',zh:'公共交通'},
+  courseWalking:{ko:'도보',en:'Walking',ja:'徒歩',zh:'步行'},
+  courseDriving:{ko:'차량',en:'Driving',ja:'車',zh:'驾车'},
+  courseNoRoute:{ko:'경로 없음',en:'No route',ja:'ルートなし',zh:'无路线'},
+  courseCalc:{ko:'경로 계산 중...',en:'Calculating...',ja:'ルート計算中...',zh:'计算路线...'},
+  // ── AI 코스 생성 번역 ──
+  aiCourse:{ko:'AI코스',en:'AI Course',ja:'AIコース',zh:'AI路线'},
+  aiTitle:{ko:'AI 코스 자동 생성',en:'AI Course Generator',ja:'AIコース自動生成',zh:'AI路线自动生成'},
+  aiSubtitle:{ko:'도시와 조건을 선택하면 최적 코스를 짜드려요',en:'Select city & options to generate the best itinerary',ja:'都市と条件を選択して最適コースを作成',zh:'选择城市和条件，生成最佳路线'},
+  aiSelectCity:{ko:'도시 선택',en:'Select City',ja:'都市を選択',zh:'选择城市'},
+  aiSearchCity:{ko:'도시 이름 검색 (예: 파리, Tokyo, 서울)',en:'Search city (e.g. Paris, Tokyo, Seoul)',ja:'都市名で検索（例：パリ、東京）',zh:'搜索城市（如：巴黎、东京、首尔）'},
+  aiTheme:{ko:'관광 테마',en:'Travel Theme',ja:'観光テーマ',zh:'旅游主题'},
+  aiThemeAll:{ko:'종합',en:'All',ja:'総合',zh:'综合'},
+  aiThemeHistory:{ko:'역사',en:'History',ja:'歴史',zh:'历史'},
+  aiThemeNature:{ko:'자연',en:'Nature',ja:'自然',zh:'自然'},
+  aiThemeFood:{ko:'음식',en:'Food',ja:'グルメ',zh:'美食'},
+  aiDaysLabel:{ko:'여행 일수',en:'Trip Days',ja:'旅行日数',zh:'旅行天数'},
+  aiDayUnit:{ko:'일',en:'D',ja:'日',zh:'天'},
+  aiIntensity:{ko:'여행 강도',en:'Intensity',ja:'旅行強度',zh:'旅行强度'},
+  aiLight:{ko:'여유',en:'Light',ja:'ゆったり',zh:'轻松'},
+  aiNormal:{ko:'보통',en:'Normal',ja:'普通',zh:'适中'},
+  aiHard:{ko:'빡빡',en:'Packed',ja:'ハード',zh:'紧凑'},
+  aiTransport:{ko:'이동 수단',en:'Transport',ja:'移動手段',zh:'交通方式'},
+  aiGenerate:{ko:'🤖 코스 자동 생성',en:'🤖 Generate Course',ja:'🤖 コース自動生成',zh:'🤖 自动生成路线'},
+  aiGenerating:{ko:'코스 생성 중...',en:'Generating...',ja:'コース生成中...',zh:'正在生成路线...'},
+  aiPreviewLight:{ko:' 하루 3~4곳씩 여유롭게',en:' leisurely 3-4 spots/day',ja:' 1日3〜4ヶ所でゆったり',zh:' 每天3-4个景点轻松游'},
+  aiPreviewNormal:{ko:' 하루 5~6곳씩 알차게',en:' solid 5-6 spots/day',ja:' 1日5〜6ヶ所を充実に',zh:' 每天5-6个景点充实游'},
+  aiPreviewHard:{ko:' 하루 7곳 이상 빡빡하게',en:' packed 7+ spots/day',ja:' 1日7ヶ所以上ハードに',zh:' 每天7个以上景点紧凑游'},
+  aiPreviewText:{ko:'돌아보는 코스를 생성합니다.',en:'itinerary will be generated.',ja:'コースを生成します。',zh:'的路线。'},
+  // ── 사이드 패널 번역 ──
+  hotspots:{ko:'핫플레이스',en:'Hot Places',ja:'ホットプレイス',zh:'热门景点'},
+  hotTab:{ko:'🔥핫플',en:'🔥Hot',ja:'🔥注目',zh:'🔥热门'},
+  foodTab:{ko:'🍽맛집',en:'🍽Food',ja:'🍽グルメ',zh:'🍽美食'},
+  foodRestaurant:{ko:'음식점',en:'Restaurant',ja:'レストラン',zh:'餐厅'},
+  foodCafe:{ko:'카페',en:'Café',ja:'カフェ',zh:'咖啡'},
+  foodBar:{ko:'술집',en:'Bar',ja:'バー',zh:'酒吧'},
+  openNow:{ko:t('openNow'),en:'● Open',ja:'● 営業中',zh:'● 营业中'},
+  closedNow:{ko:t('closedNow'),en:'● Closed',ja:'● 営業終了',zh:'● 已关闭'},
+  noData:{ko:'데이터가 없습니다',en:'No data available',ja:'データがありません',zh:'暂无数据'},
+  // ── 공유/즐겨찾기 번역 ──
+  linkCopy:{ko:'🔗 링크 복사',en:'🔗 Copy Link',ja:'🔗 リンクコピー',zh:'🔗 复制链接'},
+  shareBtn:{ko:'📤 공유하기',en:'📤 Share',ja:'📤 共有',zh:'📤 分享'},
+  shareTitle:{ko:'공유하기',en:'Share',ja:'共有する',zh:'分享'},
+  favTitle:{ko:'⭐ 즐겨찾기',en:'⭐ Favorites',ja:'⭐ お気に入り',zh:'⭐ 收藏'},
+  favDeleteAll:{ko:'전체 삭제',en:'Clear all',ja:'全削除',zh:'全部删除'},
+  favEmpty:{ko:'{t('favEmpty')}',en:'No favorites yet',ja:'お気に入りなし',zh:'暂无收藏'},
+  favDeleteConfirm:{ko:'즐겨찾기를 모두 삭제할까요?',en:'Delete all favorites?',ja:'お気に入りを全削除しますか？',zh:'删除所有收藏？'},
+  favCity:{ko:'도시',en:'Cities',ja:'都市',zh:'城市'},
+  favSpot:{ko:'관광지',en:'Attractions',ja:'観光地',zh:'景点'},
+  favHotspot:{ko:'핫플레이스',en:'Hot Places',ja:'ホットスポット',zh:'热门'},
+  favFood:{ko:'맛집',en:'Restaurants',ja:'グルメ',zh:'美食'},
+  linkCopied:{ko:'✅ 링크가 복사되었습니다!',en:'✅ Link copied!',ja:'✅ リンクをコピーしました！',zh:'✅ 链接已复制！'},
+  linkCopyFail:{ko:'링크 복사에 실패했습니다',en:'Failed to copy link',ja:'リンクのコピーに失敗しました',zh:'复制链接失败'},
+  linkCopiedKakao:{ko:'✅ 링크가 복사되었습니다! 카카오톡에 붙여넣기 해주세요.',en:'✅ Link copied! Paste it in KakaoTalk.',ja:'✅ リンクをコピーしました！KakaoTalkに貼り付けてください。',zh:'✅ 链接已复制！请粘贴到KakaoTalk。'},
+  linkCopiedInsta:{ko:'✅ 링크가 복사되었습니다! 인스타그램 DM이나 스토리에 붙여넣기 해주세요.',en:'✅ Link copied! Paste it in Instagram DM or Story.',ja:'✅ リンクをコピーしました！Instagram DMかストーリーに貼り付けてください。',zh:'✅ 链接已复制！请粘贴到Instagram私信或故事。'},
+  shareText:{ko:'의 핫플레이스와 맛집을 확인해보세요!',en:' — Check out the hotspots and restaurants!',ja:'のホットスポットとグルメをチェック！',zh:'的热门景点和美食等你来！'},
+  shareTitleSuffix:{ko:' - ATLAS 여행 가이드',en:' - ATLAS Travel Guide',ja:' - ATLAS 旅行ガイド',zh:' - ATLAS 旅行指南'},
 }
 
 // 관광지 유형 번역
@@ -4030,8 +4108,8 @@ function App() {
         if (data.routes?.[0]?.legs?.[0]) {
           const leg = data.routes[0].legs[0]
           results[key] = { distance: leg.distance.text, duration: leg.duration.text, durationSec: leg.duration.value }
-        } else { results[key] = { distance: '—', duration: '경로 없음', durationSec: 0 } }
-      } catch { results[key] = { distance: '—', duration: '오류', durationSec: 0 } }
+        } else { results[key] = { distance: '—', duration: t('courseNoRoute'), durationSec: 0 } }
+      } catch { results[key] = { distance: '—', duration: '—', durationSec: 0 } }
     }))
     setRouteCache(prev => ({ ...prev, ...results }))
     setLoadingRoutes(false)
@@ -4761,9 +4839,9 @@ function App() {
   const copyLink = (city) => {
     const url = shareCity(city)
     navigator.clipboard.writeText(url).then(() => {
-      alert('✅ 링크가 복사되었습니다!')
+      alert(t('linkCopied'))
     }).catch(() => {
-      alert('링크 복사에 실패했습니다')
+      alert(t('linkCopyFail'))
     })
   }
 
@@ -4774,7 +4852,7 @@ function App() {
       try {
         await navigator.share({
           title: `ATLAS - ${city.name}`,
-          text: `${city.name}의 핫플레이스와 맛집을 확인해보세요!`,
+          text: `${getCityName(city._koName||city.name)}${t('shareText')}`,
           url: shareUrl
         })
       } catch (error) {
@@ -5090,7 +5168,7 @@ function App() {
               onMouseEnter={e=>e.currentTarget.style.background=showAiModal?'rgba(139,92,246,.4)':'rgba(255,255,255,.22)'}
               onMouseLeave={e=>e.currentTarget.style.background=showAiModal?'rgba(139,92,246,.3)':'rgba(255,255,255,.12)'}>
               <span style={{fontSize:14}}>🤖</span>
-              <span>AI코스</span>
+              <span>{t('aiCourse')}</span>
             </button>
           </div>
           {/* Course Planner Button */}
@@ -5117,22 +5195,22 @@ function App() {
             {showFavorites && (
               <div style={{position:'absolute',top:'calc(100% + 8px)',left:0,background:'rgba(15,23,42,.95)',backdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,.15)',borderRadius:14,overflow:'hidden',zIndex:2001,boxShadow:'0 12px 40px rgba(0,0,0,.5)',width:320,maxHeight:'70vh',overflowY:'auto'}}>
                 <div style={{padding:'14px 16px 10px',borderBottom:'1px solid rgba(255,255,255,.08)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                  <span style={{fontSize:15,fontWeight:700,color:'white'}}>⭐ 즐겨찾기</span>
+                  <span style={{fontSize:15,fontWeight:700,color:'white'}}>{t('favTitle')}</span>
                   {favorites.length > 0 && (
-                    <button onClick={()=>{if(confirm('즐겨찾기를 모두 삭제할까요?'))saveFavorites([])}}
-                      style={{background:'none',border:'none',color:'#ef4444',fontSize:11,cursor:'pointer',fontWeight:600}}>전체 삭제</button>
+                    <button onClick={()=>{if(confirm(t('favDeleteConfirm')))saveFavorites([])}}
+                      style={{background:'none',border:'none',color:'#ef4444',fontSize:11,cursor:'pointer',fontWeight:600}}>{t('favDeleteAll')}</button>
                   )}
                 </div>
                 {favorites.length === 0 ? (
                   <div style={{padding:'40px 16px',textAlign:'center',color:'#64748b',fontSize:13}}>
-                    즐겨찾기가 없습니다
+                    {t('favEmpty')}
                   </div>
                 ) : (
                   <div style={{padding:'8px'}}>
                     {/* 도시 */}
                     {favorites.filter(f=>f.type==='city').length > 0 && (
                       <div style={{marginBottom:8}}>
-                        <div style={{fontSize:10,color:'#94a3b8',letterSpacing:2,padding:'6px 8px',textTransform:'uppercase'}}>도시</div>
+                        <div style={{fontSize:10,color:'#94a3b8',letterSpacing:2,padding:'6px 8px',textTransform:'uppercase'}}>{t('favCity')}</div>
                         {favorites.filter(f=>f.type==='city').map((f,i)=>(
                           <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 10px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
                             onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'}
@@ -5160,7 +5238,7 @@ function App() {
                     {/* 관광지 */}
                     {favorites.filter(f=>f.type==='spot').length > 0 && (
                       <div style={{marginBottom:8}}>
-                        <div style={{fontSize:10,color:'#94a3b8',letterSpacing:2,padding:'6px 8px',textTransform:'uppercase'}}>관광지</div>
+                        <div style={{fontSize:10,color:'#94a3b8',letterSpacing:2,padding:'6px 8px',textTransform:'uppercase'}}>{t('favSpot')}</div>
                         {favorites.filter(f=>f.type==='spot').map((f,i)=>(
                           <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 10px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
                             onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'}
@@ -5195,7 +5273,7 @@ function App() {
                     {/* 핫플/맛집 */}
                     {favorites.filter(f=>f.type==='hotspot'||f.type==='restaurant').length > 0 && (
                       <div style={{marginBottom:8}}>
-                        <div style={{fontSize:10,color:'#94a3b8',letterSpacing:2,padding:'6px 8px',textTransform:'uppercase'}}>핫플 · 맛집</div>
+                        <div style={{fontSize:10,color:'#94a3b8',letterSpacing:2,padding:'6px 8px',textTransform:'uppercase'}}>{t('favHotspot')} · {t('favFood')}</div>
                         {favorites.filter(f=>f.type==='hotspot'||f.type==='restaurant').map((f,i)=>(
                           <a key={i}
                             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(f.name)}&query_place_id=${f.place_id||''}`}
@@ -5395,7 +5473,7 @@ function App() {
             }}
             onMouseEnter={e=>e.currentTarget.style.background='#1e293b'}
             onMouseLeave={e=>e.currentTarget.style.background=sidePanel==='hotspots'?'#1e293b':'#334155'}
-          >🔥핫플</button>
+          >{t('hotTab')}</button>
           <button
             onClick={() => setSidePanel(sidePanel === 'restaurants' ? null : 'restaurants')}
             style={{
@@ -5408,7 +5486,7 @@ function App() {
             }}
             onMouseEnter={e=>e.currentTarget.style.background='#1e293b'}
             onMouseLeave={e=>e.currentTarget.style.background=sidePanel==='restaurants'?'#1e293b':'#475569'}
-          >🍽맛집</button>
+          >{t('foodTab')}</button>
         </div>
 
         {/* 사이드 슬라이드 패널 (핫플/맛집 리스트) */}
@@ -5426,10 +5504,10 @@ function App() {
                 <div style={{display:'flex',alignItems:'center',gap:8}}>
                   <span style={{fontSize:18}}>{sidePanel === 'hotspots' ? '🔥' : foodCategory === 'cafe' ? '☕' : foodCategory === 'bar' ? '🍻' : '🍽️'}</span>
                   <span style={{fontSize:16,fontWeight:800,color:'#334155'}}>
-                    {sidePanel === 'hotspots' ? '핫플레이스' : foodCategory === 'cafe' ? '카페' : foodCategory === 'bar' ? '술집' : '맛집'}
+                    {sidePanel === 'hotspots' ? t('hotspots') : foodCategory === 'cafe' ? t('foodCafe') : foodCategory === 'bar' ? t('foodBar') : t('courseRestaurant')}
                   </span>
                   <span style={{fontSize:12,color:'#94a3b8',fontWeight:500}}>
-                    {sidePanel === 'hotspots' ? hotspots.length : restaurants.length}곳
+                    {sidePanel === 'hotspots' ? hotspots.length : restaurants.length}{t('coursePlace')}
                   </span>
                 </div>
                 <button onClick={()=>setSidePanel(null)}
@@ -5442,9 +5520,9 @@ function App() {
               {sidePanel === 'restaurants' && (
                 <div style={{display:'flex',gap:6,marginTop:10}}>
                   {[
-                    {key:'restaurant', label:'음식점', emoji:'🍴'},
-                    {key:'cafe', label:'카페', emoji:'☕'},
-                    {key:'bar', label:'술집', emoji:'🍻'},
+                    {key:'restaurant', label:t('foodRestaurant'), emoji:'🍴'},
+                    {key:'cafe', label:t('foodCafe'), emoji:'☕'},
+                    {key:'bar', label:t('foodBar'), emoji:'🍻'},
                   ].map(cat => (
                     <button key={cat.key}
                       onClick={() => setFoodCategory(cat.key)}
@@ -5522,7 +5600,7 @@ function App() {
                           )}
                           {place.opening_hours && (
                             <div style={{fontSize:9,color: place.opening_hours.open_now ? '#10b981' : '#ef4444',fontWeight:600,marginTop:3}}>
-                              {place.opening_hours.open_now ? '● 영업중' : '● 영업종료'}
+                              {place.opening_hours.open_now ? t('openNow') : t('closedNow')}
                             </div>
                           )}
                         </div>
@@ -5540,7 +5618,7 @@ function App() {
                 </div>
               ) : (
                 <div style={{textAlign:'center',padding:50,color:'#94a3b8',fontSize:13}}>
-                  {sidePanel === 'hotspots' ? '핫플레이스' : foodCategory === 'cafe' ? '카페' : foodCategory === 'bar' ? '술집' : '맛집'} 데이터가 없습니다
+                  {sidePanel === 'hotspots' ? t('hotspots') : foodCategory === 'cafe' ? t('foodCafe') : foodCategory === 'bar' ? t('foodBar') : t('courseRestaurant')} {t('noData')}
                 </div>
               )}
             </div>
@@ -5625,7 +5703,7 @@ function App() {
                         }}
                         onMouseEnter={e=>{e.currentTarget.style.background='#3b82f6';e.currentTarget.style.color='white';e.currentTarget.style.borderColor='#3b82f6'}}
                         onMouseLeave={e=>{e.currentTarget.style.background='#f8fafc';e.currentTarget.style.color='#64748b';e.currentTarget.style.borderColor='#e2e8f0'}}
-                      >🔗 링크 복사</button>
+                      >{t('linkCopy')}</button>
                       <button
                         onClick={() => setShowSharePopup(v => !v)}
                         style={{
@@ -5634,7 +5712,7 @@ function App() {
                         }}
                         onMouseEnter={e=>e.currentTarget.style.background='#2563eb'}
                         onMouseLeave={e=>e.currentTarget.style.background='#3b82f6'}
-                      >📤 공유하기</button>
+                      >{t('shareBtn')}</button>
 
                       {/* 공유 팝업 */}
                       {showSharePopup && (
@@ -5645,7 +5723,7 @@ function App() {
                           animation:'sharePopIn .25s cubic-bezier(.16,1,.3,1)'
                         }}>
                           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-                            <span style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>공유하기</span>
+                            <span style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>{t('shareTitle')}</span>
                             <button onClick={()=>setShowSharePopup(false)} style={{background:'none',border:'none',fontSize:18,cursor:'pointer',color:'#94a3b8',padding:0,lineHeight:1}}>✕</button>
                           </div>
                           <div style={{display:'flex',gap:12,justifyContent:'center'}}>
@@ -5653,15 +5731,15 @@ function App() {
                               { label:'KakaoTalk', emoji:'💬', bg:'#FEE500', color:'#3C1E1E',
                                 action: () => {
                                   const url = shareCity(selectedCity)
-                                  const text = `${getCityName(selectedCity._koName||selectedCity.name)} - ATLAS 여행 가이드`
+                                  const text = getCityName(selectedCity._koName||selectedCity.name) + t('shareTitleSuffix')
                                   const mobile = /iPhone|iPad|Android/i.test(navigator.userAgent)
                                   if (mobile) {
                                     window.location.href = `kakaotalk://msg/text/${encodeURIComponent(text + '\n' + url)}`
                                     setTimeout(() => {
-                                      navigator.clipboard.writeText(url).then(() => alert('✅ 링크가 복사되었습니다! 카카오톡에 붙여넣기 해주세요.')).catch(()=>{})
+                                      navigator.clipboard.writeText(url).then(() => alert(t('linkCopiedKakao'))).catch(()=>{})
                                     }, 1500)
                                   } else {
-                                    navigator.clipboard.writeText(url).then(() => alert('✅ 링크가 복사되었습니다! 카카오톡에 붙여넣기 해주세요.')).catch(()=>{})
+                                    navigator.clipboard.writeText(url).then(() => alert(t('linkCopiedKakao'))).catch(()=>{})
                                   }
                                   setShowSharePopup(false)
                                 }
@@ -5670,7 +5748,7 @@ function App() {
                                 action: () => {
                                   const url = shareCity(selectedCity)
                                   navigator.clipboard.writeText(url).then(() => {
-                                    alert('✅ 링크가 복사되었습니다! 인스타그램 DM이나 스토리에 붙여넣기 해주세요.')
+                                    alert(t('linkCopiedInsta'))
                                     const mobile = /iPhone|iPad|Android/i.test(navigator.userAgent)
                                     if (mobile) window.open('instagram://', '_blank')
                                   }).catch(()=>{})
@@ -5680,7 +5758,7 @@ function App() {
                               { label:'X', emoji:'𝕏', bg:'#000', color:'#fff',
                                 action: () => {
                                   const url = shareCity(selectedCity)
-                                  const text = `${getCityName(selectedCity._koName||selectedCity.name)} - ATLAS 여행 가이드`
+                                  const text = getCityName(selectedCity._koName||selectedCity.name) + t('shareTitleSuffix')
                                   window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
                                   setShowSharePopup(false)
                                 }
@@ -5719,7 +5797,7 @@ function App() {
                               }}
                               onMouseEnter={e=>{e.currentTarget.style.background='#e2e8f0'}}
                               onMouseLeave={e=>{e.currentTarget.style.background='#f8fafc'}}
-                            >🔗 링크 복사</button>
+                            >{t('linkCopy')}</button>
                           </div>
                         </div>
                       )}
@@ -5877,8 +5955,8 @@ function App() {
                 <div style={{display:'flex',alignItems:'center',gap:10}}>
                   <div style={{width:42,height:42,borderRadius:12,background:'linear-gradient(135deg,#7c3aed,#3b82f6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,boxShadow:'0 4px 12px rgba(124,58,237,.3)'}}>🤖</div>
                   <div>
-                    <div style={{fontSize:17,fontWeight:800,color:'#0f172a'}}>AI 코스 자동 생성</div>
-                    <div style={{fontSize:11,color:'#94a3b8',marginTop:1}}>도시와 조건을 선택하면 최적 코스를 짜드려요</div>
+                    <div style={{fontSize:17,fontWeight:800,color:'#0f172a'}}>{t('aiTitle')}</div>
+                    <div style={{fontSize:11,color:'#94a3b8',marginTop:1}}>{t('aiSubtitle')}</div>
                   </div>
                 </div>
                 <button onClick={()=>setShowAiModal(false)} style={{background:'#f1f5f9',border:'none',color:'#64748b',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
@@ -5889,7 +5967,7 @@ function App() {
             <div style={{padding:'18px 24px 24px',display:'flex',flexDirection:'column',gap:16}}>
               {/* 도시 선택 */}
               <div>
-                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>📍 도시 선택</div>
+                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>📍 {t('aiSelectCity')}</div>
                 {aiCity ? (
                   <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',background:'#eff6ff',border:'1.5px solid #93c5fd',borderRadius:10}}>
                     <span style={{fontSize:18}}>{aiCity.emoji||'📍'}</span>
@@ -5902,7 +5980,7 @@ function App() {
                 ) : (
                   <div style={{position:'relative'}}>
                     <input value={aiCitySearch} onChange={e=>setAiCitySearch(e.target.value)}
-                      placeholder="도시 이름 검색 (예: 파리, Tokyo, 서울)"
+                      placeholder={t("aiSearchCity")}
                       style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box',transition:'border .2s'}}
                       onFocus={e=>e.currentTarget.style.borderColor='#3b82f6'}
                       onBlur={e=>e.currentTarget.style.borderColor='#e2e8f0'}/>
@@ -5926,15 +6004,15 @@ function App() {
 
               {/* 테마 */}
               <div>
-                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>🎨 관광 테마</div>
+                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>🎨 {t('aiTheme')}</div>
                 <div style={{display:'flex',gap:6}}>
-                  {[{k:'종합',icon:'🌍'},{k:'역사',icon:'🏛️'},{k:'자연',icon:'🌿'},{k:'음식',icon:'🍽️'}].map(t=>(
+                  {[{k:'종합',icon:'🌍',l:t('aiThemeAll')},{k:'역사',icon:'🏛️',l:t('aiThemeHistory')},{k:'자연',icon:'🌿',l:t('aiThemeNature')},{k:'음식',icon:'🍽️',l:t('aiThemeFood')}].map(t=>(
                     <button key={t.k} onClick={()=>setAiTheme(t.k)} style={{
                       flex:1,padding:'9px 0',fontSize:12,fontWeight:aiTheme===t.k?700:500,
                       background:aiTheme===t.k?'#1e293b':'#f8fafc',color:aiTheme===t.k?'white':'#64748b',
                       border:aiTheme===t.k?'none':'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',
                       display:'flex',alignItems:'center',justifyContent:'center',gap:4,transition:'all .15s'
-                    }}>{t.icon} {t.k}</button>
+                    }}>{t.icon} {t.l}</button>
                   ))}
                 </div>
               </div>
@@ -5942,21 +6020,21 @@ function App() {
               {/* 일수 + 강도 */}
               <div style={{display:'flex',gap:12}}>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>📅 여행 일수</div>
+                  <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>📅 {t('aiDaysLabel')}</div>
                   <div style={{display:'flex',gap:4}}>
                     {[1,2,3,4,5].map(n=>(
                       <button key={n} onClick={()=>setAiDays(n)} style={{
                         flex:1,padding:'9px 0',fontSize:13,fontWeight:aiDays===n?700:500,
                         background:aiDays===n?'#3b82f6':'#f8fafc',color:aiDays===n?'white':'#64748b',
                         border:aiDays===n?'none':'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',transition:'all .15s'
-                      }}>{n}일</button>
+                      }}>{n}{t('aiDayUnit')}</button>
                     ))}
                   </div>
                 </div>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>💪 여행 강도</div>
+                  <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>💪 {t('aiIntensity')}</div>
                   <div style={{display:'flex',gap:4}}>
-                    {[{k:'light',l:'여유'},{k:'normal',l:'보통'},{k:'hard',l:'빡빡'}].map(t=>(
+                    {[{k:'light',l:t('aiLight')},{k:'normal',l:t('aiNormal')},{k:'hard',l:t('aiHard')}].map(t=>(
                       <button key={t.k} onClick={()=>setAiIntensity(t.k)} style={{
                         flex:1,padding:'9px 0',fontSize:12,fontWeight:aiIntensity===t.k?700:500,
                         background:aiIntensity===t.k?'#1e293b':'#f8fafc',color:aiIntensity===t.k?'white':'#64748b',
@@ -5969,7 +6047,7 @@ function App() {
 
               {/* 출발일 */}
               <div>
-                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>🗓️ 출발일 (선택)</div>
+                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>🗓️ {t('courseDepartureOpt')}</div>
                 <input type="date" value={courseTripStart} onChange={e=>saveTripStart(e.target.value)}
                   style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box',color:courseTripStart?'#1e293b':'#94a3b8',fontWeight:600,cursor:'pointer',transition:'border .2s'}}
                   onFocus={e=>e.currentTarget.style.borderColor='#3b82f6'}
@@ -5978,9 +6056,9 @@ function App() {
 
               {/* 이동수단 */}
               <div>
-                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>🚌 이동 수단</div>
+                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>🚌 {t('aiTransport')}</div>
                 <div style={{display:'flex',gap:6}}>
-                  {[{k:'transit',l:'대중교통',i:'🚇'},{k:'walking',l:'도보',i:'🚶'},{k:'driving',l:'차량',i:'🚗'}].map(t=>(
+                  {[{k:'transit',l:t('courseTransit'),i:'🚇'},{k:'walking',l:t('courseWalking'),i:'🚶'},{k:'driving',l:t('courseDriving'),i:'🚗'}].map(t=>(
                     <button key={t.k} onClick={()=>setAiTransport(t.k)} style={{
                       flex:1,padding:'9px 0',fontSize:12,fontWeight:aiTransport===t.k?700:500,
                       background:aiTransport===t.k?'#1e293b':'#f8fafc',color:aiTransport===t.k?'white':'#64748b',
@@ -5995,7 +6073,7 @@ function App() {
               {aiCity && (
                 <div style={{padding:'10px 14px',background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,fontSize:12,color:'#0369a1',lineHeight:1.7}}>
                   💡 <strong>{aiCity.name}</strong>에서 <strong>{aiDays}일</strong> 동안 <strong>{aiTheme}</strong> 테마로,
-                  {aiIntensity==='light'?' 하루 3~4곳씩 여유롭게':aiIntensity==='normal'?' 하루 5~6곳씩 알차게':' 하루 7곳 이상 빡빡하게'} 돌아보는 코스를 생성합니다.
+                  {aiIntensity==='light'?t('aiPreviewLight'):aiIntensity==='normal'?t('aiPreviewNormal'):t('aiPreviewHard')} {t('aiPreviewText')}
                   {courseTripStart && <><br/>📅 {formatDate(getDayDate(0))} ~ {formatDate(getDayDate(aiDays-1))}</>}
                 </div>
               )}
@@ -6011,9 +6089,9 @@ function App() {
                   transition:'all .2s',display:'flex',alignItems:'center',justifyContent:'center',gap:8
                 }}>
                 {aiGenerating ? (
-                  <><div style={{width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,.3)',borderTopColor:'white',animation:'spin .7s linear infinite'}}/> 코스 생성 중...</>
+                  <><div style={{width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,.3)',borderTopColor:'white',animation:'spin .7s linear infinite'}}/> {t('aiGenerating')}</>
                 ) : (
-                  <>🤖 코스 자동 생성</>
+                  <>{t('aiGenerate')}</>
                 )}
               </button>
             </div>
@@ -6030,15 +6108,15 @@ function App() {
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <span style={{fontSize:22}}>🗺️</span>
                 <div>
-                  <div style={{fontSize:18,fontWeight:800,color:'#0f172a',letterSpacing:'-.3px'}}>코스 플래너</div>
-                  <div style={{fontSize:11,color:'#94a3b8',marginTop:1}}>{courseItems.length}곳 · {courseDays.length}일{courseTripStart ? ` · ${formatDate(getDayDate(0))}~${formatDate(getDayDate(courseDays.length-1))}` : ''}</div>
+                  <div style={{fontSize:18,fontWeight:800,color:'#0f172a',letterSpacing:'-.3px'}}>{t('coursePlanner')}</div>
+                  <div style={{fontSize:11,color:'#94a3b8',marginTop:1}}>{courseItems.length}{t('coursePlace')} · {courseDays.length}{t('courseDay')}{courseTripStart ? ` · ${formatDate(getDayDate(0))}~${formatDate(getDayDate(courseDays.length-1))}` : ''}</div>
                 </div>
               </div>
               <div style={{display:'flex',gap:6}}>
-                <button onClick={()=>{if(confirm('코스를 모두 비울까요?')){saveCourse([]);saveCourseDays([]);setRouteCache({});setShowCoursePlanner(false)}}}
+                <button onClick={()=>{if(confirm(t('courseDeleteConfirm'))){saveCourse([]);saveCourseDays([]);setRouteCache({});setShowCoursePlanner(false)}}}
                   style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',padding:'5px 10px',borderRadius:8,fontSize:11,fontWeight:600,cursor:'pointer'}}
                   onMouseEnter={e=>{e.currentTarget.style.background='#ef4444';e.currentTarget.style.color='white'}}
-                  onMouseLeave={e=>{e.currentTarget.style.background='#fef2f2';e.currentTarget.style.color='#ef4444'}}>전체삭제</button>
+                  onMouseLeave={e=>{e.currentTarget.style.background='#fef2f2';e.currentTarget.style.color='#ef4444'}}>{t('courseDeleteAll')}</button>
                 <button onClick={()=>setShowCoursePlanner(false)} style={{background:'#f1f5f9',border:'1.5px solid #e2e8f0',color:'#64748b',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}}
                   onMouseEnter={e=>e.currentTarget.style.background='#e2e8f0'} onMouseLeave={e=>e.currentTarget.style.background='#f1f5f9'}>✕</button>
               </div>
@@ -6047,7 +6125,7 @@ function App() {
             {/* 여행 날짜 설정 */}
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12,padding:'8px 12px',background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0'}}>
               <span style={{fontSize:14}}>📅</span>
-              <span style={{fontSize:12,color:'#64748b',fontWeight:600,flexShrink:0}}>출발일</span>
+              <span style={{fontSize:12,color:'#64748b',fontWeight:600,flexShrink:0}}>{t('courseDeparture')}</span>
               <input type="date" value={courseTripStart} onChange={e=>saveTripStart(e.target.value)}
                 style={{flex:1,fontSize:12,border:'1px solid #e2e8f0',borderRadius:6,padding:'4px 8px',color:'#1e293b',fontWeight:600,outline:'none',cursor:'pointer',background:'white'}}/>
               {courseTripStart && <button onClick={()=>saveTripStart('')} style={{background:'none',border:'none',color:'#94a3b8',fontSize:12,cursor:'pointer',padding:2}}>✕</button>}
@@ -6055,7 +6133,7 @@ function App() {
 
             {/* 이동수단 선택 */}
             <div style={{display:'flex',gap:4,marginBottom:12}}>
-              {[{key:'transit',label:'대중교통',icon:'🚇'},{key:'walking',label:'도보',icon:'🚶'},{key:'driving',label:'차량',icon:'🚗'}].map(m=>(
+              {[{key:'transit',label:t('courseTransit'),icon:'🚇'},{key:'walking',label:t('courseWalking'),icon:'🚶'},{key:'driving',label:t('courseDriving'),icon:'🚗'}].map(m=>(
                 <button key={m.key} onClick={()=>setCourseTransport(m.key)} style={{
                   flex:1,padding:'7px 0',fontSize:11,fontWeight:courseTransport===m.key?700:500,
                   background:courseTransport===m.key?'#1e293b':'#f1f5f9',color:courseTransport===m.key?'white':'#64748b',
@@ -6086,8 +6164,8 @@ function App() {
               if (items.length === 0) return (
                 <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:200,color:'#94a3b8',gap:8}}>
                   <span style={{fontSize:32}}>📭</span>
-                  <span style={{fontSize:13}}>이 날에 장소가 없습니다</span>
-                  <span style={{fontSize:11}}>다른 Day에서 이동하거나 지도에서 ＋ 버튼으로 추가하세요</span>
+                  <span style={{fontSize:13}}>{t('courseEmptyTitle')}</span>
+                  <span style={{fontSize:11}}>{t('courseEmptyDesc')}</span>
                 </div>
               )
               // 총 이동시간 계산
@@ -6106,13 +6184,13 @@ function App() {
                     <div style={{display:'flex',alignItems:'center',gap:6}}>
                       <span style={{fontSize:14,fontWeight:800,color:'#1e293b'}}>Day {activeDayTab+1}</span>
                       {courseTripStart && <span style={{fontSize:11,color:'#3b82f6',fontWeight:600}}>{formatDate(getDayDate(activeDayTab))}</span>}
-                      <span style={{fontSize:11,color:'#94a3b8'}}>{items.length}곳</span>
+                      <span style={{fontSize:11,color:'#94a3b8'}}>{items.length}{t('coursePlace')}</span>
                     </div>
                     <div style={{display:'flex',alignItems:'center',gap:10}}>
-                      {totalMin > 0 && <span style={{fontSize:11,color:'#3b82f6',fontWeight:600}}>🕐 총 {totalHr > 0 ? `${totalHr}시간 ${totalMinRem}분` : `${totalMin}분`}</span>}
+                      {totalMin > 0 && <span style={{fontSize:11,color:'#3b82f6',fontWeight:600}}>🕐 {t('courseTotal')} {totalHr > 0 ? `${totalHr}${t('courseHour')} ${totalMinRem}${t('courseMin')}` : `${totalMin}${t('courseMin')}`}</span>}
                       {loadingRoutes && <div style={{width:14,height:14,borderRadius:'50%',border:'2px solid #e2e8f0',borderTopColor:'#3b82f6',animation:'spin .7s linear infinite'}}/>}
                       {courseDays.length > 1 && (
-                        <button onClick={()=>removeCourseDay(activeDayTab)} style={{fontSize:10,background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',padding:'3px 8px',borderRadius:6,cursor:'pointer',fontWeight:600}}>삭제</button>
+                        <button onClick={()=>removeCourseDay(activeDayTab)} style={{fontSize:10,background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',padding:'3px 8px',borderRadius:6,cursor:'pointer',fontWeight:600}}>{t('courseDelete')}</button>
                       )}
                     </div>
                   </div>
@@ -6149,14 +6227,14 @@ function App() {
                             <div style={{fontSize:13.5,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.displayName}</div>
                             <div style={{display:'flex',alignItems:'center',gap:6,marginTop:3}}>
                               <span style={{fontSize:10,color:'#94a3b8'}}>{item.cityDisplayName}</span>
-                              <span style={{fontSize:9,padding:'1px 6px',borderRadius:4,background:item.source==='spot'?'#dbeafe':item.source==='hotspot'?'#fef3c7':'#dcfce7',color:item.source==='spot'?'#2563eb':item.source==='hotspot'?'#d97706':'#16a34a',fontWeight:600}}>{item.source==='spot'?'관광지':item.source==='hotspot'?'핫플':'맛집'}</span>
+                              <span style={{fontSize:9,padding:'1px 6px',borderRadius:4,background:item.source==='spot'?'#dbeafe':item.source==='hotspot'?'#fef3c7':'#dcfce7',color:item.source==='spot'?'#2563eb':item.source==='hotspot'?'#d97706':'#16a34a',fontWeight:600}}>{item.source==='spot'?t('courseSpot'):item.source==='hotspot'?t('courseHotspot'):t('courseRestaurant')}</span>
                               {item.rating && <span style={{fontSize:10,color:'#f59e0b'}}>★{item.rating}</span>}
                             </div>
                           </div>
                           {/* Day 이동 */}
                           {courseDays.length > 1 && (
                             <select value="" onChange={e=>{if(e.target.value!=='')moveToDayFn(activeDayTab,idx,parseInt(e.target.value));e.target.value=''}} style={{width:60,fontSize:10,padding:'4px 2px',border:'1px solid #e2e8f0',borderRadius:6,color:'#64748b',background:'#f8fafc',cursor:'pointer',flexShrink:0}}>
-                              <option value="">이동</option>
+                              <option value="">{t('courseMove')}</option>
                               {courseDays.map((_,di)=>di!==activeDayTab&&<option key={di} value={di}>Day {di+1}</option>)}
                             </select>
                           )}
@@ -6182,7 +6260,7 @@ function App() {
                             ) : loadingRoutes ? (
                               <div style={{width:14,height:14,borderRadius:'50%',border:'2px solid #e2e8f0',borderTopColor:'#3b82f6',animation:'spin .7s linear infinite'}}/>
                             ) : (
-                              <span style={{fontSize:10,color:'#cbd5e1'}}>경로 계산 중...</span>
+                              <span style={{fontSize:10,color:'#cbd5e1'}}>{t('courseCalc')}</span>
                             )}
                           </div>
                         )}
