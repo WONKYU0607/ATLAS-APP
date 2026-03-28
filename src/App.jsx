@@ -4512,164 +4512,52 @@ function App() {
       return false
     }
 
-    // 한국 도시 여부 확인
-    const isKorean = city.countryEn === 'South Korea' || 
-      Object.keys(COUNTRY_CITIES).some(c => c === 'South Korea' && 
-        COUNTRY_CITIES[c].some(cc => cc.name === (city._koName || city.name)))
-
     try {
-      if (isKorean) {
-        // ── 한국: 카카오 로컬 API (실패 시 Google 폴백) ──
-        let kakaoSuccess = false
+      // 핫플레이스 (관광명소, 박물관, 공원 등)
+      const hotspotRes = await fetch(
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park|point_of_interest`
+      )
+      const hotspotData = await hotspotRes.json()
+      
+      if (hotspotData.results) {
+        const filterHotspots = (minReviews) => hotspotData.results
+          .filter(p => p.rating && p.rating >= 4.0)
+          .filter(p => p.user_ratings_total && p.user_ratings_total >= minReviews)
+          .filter(p => !isDuplicate(p.name))
+          .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+
+        let topHotspots = filterHotspots(1000)
+        if (topHotspots.length < 3) topHotspots = filterHotspots(500)
+        if (topHotspots.length < 3) topHotspots = filterHotspots(300)
         
-        try {
-          // 핫플레이스 (관광명소 AT4)
-          const hotspotRes = await fetch(
-            `/api/kakao-places?lng=${city.lng}&lat=${city.lat}&category=AT4&radius=5000`
-          )
-          
-          if (!hotspotRes.ok) {
-            console.error('Kakao hotspot API error:', hotspotRes.status, await hotspotRes.text().catch(()=>''))
-            throw new Error('Kakao API failed')
-          }
-          
-          const hotspotData = await hotspotRes.json()
-          
-          if (hotspotData.documents && hotspotData.documents.length > 0) {
-            const kakaoHotspots = hotspotData.documents
-              .filter(d => !isDuplicate(d.place_name))
-              .map(d => ({
-                name: d.place_name,
-                vicinity: d.road_address_name || d.address_name,
-                place_url: d.place_url,
-                category: d.category_name?.split(' > ').slice(-1)[0] || '',
-                phone: d.phone,
-                distance: d.distance ? `${(d.distance / 1000).toFixed(1)}km` : null,
-                _source: 'kakao'
-              }))
-            setHotspots(kakaoHotspots)
-            kakaoSuccess = true
-          } else {
-            console.warn('Kakao hotspot: no documents returned', hotspotData)
-          }
-
-          // 맛집 (음식점 FD6)
-          const restaurantRes = await fetch(
-            `/api/kakao-places?lng=${city.lng}&lat=${city.lat}&category=FD6&radius=3000&size=15`
-          )
-          
-          if (!restaurantRes.ok) {
-            console.error('Kakao restaurant API error:', restaurantRes.status)
-            throw new Error('Kakao API failed')
-          }
-          
-          const restaurantData = await restaurantRes.json()
-          
-          if (restaurantData.documents && restaurantData.documents.length > 0) {
-            const kakaoRestaurants = restaurantData.documents
-              .map(d => ({
-                name: d.place_name,
-                vicinity: d.road_address_name || d.address_name,
-                place_url: d.place_url,
-                category: d.category_name?.split(' > ').slice(-1)[0] || '음식점',
-                phone: d.phone,
-                distance: d.distance ? `${(d.distance / 1000).toFixed(1)}km` : null,
-                _source: 'kakao'
-              }))
-            setRestaurants(kakaoRestaurants)
-            kakaoSuccess = true
-          } else {
-            console.warn('Kakao restaurant: no documents returned', restaurantData)
-          }
-          
-        } catch (kakaoError) {
-          console.error('Kakao API 실패, Google로 폴백:', kakaoError)
-          kakaoSuccess = false
-        }
-
-        // 카카오 실패 시 Google Places로 폴백
-        if (!kakaoSuccess) {
-          console.log('한국 도시 Google 폴백 실행')
-          try {
-            const hotspotRes = await fetch(
-              `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park|point_of_interest`
-            )
-            const hotspotData = await hotspotRes.json()
-            if (hotspotData.results) {
-              const filtered = hotspotData.results
-                .filter(p => p.rating && p.rating >= 3.5 && p.user_ratings_total >= 10)
-                .filter(p => !isDuplicate(p.name))
-                .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
-              setHotspots(filtered)
-            }
-            
-            const restaurantRes = await fetch(
-              `/api/places?lat=${city.lat}&lng=${city.lng}&type=restaurant`
-            )
-            const restaurantData = await restaurantRes.json()
-            if (restaurantData.results) {
-              const filtered = restaurantData.results
-                .filter(p => p.rating && p.rating >= 3.0 && p.user_ratings_total >= 10)
-                .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
-              setRestaurants(filtered)
-            }
-          } catch (googleError) {
-            console.error('Google 폴백도 실패:', googleError)
-            setHotspots([])
-            setRestaurants([])
-          }
-        }
-
-      } else {
-        // ── 해외: Google Places API (기존) ──
-        // 핫플레이스
-        const hotspotRes = await fetch(
-          `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park|point_of_interest`
-        )
-        const hotspotData = await hotspotRes.json()
+        setHotspots(topHotspots)
+      }
+      
+      // 맛집 (레스토랑)
+      const restaurantRes = await fetch(
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=restaurant`
+      )
+      const restaurantData = await restaurantRes.json()
+      
+      if (restaurantData.results) {
+        const hotelKeywords = ['hotel', 'hostel', 'resort', 'motel', 'lodge', 'suites', '호텔', '리조트', '모텔', 'guesthouse', 'pension', '펜션']
         
-        if (hotspotData.results) {
-          const filterHotspots = (minReviews) => hotspotData.results
-            .filter(p => p.rating && p.rating >= 4.0)
-            .filter(p => p.user_ratings_total && p.user_ratings_total >= minReviews)
-            .filter(p => !isDuplicate(p.name))
-            .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+        const filterRestaurants = (minReviews) => restaurantData.results
+          .filter(p => {
+            if (!p.rating || p.rating < 3.0) return false
+            if (!p.user_ratings_total || p.user_ratings_total < minReviews) return false
+            const nameLower = (p.name || '').toLowerCase()
+            if (hotelKeywords.some(kw => nameLower.includes(kw))) return false
+            if (p.types && p.types.some(t => ['lodging', 'hotel', 'resort'].includes(t))) return false
+            return true
+          })
+          .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
 
-          let topHotspots = filterHotspots(1000)
-          if (topHotspots.length < 3) topHotspots = filterHotspots(500)
-          if (topHotspots.length < 3) topHotspots = filterHotspots(100)
-          if (topHotspots.length < 3) topHotspots = filterHotspots(30)
-          
-          setHotspots(topHotspots)
-        }
+        let topRestaurants = filterRestaurants(1000)
+        if (topRestaurants.length < 3) topRestaurants = filterRestaurants(500)
+        if (topRestaurants.length < 3) topRestaurants = filterRestaurants(300)
         
-        // 맛집
-        const restaurantRes = await fetch(
-          `/api/places?lat=${city.lat}&lng=${city.lng}&type=restaurant`
-        )
-        const restaurantData = await restaurantRes.json()
-        
-        if (restaurantData.results) {
-          const hotelKeywords = ['hotel', 'hostel', 'resort', 'motel', 'lodge', 'suites', '호텔', '리조트', '모텔', 'guesthouse', 'pension', '펜션']
-          
-          const filterRestaurants = (minReviews) => restaurantData.results
-            .filter(p => {
-              if (!p.rating || p.rating < 3.0) return false
-              if (!p.user_ratings_total || p.user_ratings_total < minReviews) return false
-              const nameLower = (p.name || '').toLowerCase()
-              if (hotelKeywords.some(kw => nameLower.includes(kw))) return false
-              if (p.types && p.types.some(t => ['lodging', 'hotel', 'resort'].includes(t))) return false
-              return true
-            })
-            .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
-
-          let topRestaurants = filterRestaurants(1000)
-          if (topRestaurants.length < 3) topRestaurants = filterRestaurants(500)
-          if (topRestaurants.length < 3) topRestaurants = filterRestaurants(100)
-          if (topRestaurants.length < 3) topRestaurants = filterRestaurants(50)
-          
-          setRestaurants(topRestaurants)
-        }
+        setRestaurants(topRestaurants)
       }
       
     } catch (error) {
@@ -5083,7 +4971,7 @@ function App() {
                 <div style={{display:'flex',flexDirection:'column',gap:10}}>
                   {(sidePanel === 'hotspots' ? hotspots : restaurants).map((place, idx) => (
                     <a key={idx}
-                      href={place.place_url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id || ''}`}
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id || ''}`}
                       target="_blank" rel="noopener noreferrer"
                       style={{
                         textDecoration:'none',background:'white',
@@ -5122,11 +5010,6 @@ function App() {
                               )}
                             </div>
                           )}
-                          {place.category && !place.rating && (
-                            <div style={{display:'inline-block',fontSize:10,padding:'2px 8px',borderRadius:10,background:'#f1f5f9',color:'#475569',fontWeight:600,marginBottom:3}}>
-                              {place.category}
-                            </div>
-                          )}
                           {sidePanel === 'restaurants' && place.price_level && (
                             <div style={{fontSize:10,color:'#64748b',marginBottom:2}}>{'💰'.repeat(place.price_level)}</div>
                           )}
@@ -5135,19 +5018,9 @@ function App() {
                               📍 {place.vicinity}
                             </div>
                           )}
-                          {place.phone && !place.opening_hours && (
-                            <div style={{fontSize:10,color:'#64748b',marginTop:2}}>
-                              📞 {place.phone}
-                            </div>
-                          )}
                           {place.opening_hours && (
                             <div style={{fontSize:9,color: place.opening_hours.open_now ? '#10b981' : '#ef4444',fontWeight:600,marginTop:3}}>
                               {place.opening_hours.open_now ? '● 영업중' : '● 영업종료'}
-                            </div>
-                          )}
-                          {place.distance && (
-                            <div style={{fontSize:9,color:'#94a3b8',marginTop:2}}>
-                              {place.distance}
                             </div>
                           )}
                         </div>
