@@ -5,33 +5,6 @@ import Globe from 'globe.gl'
 function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, alt }) {
   const [src, setSrc] = useState(null)
 
-
-  // URL 파라미터에서 도시 읽기
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const cityName = params.get('city')
-    const lat = params.get('lat')
-    const lng = params.get('lng')
-    
-    if (cityName && lat && lng) {
-      const city = CITY_DATA.find(c => 
-        c.name.toLowerCase() === cityName.toLowerCase()
-      )
-      
-      if (city) {
-        setSelectedCity(city)
-        if (globeRef.current) {
-          globeRef.current.pointOfView({
-            lat: parseFloat(lat),
-            lng: parseFloat(lng),
-            altitude: 1.5
-          }, 1000)
-        }
-      }
-    }
-  }, [])
-
-
   useEffect(() => {
     setSrc(null)
     let cancelled = false
@@ -3908,6 +3881,33 @@ function App() {
     }
     window.addEventListener('resize', onResize)
     return () => { window.removeEventListener('resize', onResize); clearInterval(labelInterval) }
+  }, [])
+
+  // URL 파라미터에서 도시 읽기 (?city=Seoul&lat=37.5&lng=127)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const cityParam = params.get('city')
+    const lat = params.get('lat')
+    const lng = params.get('lng')
+
+    if (cityParam && lat && lng) {
+      // CITY_DATA의 모든 도시에서 이름 매칭
+      const allCities = Object.values(CITY_DATA).flat()
+      const city = allCities.find(c =>
+        c.name.toLowerCase() === cityParam.toLowerCase()
+      )
+
+      if (city) {
+        setSelectedCity(city)
+        if (globeRef.current) {
+          globeRef.current.pointOfView({
+            lat: parseFloat(lat),
+            lng: parseFloat(lng),
+            altitude: 1.5
+          }, 1000)
+        }
+      }
+    }
   }, [])
 
   // ── 도시 라벨 (지구본 표면에 HTML로 표시) ──────────────────────────
