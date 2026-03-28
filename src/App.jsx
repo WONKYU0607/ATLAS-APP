@@ -3708,8 +3708,6 @@ function App() {
   const [selectedCity, setSelectedCity] = useState(null)
     const [activeTab, setActiveTab] = useState('hotspots')
   const [tabsCollapsed, setTabsCollapsed] = useState(true)
-  const [userLocation, setUserLocation] = useState(null)
-  const [nearestCity, setNearestCity] = useState(null)
   const [hotspots, setHotspots] = useState([])
   const [restaurants, setRestaurants] = useState([])
   const [loadingPlaces, setLoadingPlaces] = useState(false)
@@ -4448,78 +4446,6 @@ function App() {
 
   // Google Places API 호출
 
-  // 거리 계산 함수 (Haversine)
-  const calculateDistance = (lat1, lng1, lat2, lng2) => {
-    const R = 6371 // 지구 반지름 (km)
-    const dLat = (lat2 - lat1) * Math.PI / 180
-    const dLng = (lng2 - lng1) * Math.PI / 180
-    
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLng/2) * Math.sin(dLng/2)
-    
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-    return R * c // km
-  }
-
-  // 가장 가까운 도시 찾기
-  const findNearestCity = (userLat, userLng) => {
-    let nearest = null
-    let minDistance = Infinity
-    
-    CITY_DATA.forEach(city => {
-      const distance = calculateDistance(userLat, userLng, city.lat, city.lng)
-      if (distance < minDistance) {
-        minDistance = distance
-        nearest = { ...city, distance }
-      }
-    })
-    
-    if (nearest) {
-      setNearestCity(nearest)
-      setSelectedCity(nearest)
-      
-      // 지구본 이동
-      if (globeRef.current) {
-        globeRef.current.pointOfView({
-          lat: nearest.lat,
-          lng: nearest.lng,
-          altitude: 1.5
-        }, 1000)
-      }
-      
-      console.log(`가장 가까운 도시: ${nearest.name} (${minDistance.toFixed(1)}km)`)
-    }
-  }
-
-  // GPS 위치 가져오기
-  const getUserLocation = () => {
-    if (!navigator.geolocation) {
-      alert('GPS를 지원하지 않는 브라우저입니다')
-      return
-    }
-    
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const userLat = position.coords.latitude
-        const userLng = position.coords.longitude
-        
-        setUserLocation({ lat: userLat, lng: userLng })
-        findNearestCity(userLat, userLng)
-      },
-      (error) => {
-        console.error('위치 가져오기 실패:', error)
-        alert('위치 정보를 가져올 수 없습니다. 위치 권한을 확인해주세요.')
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    )
-  }
-
   // 링크 공유 함수
   const shareCity = (city) => {
     const shareUrl = `${window.location.origin}${window.location.pathname}?city=${encodeURIComponent(city.name)}&lat=${city.lat}&lng=${city.lng}`
@@ -4828,59 +4754,6 @@ function App() {
         const cities = COUNTRY_CITIES[cName]
         return (
           <>
-            {/* GPS 버튼 */}
-            <button
-              onClick={getUserLocation}
-              style={{
-                position:'absolute',
-                top:24,
-                right:24,
-                zIndex:1002,
-                background:'rgba(255,255,255,0.95)',
-                border:'1.5px solid #e2e8f0',
-                borderRadius:12,
-                padding:'10px 16px',
-                cursor:'pointer',
-                display:'flex',
-                alignItems:'center',
-                gap:8,
-                fontSize:13,
-                fontWeight:600,
-                color:'#3b82f6',
-                boxShadow:'0 4px 12px rgba(0,0,0,0.1)',
-                transition:'all .2s'
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = '#3b82f6'
-                e.currentTarget.style.color = 'white'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.95)'
-                e.currentTarget.style.color = '#3b82f6'
-              }}
-            >
-              📍 내 위치
-            </button>
-
-            {/* 가까운 도시 알림 */}
-            {nearestCity && (
-              <div style={{
-                position:'absolute',
-                top:80,
-                right:24,
-                zIndex:1002,
-                background:'#10b981',
-                color:'white',
-                padding:'12px 16px',
-                borderRadius:12,
-                fontSize:13,
-                fontWeight:600,
-                boxShadow:'0 4px 12px rgba(16,185,129,0.3)'
-              }}>
-                가장 가까운 도시: {nearestCity.name} ({nearestCity.distance?.toFixed(1)}km)
-              </div>
-            )}
-
             {/* Bottom bar */}
             <div style={{
               position:'absolute',bottom:24,
@@ -4993,26 +4866,26 @@ function App() {
             style={{
               writingMode:'vertical-rl',textOrientation:'upright',
               padding:'14px 8px',fontSize:13,fontWeight:800,letterSpacing:4,
-              background: sidePanel === 'hotspots' ? '#f59e0b' : 'rgba(245,158,11,.9)',
+              background: sidePanel === 'hotspots' ? '#1e293b' : '#334155',
               color:'white',border:'none',borderRadius:'10px 0 0 10px',
-              cursor:'pointer',boxShadow:'-4px 2px 12px rgba(0,0,0,.15)',
-              transition:'all .2s',backdropFilter:'blur(8px)'
+              cursor:'pointer',boxShadow:'-4px 2px 12px rgba(0,0,0,.2)',
+              transition:'all .2s'
             }}
-            onMouseEnter={e=>e.currentTarget.style.background='#d97706'}
-            onMouseLeave={e=>e.currentTarget.style.background=sidePanel==='hotspots'?'#f59e0b':'rgba(245,158,11,.9)'}
+            onMouseEnter={e=>e.currentTarget.style.background='#1e293b'}
+            onMouseLeave={e=>e.currentTarget.style.background=sidePanel==='hotspots'?'#1e293b':'#334155'}
           >🔥핫플</button>
           <button
             onClick={() => setSidePanel(sidePanel === 'restaurants' ? null : 'restaurants')}
             style={{
               writingMode:'vertical-rl',textOrientation:'upright',
               padding:'14px 8px',fontSize:13,fontWeight:800,letterSpacing:4,
-              background: sidePanel === 'restaurants' ? '#3b82f6' : 'rgba(59,130,246,.9)',
+              background: sidePanel === 'restaurants' ? '#1e293b' : '#475569',
               color:'white',border:'none',borderRadius:'10px 0 0 10px',
-              cursor:'pointer',boxShadow:'-4px 2px 12px rgba(0,0,0,.15)',
-              transition:'all .2s',backdropFilter:'blur(8px)'
+              cursor:'pointer',boxShadow:'-4px 2px 12px rgba(0,0,0,.2)',
+              transition:'all .2s'
             }}
-            onMouseEnter={e=>e.currentTarget.style.background='#2563eb'}
-            onMouseLeave={e=>e.currentTarget.style.background=sidePanel==='restaurants'?'#3b82f6':'rgba(59,130,246,.9)'}
+            onMouseEnter={e=>e.currentTarget.style.background='#1e293b'}
+            onMouseLeave={e=>e.currentTarget.style.background=sidePanel==='restaurants'?'#1e293b':'#475569'}
           >🍽맛집</button>
         </div>
 
@@ -5030,7 +4903,7 @@ function App() {
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                 <div style={{display:'flex',alignItems:'center',gap:8}}>
                   <span style={{fontSize:18}}>{sidePanel === 'hotspots' ? '🔥' : '🍽️'}</span>
-                  <span style={{fontSize:16,fontWeight:800,color:'#0f172a'}}>
+                  <span style={{fontSize:16,fontWeight:800,color:'#334155'}}>
                     {sidePanel === 'hotspots' ? '핫플레이스' : '맛집'}
                   </span>
                   <span style={{fontSize:12,color:'#94a3b8',fontWeight:500}}>
@@ -5049,7 +4922,7 @@ function App() {
             <div style={{padding:'12px 14px'}}>
               {loadingPlaces ? (
                 <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60}}>
-                  <div style={{width:28,height:28,borderRadius:'50%',border:'3px solid #e2e8f0',borderTopColor:sidePanel==='hotspots'?'#f59e0b':'#3b82f6',animation:'spin .7s linear infinite'}}/>
+                  <div style={{width:28,height:28,borderRadius:'50%',border:'3px solid #e2e8f0',borderTopColor:'#334155',animation:'spin .7s linear infinite'}}/>
                 </div>
               ) : (sidePanel === 'hotspots' ? hotspots : restaurants).length > 0 ? (
                 <div style={{display:'flex',flexDirection:'column',gap:10}}>
@@ -5063,8 +4936,8 @@ function App() {
                         overflow:'hidden',cursor:'pointer',transition:'all .2s'
                       }}
                       onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = sidePanel==='hotspots' ? '#f59e0b' : '#3b82f6'
-                        e.currentTarget.style.boxShadow = `0 4px 12px ${sidePanel==='hotspots' ? 'rgba(245,158,11,0.15)' : 'rgba(59,130,246,0.15)'}`
+                        e.currentTarget.style.borderColor = '#334155'
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(51,65,85,0.15)'
                       }}
                       onMouseLeave={e => {
                         e.currentTarget.style.borderColor = '#e2e8f0'
@@ -5078,7 +4951,7 @@ function App() {
                             style={{width:70,height:70,borderRadius:8,objectFit:'cover',flexShrink:0}}
                           />
                         ) : (
-                          <div style={{width:70,height:70,borderRadius:8,background:sidePanel==='hotspots'?'linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%)':'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,flexShrink:0}}>
+                          <div style={{width:70,height:70,borderRadius:8,background:'linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,flexShrink:0}}>
                             {sidePanel === 'hotspots' ? '📍' : '🍽️'}
                           </div>
                         )}
@@ -5088,7 +4961,7 @@ function App() {
                           </div>
                           {place.rating && (
                             <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:3}}>
-                              <span style={{fontSize:11,color:sidePanel==='hotspots'?'#f59e0b':'#3b82f6',fontWeight:700}}>★ {place.rating}</span>
+                              <span style={{fontSize:11,color:'#334155',fontWeight:700}}>★ {place.rating}</span>
                               {place.user_ratings_total && (
                                 <span style={{fontSize:9,color:'#94a3b8'}}>({place.user_ratings_total.toLocaleString()})</span>
                               )}
