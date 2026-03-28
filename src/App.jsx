@@ -5557,6 +5557,10 @@ function App() {
                 <div style={{fontSize:26,fontWeight:800,letterSpacing:'-.5px',color:'#0f172a'}}>{getCityName(selectedCity?._koName || selectedCity?.name) || ''}</div>
               </div>
               <div style={{display:'flex',gap:6,flexShrink:0}}>
+                <button onClick={()=>{const c=allCitiesFlat.find(x=>x.name===(selectedCity?._koName||selectedCity?.name));if(c){setAiCity(c);setShowAiModal(true)}}}
+                  style={{background:'linear-gradient(135deg,#7c3aed,#3b82f6)',border:'none',color:'white',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 8px rgba(124,58,237,.3)',transition:'all .2s'}}
+                  onMouseEnter={e=>e.currentTarget.style.transform='scale(1.1)'} onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}
+                  title="AI 코스 자동 생성">🤖</button>
                 <button onClick={()=>addToCourse({source:'city',name:selectedCity?._koName||selectedCity?.name,displayName:getCityName(selectedCity?._koName||selectedCity?.name),cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),emoji:selectedCity?.emoji||'📍',lat:selectedCity?.lat,lng:selectedCity?.lng,rating:null})}
                   style={{background:isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'#3b82f6':'#f1f5f9',border:isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'1.5px solid #3b82f6':'1.5px solid #e2e8f0',color:isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'white':'#94a3b8',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
                   title="코스에 추가">{isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'✓':'＋'}</button>
@@ -5963,6 +5967,15 @@ function App() {
                 </div>
               </div>
 
+              {/* 출발일 */}
+              <div>
+                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>🗓️ 출발일 (선택)</div>
+                <input type="date" value={courseTripStart} onChange={e=>saveTripStart(e.target.value)}
+                  style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box',color:courseTripStart?'#1e293b':'#94a3b8',fontWeight:600,cursor:'pointer',transition:'border .2s'}}
+                  onFocus={e=>e.currentTarget.style.borderColor='#3b82f6'}
+                  onBlur={e=>e.currentTarget.style.borderColor='#e2e8f0'}/>
+              </div>
+
               {/* 이동수단 */}
               <div>
                 <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>🚌 이동 수단</div>
@@ -5983,6 +5996,7 @@ function App() {
                 <div style={{padding:'10px 14px',background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,fontSize:12,color:'#0369a1',lineHeight:1.7}}>
                   💡 <strong>{aiCity.name}</strong>에서 <strong>{aiDays}일</strong> 동안 <strong>{aiTheme}</strong> 테마로,
                   {aiIntensity==='light'?' 하루 3~4곳씩 여유롭게':aiIntensity==='normal'?' 하루 5~6곳씩 알차게':' 하루 7곳 이상 빡빡하게'} 돌아보는 코스를 생성합니다.
+                  {courseTripStart && <><br/>📅 {formatDate(getDayDate(0))} ~ {formatDate(getDayDate(aiDays-1))}</>}
                 </div>
               )}
 
