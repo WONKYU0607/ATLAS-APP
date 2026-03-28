@@ -3883,7 +3883,7 @@ function App() {
     return () => { window.removeEventListener('resize', onResize); clearInterval(labelInterval) }
   }, [])
 
-  // URL 파라미터에서 도시 읽기 (?city=Seoul&lat=37.5&lng=127)
+  // URL 파라미터에서 도시 읽기 (?city=서울&lat=37.5&lng=127)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const cityParam = params.get('city')
@@ -3891,24 +3891,36 @@ function App() {
     const lng = params.get('lng')
 
     if (cityParam && lat && lng) {
-      // CITY_DATA의 모든 도시에서 이름 매칭
-      const allCities = Object.values(CITY_DATA).flat()
-      const city = allCities.find(c =>
-        c.name.toLowerCase() === cityParam.toLowerCase()
-      )
-
-      if (city) {
-        setSelectedCity(city)
-        if (globeRef.current) {
-          globeRef.current.pointOfView({
-            lat: parseFloat(lat),
-            lng: parseFloat(lng),
-            altitude: 1.5
-          }, 1000)
+      // COUNTRY_CITIES에서 도시 검색
+      let foundCity = null
+      let foundCountry = null
+      for (const [country, cities] of Object.entries(COUNTRY_CITIES)) {
+        const match = cities.find(c => c.name === cityParam || c.name === decodeURIComponent(cityParam))
+        if (match) {
+          foundCity = { ...match, countryEn: country }
+          foundCountry = country
+          break
         }
       }
+
+      if (foundCity) {
+        // Globe 준비 대기 후 handleCityClick 호출
+        const tryNavigate = () => {
+          if (globeRef.current && handleCityClickRef.current) {
+            // 먼저 국가 선택
+            const feat = countries.find(f => f.properties?.NAME === foundCountry)
+            if (feat) setSelectedCountry(feat)
+            // 도시 클릭 (fetchCityData 포함)
+            handleCityClickRef.current(foundCity)
+          } else {
+            setTimeout(tryNavigate, 200)
+          }
+        }
+        // Globe 초기화 후 실행 (약간의 지연)
+        setTimeout(tryNavigate, 500)
+      }
     }
-  }, [])
+  }, [countries])
 
   // ── 도시 라벨 (지구본 표면에 HTML로 표시) ──────────────────────────
   // 대양 라벨 데이터
@@ -5024,11 +5036,71 @@ function App() {
 
                     {/* 공유 버튼 */}
                     <div style={{
-                      display:'flex',
-                      gap:8,
                       marginTop:16,
-                      marginBottom:16
+                      marginBottom:16,
+                      display:'flex',
+                      flexDirection:'column',
+                      gap:10
                     }}>
+                      {/* 첫 줄: SNS 공유 (카톡, 인스타, X, 페이스북) */}
+                      <div style={{display:'flex',gap:8,justifyContent:'center'}}>
+                        {[
+                          { label:'KakaoTalk', emoji:'💬', bg:'#FEE500', color:'#3C1E1E',
+                            action: () => {
+                              const url = shareCity(selectedCity)
+                              const text = `${getCityName(selectedCity._koName||selectedCity.name)} - ATLAS 여행 가이드`
+                              // 모바일: 카카오톡 앱 열기 시도, 실패 시 클립보드 복사
+                              const mobile = /iPhone|iPad|Android/i.test(navigator.userAgent)
+                              if (mobile) {
+                                window.location.href = `kakaotalk://msg/text/${encodeURIComponent(text + '\n' + url)}`
+                                setTimeout(() => {
+                                  navigator.clipboard.writeText(url).then(() => alert('✅ 링크가 복사되었습니다! 카카오톡에 붙여넣기 해주세요.')).catch(()=>{})
+                                }, 1500)
+                              } else {
+                                navigator.clipboard.writeText(url).then(() => alert('✅ 링크가 복사되었습니다! 카카오톡에 붙여넣기 해주세요.')).catch(()=>{})
+                              }
+                            }
+                          },
+                          { label:'Instagram', emoji:'📸', bg:'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)', color:'#fff',
+                            action: () => {
+                              const url = shareCity(selectedCity)
+                              navigator.clipboard.writeText(url).then(() => {
+                                alert('✅ 링크가 복사되었습니다! 인스타그램 DM이나 스토리에 붙여넣기 해주세요.')
+                                const mobile = /iPhone|iPad|Android/i.test(navigator.userAgent)
+                                if (mobile) window.open('instagram://', '_blank')
+                              }).catch(()=>{})
+                            }
+                          },
+                          { label:'X', emoji:'𝕏', bg:'#000', color:'#fff',
+                            action: () => {
+                              const url = shareCity(selectedCity)
+                              const text = `${getCityName(selectedCity._koName||selectedCity.name)} - ATLAS 여행 가이드`
+                              window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
+                            }
+                          },
+                          { label:'Facebook', emoji:'f', bg:'#1877F2', color:'#fff',
+                            action: () => {
+                              const url = shareCity(selectedCity)
+                              window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank')
+                            }
+                          },
+                        ].map((btn,i) => (
+                          <button key={i} onClick={btn.action} title={btn.label}
+                            style={{
+                              width:48,height:48,borderRadius:'50%',border:'none',
+                              background:btn.bg,color:btn.color,
+                              fontSize: btn.label==='Facebook' ? 20 : btn.label==='X' ? 18 : 22,
+                              fontWeight: btn.label==='Facebook' ? 800 : 400,
+                              cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',
+                              boxShadow:'0 2px 8px rgba(0,0,0,.12)',transition:'transform .15s'
+                            }}
+                            onMouseEnter={e=>e.currentTarget.style.transform='scale(1.1)'}
+                            onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}
+                          >{btn.emoji}</button>
+                        ))}
+                      </div>
+                      {/* 둘째 줄: 링크 복사 + 공유하기 */}
+                      <div style={{display:'flex',gap:8}}>
                       <button
                         onClick={() => copyLink(selectedCity)}
                         style={{
@@ -5088,6 +5160,7 @@ function App() {
                       >
                         📤 공유하기
                       </button>
+                      </div>
                     </div>
 
                     {/* 핫플레이스 / 맛집 섹션 */}
@@ -5351,26 +5424,7 @@ function App() {
                         </>
                       )}
 
-                      {/* API 사용량 표시 */}
-                      <div style={{
-                        fontSize:10,
-                        color: dailyUsage.count >= 250 ? '#ef4444' : dailyUsage.count >= 150 ? '#f59e0b' : '#64748b',
-                        marginTop:12,
-                        padding:8,
-                        background: dailyUsage.count >= 250 ? '#fef2f2' : dailyUsage.count >= 150 ? '#fffbeb' : '#f8fafc',
-                        borderRadius:6,
-                        border:`1px solid ${dailyUsage.count >= 250 ? '#fecaca' : dailyUsage.count >= 150 ? '#fde68a' : '#e2e8f0'}`,
-                        display:'flex',
-                        alignItems:'center',
-                        justifyContent:'space-between'
-                      }}>
-                        <span>
-                          📊 오늘 API 사용: <strong>{dailyUsage.count || 0}/300건</strong>
-                        </span>
-                        {dailyUsage.count >= 250 && (
-                          <span style={{fontSize:11,color:'#dc2626',fontWeight:700}}>⚠️ 한도 임박</span>
-                        )}
-                      </div>
+
                     </div>
 
                     {cityData.spots?.length > 0 && (
