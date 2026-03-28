@@ -4103,7 +4103,7 @@ function App() {
     })
     await Promise.all(fetches.map(async ({ key, o, d }) => {
       try {
-        const res = await fetch(`/api/directions?origin=${encodeURIComponent(o)}&destination=${encodeURIComponent(d)}&mode=${mode}`)
+        const res = await fetch(`/api/directions?origin=${encodeURIComponent(o)}&destination=${encodeURIComponent(d)}&mode=${mode}&language=${lang==='zh'?'zh-CN':lang}`)
         const data = await res.json()
         if (data.routes?.[0]?.legs?.[0]) {
           const leg = data.routes[0].legs[0]
@@ -4361,7 +4361,7 @@ function App() {
       setRestaurants([])
       setActiveTab('hotspots')
     }
-  }, [selectedCity])
+  }, [selectedCity, lang])
 
   // 맛집 카테고리 변경 시 다시 로드
   useEffect(() => {
@@ -4899,7 +4899,7 @@ function App() {
     try {
       // 핫플레이스 (관광명소, 박물관, 공원 등)
       const hotspotRes = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park|point_of_interest`
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park|point_of_interest&language=${lang==='zh'?'zh-CN':lang}`
       )
       const hotspotData = await hotspotRes.json()
       
@@ -4955,7 +4955,7 @@ function App() {
 
     try {
       const res = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=${apiType}`
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=${apiType}&language=${lang==='zh'?'zh-CN':lang}`
       )
       const data = await res.json()
       
@@ -5023,7 +5023,7 @@ function App() {
     if (!API_KEY) return null
     try {
       const res = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${API_KEY}&units=metric&lang=kr`
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${API_KEY}&units=metric&lang=${lang==='ko'?'kr':lang==='zh'?'zh_cn':lang}`
       )
       const d = await res.json()
       if (d.cod !== 200) return null
