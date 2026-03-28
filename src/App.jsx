@@ -4558,13 +4558,28 @@ function App() {
   const fetchFoodData = async (city, category) => {
     if (!city?.lat || !city?.lng) return
     
+    // 동서양 공통으로 잘 잡히도록 넓게 매핑
     const typeMap = {
-      restaurant: 'restaurant',
-      cafe: 'cafe',
-      bar: 'bar|night_club'
+      restaurant: 'restaurant',           // 전 세계 공통
+      cafe: 'cafe|bakery',                // 카페 + 베이커리/디저트숍 (아시아 디저트 카페 포함)
+      bar: 'bar|night_club'               // 바/펍/이자카야 + 클럽
     }
     const apiType = typeMap[category] || 'restaurant'
     
+    // 카테고리별 제외 키워드
+    const excludeKeywords = {
+      restaurant: ['hotel', 'hostel', 'resort', 'motel', 'lodge', 'suites', '호텔', '리조트', '모텔', 'guesthouse', 'pension', '펜션'],
+      cafe: ['hotel', 'hostel', 'resort', '호텔', '리조트', 'guesthouse'],
+      bar: ['hotel', 'hostel', 'resort', '호텔', '리조트', 'guesthouse', 'karaoke', '노래방']
+    }
+    const excludeTypes = {
+      restaurant: ['lodging', 'hotel', 'resort'],
+      cafe: ['lodging', 'hotel'],
+      bar: ['lodging', 'hotel']
+    }
+    const keywords = excludeKeywords[category] || excludeKeywords.restaurant
+    const badTypes = excludeTypes[category] || excludeTypes.restaurant
+
     try {
       const res = await fetch(
         `/api/places?lat=${city.lat}&lng=${city.lng}&type=${apiType}`
@@ -4572,15 +4587,13 @@ function App() {
       const data = await res.json()
       
       if (data.results) {
-        const hotelKeywords = ['hotel', 'hostel', 'resort', 'motel', 'lodge', 'suites', '호텔', '리조트', '모텔', 'guesthouse', 'pension', '펜션']
-        
         const filterResults = (minReviews) => data.results
           .filter(p => {
             if (!p.rating || p.rating < 3.0) return false
             if (!p.user_ratings_total || p.user_ratings_total < minReviews) return false
             const nameLower = (p.name || '').toLowerCase()
-            if (hotelKeywords.some(kw => nameLower.includes(kw))) return false
-            if (p.types && p.types.some(t => ['lodging', 'hotel', 'resort'].includes(t))) return false
+            if (keywords.some(kw => nameLower.includes(kw))) return false
+            if (p.types && p.types.some(t => badTypes.includes(t))) return false
             return true
           })
           .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
