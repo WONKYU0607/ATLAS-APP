@@ -4544,7 +4544,7 @@ function App() {
         const topRestaurants = restaurantData.results
           .filter(p => {
             // 평점 4.0 이상
-            if (!p.rating || p.rating < 4.0) return false
+            if (!p.rating || p.rating < 3.0) return false
             // 리뷰 최소 50개 이상 (관광지라 너무 높으면 안됨)
             if (!p.user_ratings_total || p.user_ratings_total < 1000) return false
             // 호텔/숙박업소 제외 (이름 기반)
