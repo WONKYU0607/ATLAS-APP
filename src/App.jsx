@@ -4495,7 +4495,6 @@ function App() {
     staticSpots.forEach(s => {
       if (s.name) spotNames.add(s.name.toLowerCase().replace(/\s+/g, ''))
       if (s.wikiTitle) spotNames.add(s.wikiTitle.toLowerCase().replace(/\s+/g, ''))
-      // 부분 매칭용 키워드도 추가 (예: "경복궁" → "gyeongbokgung")
       if (s.wikiTitle) {
         s.wikiTitle.split(/[\s_()]+/).forEach(w => {
           if (w.length >= 4) spotNames.add(w.toLowerCase())
@@ -4505,9 +4504,7 @@ function App() {
 
     const isDuplicate = (placeName) => {
       const normalized = placeName.toLowerCase().replace(/\s+/g, '')
-      // 정확 매칭
       if (spotNames.has(normalized)) return true
-      // 부분 매칭: Google Places 이름에 관광지 키워드가 포함되어 있는지
       for (const keyword of spotNames) {
         if (keyword.length >= 4 && normalized.includes(keyword)) return true
         if (keyword.length >= 4 && keyword.includes(normalized.replace(/\s+/g, ''))) return true
@@ -4515,56 +4512,107 @@ function App() {
       return false
     }
 
+    // 한국 도시 여부 확인
+    const isKorean = city.countryEn === 'South Korea' || 
+      Object.keys(COUNTRY_CITIES).some(c => c === 'South Korea' && 
+        COUNTRY_CITIES[c].some(cc => cc.name === (city._koName || city.name)))
+
     try {
-      // 핫플레이스 (관광명소, 박물관, 공원 등)
-      const hotspotRes = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park|point_of_interest`
-      )
-      const hotspotData = await hotspotRes.json()
-      
-      if (hotspotData.results) {
-        const filterHotspots = (minReviews) => hotspotData.results
-          .filter(p => p.rating && p.rating >= 4.0)
-          .filter(p => p.user_ratings_total && p.user_ratings_total >= minReviews)
-          .filter(p => !isDuplicate(p.name))
-          .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+      if (isKorean) {
+        // ── 한국: 카카오 로컬 API ──
+        // 핫플레이스 (관광명소 AT4)
+        try {
+          const hotspotRes = await fetch(
+            `/api/kakao-places?lng=${city.lng}&lat=${city.lat}&category=AT4&radius=5000`
+          )
+          const hotspotData = await hotspotRes.json()
+          if (hotspotData.documents) {
+            const kakaoHotspots = hotspotData.documents
+              .filter(d => !isDuplicate(d.place_name))
+              .map(d => ({
+                name: d.place_name,
+                vicinity: d.road_address_name || d.address_name,
+                place_url: d.place_url,
+                category: d.category_name?.split(' > ').slice(-1)[0] || '',
+                phone: d.phone,
+                distance: d.distance ? `${(d.distance / 1000).toFixed(1)}km` : null,
+                _source: 'kakao'
+              }))
+            setHotspots(kakaoHotspots)
+          }
+        } catch { setHotspots([]) }
 
-        let topHotspots = filterHotspots(1000)
-        if (topHotspots.length < 3) topHotspots = filterHotspots(500)
-        if (topHotspots.length < 3) topHotspots = filterHotspots(100)
-        if (topHotspots.length < 3) topHotspots = filterHotspots(30)
-        
-        setHotspots(topHotspots)
-      }
-      
-      // 맛집 (레스토랑만, 카페 별도)
-      const restaurantRes = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=restaurant`
-      )
-      const restaurantData = await restaurantRes.json()
-      
-      if (restaurantData.results) {
-        // 호텔/숙박 키워드 필터 (inn 제외 - Cinnamon 등 오탐 방지, lodging 타입으로 충분)
-        const hotelKeywords = ['hotel', 'hostel', 'resort', 'motel', 'lodge', 'suites', '호텔', '리조트', '모텔', 'guesthouse', 'pension', '펜션']
-        
-        const filterRestaurants = (minReviews) => restaurantData.results
-          .filter(p => {
-            if (!p.rating || p.rating < 3.0) return false
-            if (!p.user_ratings_total || p.user_ratings_total < minReviews) return false
-            const nameLower = (p.name || '').toLowerCase()
-            if (hotelKeywords.some(kw => nameLower.includes(kw))) return false
-            if (p.types && p.types.some(t => ['lodging', 'hotel', 'resort'].includes(t))) return false
-            return true
-          })
-          .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+        // 맛집 (음식점 FD6)
+        try {
+          const restaurantRes = await fetch(
+            `/api/kakao-places?lng=${city.lng}&lat=${city.lat}&category=FD6&radius=3000&size=15`
+          )
+          const restaurantData = await restaurantRes.json()
+          if (restaurantData.documents) {
+            const kakaoRestaurants = restaurantData.documents
+              .map(d => ({
+                name: d.place_name,
+                vicinity: d.road_address_name || d.address_name,
+                place_url: d.place_url,
+                category: d.category_name?.split(' > ').slice(-1)[0] || '음식점',
+                phone: d.phone,
+                distance: d.distance ? `${(d.distance / 1000).toFixed(1)}km` : null,
+                _source: 'kakao'
+              }))
+            setRestaurants(kakaoRestaurants)
+          }
+        } catch { setRestaurants([]) }
 
-        // 리뷰 기준 유연 적용: 1000 → 500 → 100 → 50
-        let topRestaurants = filterRestaurants(1000)
-        if (topRestaurants.length < 3) topRestaurants = filterRestaurants(500)
-        if (topRestaurants.length < 3) topRestaurants = filterRestaurants(100)
-        if (topRestaurants.length < 3) topRestaurants = filterRestaurants(50)
+      } else {
+        // ── 해외: Google Places API (기존) ──
+        // 핫플레이스
+        const hotspotRes = await fetch(
+          `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park|point_of_interest`
+        )
+        const hotspotData = await hotspotRes.json()
         
-        setRestaurants(topRestaurants)
+        if (hotspotData.results) {
+          const filterHotspots = (minReviews) => hotspotData.results
+            .filter(p => p.rating && p.rating >= 4.0)
+            .filter(p => p.user_ratings_total && p.user_ratings_total >= minReviews)
+            .filter(p => !isDuplicate(p.name))
+            .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+
+          let topHotspots = filterHotspots(1000)
+          if (topHotspots.length < 3) topHotspots = filterHotspots(500)
+          if (topHotspots.length < 3) topHotspots = filterHotspots(100)
+          if (topHotspots.length < 3) topHotspots = filterHotspots(30)
+          
+          setHotspots(topHotspots)
+        }
+        
+        // 맛집
+        const restaurantRes = await fetch(
+          `/api/places?lat=${city.lat}&lng=${city.lng}&type=restaurant`
+        )
+        const restaurantData = await restaurantRes.json()
+        
+        if (restaurantData.results) {
+          const hotelKeywords = ['hotel', 'hostel', 'resort', 'motel', 'lodge', 'suites', '호텔', '리조트', '모텔', 'guesthouse', 'pension', '펜션']
+          
+          const filterRestaurants = (minReviews) => restaurantData.results
+            .filter(p => {
+              if (!p.rating || p.rating < 3.0) return false
+              if (!p.user_ratings_total || p.user_ratings_total < minReviews) return false
+              const nameLower = (p.name || '').toLowerCase()
+              if (hotelKeywords.some(kw => nameLower.includes(kw))) return false
+              if (p.types && p.types.some(t => ['lodging', 'hotel', 'resort'].includes(t))) return false
+              return true
+            })
+            .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+
+          let topRestaurants = filterRestaurants(1000)
+          if (topRestaurants.length < 3) topRestaurants = filterRestaurants(500)
+          if (topRestaurants.length < 3) topRestaurants = filterRestaurants(100)
+          if (topRestaurants.length < 3) topRestaurants = filterRestaurants(50)
+          
+          setRestaurants(topRestaurants)
+        }
       }
       
     } catch (error) {
@@ -4978,7 +5026,7 @@ function App() {
                 <div style={{display:'flex',flexDirection:'column',gap:10}}>
                   {(sidePanel === 'hotspots' ? hotspots : restaurants).map((place, idx) => (
                     <a key={idx}
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id || ''}`}
+                      href={place.place_url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id || ''}`}
                       target="_blank" rel="noopener noreferrer"
                       style={{
                         textDecoration:'none',background:'white',
@@ -5017,6 +5065,11 @@ function App() {
                               )}
                             </div>
                           )}
+                          {place.category && !place.rating && (
+                            <div style={{display:'inline-block',fontSize:10,padding:'2px 8px',borderRadius:10,background:'#f1f5f9',color:'#475569',fontWeight:600,marginBottom:3}}>
+                              {place.category}
+                            </div>
+                          )}
                           {sidePanel === 'restaurants' && place.price_level && (
                             <div style={{fontSize:10,color:'#64748b',marginBottom:2}}>{'💰'.repeat(place.price_level)}</div>
                           )}
@@ -5025,9 +5078,19 @@ function App() {
                               📍 {place.vicinity}
                             </div>
                           )}
+                          {place.phone && !place.opening_hours && (
+                            <div style={{fontSize:10,color:'#64748b',marginTop:2}}>
+                              📞 {place.phone}
+                            </div>
+                          )}
                           {place.opening_hours && (
                             <div style={{fontSize:9,color: place.opening_hours.open_now ? '#10b981' : '#ef4444',fontWeight:600,marginTop:3}}>
                               {place.opening_hours.open_now ? '● 영업중' : '● 영업종료'}
+                            </div>
+                          )}
+                          {place.distance && (
+                            <div style={{fontSize:9,color:'#94a3b8',marginTop:2}}>
+                              {place.distance}
                             </div>
                           )}
                         </div>
