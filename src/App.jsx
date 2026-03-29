@@ -1513,7 +1513,236 @@ const COUNTRY_INFO = {
   "Zambia": { capital:"루사카", population:"2,000만", area:"752,618 km²", lang:"영어", currency:"콰차 (ZMW)", timezone:"UTC+2", timeDiff:"-7시간", visa:"e-비자", voltage:"230V / 50Hz", callCode:"+260", drive:"좌측", tagline:"빅토리아 폭포의 또 다른 관문", continent:"아프리카", emoji:"🇿🇲" },
 }
 
-// ── 도시 관광 데이터 다국어 오버레이 ──────────────────────────────────
+// ── 국가 정보 다국어 번역 시스템 ──────────────────────────────────
+const CONTINENT_I18N = {
+  '아시아':       {en:'Asia',ja:'アジア',zh:'亚洲'},
+  '아시아(중동)': {en:'Asia (Middle East)',ja:'アジア（中東）',zh:'亚洲（中东）'},
+  '아시아/유럽':  {en:'Asia / Europe',ja:'アジア/ヨーロッパ',zh:'亚洲/欧洲'},
+  '유럽':         {en:'Europe',ja:'ヨーロッパ',zh:'欧洲'},
+  '유럽/아시아':  {en:'Europe / Asia',ja:'ヨーロッパ/アジア',zh:'欧洲/亚洲'},
+  '북아메리카':   {en:'North America',ja:'北アメリカ',zh:'北美洲'},
+  '남아메리카':   {en:'South America',ja:'南アメリカ',zh:'南美洲'},
+  '아프리카':     {en:'Africa',ja:'アフリカ',zh:'非洲'},
+  '오세아니아':   {en:'Oceania',ja:'オセアニア',zh:'大洋洲'},
+}
+const DRIVE_I18N = { '우측':{en:'Right',ja:'右側通行',zh:'靠右行驶'}, '좌측':{en:'Left',ja:'左側通行',zh:'靠左行驶'} }
+const translateVisa = (v, lang) => {
+  if (lang==='ko') return v
+  const m = v.match(/^(\d+)(일|개월) 무비자$/)
+  if (m) { const n=m[1],u=m[2]==='일'?{en:'day',ja:'日',zh:'天'}:{en:'month',ja:'ヶ月',zh:'个月'}; return lang==='en'?`${n}-${u[lang]} visa-free`:lang==='ja'?`${n}${u[lang]}ビザ免除`:`${n}${u[lang]}免签` }
+  if (v==='1년 무비자') return lang==='en'?'1-year visa-free':lang==='ja'?'1年ビザ免除':'1年免签'
+  if (v==='무비자') return lang==='en'?'Visa-free':lang==='ja'?'ビザ免除':'免签'
+  if (v==='비자 필요') return lang==='en'?'Visa required':lang==='ja'?'ビザ必要':'需要签证'
+  if (v==='특별 비자 필요') return lang==='en'?'Special visa required':lang==='ja'?'特別ビザ必要':'需要特别签证'
+  if (v==='도착 비자') return lang==='en'?'Visa on arrival':lang==='ja'?'到着ビザ':'落地签'
+  if (v==='e-비자') return lang==='en'?'e-Visa':lang==='ja'?'e-ビザ':'电子签证'
+  if (v==='ETA 필요'||v==='eTA 필요') return lang==='en'?'ETA required':lang==='ja'?'ETA必要':'需要ETA'
+  if (v==='ESTA 필요') return lang==='en'?'ESTA required':lang==='ja'?'ESTA必要':'需要ESTA'
+  if (v==='관광세 필요') return lang==='en'?'Tourist tax required':lang==='ja'?'観光税必要':'需要旅游税'
+  if (v==='관광카드 필요') return lang==='en'?'Tourist card required':lang==='ja'?'ツーリストカード必要':'需要旅游卡'
+  if (v==='—') return '—'
+  return v
+}
+const translateTimeDiff = (v, lang) => {
+  if (lang==='ko'||v==='—') return v
+  if (v==='시차 없음') return lang==='en'?'No time diff.':lang==='ja'?'時差なし':'无时差'
+  const m = v.match(/^([+-]?[\d.]+)(시간)$/)
+  if (m) return lang==='en'?`${m[1]} hr`:lang==='ja'?`${m[1]}時間`:`${m[1]}小时`
+  const m2 = v.match(/^(.+)~(.+)(시간)$/)
+  if (m2) return lang==='en'?`${m2[1]}~${m2[2]} hr`:lang==='ja'?`${m2[1]}~${m2[2]}時間`:`${m2[1]}~${m2[2]}小时`
+  return v
+}
+// [en, ja, zh] for [capital, lang, tagline]
+const COUNTRY_I18N = {
+"South Korea":{en:["Seoul","Korean","Dynamic Korea — where tradition meets K-wave"],ja:["ソウル","韓国語","韓流と伝統が共存するダイナミックコリア"],zh:["首尔","韩语","韩流与传统共存的活力韩国"]},
+"Japan":{en:["Tokyo","Japanese","Land of tradition and cutting-edge innovation"],ja:["東京","日本語","伝統と先端が調和する侍の国"],zh:["东京","日语","传统与尖端并存的武士之国"]},
+"China":{en:["Beijing","Chinese (Mandarin)","5,000 years of civilization"],ja:["北京","中国語（普通話）","5千年文明の大陸"],zh:["北京","中文（普通话）","五千年文明的大陆"]},
+"Thailand":{en:["Bangkok","Thai","Land of Smiles and golden temples"],ja:["バンコク","タイ語","微笑みの国、黄金の寺院の地"],zh:["曼谷","泰语","微笑之国，金色佛寺之地"]},
+"Vietnam":{en:["Hanoi","Vietnamese","Asia's rising jewel"],ja:["ハノイ","ベトナム語","アジアの新しい宝石"],zh:["河内","越南语","亚洲崛起的宝石"]},
+"India":{en:["New Delhi","Hindi · English","Land of mystical diversity"],ja:["ニューデリー","ヒンディー語・英語","神秘的な多様性の大国"],zh:["新德里","印地语·英语","神秘色彩的多样性大国"]},
+"Indonesia":{en:["Jakarta","Indonesian","Tropical paradise of ten thousand islands"],ja:["ジャカルタ","インドネシア語","万の島々の熱帯の楽園"],zh:["雅加达","印尼语","万岛热带天堂"]},
+"Malaysia":{en:["Kuala Lumpur","Malay · English","A tropical gem of multicultural harmony"],ja:["クアラルンプール","マレー語・英語","多民族文化の熱帯の宝石"],zh:["吉隆坡","马来语·英语","多民族文化的热带宝石"]},
+"Singapore":{en:["Singapore","English · Chinese · Malay · Tamil","Asia's jewel, the Garden City"],ja:["シンガポール","英語・中国語・マレー語・タミル語","アジアの宝石、ガーデンシティ"],zh:["新加坡","英语·中文·马来语·泰米尔语","亚洲的宝石，花园城市"]},
+"Cambodia":{en:["Phnom Penh","Khmer","Mystical land of Angkor civilization"],ja:["プノンペン","クメール語","アンコール文明の神秘の国"],zh:["金边","高棉语","吴哥文明的神秘之国"]},
+"Myanmar":{en:["Naypyidaw","Burmese","Land of golden pagodas"],ja:["ネーピードー","ミャンマー語","黄金のパゴダの国"],zh:["内比都","缅甸语","金色佛塔之国"]},
+"Nepal":{en:["Kathmandu","Nepali","Country atop the roof of the Himalayas"],ja:["カトマンズ","ネパール語","ヒマラヤの屋根の上の国"],zh:["加德满都","尼泊尔语","喜马拉雅屋脊上的国度"]},
+"Sri Lanka":{en:["Sri Jayawardenepura Kotte","Sinhala · Tamil","Pearl of the Indian Ocean"],ja:["スリジャヤワルダナプラコッテ","シンハラ語・タミル語","インド洋の真珠"],zh:["斯里贾亚瓦德纳普拉科特","僧伽罗语·泰米尔语","印度洋上的珍珠"]},
+"Philippines":{en:["Manila","Filipino · English","Tropical paradise of 7,000 islands"],ja:["マニラ","フィリピノ語・英語","7千の島々の熱帯の楽園"],zh:["马尼拉","菲律宾语·英语","七千座岛屿的热带天堂"]},
+"United Arab Emirates":{en:["Abu Dhabi","Arabic · English","Futuristic cities built on the desert"],ja:["アブダビ","アラビア語・英語","砂漠の上に建てた未来都市"],zh:["阿布扎比","阿拉伯语·英语","沙漠上建起的未来之城"]},
+"Turkey":{en:["Ankara","Turkish","Crossroads of Eastern and Western civilizations"],ja:["アンカラ","トルコ語","東西文明の交差路"],zh:["安卡拉","土耳其语","东西方文明的十字路口"]},
+"Jordan":{en:["Amman","Arabic","Ancient kingdom of Petra and the Dead Sea"],ja:["アンマン","アラビア語","ペトラと死海の古代王国"],zh:["安曼","阿拉伯语","佩特拉与死海的古老王国"]},
+"Israel":{en:["Jerusalem","Hebrew · Arabic","Holy land of three religions"],ja:["エルサレム","ヘブライ語・アラビア語","三宗教の聖地、歴史の地"],zh:["耶路撒冷","希伯来语·阿拉伯语","三大宗教的圣地"]},
+"France":{en:["Paris","French","Land of art and romance"],ja:["パリ","フランス語","芸術とロマンの国"],zh:["巴黎","法语","艺术与浪漫之国"]},
+"Italy":{en:["Rome","Italian","Home of the Roman Empire and Renaissance"],ja:["ローマ","イタリア語","ローマ帝国とルネサンスの故郷"],zh:["罗马","意大利语","罗马帝国与文艺复兴的故乡"]},
+"Spain":{en:["Madrid","Spanish","Land of sun and passion"],ja:["マドリード","スペイン語","太陽と情熱の国"],zh:["马德里","西班牙语","阳光与热情之国"]},
+"Germany":{en:["Berlin","German","Land of beer, tech and fairy tales"],ja:["ベルリン","ドイツ語","ビールと技術と童話の国"],zh:["柏林","德语","啤酒、科技与童话之国"]},
+"United Kingdom":{en:["London","English","A storied nation where the sun never set"],ja:["ロンドン","英語","太陽の沈まない歴史の国"],zh:["伦敦","英语","日不落的历史之国"]},
+"Portugal":{en:["Lisbon","Portuguese","Romantic starting point of the Age of Discovery"],ja:["リスボン","ポルトガル語","大航海時代のロマンの出発点"],zh:["里斯本","葡萄牙语","大航海时代的浪漫起点"]},
+"Netherlands":{en:["Amsterdam","Dutch","Land of windmills, tulips and freedom"],ja:["アムステルダム","オランダ語","風車とチューリップと自由の国"],zh:["阿姆斯特丹","荷兰语","风车、郁金香与自由之国"]},
+"Czechia":{en:["Prague","Czech","Land of fairy-tale medieval cities"],ja:["プラハ","チェコ語","童話のような中世都市の国"],zh:["布拉格","捷克语","童话般中世纪城市之国"]},
+"Austria":{en:["Vienna","German","Land of music and the Alps"],ja:["ウィーン","ドイツ語","音楽とアルプスの国"],zh:["维也纳","德语","音乐与阿尔卑斯之国"]},
+"Switzerland":{en:["Bern","German · French · Italian · Romansh","Precision country at the heart of the Alps"],ja:["ベルン","ドイツ語・フランス語・イタリア語・ロマンシュ語","アルプスの中心の精密な国"],zh:["伯尔尼","德语·法语·意大利语·罗曼什语","阿尔卑斯山中心的精密之国"]},
+"Hungary":{en:["Budapest","Hungarian","Pearl of the Danube"],ja:["ブダペスト","ハンガリー語","ドナウの真珠"],zh:["布达佩斯","匈牙利语","多瑙河上的明珠"]},
+"Croatia":{en:["Zagreb","Croatian","Jewel of the Adriatic"],ja:["ザグレブ","クロアチア語","アドリア海の宝石"],zh:["萨格勒布","克罗地亚语","亚得里亚海的宝石"]},
+"Greece":{en:["Athens","Greek","Cradle of Western civilization"],ja:["アテネ","ギリシャ語","西洋文明の揺りかご"],zh:["雅典","希腊语","西方文明的摇篮"]},
+"Norway":{en:["Oslo","Norwegian","Land of fjords and northern lights"],ja:["オスロ","ノルウェー語","フィヨルドとオーロラの国"],zh:["奥斯陆","挪威语","峡湾与极光之国"]},
+"Sweden":{en:["Stockholm","Swedish","Scandinavian design and welfare"],ja:["ストックホルム","スウェーデン語","デザインと福祉のスカンジナビア"],zh:["斯德哥尔摩","瑞典语","设计与福利的斯堪的纳维亚"]},
+"Denmark":{en:["Copenhagen","Danish","Happy land of fairy tales and hygge"],ja:["コペンハーゲン","デンマーク語","幸せな童話の国、ヒュッゲの本場"],zh:["哥本哈根","丹麦语","童话王国，许格的发源地"]},
+"Finland":{en:["Helsinki","Finnish · Swedish","Land of Santa, saunas and aurora"],ja:["ヘルシンキ","フィンランド語・スウェーデン語","サンタとサウナとオーロラの国"],zh:["赫尔辛基","芬兰语·瑞典语","圣诞老人、桑拿与极光之国"]},
+"Iceland":{en:["Reykjavik","Icelandic","Land of fire and ice"],ja:["レイキャヴィーク","アイスランド語","火と氷の国"],zh:["雷克雅未克","冰岛语","冰与火之国"]},
+"Poland":{en:["Warsaw","Polish","Hidden gem of medieval Europe"],ja:["ワルシャワ","ポーランド語","中世ヨーロッパの隠れた宝石"],zh:["华沙","波兰语","中世纪欧洲的隐藏宝石"]},
+"Russia":{en:["Moscow","Russian","Largest country on Earth"],ja:["モスクワ","ロシア語","世界最大の国"],zh:["莫斯科","俄语","世界上面积最大的国家"]},
+"Egypt":{en:["Cairo","Arabic","Land of pharaohs and pyramids"],ja:["カイロ","アラビア語","ファラオとピラミッドの国"],zh:["开罗","阿拉伯语","法老与金字塔之国"]},
+"Morocco":{en:["Rabat","Arabic","Exotic land of colors and scents"],ja:["ラバト","アラビア語","色と香りのエキゾチックな国"],zh:["拉巴特","阿拉伯语","色彩与芳香的异域之国"]},
+"South Africa":{en:["Pretoria","Afrikaans · English + 9 others","Rainbow nation at Africa's southern tip"],ja:["プレトリア","アフリカーンス語・英語他","アフリカ南端の虹の国"],zh:["比勒陀利亚","南非荷兰语·英语等","非洲南端的彩虹之国"]},
+"Kenya":{en:["Nairobi","Swahili · English","Land of the Great Migration"],ja:["ナイロビ","スワヒリ語・英語","大移動の地"],zh:["内罗毕","斯瓦希里语·英语","大迁徙之地"]},
+"Tanzania":{en:["Dodoma","Swahili · English","Home of Kilimanjaro and Serengeti"],ja:["ドドマ","スワヒリ語・英語","キリマンジャロとセレンゲティの地"],zh:["多多马","斯瓦希里语·英语","乞力马扎罗与塞伦盖蒂的故乡"]},
+"United States of America":{en:["Washington, D.C.","English","Land of freedom and the American Dream"],ja:["ワシントンD.C.","英語","自由とアメリカンドリームの国"],zh:["华盛顿","英语","自由与美国梦之国"]},
+"Canada":{en:["Ottawa","English · French","Vast land of maple and nature"],ja:["オタワ","英語・フランス語","メープルと自然の広大な国"],zh:["渥太华","英语·法语","枫叶与自然的辽阔之国"]},
+"Mexico":{en:["Mexico City","Spanish","Land of ancient Aztec and Maya civilizations"],ja:["メキシコシティ","スペイン語","古代アステカ・マヤ文明の地"],zh:["墨西哥城","西班牙语","古代阿兹特克与玛雅文明之地"]},
+"Cuba":{en:["Havana","Spanish","Caribbean island of vintage cars and salsa"],ja:["ハバナ","スペイン語","クラシックカーとサルサのカリブ海の島"],zh:["哈瓦那","西班牙语","老爷车与萨尔萨的加勒比海之岛"]},
+"Brazil":{en:["Brasília","Portuguese","Land of samba, carnival and the Amazon"],ja:["ブラジリア","ポルトガル語","サンバとカーニバルとアマゾンの国"],zh:["巴西利亚","葡萄牙语","桑巴、狂欢节与亚马逊之国"]},
+"Argentina":{en:["Buenos Aires","Spanish","Land of tango and Patagonia"],ja:["ブエノスアイレス","スペイン語","タンゴとパタゴニアの国"],zh:["布宜诺斯艾利斯","西班牙语","探戈与巴塔哥尼亚之国"]},
+"Peru":{en:["Lima","Spanish","Land of the Inca Empire and Machu Picchu"],ja:["リマ","スペイン語","インカ帝国とマチュピチュの地"],zh:["利马","西班牙语","印加帝国与马丘比丘之地"]},
+"Colombia":{en:["Bogotá","Spanish","Enchanting land of emeralds and coffee"],ja:["ボゴタ","スペイン語","エメラルドとコーヒーの魅力的な国"],zh:["波哥大","西班牙语","翡翠与咖啡的迷人之国"]},
+"Chile":{en:["Santiago","Spanish","Long strip of land from desert to glacier"],ja:["サンティアゴ","スペイン語","砂漠から氷河までの細長い国"],zh:["圣地亚哥","西班牙语","从沙漠到冰川的狭长之国"]},
+"Australia":{en:["Canberra","English","Continent of unique wildlife and vast outback"],ja:["キャンベラ","英語","固有の野生動物と広大なアウトバックの大陸"],zh:["堪培拉","英语","独特野生动物与广袤内陆的大陆"]},
+"New Zealand":{en:["Wellington","English · Māori","Pure nature of Middle-earth"],ja:["ウェリントン","英語・マオリ語","中つ国の純粋な自然"],zh:["惠灵顿","英语·毛利语","中土世界的纯净自然"]},
+"Maldives":{en:["Malé","Dhivehi","Paradise of turquoise atolls in the Indian Ocean"],ja:["マレ","ディベヒ語","インド洋のターコイズブルーの環礁の楽園"],zh:["马累","迪维希语","印度洋上绿松石色环礁的天堂"]},
+"Taiwan":{en:["Taipei","Mandarin","Friendly island of night markets and hot springs"],ja:["台北","中国語（國語）","夜市と温泉のフレンドリーな島"],zh:["台北","中文（国语）","夜市与温泉的友善之岛"]},
+"Ireland":{en:["Dublin","English · Irish","Emerald Isle of literature and Guinness"],ja:["ダブリン","英語・アイルランド語","文学とギネスのエメラルドの島"],zh:["都柏林","英语·爱尔兰语","文学与吉尼斯的翡翠之岛"]},
+"Belgium":{en:["Brussels","Dutch · French · German","Land of chocolate, waffles and beer"],ja:["ブリュッセル","オランダ語・フランス語・ドイツ語","チョコとワッフルとビールの国"],zh:["布鲁塞尔","荷兰语·法语·德语","巧克力、华夫饼与啤酒之国"]},
+"Costa Rica":{en:["San José","Spanish","Pure life in the tropical paradise"],ja:["サンホセ","スペイン語","熱帯の楽園のピュアライフ"],zh:["圣何塞","西班牙语","热带天堂的纯净生活"]},
+"Saudi Arabia":{en:["Riyadh","Arabic","Holy land of Islam and desert kingdom"],ja:["リヤド","アラビア語","イスラムの聖地と砂漠の王国"],zh:["利雅得","阿拉伯语","伊斯兰圣地与沙漠王国"]},
+"Iran":{en:["Tehran","Persian","Ancient Persia of 2,500 years"],ja:["テヘラン","ペルシャ語","2500年のペルシャ文明"],zh:["德黑兰","波斯语","两千五百年的波斯文明"]},
+"Uzbekistan":{en:["Tashkent","Uzbek","Blue pearl of the Silk Road"],ja:["タシケント","ウズベク語","シルクロードの青い真珠"],zh:["塔什干","乌兹别克语","丝绸之路上的蓝色明珠"]},
+"Laos":{en:["Vientiane","Lao","Serene land of temples and nature"],ja:["ヴィエンチャン","ラオ語","静けさの中の寺院と自然の国"],zh:["万象","老挝语","宁静的寺庙与自然之国"]},
+"Mongolia":{en:["Ulaanbaatar","Mongolian","Vast steppe of Genghis Khan"],ja:["ウランバートル","モンゴル語","チンギス・ハンの広大な草原"],zh:["乌兰巴托","蒙古语","成吉思汗的辽阔草原"]},
+"Romania":{en:["Bucharest","Romanian","Land of Dracula's castles and Carpathians"],ja:["ブカレスト","ルーマニア語","ドラキュラの城とカルパチア山脈の国"],zh:["布加勒斯特","罗马尼亚语","德古拉城堡与喀尔巴阡山之国"]},
+"Georgia":{en:["Tbilisi","Georgian","Wine cradle at the crossroads of Europe and Asia"],ja:["トビリシ","ジョージア語","ヨーロッパとアジアの交差点のワインの揺りかご"],zh:["第比利斯","格鲁吉亚语","欧亚交汇处的葡萄酒摇篮"]},
+"Ecuador":{en:["Quito","Spanish","Where the equator meets the Andes"],ja:["キト","スペイン語","赤道とアンデスが出会う場所"],zh:["基多","西班牙语","赤道与安第斯山脉交汇之地"]},
+"Bolivia":{en:["Sucre","Spanish","Sky-high mirror of Uyuni and Andean culture"],ja:["スクレ","スペイン語","ウユニの天空の鏡とアンデス文化"],zh:["苏克雷","西班牙语","乌尤尼天空之镜与安第斯文化"]},
+"Ethiopia":{en:["Addis Ababa","Amharic","Africa's oldest independent civilization"],ja:["アディスアベバ","アムハラ語","アフリカ最古の独立文明"],zh:["亚的斯亚贝巴","阿姆哈拉语","非洲最古老的独立文明"]},
+"Ghana":{en:["Accra","English","Gateway to West Africa"],ja:["アクラ","英語","西アフリカへの玄関口"],zh:["阿克拉","英语","通往西非的门户"]},
+"Panama":{en:["Panama City","Spanish","Bridge of the Americas and global canal"],ja:["パナマシティ","スペイン語","アメリカ大陸の橋と世界の運河"],zh:["巴拿马城","西班牙语","美洲桥梁与世界运河"]},
+"Montenegro":{en:["Podgorica","Montenegrin","Mediterranean hidden gem of dramatic mountains and coast"],ja:["ポドゴリツァ","モンテネグロ語","地中海沿岸の劇的な山と海岸の隠れた宝石"],zh:["波德戈里察","黑山语","地中海畔壮丽山海的隐秘宝石"]},
+"Tunisia":{en:["Tunis","Arabic","Gateway to the Sahara and Carthage ruins"],ja:["チュニス","アラビア語","サハラとカルタゴ遺跡への入口"],zh:["突尼斯","阿拉伯语","撒哈拉与迦太基遗址的入口"]},
+"Oman":{en:["Muscat","Arabic","Jewel of the Arabian Peninsula"],ja:["マスカット","アラビア語","アラビア半島の宝石"],zh:["马斯喀特","阿拉伯语","阿拉伯半岛的宝石"]},
+"Qatar":{en:["Doha","Arabic","Futuristic desert oasis of the Persian Gulf"],ja:["ドーハ","アラビア語","ペルシャ湾の未来的な砂漠のオアシス"],zh:["多哈","阿拉伯语","波斯湾的未来沙漠绿洲"]},
+"Dominican Republic":{en:["Santo Domingo","Spanish","Caribbean paradise of Columbus's first landing"],ja:["サントドミンゴ","スペイン語","コロンブス初上陸のカリブ海の楽園"],zh:["圣多明各","西班牙语","哥伦布首次登陆的加勒比天堂"]},
+"Guatemala":{en:["Guatemala City","Spanish","Heart of Maya civilization"],ja:["グアテマラシティ","スペイン語","マヤ文明の中心地"],zh:["危地马拉城","西班牙语","玛雅文明的中心"]},
+"Jamaica":{en:["Kingston","English","Island of reggae rhythm and Caribbean vibes"],ja:["キングストン","英語","レゲエのリズムとカリブのバイブスの島"],zh:["金斯敦","英语","雷鬼节奏与加勒比风情之岛"]},
+"Latvia":{en:["Riga","Latvian","Art Nouveau jewel of the Baltics"],ja:["リガ","ラトビア語","バルト海のアールヌーヴォーの宝石"],zh:["里加","拉脱维亚语","波罗的海的新艺术瑰宝"]},
+"Lithuania":{en:["Vilnius","Lithuanian","Land of medieval charm at the Baltic crossroads"],ja:["ヴィリニュス","リトアニア語","バルト海の交差点の中世の魅力の地"],zh:["维尔纽斯","立陶宛语","波罗的海十字路口的中世纪魅力之地"]},
+"Estonia":{en:["Tallinn","Estonian","Digital nation with a fairy-tale medieval old town"],ja:["タリン","エストニア語","童話のような中世旧市街のデジタル国家"],zh:["塔林","爱沙尼亚语","拥有童话般中世纪老城的数字国家"]},
+"Cyprus":{en:["Nicosia","Greek · Turkish","Mediterranean island of Aphrodite's birthplace"],ja:["ニコシア","ギリシャ語・トルコ語","アフロディーテ生誕の地中海の島"],zh:["尼科西亚","希腊语·土耳其语","阿芙洛狄忒诞生的地中海之岛"]},
+"Albania":{en:["Tirana","Albanian","Hidden gem of the Mediterranean"],ja:["ティラナ","アルバニア語","地中海の隠れた宝石"],zh:["地拉那","阿尔巴尼亚语","地中海的隐秘宝石"]},
+"Serbia":{en:["Belgrade","Serbian","Vibrant crossroads of Balkan culture"],ja:["ベオグラード","セルビア語","バルカン文化の活気ある交差点"],zh:["贝尔格莱德","塞尔维亚语","巴尔干文化的活力十字路口"]},
+"Namibia":{en:["Windhoek","English","Land of the world's oldest desert and wildlife"],ja:["ウィントフック","英語","世界最古の砂漠と野生動物の地"],zh:["温得和克","英语","世界上最古老沙漠与野生动物之地"]},
+"Zimbabwe":{en:["Harare","English · Shona · Ndebele","Land of Victoria Falls and ancient ruins"],ja:["ハラレ","英語・ショナ語・ンデベレ語","ビクトリアの滝と古代遺跡の地"],zh:["哈拉雷","英语·绍纳语·恩德贝莱语","维多利亚瀑布与古代遗迹之地"]},
+"Fiji":{en:["Suva","English · Fijian","South Pacific paradise of 333 islands"],ja:["スバ","英語・フィジー語","333の島々の南太平洋の楽園"],zh:["苏瓦","英语·斐济语","333座岛屿的南太平洋天堂"]},
+"Madagascar":{en:["Antananarivo","Malagasy · French","Unique biodiversity island in the Indian Ocean"],ja:["アンタナナリボ","マダガスカル語・フランス語","インド洋の生物多様性のユニークな島"],zh:["塔那那利佛","马达加斯加语·法语","印度洋上独特的生物多样性之岛"]},
+"Mauritius":{en:["Port Louis","English","Tropical gem of diverse cultures in the Indian Ocean"],ja:["ポートルイス","英語","インド洋の多文化の熱帯の宝石"],zh:["路易港","英语","印度洋上多元文化的热带宝石"]},
+"Lebanon":{en:["Beirut","Arabic","Ancient Phoenician land meets vibrant nightlife"],ja:["ベイルート","アラビア語","古代フェニキアの地と活気あるナイトライフ"],zh:["贝鲁特","阿拉伯语","古代腓尼基之地与活力夜生活"]},
+"Ukraine":{en:["Kyiv","Ukrainian","Golden-domed churches and resilient spirit"],ja:["キーウ","ウクライナ語","黄金のドーム教会と不屈の精神"],zh:["基辅","乌克兰语","金色穹顶教堂与不屈精神"]},
+"Pakistan":{en:["Islamabad","Urdu · English","Land of K2 and ancient Indus civilization"],ja:["イスラマバード","ウルドゥー語・英語","K2と古代インダス文明の地"],zh:["伊斯兰堡","乌尔都语·英语","K2与古印度河文明之地"]},
+"Luxembourg":{en:["Luxembourg City","Luxembourgish · French · German","Tiny grand duchy of medieval castles and EU institutions"],ja:["ルクセンブルク市","ルクセンブルク語・フランス語・ドイツ語","中世の城とEU機関の小さな大公国"],zh:["卢森堡市","卢森堡语·法语·德语","中世纪城堡与欧盟机构的袖珍大公国"]},
+"Slovakia":{en:["Bratislava","Slovak","Charming Danube capital with castle-topped hills"],ja:["ブラチスラバ","スロバキア語","城がそびえる丘のあるドナウの魅力的な首都"],zh:["布拉迪斯拉发","斯洛伐克语","城堡山丘上的迷人多瑙河首都"]},
+"Bulgaria":{en:["Sofia","Bulgarian","Land of roses, yogurt and ancient Thracian culture"],ja:["ソフィア","ブルガリア語","バラとヨーグルトと古代トラキア文化の国"],zh:["索菲亚","保加利亚语","玫瑰、酸奶与古色雷斯文化之国"]},
+"Rwanda":{en:["Kigali","Kinyarwanda · English · French","Africa's phoenix — the land of a thousand hills"],ja:["キガリ","キニヤルワンダ語・英語・フランス語","アフリカの不死鳥—千の丘の国"],zh:["基加利","卢旺达语·英语·法语","非洲的凤凰——千丘之国"]},
+"Senegal":{en:["Dakar","French","Vibrant West African gateway of Teranga hospitality"],ja:["ダカール","フランス語","テランガのおもてなしの活気ある西アフリカの玄関口"],zh:["达喀尔","法语","充满活力的西非门户，特朗加式好客"]},
+"Kazakhstan":{en:["Astana","Kazakh · Russian","Heart of the Eurasian steppe"],ja:["アスタナ","カザフ語・ロシア語","ユーラシアの草原の中心"],zh:["阿斯塔纳","哈萨克语·俄语","欧亚大草原的心脏"]},
+"Afghanistan":{en:["Kabul","Pashto · Dari","Rugged crossroads of ancient empires"]},
+"Algeria":{en:["Algiers","Arabic","Gateway to the Sahara and Roman ruins"]},
+"Angola":{en:["Luanda","Portuguese","Resource-rich nation on Africa's west coast"]},
+"Armenia":{en:["Yerevan","Armenian","Ancient Christian nation beneath Mt. Ararat"]},
+"Azerbaijan":{en:["Baku","Azerbaijani","Land of fire on the Caspian shore"]},
+"Bahrain":{en:["Manama","Arabic","Pearl of the Persian Gulf"]},
+"Bangladesh":{en:["Dhaka","Bengali","Land of rivers and vibrant culture"]},
+"Belarus":{en:["Minsk","Belarusian · Russian","Forested heart of Eastern Europe"]},
+"Belize":{en:["Belmopan","English","Caribbean meets Central American jungle"]},
+"Benin":{en:["Porto-Novo","French","Birthplace of Voodoo culture"]},
+"Bhutan":{en:["Thimphu","Dzongkha","Himalayan kingdom of Gross National Happiness"]},
+"Bosnia and Herzegovina":{en:["Sarajevo","Bosnian · Croatian · Serbian","Crossroads of East and West in the Balkans"]},
+"Botswana":{en:["Gaborone","English · Setswana","Home of the Okavango Delta"]},
+"Brunei":{en:["Bandar Seri Begawan","Malay","Tiny oil-rich sultanate on Borneo"]},
+"Burkina Faso":{en:["Ouagadougou","French","Land of Honest People"]},
+"Burundi":{en:["Gitega","Kirundi · French","Heart of Africa by Lake Tanganyika"]},
+"Cabo Verde":{en:["Praia","Portuguese","Atlantic archipelago of music and color"]},
+"Cameroon":{en:["Yaoundé","French · English","Africa in miniature"]},
+"Central African Republic":{en:["Bangui","French · Sango","Wild heart of the continent"]},
+"Chad":{en:["N'Djamena","French · Arabic","Where the Sahara meets the Sahel"]},
+"Comoros":{en:["Moroni","Comorian · Arabic · French","Perfume islands of the Indian Ocean"]},
+"Democratic Republic of the Congo":{en:["Kinshasa","French","Vast nation of the Congo River basin"]},
+"Djibouti":{en:["Djibouti","French · Arabic","Strategic gateway to the Red Sea"]},
+"El Salvador":{en:["San Salvador","Spanish","Land of volcanoes in Central America"]},
+"Equatorial Guinea":{en:["Malabo","Spanish · French · Portuguese","Oil-rich nation on the Gulf of Guinea"]},
+"Eritrea":{en:["Asmara","Tigrinya · Arabic","Art Deco capital on the Red Sea coast"]},
+"Eswatini":{en:["Mbabane","English · Swazi","Africa's last absolute monarchy"]},
+"Gabon":{en:["Libreville","French","Equatorial rainforest sanctuary"]},
+"Gambia":{en:["Banjul","English","Smiling Coast of Africa"]},
+"Guinea":{en:["Conakry","French","West Africa's resource-rich heartland"]},
+"Guinea-Bissau":{en:["Bissau","Portuguese","Bijagós archipelago and mangrove coast"]},
+"Guyana":{en:["Georgetown","English","South America's only English-speaking country"]},
+"Haiti":{en:["Port-au-Prince","French · Haitian Creole","First Black-led republic"]},
+"Honduras":{en:["Tegucigalpa","Spanish","Land of Maya ruins and Caribbean reefs"]},
+"Iraq":{en:["Baghdad","Arabic · Kurdish","Cradle of Mesopotamian civilization"]},
+"Ivory Coast":{en:["Yamoussoukro","French","West Africa's economic powerhouse"]},
+"Kosovo":{en:["Pristina","Albanian · Serbian","Europe's youngest nation"]},
+"Kuwait":{en:["Kuwait City","Arabic","Pearl-diving heritage on the Persian Gulf"]},
+"Kyrgyzstan":{en:["Bishkek","Kyrgyz · Russian","Switzerland of Central Asia"]},
+"Lesotho":{en:["Maseru","Sesotho · English","Mountain kingdom in the sky"]},
+"Liberia":{en:["Monrovia","English","Africa's oldest republic"]},
+"Libya":{en:["Tripoli","Arabic","Ancient Roman ruins on the Mediterranean"]},
+"Malawi":{en:["Lilongwe","English · Chichewa","Warm heart of Africa"]},
+"Mali":{en:["Bamako","French","Land of Timbuktu and the Niger River"]},
+"Mauritania":{en:["Nouakchott","Arabic","Where the Sahara meets the Atlantic"]},
+"Moldova":{en:["Chișinău","Romanian","Europe's wine country hidden gem"]},
+"Mozambique":{en:["Maputo","Portuguese","Indian Ocean coast of pristine beaches"]},
+"Nicaragua":{en:["Managua","Spanish","Land of lakes and volcanoes"]},
+"Niger":{en:["Niamey","French","Gateway to the Sahara"]},
+"Nigeria":{en:["Abuja","English","Africa's most populous nation"]},
+"North Korea":{en:["Pyongyang","Korean","The Hermit Kingdom"]},
+"North Macedonia":{en:["Skopje","Macedonian","Ancient land of Alexander the Great"]},
+"Papua New Guinea":{en:["Port Moresby","English · Tok Pisin · Hiri Motu","World's most linguistically diverse country"]},
+"Paraguay":{en:["Asunción","Spanish · Guaraní","Heart of South America"]},
+"Republic of the Congo":{en:["Brazzaville","French","Congo River basin and lush rainforests"]},
+"Sierra Leone":{en:["Freetown","English","Beautiful beaches on West Africa's coast"]},
+"Somalia":{en:["Mogadishu","Somali · Arabic","Land of the longest African coastline"]},
+"South Sudan":{en:["Juba","English","World's newest country"]},
+"Sudan":{en:["Khartoum","Arabic · English","Where the Blue and White Nile meet"]},
+"Suriname":{en:["Paramaribo","Dutch","South America's Dutch-speaking gem"]},
+"Syria":{en:["Damascus","Arabic","One of the world's oldest continuously inhabited cities"]},
+"Tajikistan":{en:["Dushanbe","Tajik","Roof of the World along the Pamir Highway"]},
+"Timor-Leste":{en:["Dili","Tetum · Portuguese","Southeast Asia's youngest nation"]},
+"Togo":{en:["Lomé","French","Narrow West African nation of diverse landscapes"]},
+"Trinidad and Tobago":{en:["Port of Spain","English","Carnival capital of the Caribbean"]},
+"Turkmenistan":{en:["Ashgabat","Turkmen","White marble city of the Karakum Desert"]},
+"Uganda":{en:["Kampala","English · Swahili","Pearl of Africa"]},
+"Uruguay":{en:["Montevideo","Spanish","Progressive gem on the River Plate"]},
+"Venezuela":{en:["Caracas","Spanish","Home of Angel Falls, the world's tallest waterfall"]},
+"Yemen":{en:["Sana'a","Arabic","Ancient kingdom of the Arabian Peninsula"]},
+"Zambia":{en:["Lusaka","English","Another gateway to Victoria Falls"]},
+}
+
+const translateCountryInfo = (info, cName, lang) => {
+  if (!info || lang === 'ko') return info
+  const i18n = COUNTRY_I18N[cName]
+  const getLang = (idx) => {
+    if (!i18n) return undefined
+    return i18n[lang]?.[idx] || i18n.en?.[idx] || undefined
+  }
+  return {
+    ...info,
+    capital: getLang(0) || info.capital,
+    lang: getLang(1) || info.lang,
+    tagline: getLang(2) || info.tagline,
+    continent: CONTINENT_I18N[info.continent]?.[lang] || info.continent,
+    drive: DRIVE_I18N[info.drive]?.[lang] || info.drive,
+    visa: translateVisa(info.visa, lang),
+    timeDiff: translateTimeDiff(info.timeDiff, lang),
+  }
+}
 const CITY_DATA_I18N = {
 // ── 서울 ──
 "서울":{
@@ -3861,12 +4090,18 @@ function App() {
     try { return JSON.parse(localStorage.getItem('atlas_saved_courses') || '[]') } catch { return [] }
   })
   const saveCourseToList = (courseType = 'manual') => {
-    if (courseDays.length === 0 || courseDays.every(d => d.items.length === 0)) return
-    const name = courseDays[0]?.items?.[0]?.cityDisplayName || 'My Course'
+    // courseDays가 비어있으면 courseItems로부터 자동 생성
+    let days = courseDays
+    if (days.length === 0 && courseItems.length > 0) {
+      days = [{ items: [...courseItems] }]
+      setCourseDays(days); localStorage.setItem('atlas_course_days', JSON.stringify(days))
+    }
+    if (days.length === 0 || days.every(d => d.items.length === 0)) return
+    const name = days[0]?.items?.[0]?.cityDisplayName || 'My Course'
     const saved = {
-      id: Date.now(), name: `${name} ${courseDays.length}${lang==='ko'?'일':'D'}`,
+      id: Date.now(), name: `${name} ${days.length}${lang==='ko'?'일':'D'}`,
       type: courseType,
-      days: courseDays, transport: courseTransport, tripStart: courseTripStart,
+      days: days, transport: courseTransport, tripStart: courseTripStart,
       createdAt: Date.now()
     }
     const newList = [saved, ...savedCourses]
@@ -3874,8 +4109,9 @@ function App() {
     return saved
   }
   const loadSavedCourse = (saved) => {
-    setCourseDays(saved.days); localStorage.setItem('atlas_course_days', JSON.stringify(saved.days))
-    const flat = saved.days.flatMap(d => d.items); saveCourse(flat)
+    const days = saved.days || []
+    setCourseDays(days); localStorage.setItem('atlas_course_days', JSON.stringify(days))
+    const flat = days.flatMap(d => d.items || []); saveCourse(flat)
     setCourseTransport(saved.transport || 'transit')
     if (saved.tripStart) saveTripStart(saved.tripStart)
     setActiveDayTab(0); setShowCoursePlanner(true); setShowHamburger(false)
@@ -4107,15 +4343,31 @@ function App() {
 
   const saveCourse = (items) => { setCourseItems(items); localStorage.setItem('atlas_course', JSON.stringify(items)) }
   const addToCourse = (item) => {
-    if (courseItems.some(c => c.name === item.name && c.source === item.source)) return
-    const newItems = [...courseItems, { ...item, addedAt: Date.now() }]
+    // 토글: 이미 있으면 제거
+    if (courseItems.some(c => c.name === item.name && c.source === item.source)) {
+      const newItems = courseItems.filter(c => !(c.name === item.name && c.source === item.source))
+      saveCourse(newItems)
+      if (courseDays.length > 0) {
+        const days = courseDays.map(d => ({ ...d, items: d.items.filter(di => !(di.name === item.name && di.source === item.source)) }))
+        setCourseDays(days); localStorage.setItem('atlas_course_days', JSON.stringify(days))
+      }
+      return
+    }
+    // 새 아이템 추가
+    const newItem = { ...item, addedAt: Date.now() }
+    const newItems = [...courseItems, newItem]
     saveCourse(newItems)
-    // 플래너가 이미 열렸었으면 마지막 날에 추가
+    // courseDays에도 추가 (없으면 Day 1 자동 생성)
     if (courseDays.length > 0) {
       const days = courseDays.map(d => ({ ...d, items: [...d.items] }))
-      days[days.length - 1].items.push({ ...item, addedAt: Date.now() })
+      days[days.length - 1].items.push(newItem)
+      setCourseDays(days); localStorage.setItem('atlas_course_days', JSON.stringify(days))
+    } else {
+      const days = [{ items: [newItem] }]
       setCourseDays(days); localStorage.setItem('atlas_course_days', JSON.stringify(days))
     }
+    // 플래너 자동 표시
+    setShowCoursePlanner(true)
   }
   const removeFromCourse = (idx) => {
     const item = courseItems[idx]
@@ -5244,6 +5496,20 @@ function App() {
             {/* Hamburger Dropdown */}
             {showHamburger && (
               <div style={{position:'absolute',top:'calc(100% + 10px)',left:0,background:'rgba(15,23,42,.97)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,.15)',borderRadius:16,overflow:'hidden',zIndex:2001,boxShadow:'0 16px 48px rgba(0,0,0,.5)',width:340,maxHeight:'75vh',overflowY:'auto'}}>
+                {/* 현재 작업중인 코스 */}
+                {courseItems.length > 0 && (
+                  <div style={{padding:'12px 16px 8px',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,background:'rgba(59,130,246,.12)',border:'1px solid rgba(59,130,246,.25)',cursor:'pointer'}}
+                      onClick={()=>{openCoursePlanner();setShowHamburger(false)}}>
+                      <span style={{fontSize:16}}>📝</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:13,fontWeight:700,color:'#93c5fd'}}>{t('coursePlanner')}</div>
+                        <div style={{fontSize:10,color:'#64748b',marginTop:1}}>{courseItems.length}{t('coursePlace')} · {courseDays.length||1}{t('courseDay')}</div>
+                      </div>
+                      <span style={{fontSize:10,color:'#60a5fa',fontWeight:600}}>{t('courseLoad')} →</span>
+                    </div>
+                  </div>
+                )}
                 {/* 저장된 코스 */}
                 <div style={{padding:'16px 16px 10px',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
@@ -5263,7 +5529,7 @@ function App() {
                           }}>{sc.type==='ai'?t('courseTypeAi'):t('courseTypeManual')}</span>
                           <div style={{flex:1,minWidth:0}}>
                             <div style={{fontSize:13,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{sc.name}</div>
-                            <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{sc.days.reduce((a,d)=>a+d.items.length,0)}{t('coursePlace')} · {sc.days.length}{t('courseDay')}</div>
+                            <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
                           <button onClick={()=>loadSavedCourse(sc)} style={{background:'#3b82f6',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
                           <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
@@ -5436,7 +5702,8 @@ function App() {
       {/* Country selected badge + info panel */}
       {selectedCountry && !selectedCity && (() => {
         const cName = selectedCountry.properties.NAME
-        const info = COUNTRY_INFO[cName]
+        const rawInfo = COUNTRY_INFO[cName]
+        const info = translateCountryInfo(rawInfo, cName, lang)
         const cities = COUNTRY_CITIES[cName]
         return (
           <>
