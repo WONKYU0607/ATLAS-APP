@@ -988,6 +988,14 @@ const getCountryDisplayName = (enName, targetLang) => {
   catch { return enName }
 }
 
+const LANG_OPTIONS = [
+  { code:'ko', label:'한국어', flag:'🇰🇷' },
+  { code:'en', label:'English', flag:'🇺🇸' },
+  { code:'ja', label:'日本語', flag:'🇯🇵' },
+  { code:'zh', label:'中文', flag:'🇨🇳' },
+]
+
+// UI 번역 문자열
 const T = {
   appSub:{ko:'세계 여행 탐험가',en:'World Travel Explorer',ja:'世界旅行エクスプローラー',zh:'世界旅行探索家'},
   search:{ko:'도시, 국가, 관광지 검색…',en:'Search city, country, attraction…',ja:'都市・国・観光地を検索…',zh:'搜索城市、国家、景点…'},
