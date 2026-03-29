@@ -5218,12 +5218,114 @@ function App() {
         transition:'right .42s cubic-bezier(.16,1,.3,1)'
       }}>
         <div style={{display:'flex',alignItems:'center',gap:12,pointerEvents:'all'}}>
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <div style={{width:40,height:40,borderRadius:11,background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,boxShadow:'0 4px 16px rgba(37,99,235,.4)'}}>🌐</div>
+          <div style={{display:'flex',alignItems:'center',gap:10,position:'relative'}}>
+            <div onClick={()=>{setShowHamburger(v=>!v);setShowLangMenu(false)}} style={{width:40,height:40,borderRadius:11,background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 16px rgba(37,99,235,.4)',cursor:'pointer',transition:'transform .15s'}}
+              onMouseEnter={e=>e.currentTarget.style.transform='scale(1.08)'} onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="white" strokeWidth="2.2" strokeLinecap="round"/></svg>
+            </div>
             <div>
               <div style={{fontSize:20,fontWeight:800,letterSpacing:'-.5px',color:'white',lineHeight:1}}>ATLAS</div>
               <div style={{fontSize:9,color:'rgba(255,255,255,.6)',letterSpacing:'2.5px',textTransform:'uppercase'}}>{t('appSub')}</div>
             </div>
+            {/* Hamburger Dropdown */}
+            {showHamburger && (
+              <div style={{position:'absolute',top:'calc(100% + 10px)',left:0,background:'rgba(15,23,42,.97)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,.15)',borderRadius:16,overflow:'hidden',zIndex:2001,boxShadow:'0 16px 48px rgba(0,0,0,.5)',width:340,maxHeight:'75vh',overflowY:'auto'}}>
+                {/* 저장된 코스 */}
+                <div style={{padding:'16px 16px 10px',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+                    <span style={{fontSize:14,fontWeight:700,color:'white'}}>🗺️ {t('menuSavedCourses')}</span>
+                    <span style={{fontSize:11,color:'#64748b'}}>{savedCourses.length}</span>
+                  </div>
+                  {savedCourses.length === 0 ? (
+                    <div style={{padding:'16px 0',textAlign:'center',color:'#64748b',fontSize:12}}>{t('menuNoSaved')}</div>
+                  ) : (
+                    <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                      {savedCourses.map((sc) => (
+                        <div key={sc.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.08)'}}>
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{fontSize:13,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{sc.name}</div>
+                            <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{sc.days.reduce((a,d)=>a+d.items.length,0)}{t('coursePlace')} · {sc.days.length}{t('courseDay')}</div>
+                          </div>
+                          <button onClick={()=>loadSavedCourse(sc)} style={{background:'#3b82f6',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
+                          <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* 즐겨찾기 */}
+                <div style={{padding:'12px 16px 14px'}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+                    <span style={{fontSize:14,fontWeight:700,color:'white'}}>{t('favTitle')}</span>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <span style={{fontSize:11,color:'#64748b'}}>{favorites.length}</span>
+                      {favorites.length > 0 && (
+                        <button onClick={()=>{if(confirm(t('favDeleteConfirm')))saveFavorites([])}}
+                          style={{background:'none',border:'none',color:'#ef4444',fontSize:10,cursor:'pointer',fontWeight:600}}>{t('favDeleteAll')}</button>
+                      )}
+                    </div>
+                  </div>
+                  {favorites.length === 0 ? (
+                    <div style={{padding:'16px 0',textAlign:'center',color:'#64748b',fontSize:12}}>{t('favEmpty')}</div>
+                  ) : (
+                    <div>
+                      {favorites.filter(f=>f.type==='city').length > 0 && (
+                        <div style={{marginBottom:6}}>
+                          <div style={{fontSize:10,color:'#94a3b8',letterSpacing:2,padding:'4px 0',textTransform:'uppercase'}}>{t('favCity')}</div>
+                          {favorites.filter(f=>f.type==='city').map((f,i)=>(
+                            <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
+                              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+                              onClick={()=>{const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>cs.map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f._koName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300)};setShowHamburger(false)}}>
+                              <span style={{fontSize:16}}>{f.emoji||'📍'}</span>
+                              <div style={{flex:1,minWidth:0}}>
+                                <div style={{fontSize:12,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{f.displayName||f.name}</div>
+                                <div style={{fontSize:10,color:'#94a3b8'}}>{f.countryName||''}</div>
+                              </div>
+                              <button onClick={e=>{e.stopPropagation();toggleFav(f)}} style={{background:'none',border:'none',color:'#fbbf24',fontSize:14,cursor:'pointer',padding:2}}>⭐</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {favorites.filter(f=>f.type==='spot').length > 0 && (
+                        <div style={{marginBottom:6}}>
+                          <div style={{fontSize:10,color:'#94a3b8',letterSpacing:2,padding:'4px 0',textTransform:'uppercase'}}>{t('favSpot')}</div>
+                          {favorites.filter(f=>f.type==='spot').map((f,i)=>(
+                            <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
+                              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+                              onClick={()=>{if(f.cityName){const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>cs.map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f.cityName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300);setTimeout(()=>{const spot=CITY_DATA[f.cityName]?.spots?.find(s=>s.name===f.name);if(spot)setSelectedSpot(spot)},1200)}};setShowHamburger(false)}}>
+                              <span style={{fontSize:13,width:24,height:24,borderRadius:6,background:'rgba(251,191,36,.15)',display:'flex',alignItems:'center',justifyContent:'center'}}>📍</span>
+                              <div style={{flex:1,minWidth:0}}>
+                                <div style={{fontSize:12,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{f.name}</div>
+                                <div style={{fontSize:10,color:'#94a3b8'}}>{f.cityDisplayName||f.cityName||''}</div>
+                              </div>
+                              <button onClick={e=>{e.stopPropagation();toggleFav(f)}} style={{background:'none',border:'none',color:'#fbbf24',fontSize:14,cursor:'pointer',padding:2}}>⭐</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {favorites.filter(f=>f.type==='hotspot'||f.type==='restaurant').length > 0 && (
+                        <div>
+                          <div style={{fontSize:10,color:'#94a3b8',letterSpacing:2,padding:'4px 0',textTransform:'uppercase'}}>{t('favHotspot')} · {t('favFood')}</div>
+                          {favorites.filter(f=>f.type==='hotspot'||f.type==='restaurant').map((f,i)=>(
+                            <a key={i} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(f.name)}&query_place_id=${f.place_id||''}`}
+                              target="_blank" rel="noopener noreferrer"
+                              style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,textDecoration:'none',transition:'background .15s'}}
+                              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                              <span style={{fontSize:13,width:24,height:24,borderRadius:6,background:f.type==='hotspot'?'rgba(99,102,241,.15)':'rgba(16,185,129,.15)',display:'flex',alignItems:'center',justifyContent:'center'}}>{f.type==='hotspot'?'🔥':'🍽️'}</span>
+                              <div style={{flex:1,minWidth:0}}>
+                                <div style={{fontSize:12,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{f.name}</div>
+                                <div style={{fontSize:10,color:'#94a3b8'}}>{f.rating?`★ ${f.rating}`:''} {f.cityDisplayName||''}</div>
+                              </div>
+                              <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav(f)}} style={{background:'none',border:'none',color:'#fbbf24',fontSize:14,cursor:'pointer',padding:2}}>⭐</button>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
           {/* Language Selector */}
           <div style={{position:'relative',marginLeft:8}}>
@@ -5260,141 +5362,6 @@ function App() {
               <span style={{fontSize:14}}>🤖</span>
               <span>{t('aiCourse')}</span>
             </button>
-          </div>
-          {/* Course Planner Button */}
-          {courseItems.length > 0 && (
-            <div style={{marginLeft:4}}>
-              <button onClick={openCoursePlanner}
-                style={{display:'flex',alignItems:'center',gap:5,background:showCoursePlanner?'rgba(59,130,246,.3)':'rgba(255,255,255,.12)',border:showCoursePlanner?'1px solid rgba(59,130,246,.5)':'1px solid rgba(255,255,255,.2)',borderRadius:20,padding:'5px 12px',cursor:'pointer',color:'white',fontSize:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s'}}
-                onMouseEnter={e=>e.currentTarget.style.background=showCoursePlanner?'rgba(59,130,246,.4)':'rgba(255,255,255,.22)'}
-                onMouseLeave={e=>e.currentTarget.style.background=showCoursePlanner?'rgba(59,130,246,.3)':'rgba(255,255,255,.12)'}>
-                <span style={{fontSize:14}}>🗺️</span>
-                <span style={{background:'#3b82f6',borderRadius:8,padding:'0px 6px',fontSize:10,fontWeight:800,lineHeight:'18px'}}>{courseItems.length}</span>
-              </button>
-            </div>
-          )}
-          {/* Hamburger Menu */}
-          <div style={{position:'relative',marginLeft:4}}>
-            <button onClick={()=>{setShowHamburger(v=>!v);setShowLangMenu(false);setShowFavorites(false)}}
-              style={{display:'flex',alignItems:'center',justifyContent:'center',width:36,height:36,background:showHamburger?'rgba(255,255,255,.25)':'rgba(255,255,255,.12)',border:'1px solid rgba(255,255,255,.2)',borderRadius:10,cursor:'pointer',color:'white',backdropFilter:'blur(8px)',transition:'all .2s'}}
-              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.22)'}
-              onMouseLeave={e=>e.currentTarget.style.background=showHamburger?'rgba(255,255,255,.25)':'rgba(255,255,255,.12)'}>
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4h14M2 9h14M2 14h14" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
-            </button>
-            {showHamburger && (
-              <div style={{position:'absolute',top:'calc(100% + 8px)',right:0,background:'rgba(15,23,42,.97)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,.15)',borderRadius:16,overflow:'hidden',zIndex:2001,boxShadow:'0 16px 48px rgba(0,0,0,.5)',width:340,maxHeight:'75vh',overflowY:'auto'}}>
-
-                {/* 저장된 코스 섹션 */}
-                <div style={{padding:'16px 16px 10px',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
-                    <span style={{fontSize:14,fontWeight:700,color:'white'}}>🗺️ {t('menuSavedCourses')}</span>
-                    <span style={{fontSize:11,color:'#64748b'}}>{savedCourses.length}</span>
-                  </div>
-                  {savedCourses.length === 0 ? (
-                    <div style={{padding:'16px 0',textAlign:'center',color:'#64748b',fontSize:12}}>{t('menuNoSaved')}</div>
-                  ) : (
-                    <div style={{display:'flex',flexDirection:'column',gap:6}}>
-                      {savedCourses.map((sc,i) => (
-                        <div key={sc.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.08)'}}>
-                          <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontSize:13,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{sc.name}</div>
-                            <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{sc.days.reduce((a,d)=>a+d.items.length,0)}{t('coursePlace')} · {new Date(sc.createdAt).toLocaleDateString()}</div>
-                          </div>
-                          <button onClick={()=>loadSavedCourse(sc)} style={{background:'#3b82f6',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
-                          <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* 즐겨찾기 섹션 */}
-                <div style={{padding:'12px 16px 14px'}}>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
-                    <span style={{fontSize:14,fontWeight:700,color:'white'}}>{t('favTitle')}</span>
-                    <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <span style={{fontSize:11,color:'#64748b'}}>{favorites.length}</span>
-                      {favorites.length > 0 && (
-                        <button onClick={()=>{if(confirm(t('favDeleteConfirm')))saveFavorites([])}}
-                          style={{background:'none',border:'none',color:'#ef4444',fontSize:10,cursor:'pointer',fontWeight:600}}>{t('favDeleteAll')}</button>
-                      )}
-                    </div>
-                  </div>
-                  {favorites.length === 0 ? (
-                    <div style={{padding:'16px 0',textAlign:'center',color:'#64748b',fontSize:12}}>{t('favEmpty')}</div>
-                  ) : (
-                    <div>
-                      {/* 도시 */}
-                      {favorites.filter(f=>f.type==='city').length > 0 && (
-                        <div style={{marginBottom:6}}>
-                          <div style={{fontSize:10,color:'#94a3b8',letterSpacing:2,padding:'4px 0',textTransform:'uppercase'}}>{t('favCity')}</div>
-                          {favorites.filter(f=>f.type==='city').map((f,i)=>(
-                            <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
-                              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'}
-                              onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-                              onClick={()=>{
-                                const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>cs.map(c=>({...c,countryEn:co})))
-                                const city=allC.find(c=>c.name===f._koName)
-                                if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300)}
-                                setShowHamburger(false)
-                              }}>
-                              <span style={{fontSize:16}}>{f.emoji||'📍'}</span>
-                              <div style={{flex:1,minWidth:0}}>
-                                <div style={{fontSize:12,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{f.displayName||f.name}</div>
-                                <div style={{fontSize:10,color:'#94a3b8'}}>{f.countryName||''}</div>
-                              </div>
-                              <button onClick={e=>{e.stopPropagation();toggleFav(f)}} style={{background:'none',border:'none',color:'#fbbf24',fontSize:14,cursor:'pointer',padding:2}}>⭐</button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {/* 관광지 */}
-                      {favorites.filter(f=>f.type==='spot').length > 0 && (
-                        <div style={{marginBottom:6}}>
-                          <div style={{fontSize:10,color:'#94a3b8',letterSpacing:2,padding:'4px 0',textTransform:'uppercase'}}>{t('favSpot')}</div>
-                          {favorites.filter(f=>f.type==='spot').map((f,i)=>(
-                            <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
-                              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'}
-                              onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-                              onClick={()=>{
-                                if(f.cityName){const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>cs.map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f.cityName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300);setTimeout(()=>{const spot=CITY_DATA[f.cityName]?.spots?.find(s=>s.name===f.name);if(spot)setSelectedSpot(spot)},1200)}}
-                                setShowHamburger(false)
-                              }}>
-                              <span style={{fontSize:13,width:24,height:24,borderRadius:6,background:'rgba(251,191,36,.15)',display:'flex',alignItems:'center',justifyContent:'center'}}>📍</span>
-                              <div style={{flex:1,minWidth:0}}>
-                                <div style={{fontSize:12,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{f.name}</div>
-                                <div style={{fontSize:10,color:'#94a3b8'}}>{f.cityDisplayName||f.cityName||''}</div>
-                              </div>
-                              <button onClick={e=>{e.stopPropagation();toggleFav(f)}} style={{background:'none',border:'none',color:'#fbbf24',fontSize:14,cursor:'pointer',padding:2}}>⭐</button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {/* 핫플/맛집 */}
-                      {favorites.filter(f=>f.type==='hotspot'||f.type==='restaurant').length > 0 && (
-                        <div>
-                          <div style={{fontSize:10,color:'#94a3b8',letterSpacing:2,padding:'4px 0',textTransform:'uppercase'}}>{t('favHotspot')} · {t('favFood')}</div>
-                          {favorites.filter(f=>f.type==='hotspot'||f.type==='restaurant').map((f,i)=>(
-                            <a key={i} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(f.name)}&query_place_id=${f.place_id||''}`}
-                              target="_blank" rel="noopener noreferrer"
-                              style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,textDecoration:'none',transition:'background .15s'}}
-                              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'}
-                              onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                              <span style={{fontSize:13,width:24,height:24,borderRadius:6,background:f.type==='hotspot'?'rgba(99,102,241,.15)':'rgba(16,185,129,.15)',display:'flex',alignItems:'center',justifyContent:'center'}}>{f.type==='hotspot'?'🔥':'🍽️'}</span>
-                              <div style={{flex:1,minWidth:0}}>
-                                <div style={{fontSize:12,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{f.name}</div>
-                                <div style={{fontSize:10,color:'#94a3b8'}}>{f.rating?`★ ${f.rating}`:''} {f.cityDisplayName||''}</div>
-                              </div>
-                              <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav(f)}} style={{background:'none',border:'none',color:'#fbbf24',fontSize:14,cursor:'pointer',padding:2}}>⭐</button>
-                            </a>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
           <div style={{marginLeft:'auto',position:'relative'}}>
             <span style={{position:'absolute',left:11,top:'50%',transform:'translateY(-50%)',fontSize:13,color:'#94a3b8',pointerEvents:'none'}}>🔍</span>
