@@ -1238,6 +1238,8 @@ const T = {
   courseSave:{ko:'코스 저장하기',en:'Save Course',ja:'コース保存',zh:'保存路线'},
   courseSaved:{ko:'✅ 코스가 저장되었습니다!',en:'✅ Course saved!',ja:'✅ コースを保存しました！',zh:'✅ 路线已保存！'},
   courseLoad:{ko:'불러오기',en:'Load',ja:'読込',zh:'加载'},
+  courseTypeManual:{ko:'수동',en:'Manual',ja:'手動',zh:'手动'},
+  courseTypeAi:{ko:'AI',en:'AI',ja:'AI',zh:'AI'},
 }
 
 // 관광지 유형 번역
@@ -3858,11 +3860,12 @@ function App() {
   const [savedCourses, setSavedCourses] = useState(() => {
     try { return JSON.parse(localStorage.getItem('atlas_saved_courses') || '[]') } catch { return [] }
   })
-  const saveCourseToList = () => {
+  const saveCourseToList = (courseType = 'manual') => {
     if (courseDays.length === 0 || courseDays.every(d => d.items.length === 0)) return
     const name = courseDays[0]?.items?.[0]?.cityDisplayName || 'My Course'
     const saved = {
       id: Date.now(), name: `${name} ${courseDays.length}${lang==='ko'?'일':'D'}`,
+      type: courseType,
       days: courseDays, transport: courseTransport, tripStart: courseTripStart,
       createdAt: Date.now()
     }
@@ -4081,12 +4084,23 @@ function App() {
         days.push({ items: ordered })
       }
 
-      // 6) 플래너에 로드
+      // 6) 플래너에 로드 + 자동 저장
       saveCourseDays(days)
       setCourseTransport(aiTransport)
       setActiveDayTab(0)
       setShowAiModal(false)
       setShowCoursePlanner(true)
+      // AI 코스 자동 저장
+      setTimeout(() => {
+        const cityName2 = getCityName(cityKey)
+        const aiSaved = {
+          id: Date.now(), name: `${cityName2} ${days.length}${lang==='ko'?'일':'D'}`,
+          type: 'ai',
+          days, transport: aiTransport, tripStart: courseTripStart,
+          createdAt: Date.now()
+        }
+        setSavedCourses(prev => { const nl = [aiSaved, ...prev]; localStorage.setItem('atlas_saved_courses', JSON.stringify(nl)); return nl })
+      }, 100)
       setAiGenerating(false)
     }, 600) // 약간의 딜레이로 생성 중 느낌
   }
@@ -5242,6 +5256,11 @@ function App() {
                     <div style={{display:'flex',flexDirection:'column',gap:6}}>
                       {savedCourses.map((sc) => (
                         <div key={sc.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.08)'}}>
+                          <span style={{fontSize:9,padding:'2px 6px',borderRadius:4,fontWeight:700,flexShrink:0,
+                            background:sc.type==='ai'?'rgba(139,92,246,.2)':'rgba(59,130,246,.2)',
+                            color:sc.type==='ai'?'#a78bfa':'#93c5fd',
+                            border:sc.type==='ai'?'1px solid rgba(139,92,246,.3)':'1px solid rgba(59,130,246,.3)'
+                          }}>{sc.type==='ai'?t('courseTypeAi'):t('courseTypeManual')}</span>
                           <div style={{flex:1,minWidth:0}}>
                             <div style={{fontSize:13,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{sc.name}</div>
                             <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{sc.days.reduce((a,d)=>a+d.items.length,0)}{t('coursePlace')} · {sc.days.length}{t('courseDay')}</div>
