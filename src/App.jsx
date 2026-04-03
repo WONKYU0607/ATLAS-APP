@@ -1456,6 +1456,30 @@ const translateTimeDiff = (v, lang) => {
   return v
 }
 // 관광지 openTime/price 한국어 패턴 번역
+const translatePopulation = (v, lang) => {
+  if (lang === 'ko' || !v) return v
+  // Parse Korean number: "14억 2,600만" → number
+  let total = 0
+  const eok = v.match(/([\d,]+)억/)
+  const man = v.match(/([\d,]+)만/)
+  if (eok) total += parseFloat(eok[1].replace(/,/g, '')) * 100000000
+  if (man) total += parseFloat(man[1].replace(/,/g, '')) * 10000
+  if (total === 0) return v
+  if (lang === 'ja') {
+    // Japanese uses same 億/万 system
+    if (total >= 100000000) return `${(total/100000000).toFixed(total%100000000===0?0:1)}億人`
+    return `${Math.round(total/10000)}万人`
+  }
+  if (lang === 'zh') {
+    if (total >= 100000000) return `${(total/100000000).toFixed(total%100000000===0?0:1)}亿`
+    return `${Math.round(total/10000)}万`
+  }
+  // English
+  if (total >= 1000000000) return `${(total/1000000000).toFixed(total%1000000000<50000000?1:2)}B`
+  if (total >= 1000000) return `${(total/1000000).toFixed(total%1000000<50000?0:1)}M`
+  if (total >= 1000) return `${Math.round(total/1000)}K`
+  return total.toLocaleString()
+}
 const KO_WORD_MAP = {
   en:{무료:'Free',시간:'Hours',일몰:'sunset',일출:'sunrise',성인:'Adult',어린이:'Child',학생:'Student',
   '계절별':'seasonal','시즌별 상이':'varies','야외':'outdoor','입산':'hiking','투어':'tour',
@@ -1686,6 +1710,7 @@ const translateCountryInfo = (info, cName, lang) => {
   return {
     ...info,
     capital: getField(0) || info.capital,
+    population: translatePopulation(info.population, lang),
     lang: translateLangNames(info.lang, lang),
     currency: translateCurrency(info.currency, lang),
     tagline: getField(1) || info.tagline,
@@ -4400,8 +4425,8 @@ function App() {
         if (data.routes?.[0]?.legs?.[0]) {
           const leg = data.routes[0].legs[0]
           results[key] = { distance: leg.distance.text, duration: leg.duration.text, durationSec: leg.duration.value }
-        } else { results[key] = { distance: '—', duration: t('courseNoRoute'), durationSec: 0 } }
-      } catch { results[key] = { distance: '—', duration: '—', durationSec: 0 } }
+        } else { results[key] = { distance: '—', duration: null, durationSec: 0, noRoute: true } }
+      } catch { results[key] = { distance: '—', duration: null, durationSec: 0, noRoute: true } }
     }))
     setRouteCache(prev => ({ ...prev, ...results }))
     setLoadingRoutes(false)
@@ -4419,6 +4444,9 @@ function App() {
       if (hasUncached) fetchAllRoutes(courseDays, courseTransport)
     }
   }, [showCoursePlanner, courseDays, courseTransport])
+
+  // 언어 변경 시 경로 캐시 초기화 (Directions API 응답 언어가 다름)
+  useEffect(() => { setRouteCache({}) }, [lang])
 
   // 즐겨찾기 (localStorage 저장)
   const [favorites, setFavorites] = useState(() => {
@@ -4478,6 +4506,19 @@ function App() {
     }
     return null
   }
+
+  // 코스 아이템 동적 번역 (저장 시점 언어와 현재 언어가 다를 때)
+  const getCourseItemName = (item) => {
+    if (item.source === 'city') return getCityName(item.name || item.cityName)
+    if (item.source === 'spot') {
+      const tr = trSpot(item.cityName, item.name)
+      if (tr?.name) return tr.name
+      if (item.wikiTitle && lang !== 'ko') return item.wikiTitle
+    }
+    // hotspot/restaurant은 Google Places에서 온 이름 → 원래 언어 유지
+    return item.displayName || item.name
+  }
+  const getCourseItemCity = (item) => getCityName(item.cityName || item.name)
 
 
   // Load world GeoJSON (110m 경량 + 폴리곤 구멍 제거 → 빠른 렌더링, 빈 공간 없음)
@@ -5468,7 +5509,10 @@ function App() {
                             border:sc.type==='ai'?'1px solid rgba(139,92,246,.3)':'1px solid rgba(59,130,246,.3)'
                           }}>{sc.type==='ai'?t('courseTypeAi'):t('courseTypeManual')}</span>
                           <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontSize:13,fontWeight:600,color:'white',lineHeight:1.4}}>{sc.name}</div>
+                            <div style={{fontSize:13,fontWeight:600,color:'white',lineHeight:1.4}}>{(() => {
+                              const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>getCityName(it.cityName||it.name))).filter(Boolean))]
+                              return cities.length > 0 ? `${cities.join(' · ')} ${(sc.days||[]).length}${lang==='ko'?'일':'D'}` : sc.name
+                            })()}</div>
                             <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
                           <button onClick={()=>loadSavedCourse(sc)} style={{background:'#3b82f6',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
@@ -6521,9 +6565,9 @@ function App() {
                           <span style={{fontSize:20,flexShrink:0}}>{item.emoji||'📍'}</span>
                           {/* 정보 */}
                           <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontSize:13.5,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.displayName}</div>
+                            <div style={{fontSize:13.5,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCourseItemName(item)}</div>
                             <div style={{display:'flex',alignItems:'center',gap:6,marginTop:3}}>
-                              <span style={{fontSize:10,color:'#94a3b8'}}>{item.cityDisplayName}</span>
+                              <span style={{fontSize:10,color:'#94a3b8'}}>{getCourseItemCity(item)}</span>
                               <span style={{fontSize:9,padding:'1px 6px',borderRadius:4,background:item.source==='spot'?'#dbeafe':item.source==='hotspot'?'#fef3c7':'#dcfce7',color:item.source==='spot'?'#2563eb':item.source==='hotspot'?'#d97706':'#16a34a',fontWeight:600}}>{item.source==='spot'?t('courseSpot'):item.source==='hotspot'?t('courseHotspot'):t('courseRestaurant')}</span>
                               {item.rating && <span style={{fontSize:10,color:'#f59e0b'}}>★{item.rating}</span>}
                             </div>
@@ -6550,7 +6594,7 @@ function App() {
                             </div>
                             {route ? (
                               <div style={{display:'flex',alignItems:'center',gap:8,fontSize:11,color:'#64748b',background:'#f8fafc',borderRadius:8,padding:'4px 12px',border:'1px solid #f1f5f9'}}>
-                                <span style={{fontWeight:700,color:'#3b82f6'}}>{route.duration}</span>
+                                <span style={{fontWeight:700,color:'#3b82f6'}}>{route.noRoute ? t('courseNoRoute') : route.duration}</span>
                                 <span style={{color:'#cbd5e1'}}>·</span>
                                 <span>{route.distance}</span>
                               </div>
