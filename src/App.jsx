@@ -4094,6 +4094,7 @@ function App() {
     setCourseTransport(saved.transport || 'transit')
     if (saved.tripStart) saveTripStart(saved.tripStart)
     setActiveDayTab(0); setShowCoursePlanner(true); setShowHamburger(false)
+    setCourseSource(saved.type || 'manual')
   }
   const deleteSavedCourse = (id) => {
     const newList = savedCourses.filter(c => c.id !== id)
@@ -4153,6 +4154,7 @@ function App() {
   const [aiHours, setAiHours] = useState(4)
   const [aiCitySearch, setAiCitySearch] = useState('')
   const [aiGenerating, setAiGenerating] = useState(false)
+  const [courseSource, setCourseSource] = useState('manual') // 'manual' | 'ai'
 
   const allCitiesFlat = Object.entries(COUNTRY_CITIES).flatMap(([co, cs]) =>
     cs.map(c => ({ ...c, countryEn: co, countryKo: getCountryDisplayName(co, lang) }))
@@ -4311,6 +4313,7 @@ function App() {
       setActiveDayTab(0)
       setShowAiModal(false)
       setShowCoursePlanner(true)
+      setCourseSource('ai')
       // AI 코스 자동 저장
       setTimeout(() => {
         const cityName2 = getCityName(cityKey)
@@ -4353,6 +4356,7 @@ function App() {
     }
     // 플래너 자동 표시
     setShowCoursePlanner(true)
+    setCourseSource('manual')
   }
   const removeFromCourse = (idx) => {
     const item = courseItems[idx]
@@ -5493,21 +5497,42 @@ function App() {
               <div style={{position:'absolute',top:'calc(100% + 10px)',left:0,background:'rgba(15,23,42,.97)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,.15)',borderRadius:16,overflow:'hidden',zIndex:2001,boxShadow:'0 16px 48px rgba(0,0,0,.5)',width:340,maxHeight:'75vh',overflowY:'auto'}}>
                 {/* 저장된 코스 */}
                 <div style={{padding:'16px 16px 10px',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
-                    <span style={{fontSize:14,fontWeight:700,color:'white'}}>🗺️ {t('menuSavedCourses')}</span>
-                    <span style={{fontSize:11,color:'#64748b'}}>{savedCourses.length}</span>
+                  {/* AI 코스 */}
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+                    <span style={{fontSize:13,fontWeight:700,color:'#a78bfa'}}>🤖 AI {t('menuSavedCourses')}</span>
+                    <span style={{fontSize:11,color:'#64748b'}}>{savedCourses.filter(sc=>sc.type==='ai').length}</span>
                   </div>
-                  {savedCourses.length === 0 ? (
-                    <div style={{padding:'16px 0',textAlign:'center',color:'#64748b',fontSize:12}}>{t('menuNoSaved')}</div>
+                  {savedCourses.filter(sc=>sc.type==='ai').length === 0 ? (
+                    <div style={{padding:'10px 0',textAlign:'center',color:'#64748b',fontSize:11}}>{t('menuNoSaved')}</div>
                   ) : (
-                    <div style={{display:'flex',flexDirection:'column',gap:6}}>
-                      {savedCourses.map((sc) => (
-                        <div key={sc.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.08)'}}>
-                          <span style={{fontSize:9,padding:'2px 6px',borderRadius:4,fontWeight:700,flexShrink:0,
-                            background:sc.type==='ai'?'rgba(139,92,246,.2)':'rgba(59,130,246,.2)',
-                            color:sc.type==='ai'?'#a78bfa':'#93c5fd',
-                            border:sc.type==='ai'?'1px solid rgba(139,92,246,.3)':'1px solid rgba(59,130,246,.3)'
-                          }}>{sc.type==='ai'?t('courseTypeAi'):t('courseTypeManual')}</span>
+                    <div style={{display:'flex',flexDirection:'column',gap:5,marginBottom:6}}>
+                      {savedCourses.filter(sc=>sc.type==='ai').map((sc) => (
+                        <div key={sc.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,background:'rgba(139,92,246,.08)',border:'1px solid rgba(139,92,246,.2)'}}>
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{fontSize:13,fontWeight:600,color:'white',lineHeight:1.4}}>{(() => {
+                              const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>getCityName(it.cityName||it.name))).filter(Boolean))]
+                              return cities.length > 0 ? `${cities.join(' · ')} ${(sc.days||[]).length}${lang==='ko'?'일':'D'}` : sc.name
+                            })()}</div>
+                            <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
+                          </div>
+                          <button onClick={()=>loadSavedCourse(sc)} style={{background:'#7c3aed',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
+                          <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 수동 코스 */}
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8,marginTop:14}}>
+                    <span style={{fontSize:13,fontWeight:700,color:'#93c5fd'}}>📝 {t('courseTypeManual')} {t('menuSavedCourses')}</span>
+                    <span style={{fontSize:11,color:'#64748b'}}>{savedCourses.filter(sc=>sc.type!=='ai').length}</span>
+                  </div>
+                  {savedCourses.filter(sc=>sc.type!=='ai').length === 0 ? (
+                    <div style={{padding:'10px 0',textAlign:'center',color:'#64748b',fontSize:11}}>{t('menuNoSaved')}</div>
+                  ) : (
+                    <div style={{display:'flex',flexDirection:'column',gap:5}}>
+                      {savedCourses.filter(sc=>sc.type!=='ai').map((sc) => (
+                        <div key={sc.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,background:'rgba(59,130,246,.08)',border:'1px solid rgba(59,130,246,.2)'}}>
                           <div style={{flex:1,minWidth:0}}>
                             <div style={{fontSize:13,fontWeight:600,color:'white',lineHeight:1.4}}>{(() => {
                               const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>getCityName(it.cityName||it.name))).filter(Boolean))]
@@ -6309,7 +6334,7 @@ function App() {
                   <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',background:'#eff6ff',border:'1.5px solid #93c5fd',borderRadius:10}}>
                     <span style={{fontSize:18}}>{aiCity.emoji||'📍'}</span>
                     <div style={{flex:1}}>
-                      <span style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>{aiCity.name}</span>
+                      <span style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>{getCityName(aiCity.name)}</span>
                       <span style={{fontSize:11,color:'#64748b',marginLeft:6}}>{aiCity.countryKo}</span>
                     </div>
                     <button onClick={()=>{setAiCity(null);setAiCitySearch('')}} style={{background:'none',border:'none',color:'#94a3b8',cursor:'pointer',fontSize:14}}>✕</button>
@@ -6413,7 +6438,7 @@ function App() {
               {/* 미리보기 요약 */}
               {aiCity && (
                 <div style={{padding:'10px 14px',background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,fontSize:12,color:'#0369a1',lineHeight:1.7}}>
-                  💡 <strong>{aiCity.name}</strong>{t('aiSummaryIn')} <strong>{aiDays}{t('aiDayUnit')}</strong>{t('aiSummaryDuring')} <strong>{aiTheme.map(k=>({종합:t('aiThemeAll'),역사:t('aiThemeHistory'),자연:t('aiThemeNature'),음식:t('aiThemeFood'),핫플:t('aiThemeHotspot'),맛집:t('aiThemeRestaurant')}[k]||k)).join(' + ')}</strong>,
+                  💡 <strong>{getCityName(aiCity.name)}</strong>{t('aiSummaryIn')} <strong>{aiDays}{t('aiDayUnit')}</strong>{t('aiSummaryDuring')} <strong>{aiTheme.map(k=>({종합:t('aiThemeAll'),역사:t('aiThemeHistory'),자연:t('aiThemeNature'),음식:t('aiThemeFood'),핫플:t('aiThemeHotspot'),맛집:t('aiThemeRestaurant')}[k]||k)).join(' + ')}</strong>,
                   {t(aiHours<=1?'aiPreview1h':aiHours<=2?'aiPreview2h':aiHours<=4?'aiPreview4h':aiHours<=6?'aiPreview6h':'aiPreview8h')} {t('aiPreviewText')}
                   {courseTripStart && <><br/>📅 {formatDate(getDayDate(0))} ~ {formatDate(getDayDate(aiDays-1))}</>}
                 </div>
@@ -6615,9 +6640,15 @@ function App() {
 
           {/* 플래너 푸터 */}
           <div style={{padding:'14px 16px',borderTop:'1px solid #e2e8f0',background:'#fafbfc',flexShrink:0,display:'flex',gap:8}}>
-            <button onClick={()=>{const s=saveCourseToList();if(s)alert(t('courseSaved'));setShowCoursePlanner(false)}} style={{flex:1,padding:'11px',background:'linear-gradient(135deg,#3b82f6,#6366f1)',border:'none',borderRadius:10,fontSize:13,fontWeight:700,color:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(59,130,246,.3)'}}>
-              💾 {t('courseSave')}
-            </button>
+            {courseSource === 'ai' ? (
+              <div style={{flex:1,padding:'11px',background:'linear-gradient(135deg,#7c3aed22,#6366f122)',border:'1.5px solid #a78bfa',borderRadius:10,fontSize:13,fontWeight:700,color:'#7c3aed',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                ✅ {t('courseTypeAi')} {t('courseSaved')}
+              </div>
+            ) : (
+              <button onClick={()=>{const s=saveCourseToList('manual');if(s)alert(t('courseSaved'));setShowCoursePlanner(false)}} style={{flex:1,padding:'11px',background:'linear-gradient(135deg,#3b82f6,#6366f1)',border:'none',borderRadius:10,fontSize:13,fontWeight:700,color:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(59,130,246,.3)'}}>
+                💾 {t('courseSave')}
+              </button>
+            )}
             <button onClick={()=>setShowCoursePlanner(false)} style={{padding:'11px 20px',background:'#f1f5f9',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,fontWeight:600,color:'#64748b',cursor:'pointer'}}>
               ✕
             </button>
