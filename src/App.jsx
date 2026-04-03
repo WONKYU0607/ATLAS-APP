@@ -4500,13 +4500,23 @@ function App() {
   }
   const trDesc = (cityKey) => trCity(cityKey)?.description || null
   const trSpot = (cityKey, spotName) => {
-    const manual = trCity(cityKey)?.spots?.[spotName]
-    if (manual) return manual
-    // wikiTitle fallback for names
+    const cityTr = trCity(cityKey)
+    if (cityTr?.spots) {
+      // 1차: 정확한 키 매칭
+      const exact = cityTr.spots[spotName]
+      if (exact) return exact
+      // 2차: 퍼지 매칭 (CITY_DATA_I18N 키가 더 길거나 짧은 경우 대응)
+      // 예: CITY_DATA "센소지" ↔ CITY_DATA_I18N "센소지(아사쿠사)"
+      const fuzzyKey = Object.keys(cityTr.spots).find(
+        k => k.startsWith(spotName) || spotName.startsWith(k)
+      )
+      if (fuzzyKey) return cityTr.spots[fuzzyKey]
+    }
+    // wikiTitle fallback for name (desc는 null → 한국어 노출 방지)
     if (lang !== 'ko') {
       const cityData2 = CITY_DATA[cityKey]
       const spot = cityData2?.spots?.find(s => s.name === spotName)
-      if (spot?.wikiTitle) return { name: spot.wikiTitle, desc: null }
+      if (spot?.wikiTitle) return { name: spot.wikiTitle, desc: '' }
     }
     return null
   }
@@ -6224,7 +6234,7 @@ function App() {
 
                               {selectedSpot?.name===spot.name && (
                                 <div style={{padding:'12px 14px',borderTop:`1px solid ${(selectedCity?.color||'#3b82f6')}22`,background:`${selectedCity?.color||'#3b82f6'}07`}}>
-                                  <p style={{fontSize:12.5,color:'#475569',lineHeight:1.75,marginBottom:10}}>{trSpot(selectedCity?._koName||selectedCity?.name,spot.name)?.desc || spot.desc}</p>
+                                  <p style={{fontSize:12.5,color:'#475569',lineHeight:1.75,marginBottom:10}}>{trSpot(selectedCity?._koName||selectedCity?.name,spot.name)?.desc || (lang === 'ko' ? spot.desc : '')}</p>
                                   {/* 참고 정보 + Google 최신 정보 */}
                                   {(spot.openTime || spot.price) && (
                                     <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8,alignItems:'center'}}>
