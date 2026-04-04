@@ -1108,7 +1108,7 @@ const T = {
   aiPreview6h:{ko:' 6시간 깊이 있게',en:' 6h in-depth tour',ja:' 6時間じっくり巡る',zh:' 6小时深度游'},
   aiPreview8h:{ko:' 8시간 하루 종일',en:' 8h full day tour',ja:' 8時間終日ツアー',zh:' 8小时全天游'},
   aiTransport:{ko:'이동 수단',en:'Transport',ja:'移動手段',zh:'交通方式'},
-  aiGenerate:{ko:'🤖 코스 자동 생성',en:'🤖 Generate Course',ja:'🤖 コース自動生成',zh:'🤖 自动生成路线'},
+  aiGenerate:{ko:'코스 자동 생성',en:'Generate Course',ja:'コース自動生成',zh:'自动生成路线'},
   aiGenerating:{ko:'코스 생성 중...',en:'Generating...',ja:'コース生成中...',zh:'正在生成路线...'},
   aiPreviewText:{ko:'코스를 생성합니다.',en:'will be generated.',ja:'コースを生成します。',zh:'的路线。'},
   // ── 사이드 패널 번역 ──
@@ -5820,7 +5820,7 @@ function App() {
                               target="_blank" rel="noopener noreferrer"
                               style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,textDecoration:'none',transition:'background .15s'}}
                               onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                              <span style={{fontSize:13,width:24,height:24,borderRadius:6,background:f.type==='hotspot'?'rgba(99,102,241,.15)':'rgba(16,185,129,.15)',display:'flex',alignItems:'center',justifyContent:'center'}}>{f.type==='hotspot'?'🔥':'🍽️'}</span>
+                              <span style={{fontSize:10,width:24,height:24,borderRadius:6,background:f.type==='hotspot'?'#f5f0ea':'#eef5ea',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,color:f.type==='hotspot'?'#c8856a':'#6fa870'}}>{f.type==='hotspot'?'H':'F'}</span>
                               <div style={{flex:1,minWidth:0}}>
                                 <div style={{fontSize:12,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{f.name}</div>
                                 <div style={{fontSize:10,color:'#94a3b8'}}>{f.rating?`★ ${f.rating}`:''} {f.cityDisplayName||''}</div>
@@ -6079,40 +6079,36 @@ function App() {
             <div style={{position:'sticky',top:0,zIndex:10,padding:'16px 16px 12px',background:'linear-gradient(white 87%,transparent)',borderBottom:'1px solid #f1f5f9'}}>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                 <div style={{display:'flex',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:18}}>{sidePanel === 'hotspots' ? '🔥' : foodCategory === 'cafe' ? '☕' : foodCategory === 'bar' ? '🍻' : '🍽️'}</span>
-                  <span style={{fontSize:16,fontWeight:800,color:'#334155'}}>
+                  <span style={{fontSize:16,fontWeight:700,color:'#1a1714'}}>
                     {sidePanel === 'hotspots' ? t('hotspots') : foodCategory === 'cafe' ? t('foodCafe') : foodCategory === 'bar' ? t('foodBar') : t('courseRestaurant')}
                   </span>
-                  <span style={{fontSize:12,color:'#94a3b8',fontWeight:500}}>
+                  <span style={{fontSize:11,color:'#b0a89e',fontWeight:400}}>
                     {sidePanel === 'hotspots' ? hotspots.length : restaurants.length}{t('coursePlace')}
                   </span>
                 </div>
                 <button onClick={()=>setSidePanel(null)}
-                  style={{background:'#f1f5f9',border:'none',color:'#64748b',width:30,height:30,borderRadius:8,cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center'}}
-                  onMouseEnter={e=>e.currentTarget.style.background='#e2e8f0'}
-                  onMouseLeave={e=>e.currentTarget.style.background='#f1f5f9'}
+                  style={{background:'#f5f0ea',border:'none',color:'#b0a89e',width:30,height:30,borderRadius:8,cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
+                  onMouseEnter={e=>e.currentTarget.style.background='#ede7de'}
+                  onMouseLeave={e=>e.currentTarget.style.background='#f5f0ea'}
                 >✕</button>
               </div>
               {/* 맛집 카테고리 탭 */}
               {sidePanel === 'restaurants' && (
-                <div style={{display:'flex',gap:6,marginTop:10}}>
+                <div style={{display:'flex',gap:4,marginTop:10,background:'#f5f0ea',borderRadius:8,padding:3}}>
                   {[
-                    {key:'restaurant', label:t('foodRestaurant'), emoji:'🍴'},
-                    {key:'cafe', label:t('foodCafe'), emoji:'☕'},
-                    {key:'bar', label:t('foodBar'), emoji:'🍻'},
+                    {key:'restaurant', label:t('foodRestaurant')},
+                    {key:'cafe', label:t('foodCafe')},
+                    {key:'bar', label:t('foodBar')},
                   ].map(cat => (
                     <button key={cat.key}
                       onClick={() => setFoodCategory(cat.key)}
                       style={{
-                        flex:1,padding:'7px 0',fontSize:12,fontWeight:foodCategory===cat.key?700:500,
-                        background:foodCategory===cat.key?'#1e293b':'#f1f5f9',
-                        color:foodCategory===cat.key?'white':'#64748b',
-                        border:'none',borderRadius:8,cursor:'pointer',
-                        transition:'all .2s',display:'flex',alignItems:'center',justifyContent:'center',gap:4
+                        flex:1,padding:'6px 0',fontSize:11,fontWeight:foodCategory===cat.key?600:400,
+                        background:foodCategory===cat.key?'#fff':'none',
+                        color:foodCategory===cat.key?'#1a1714':'#b0a89e',
+                        border:'none',borderRadius:6,cursor:'pointer',transition:'all .15s'
                       }}
-                      onMouseEnter={e=>{if(foodCategory!==cat.key)e.currentTarget.style.background='#e2e8f0'}}
-                      onMouseLeave={e=>{if(foodCategory!==cat.key)e.currentTarget.style.background='#f1f5f9'}}
-                    >{cat.emoji} {cat.label}</button>
+                    >{cat.label}</button>
                   ))}
                 </div>
               )}
@@ -6145,49 +6141,49 @@ function App() {
                       }}>
                       <div style={{display:'flex',gap:10,padding:10,alignItems:'center'}}>
                         {place.photos && place.photos.length > 0 ? (
-                          <img 
+                          <img
                             src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photo_reference=${place.photos[0].photo_reference}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`}
                             alt={place.name}
-                            style={{width:70,height:70,borderRadius:8,objectFit:'cover',flexShrink:0}}
+                            style={{width:66,height:66,borderRadius:8,objectFit:'cover',flexShrink:0}}
                           />
                         ) : (
-                          <div style={{width:70,height:70,borderRadius:8,background:'linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,flexShrink:0}}>
-                            {sidePanel === 'hotspots' ? '📍' : foodCategory === 'cafe' ? '☕' : foodCategory === 'bar' ? '🍻' : '🍽️'}
+                          <div style={{width:66,height:66,borderRadius:8,background:'#f5f0ea',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,color:'#c8b8a8',flexShrink:0,letterSpacing:'.2px'}}>
+                            {sidePanel === 'hotspots' ? 'Place' : foodCategory === 'cafe' ? 'Café' : foodCategory === 'bar' ? 'Bar' : 'Food'}
                           </div>
                         )}
                         <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontSize:13,fontWeight:700,color:'#0f172a',marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                          <div style={{fontSize:13,fontWeight:600,color:'#1a1714',marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
                             {place.name}
                           </div>
                           {place.rating && (
                             <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:3}}>
-                              <span style={{fontSize:11,color:'#334155',fontWeight:700}}>★ {place.rating}</span>
+                              <span style={{fontSize:11,color:'#c8a870',fontWeight:600}}>★ {place.rating}</span>
                               {place.user_ratings_total && (
-                                <span style={{fontSize:9,color:'#94a3b8'}}>({place.user_ratings_total.toLocaleString()})</span>
+                                <span style={{fontSize:9,color:'#c8b8a8'}}>({place.user_ratings_total.toLocaleString()})</span>
                               )}
                             </div>
                           )}
                           {sidePanel === 'restaurants' && place.price_level && (
-                            <div style={{fontSize:10,color:'#64748b',marginBottom:2}}>{'💰'.repeat(place.price_level)}</div>
+                            <div style={{fontSize:10,color:'#c8b8a8',marginBottom:2}}>{'$'.repeat(place.price_level)}</div>
                           )}
                           {place.vicinity && (
-                            <div style={{fontSize:10,color:'#64748b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                              📍 {place.vicinity}
+                            <div style={{fontSize:10,color:'#b0a89e',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                              {place.vicinity}
                             </div>
                           )}
                           {place.opening_hours && (
-                            <div style={{fontSize:9,color: place.opening_hours.open_now ? '#10b981' : '#ef4444',fontWeight:600,marginTop:3}}>
+                            <div style={{fontSize:9,color: place.opening_hours.open_now ? '#6fa870' : '#c07060',fontWeight:600,marginTop:3}}>
                               {place.opening_hours.open_now ? t('openNow') : t('closedNow')}
                             </div>
                           )}
                         </div>
                         <div style={{display:'flex',flexDirection:'column',gap:4,flexShrink:0}}>
                           <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:sidePanel==='hotspots'?'hotspot':'restaurant',name:place.name,displayName:place.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:place.rating,place_id:place.place_id,vicinity:place.vicinity,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:sidePanel==='hotspots'?'📍':foodCategory==='cafe'?'☕':foodCategory==='bar'?'🍻':'🍽️',photo_ref:place.photos?.[0]?.photo_reference||null})}}
-                            style={{background:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'#3b82f6':'#f8fafc',border:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'1.5px solid #3b82f6':'1.5px solid #e2e8f0',color:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'white':'#cbd5e1',width:28,height:28,borderRadius:6,cursor:'pointer',fontSize:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
+                            style={{background:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'#c8856a':'#f5f0ea',border:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'none':'1px solid #e0d9d0',color:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'white':'#c8b8a8',width:28,height:28,borderRadius:6,cursor:'pointer',fontSize:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
                             title={t("courseAddToTrip")}>{isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'✓':'＋'}</button>
                           <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav({type:sidePanel==='hotspots'?'hotspot':'restaurant',name:place.name,place_id:place.place_id,rating:place.rating,user_ratings_total:place.user_ratings_total,vicinity:place.vicinity,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name)})}}
-                            style={{background:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#fef3c7':'#f8fafc',border:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'1.5px solid #fbbf24':'1.5px solid #e2e8f0',color:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#f59e0b':'#cbd5e1',width:28,height:28,borderRadius:6,cursor:'pointer',fontSize:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
-                            title={t("favToggle")}>{isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'⭐':'☆'}</button>
+                            style={{background:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#fef3c7':'#f5f0ea',border:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'1px solid #f0c040':'1px solid #e0d9d0',color:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#c8a020':'#c8b8a8',width:28,height:28,borderRadius:6,cursor:'pointer',fontSize:12,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
+                            title={t("favToggle")}>{isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'★':'☆'}</button>
                         </div>
                       </div>
                     </a>
@@ -6221,7 +6217,7 @@ function App() {
                   title={t("courseAddToTrip")}>{isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'✓':'＋'}</button>
                 <button onClick={()=>toggleFav({type:'city',name:selectedCity?._koName||selectedCity?.name,_koName:selectedCity?._koName||selectedCity?.name,displayName:getCityName(selectedCity?._koName||selectedCity?.name),emoji:selectedCity?.emoji,color:selectedCity?.color,countryEn:selectedCity?.countryEn,countryName:countryKo,lat:selectedCity?.lat,lng:selectedCity?.lng})}
                   style={{background:isFav('city',selectedCity?._koName||selectedCity?.name)?'#fef3c7':'#f1f5f9',border:isFav('city',selectedCity?._koName||selectedCity?.name)?'1.5px solid #fbbf24':'1.5px solid #e2e8f0',color:isFav('city',selectedCity?._koName||selectedCity?.name)?'#f59e0b':'#94a3b8',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
-                  title={t("favToggle")}>{isFav('city',selectedCity?._koName||selectedCity?.name)?'⭐':'☆'}</button>
+                  title={t("favToggle")}>{isFav('city',selectedCity?._koName||selectedCity?.name)?'★':'☆'}</button>
                 <button onClick={closePanel}
                   style={{background:'#f1f5f9',border:'1.5px solid #e2e8f0',color:'#64748b',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
                   onMouseEnter={e=>e.currentTarget.style.background='#e2e8f0'}
@@ -6423,7 +6419,7 @@ function App() {
                                 {selectedSpot?.name!==spot.name && <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 55%)'}}/>}
                                 <button onClick={e=>{e.stopPropagation();toggleFav({type:'spot',name:spot.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),wikiTitle:spot.wikiTitle,spotType:spot.type,rating:spot.rating})}}
                                   style={{position:'absolute',top:8,right:8,width:30,height:30,borderRadius:8,background:isFav('spot',spot.name)?'rgba(251,191,36,.9)':'rgba(0,0,0,.4)',border:'none',color:isFav('spot',spot.name)?'white':'rgba(255,255,255,.7)',fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',transition:'all .2s',zIndex:2}}
-                                  title={t("favToggle")}>{isFav('spot',spot.name)?'⭐':'☆'}</button>
+                                  title={t("favToggle")}>{isFav('spot',spot.name)?'★':'☆'}</button>
                                 <button onClick={e=>{e.stopPropagation();addToCourse({source:'spot',name:spot.name,displayName:trSpot(selectedCity?._koName||selectedCity?.name,spot.name)?.name||spot.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),type:spot.type,rating:spot.rating,wikiTitle:spot.wikiTitle,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:spot.type==='자연'?'🌿':spot.type==='역사'?'🏛️':spot.type==='음식'?'🍽️':spot.type==='문화'?'🎭':'📍'})}}
                                   style={{position:'absolute',top:8,right:44,width:30,height:30,borderRadius:8,background:isInCourse(spot.name,'spot')?'rgba(59,130,246,.9)':'rgba(0,0,0,.4)',border:'none',color:'white',fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',transition:'all .2s',zIndex:2,animation:isInCourse(spot.name,'spot')?'coursePop .3s':'none'}}
                                   title={t("courseAddToTrip")}>{isInCourse(spot.name,'spot')?'✓':'＋'}</button>
@@ -6536,32 +6532,34 @@ function App() {
             animation:'aiModalIn .3s cubic-bezier(.16,1,.3,1)'
           }}>
             {/* 모달 헤더 */}
-            <div style={{padding:'22px 24px 16px',background:'linear-gradient(135deg,#7c3aed12,#3b82f612)',borderBottom:'1px solid #f1f5f9'}}>
+            <div style={{padding:'20px 24px 16px',background:'#faf8f5',borderBottom:'1px solid #e8e2da'}}>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                 <div style={{display:'flex',alignItems:'center',gap:10}}>
-                  <div style={{width:42,height:42,borderRadius:12,background:'linear-gradient(135deg,#7c3aed,#3b82f6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,boxShadow:'0 4px 12px rgba(124,58,237,.3)'}}>🤖</div>
+                  <div style={{width:38,height:38,borderRadius:10,background:'#c8856a',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,color:'white',fontWeight:700}}>AI</div>
                   <div>
-                    <div style={{fontSize:17,fontWeight:800,color:'#0f172a'}}>{t('aiTitle')}</div>
-                    <div style={{fontSize:11,color:'#94a3b8',marginTop:1}}>{t('aiSubtitle')}</div>
+                    <div style={{fontSize:16,fontWeight:700,color:'#1a1714'}}>{t('aiTitle')}</div>
+                    <div style={{fontSize:11,color:'#b0a89e',marginTop:1}}>{t('aiSubtitle')}</div>
                   </div>
                 </div>
-                <button onClick={()=>setShowAiModal(false)} style={{background:'#f1f5f9',border:'none',color:'#64748b',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+                <button onClick={()=>setShowAiModal(false)} style={{background:'#f0ebe4',border:'none',color:'#b0a89e',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
+                  onMouseEnter={e=>e.currentTarget.style.background='#e8e0d6'}
+                  onMouseLeave={e=>e.currentTarget.style.background='#f0ebe4'}>✕</button>
               </div>
             </div>
 
             {/* 모달 내용 */}
-            <div style={{padding:'18px 24px 24px',display:'flex',flexDirection:'column',gap:16}}>
+            <div style={{padding:'18px 24px 24px',display:'flex',flexDirection:'column',gap:16,background:'#faf8f5'}}>
               {/* 도시 선택 */}
               <div>
-                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>📍 {t('aiSelectCity')}</div>
+                <div style={{fontSize:12,fontWeight:600,color:'#1a1714',marginBottom:6}}>{t('aiSelectCity')}</div>
                 {aiCity ? (
-                  <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',background:'#eff6ff',border:'1.5px solid #93c5fd',borderRadius:10}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',background:'#f5f0ea',border:'1px solid #e0d9d0',borderRadius:10}}>
                     <span style={{fontSize:18}}>{aiCity.emoji||'📍'}</span>
                     <div style={{flex:1}}>
-                      <span style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>{getCityName(aiCity.name)}</span>
-                      <span style={{fontSize:11,color:'#64748b',marginLeft:6}}>{aiCity.countryKo}</span>
+                      <span style={{fontSize:14,fontWeight:600,color:'#1a1714'}}>{getCityName(aiCity.name)}</span>
+                      <span style={{fontSize:11,color:'#b0a89e',marginLeft:6}}>{aiCity.countryKo}</span>
                     </div>
-                    <button onClick={()=>{setAiCity(null);setAiCitySearch('')}} style={{background:'none',border:'none',color:'#94a3b8',cursor:'pointer',fontSize:14}}>✕</button>
+                    <button onClick={()=>{setAiCity(null);setAiCitySearch('')}} style={{background:'none',border:'none',color:'#c8b8a8',cursor:'pointer',fontSize:14}}>✕</button>
                   </div>
                 ) : (
                   <div style={{position:'relative'}}>
@@ -6591,18 +6589,18 @@ function App() {
               {/* 테마 */}
               <div>
                 <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
-                  <div style={{fontSize:12,fontWeight:700,color:'#475569'}}>🎨 {t('aiTheme')}</div>
-                  <span style={{fontSize:10,color:'#94a3b8',fontWeight:500}}>({t('multiSelect')})</span>
+                  <div style={{fontSize:12,fontWeight:700,color:'#1a1714'}}>{t('aiTheme')}</div>
+                  <span style={{fontSize:10,color:'#b0a89e',fontWeight:400}}>({t('multiSelect')})</span>
                 </div>
                 <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
-                  {[{k:'종합',icon:'🌍',l:t('aiThemeAll')},{k:'역사',icon:'🏛️',l:t('aiThemeHistory')},{k:'자연',icon:'🌿',l:t('aiThemeNature')},{k:'음식',icon:'🍽️',l:t('aiThemeFood')},{k:'핫플',icon:'🔥',l:t('aiThemeHotspot')},{k:'맛집',icon:'🍴',l:t('aiThemeRestaurant')}].map(tm=>(
+                  {[{k:'종합',l:t('aiThemeAll')},{k:'역사',l:t('aiThemeHistory')},{k:'자연',l:t('aiThemeNature')},{k:'음식',l:t('aiThemeFood')},{k:'핫플',l:t('aiThemeHotspot')},{k:'맛집',l:t('aiThemeRestaurant')}].map(tm=>(
                     <button key={tm.k} onClick={()=>toggleAiTheme(tm.k)} style={{
-                      padding:'8px 14px',fontSize:12,fontWeight:aiTheme.includes(tm.k)?700:500,
-                      background:aiTheme.includes(tm.k)?tm.k==='종합'?'#1e293b':'#3b82f6':'#f8fafc',
-                      color:aiTheme.includes(tm.k)?'white':'#64748b',
-                      border:aiTheme.includes(tm.k)?'none':'1px solid #e2e8f0',borderRadius:20,cursor:'pointer',
-                      display:'flex',alignItems:'center',gap:4,transition:'all .15s'
-                    }}>{tm.icon} {tm.l}</button>
+                      padding:'7px 14px',fontSize:12,fontWeight:aiTheme.includes(tm.k)?600:400,
+                      background:aiTheme.includes(tm.k)?'#c8856a':'#f5f0ea',
+                      color:aiTheme.includes(tm.k)?'white':'#a89080',
+                      border:aiTheme.includes(tm.k)?'none':'1px solid #e0d9d0',borderRadius:20,cursor:'pointer',
+                      transition:'all .15s'
+                    }}>{tm.l}</button>
                   ))}
                 </div>
               </div>
@@ -6610,25 +6608,25 @@ function App() {
               {/* 일수 + 강도 */}
               <div style={{display:'flex',gap:12}}>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>📅 {t('aiDaysLabel')}</div>
+                  <div style={{fontSize:12,fontWeight:600,color:'#1a1714',marginBottom:6}}>{t('aiDaysLabel')}</div>
                   <div style={{display:'flex',gap:4}}>
                     {[1,2,3,4,5].map(n=>(
                       <button key={n} onClick={()=>setAiDays(n)} style={{
-                        flex:1,padding:'9px 0',fontSize:13,fontWeight:aiDays===n?700:500,
-                        background:aiDays===n?'#3b82f6':'#f8fafc',color:aiDays===n?'white':'#64748b',
-                        border:aiDays===n?'none':'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',transition:'all .15s'
+                        flex:1,padding:'9px 0',fontSize:13,fontWeight:aiDays===n?700:400,
+                        background:aiDays===n?'#c8856a':'#f5f0ea',color:aiDays===n?'white':'#a89080',
+                        border:aiDays===n?'none':'1px solid #e0d9d0',borderRadius:8,cursor:'pointer',transition:'all .15s'
                       }}>{n}{t('aiDayUnit')}</button>
                     ))}
                   </div>
                 </div>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>⏰ {t('aiHoursLabel')}</div>
+                  <div style={{fontSize:12,fontWeight:600,color:'#1a1714',marginBottom:6}}>{t('aiHoursLabel')}</div>
                   <div style={{display:'flex',gap:4}}>
                     {[1,2,4,6,8].map(h=>(
                       <button key={h} onClick={()=>setAiHours(h)} style={{
-                        flex:1,padding:'9px 0',fontSize:12,fontWeight:aiHours===h?700:500,
-                        background:aiHours===h?'#3b82f6':'#f8fafc',color:aiHours===h?'white':'#64748b',
-                        border:aiHours===h?'none':'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',transition:'all .15s'
+                        flex:1,padding:'9px 0',fontSize:12,fontWeight:aiHours===h?700:400,
+                        background:aiHours===h?'#c8856a':'#f5f0ea',color:aiHours===h?'white':'#a89080',
+                        border:aiHours===h?'none':'1px solid #e0d9d0',borderRadius:8,cursor:'pointer',transition:'all .15s'
                       }}>{h}{t('aiHourUnit')}</button>
                     ))}
                   </div>
@@ -6637,32 +6635,31 @@ function App() {
 
               {/* 출발일 */}
               <div>
-                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>🗓️ {t('courseDepartureOpt')}</div>
+                <div style={{fontSize:12,fontWeight:600,color:'#1a1714',marginBottom:6}}>{t('courseDepartureOpt')}</div>
                 <input type="date" value={courseTripStart} onChange={e=>saveTripStart(e.target.value)}
-                  style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box',color:courseTripStart?'#1e293b':'#94a3b8',fontWeight:600,cursor:'pointer',transition:'border .2s'}}
-                  onFocus={e=>e.currentTarget.style.borderColor='#3b82f6'}
-                  onBlur={e=>e.currentTarget.style.borderColor='#e2e8f0'}/>
+                  style={{width:'100%',padding:'10px 14px',border:'1px solid #e0d9d0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box',color:courseTripStart?'#1a1714':'#c8b8a8',fontWeight:500,cursor:'pointer',transition:'border .2s',background:'#f5f0ea'}}
+                  onFocus={e=>e.currentTarget.style.borderColor='#c8856a'}
+                  onBlur={e=>e.currentTarget.style.borderColor='#e0d9d0'}/>
               </div>
 
               {/* 이동수단 */}
               <div>
-                <div style={{fontSize:12,fontWeight:700,color:'#475569',marginBottom:6}}>🚌 {t('aiTransport')}</div>
-                <div style={{display:'flex',gap:6}}>
-                  {[{k:'transit',l:t('courseTransit'),i:'🚇'},{k:'walking',l:t('courseWalking'),i:'🚶'},{k:'driving',l:t('courseDriving'),i:'🚗'}].map(t=>(
-                    <button key={t.k} onClick={()=>setAiTransport(t.k)} style={{
-                      flex:1,padding:'9px 0',fontSize:12,fontWeight:aiTransport===t.k?700:500,
-                      background:aiTransport===t.k?'#1e293b':'#f8fafc',color:aiTransport===t.k?'white':'#64748b',
-                      border:aiTransport===t.k?'none':'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',
-                      display:'flex',alignItems:'center',justifyContent:'center',gap:4,transition:'all .15s'
-                    }}>{t.i} {t.l}</button>
+                <div style={{fontSize:12,fontWeight:600,color:'#1a1714',marginBottom:6}}>{t('aiTransport')}</div>
+                <div style={{display:'flex',gap:4,background:'#f5f0ea',borderRadius:8,padding:3}}>
+                  {[{k:'transit',l:t('courseTransit')},{k:'walking',l:t('courseWalking')},{k:'driving',l:t('courseDriving')}].map(tr=>(
+                    <button key={tr.k} onClick={()=>setAiTransport(tr.k)} style={{
+                      flex:1,padding:'8px 0',fontSize:12,fontWeight:aiTransport===tr.k?600:400,
+                      background:aiTransport===tr.k?'#fff':'none',color:aiTransport===tr.k?'#1a1714':'#b0a89e',
+                      border:'none',borderRadius:6,cursor:'pointer',transition:'all .15s'
+                    }}>{tr.l}</button>
                   ))}
                 </div>
               </div>
 
               {/* 미리보기 요약 */}
               {aiCity && (
-                <div style={{padding:'10px 14px',background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,fontSize:12,color:'#0369a1',lineHeight:1.7}}>
-                  💡 <strong>{getCityName(aiCity.name)}</strong>{t('aiSummaryIn')} <strong>{aiDays}{t('aiDayUnit')}</strong>{t('aiSummaryDuring')} <strong>{aiTheme.map(k=>({종합:t('aiThemeAll'),역사:t('aiThemeHistory'),자연:t('aiThemeNature'),음식:t('aiThemeFood'),핫플:t('aiThemeHotspot'),맛집:t('aiThemeRestaurant')}[k]||k)).join(' + ')}</strong>,
+                <div style={{padding:'10px 14px',background:'#f5f0ea',border:'1px solid #e0d9d0',borderRadius:10,fontSize:12,color:'#9a8070',lineHeight:1.7}}>
+                  <strong>{getCityName(aiCity.name)}</strong>{t('aiSummaryIn')} <strong>{aiDays}{t('aiDayUnit')}</strong>{t('aiSummaryDuring')} <strong>{aiTheme.map(k=>({종합:t('aiThemeAll'),역사:t('aiThemeHistory'),자연:t('aiThemeNature'),음식:t('aiThemeFood'),핫플:t('aiThemeHotspot'),맛집:t('aiThemeRestaurant')}[k]||k)).join(' + ')}</strong>,
                   {t(aiHours<=1?'aiPreview1h':aiHours<=2?'aiPreview2h':aiHours<=4?'aiPreview4h':aiHours<=6?'aiPreview6h':'aiPreview8h')} {t('aiPreviewText')}
                   {courseTripStart && <><br/>📅 {formatDate(getDayDate(0))} ~ {formatDate(getDayDate(aiDays-1))}</>}
                 </div>
@@ -6671,11 +6668,10 @@ function App() {
               {/* 생성 버튼 */}
               <button onClick={generateAiCourse} disabled={!aiCity||aiGenerating}
                 style={{
-                  width:'100%',padding:'14px',fontSize:15,fontWeight:800,
-                  background:aiCity?'linear-gradient(135deg,#7c3aed,#3b82f6)':'#e2e8f0',
-                  color:aiCity?'white':'#94a3b8',border:'none',borderRadius:12,
+                  width:'100%',padding:'14px',fontSize:14,fontWeight:700,
+                  background:aiCity?'#c8856a':'#f0ebe4',
+                  color:aiCity?'white':'#c8b8a8',border:'none',borderRadius:10,
                   cursor:aiCity&&!aiGenerating?'pointer':'not-allowed',
-                  boxShadow:aiCity?'0 6px 20px rgba(124,58,237,.3)':'none',
                   transition:'all .2s',display:'flex',alignItems:'center',justifyContent:'center',gap:8
                 }}>
                 {aiGenerating ? (
@@ -6689,76 +6685,93 @@ function App() {
         </>
       )}
 
-      {/* ── 코스 플래너 패널 ── */}
+      {/* ── 코스 플래너 패널 (Warm Cream) ── */}
       {showCoursePlanner && courseDays.length > 0 && (
-        <div style={{position:'absolute',top:72,left:0,bottom:0,width:Math.min(540,typeof window!=='undefined'?window.innerWidth-30:500),zIndex:1100,background:'rgba(255,255,255,.97)',backdropFilter:'blur(20px)',borderRight:'1.5px solid #e2e8f0',boxShadow:'12px 0 40px rgba(0,0,0,.12)',display:'flex',flexDirection:'column',animation:'coursePlannerIn .35s cubic-bezier(.16,1,.3,1)',borderRadius:'0 18px 0 0'}}>
-          {/* 플래너 헤더 */}
-          <div style={{padding:'18px 20px 14px',borderBottom:'1px solid #e2e8f0',flexShrink:0}}>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-              <div style={{display:'flex',alignItems:'center',gap:10}}>
-                <span style={{fontSize:22}}>🗺️</span>
-                <div>
-                  <div style={{fontSize:18,fontWeight:800,color:'#0f172a',letterSpacing:'-.3px'}}>{t('coursePlanner')}</div>
-                  <div style={{fontSize:11,color:'#94a3b8',marginTop:1}}>{courseItems.length}{t('coursePlace')} · {courseDays.length}{t('courseDay')}{courseTripStart ? ` · ${formatDate(getDayDate(0))}~${formatDate(getDayDate(courseDays.length-1))}` : ''}</div>
+        <div style={{position:'absolute',top:72,left:0,bottom:0,width:Math.min(500,typeof window!=='undefined'?window.innerWidth-30:480),zIndex:1100,background:'#faf8f5',borderRight:'1px solid #e8e2da',boxShadow:'16px 0 48px rgba(0,0,0,.1)',display:'flex',flexDirection:'column',animation:'coursePlannerIn .35s cubic-bezier(.16,1,.3,1)'}}>
+
+          {/* 헤더 */}
+          <div style={{padding:'20px 20px 0',flexShrink:0}}>
+            <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:16}}>
+              <div>
+                <div style={{fontSize:19,fontWeight:700,color:'#1a1714',letterSpacing:'-.4px'}}>{t('coursePlanner')}</div>
+                <div style={{fontSize:11,color:'#b0a89e',marginTop:3}}>
+                  {courseItems.length}{t('coursePlace')} · {courseDays.length}{t('courseDay')}
+                  {courseTripStart ? ` · ${formatDate(getDayDate(0))} – ${formatDate(getDayDate(courseDays.length-1))}` : ''}
                 </div>
               </div>
-              <div style={{display:'flex',gap:6}}>
-                <button onClick={()=>{if(confirm(t('courseDeleteConfirm'))){saveCourse([]);saveCourseDays([]);setRouteCache({});setShowCoursePlanner(false)}}}
-                  style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',padding:'5px 10px',borderRadius:8,fontSize:11,fontWeight:600,cursor:'pointer'}}
-                  onMouseEnter={e=>{e.currentTarget.style.background='#ef4444';e.currentTarget.style.color='white'}}
-                  onMouseLeave={e=>{e.currentTarget.style.background='#fef2f2';e.currentTarget.style.color='#ef4444'}}>{t('courseDeleteAll')}</button>
-                <button onClick={()=>setShowCoursePlanner(false)} style={{background:'#f1f5f9',border:'1.5px solid #e2e8f0',color:'#64748b',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}}
-                  onMouseEnter={e=>e.currentTarget.style.background='#e2e8f0'} onMouseLeave={e=>e.currentTarget.style.background='#f1f5f9'}>✕</button>
+              <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                <button
+                  onClick={()=>{if(confirm(t('courseDeleteConfirm'))){
+                    saveCourse([]);saveCourseDays([]);setRouteCache({});
+                    setSavedCourses([]);localStorage.removeItem('atlas_saved_courses');
+                    setShowCoursePlanner(false)
+                  }}}
+                  style={{padding:'5px 10px',borderRadius:6,border:'1px solid #e0d9d0',background:'none',fontSize:11,fontWeight:500,color:'#b0a89e',cursor:'pointer',transition:'all .15s'}}
+                  onMouseEnter={e=>{e.currentTarget.style.color='#c0604a';e.currentTarget.style.borderColor='#e8c0b0'}}
+                  onMouseLeave={e=>{e.currentTarget.style.color='#b0a89e';e.currentTarget.style.borderColor='#e0d9d0'}}
+                >{t('courseDeleteAll')}</button>
+                <button onClick={()=>setShowCoursePlanner(false)}
+                  style={{width:30,height:30,borderRadius:6,border:'1px solid #e0d9d0',background:'none',color:'#b0a89e',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
+                  onMouseEnter={e=>e.currentTarget.style.background='#f0ebe4'}
+                  onMouseLeave={e=>e.currentTarget.style.background='none'}>✕</button>
               </div>
             </div>
 
-            {/* 여행 날짜 설정 */}
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12,padding:'8px 12px',background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0'}}>
-              <span style={{fontSize:14}}>📅</span>
-              <span style={{fontSize:12,color:'#64748b',fontWeight:600,flexShrink:0}}>{t('courseDeparture')}</span>
+            {/* 날짜 */}
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12,padding:'8px 12px',background:'#f0ebe4',borderRadius:8,border:'1px solid #e0d9d0'}}>
+              <span style={{fontSize:11,color:'#b0a89e',fontWeight:500,flexShrink:0}}>{t('courseDeparture')}</span>
               <input type="date" value={courseTripStart} onChange={e=>saveTripStart(e.target.value)}
-                style={{flex:1,fontSize:12,border:'1px solid #e2e8f0',borderRadius:6,padding:'4px 8px',color:'#1e293b',fontWeight:600,outline:'none',cursor:'pointer',background:'white'}}/>
-              {courseTripStart && <button onClick={()=>saveTripStart('')} style={{background:'none',border:'none',color:'#94a3b8',fontSize:12,cursor:'pointer',padding:2}}>✕</button>}
+                style={{flex:1,fontSize:11,border:'none',background:'none',color:'#1a1714',fontWeight:600,outline:'none',cursor:'pointer'}}/>
+              {courseTripStart && <button onClick={()=>saveTripStart('')} style={{background:'none',border:'none',color:'#c8b8a8',fontSize:11,cursor:'pointer',lineHeight:1}}>✕</button>}
             </div>
 
-            {/* 이동수단 선택 */}
-            <div style={{display:'flex',gap:4,marginBottom:12}}>
-              {[{key:'transit',label:t('courseTransit'),icon:'🚇'},{key:'walking',label:t('courseWalking'),icon:'🚶'},{key:'driving',label:t('courseDriving'),icon:'🚗'}].map(m=>(
+            {/* 이동수단 */}
+            <div style={{display:'flex',gap:2,marginBottom:14,background:'#f0ebe4',borderRadius:8,padding:3,border:'1px solid #e0d9d0'}}>
+              {[{key:'transit',label:t('courseTransit')},{key:'walking',label:t('courseWalking')},{key:'driving',label:t('courseDriving')}].map(m=>(
                 <button key={m.key} onClick={()=>setCourseTransport(m.key)} style={{
-                  flex:1,padding:'7px 0',fontSize:11,fontWeight:courseTransport===m.key?700:500,
-                  background:courseTransport===m.key?'#1e293b':'#f1f5f9',color:courseTransport===m.key?'white':'#64748b',
-                  border:'none',borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4,transition:'all .2s'
-                }}>{m.icon} {m.label}</button>
+                  flex:1,padding:'6px 0',fontSize:11,fontWeight:600,
+                  background:courseTransport===m.key?'#fff':'none',
+                  color:courseTransport===m.key?'#1a1714':'#b0a89e',
+                  border:'none',borderRadius:6,cursor:'pointer',transition:'all .15s'
+                }}>{m.label}</button>
               ))}
             </div>
 
             {/* Day 탭 */}
-            <div style={{display:'flex',gap:4,overflowX:'auto',paddingBottom:4}}>
+            <div style={{display:'flex',gap:4,overflowX:'auto',paddingBottom:16,borderBottom:'1px solid #e8e2da'}}>
               {courseDays.map((_,i)=>(
                 <button key={i} onClick={()=>setActiveDayTab(i)} style={{
-                  padding:'6px 14px',fontSize:12,fontWeight:activeDayTab===i?700:500,
-                  background:activeDayTab===i?'#3b82f6':'#f8fafc',color:activeDayTab===i?'white':'#64748b',
-                  border:activeDayTab===i?'none':'1px solid #e2e8f0',borderRadius:20,cursor:'pointer',whiteSpace:'nowrap',transition:'all .15s'
-                }}>Day {i+1}{courseTripStart ? <span style={{fontSize:9,opacity:.7,marginLeft:3}}>{formatDate(getDayDate(i))}</span> : null} <span style={{fontSize:10,opacity:.8}}>({courseDays[i].items.length})</span></button>
+                  padding:'5px 14px',fontSize:11,fontWeight:activeDayTab===i?700:400,
+                  background:activeDayTab===i?'#c8856a':'none',
+                  color:activeDayTab===i?'#fff':'#b0a89e',
+                  border:activeDayTab===i?'none':'1px solid #e0d9d0',
+                  borderRadius:20,cursor:'pointer',whiteSpace:'nowrap',transition:'all .15s',flexShrink:0
+                }}>
+                  Day {i+1}
+                  {courseTripStart && <span style={{fontSize:9,opacity:.7,marginLeft:4}}>{formatDate(getDayDate(i))}</span>}
+                  <span style={{fontSize:9,opacity:.6,marginLeft:3}}>({courseDays[i].items.length})</span>
+                </button>
               ))}
-              <button onClick={addCourseDay} style={{padding:'6px 12px',fontSize:14,background:'#f0fdf4',color:'#16a34a',border:'1px dashed #86efac',borderRadius:20,cursor:'pointer',fontWeight:700}}>＋</button>
+              <button onClick={addCourseDay}
+                style={{padding:'5px 12px',fontSize:13,background:'none',color:'#c8b8a8',border:'1px dashed #d8cfc4',borderRadius:20,cursor:'pointer',flexShrink:0,transition:'all .15s'}}
+                onMouseEnter={e=>{e.currentTarget.style.color='#c8856a';e.currentTarget.style.borderColor='#c8856a'}}
+                onMouseLeave={e=>{e.currentTarget.style.color='#c8b8a8';e.currentTarget.style.borderColor='#d8cfc4'}}>＋</button>
             </div>
           </div>
 
           {/* Day 내용 */}
-          <div style={{flex:1,overflowY:'auto',padding:'14px 16px'}}>
+          <div style={{flex:1,overflowY:'auto',padding:'16px 20px'}}>
             {(() => {
               const day = courseDays[activeDayTab]
               if (!day) return null
               const items = day.items
               if (items.length === 0) return (
-                <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:200,color:'#94a3b8',gap:8}}>
-                  <span style={{fontSize:32}}>📭</span>
-                  <span style={{fontSize:13}}>{t('courseEmptyTitle')}</span>
-                  <span style={{fontSize:11}}>{t('courseEmptyDesc')}</span>
+                <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:200,color:'#c8b8a8',gap:8}}>
+                  <div style={{width:40,height:40,border:'1.5px dashed #d8cfc4',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'#d8cfc4'}}>+</div>
+                  <span style={{fontSize:12,color:'#c8b8a8'}}>{t('courseEmptyTitle')}</span>
+                  <span style={{fontSize:11,color:'#d8cfc4'}}>{t('courseEmptyDesc')}</span>
                 </div>
               )
-              // 총 이동시간 계산
               let totalSec = 0
               for (let i = 0; i < items.length - 1; i++) {
                 const rk = getRouteKey(items[i], items[i+1], courseTransport)
@@ -6769,88 +6782,87 @@ function App() {
               const totalMinRem = totalMin % 60
               return (
                 <>
-                  {/* Day 요약 바 */}
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',background:'#f8fafc',borderRadius:12,marginBottom:12,border:'1px solid #e2e8f0'}}>
-                    <div style={{display:'flex',alignItems:'center',gap:6}}>
-                      <span style={{fontSize:14,fontWeight:800,color:'#1e293b'}}>Day {activeDayTab+1}</span>
-                      {courseTripStart && <span style={{fontSize:11,color:'#3b82f6',fontWeight:600}}>{formatDate(getDayDate(activeDayTab))}</span>}
-                      <span style={{fontSize:11,color:'#94a3b8'}}>{items.length}{t('coursePlace')}</span>
+                  {/* Day 요약 */}
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <span style={{fontSize:12,fontWeight:700,color:'#1a1714'}}>Day {activeDayTab+1}</span>
+                      {courseTripStart && <span style={{fontSize:11,color:'#c8856a'}}>{formatDate(getDayDate(activeDayTab))}</span>}
+                      <span style={{fontSize:11,color:'#c8b8a8'}}>{items.length}{t('coursePlace')}</span>
                     </div>
-                    <div style={{display:'flex',alignItems:'center',gap:10}}>
-                      {totalMin > 0 && <span style={{fontSize:11,color:'#3b82f6',fontWeight:600}}>🕐 {t('courseTotal')} {totalHr > 0 ? `${totalHr}${t('courseHour')} ${totalMinRem}${t('courseMin')}` : `${totalMin}${t('courseMin')}`}</span>}
-                      {loadingRoutes && <div style={{width:14,height:14,borderRadius:'50%',border:'2px solid #e2e8f0',borderTopColor:'#3b82f6',animation:'spin .7s linear infinite'}}/>}
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      {totalMin > 0 && <span style={{fontSize:11,color:'#b0a89e'}}>{totalHr > 0 ? `${totalHr}${t('courseHour')} ${totalMinRem}${t('courseMin')}` : `${totalMin}${t('courseMin')}`}</span>}
+                      {loadingRoutes && <div style={{width:12,height:12,borderRadius:'50%',border:'1.5px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>}
                       {courseDays.length > 1 && (
-                        <button onClick={()=>removeCourseDay(activeDayTab)} style={{fontSize:10,background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',padding:'3px 8px',borderRadius:6,cursor:'pointer',fontWeight:600}}>{t('courseDelete')}</button>
+                        <button onClick={()=>removeCourseDay(activeDayTab)}
+                          style={{fontSize:10,background:'none',border:'1px solid #e0d9d0',color:'#c8b8a8',padding:'3px 8px',borderRadius:5,cursor:'pointer',transition:'all .15s'}}
+                          onMouseEnter={e=>{e.currentTarget.style.color='#c0604a';e.currentTarget.style.borderColor='#e8c0b0'}}
+                          onMouseLeave={e=>{e.currentTarget.style.color='#c8b8a8';e.currentTarget.style.borderColor='#e0d9d0'}}
+                        >{t('courseDelete')}</button>
                       )}
                     </div>
                   </div>
 
-                  {/* 장소 리스트 + 경로 정보 */}
+                  {/* 장소 리스트 */}
                   {items.map((item, idx) => {
                     const rk = idx < items.length - 1 ? getRouteKey(items[idx], items[idx+1], courseTransport) : null
                     const route = rk ? routeCache[rk] : null
                     return (
                       <div key={item.name+'-'+idx}>
-                        {/* 장소 카드 (드래그 가능) */}
                         <div
                           draggable
                           onDragStart={e=>{e.dataTransfer.setData('text/plain',JSON.stringify({dayIdx:activeDayTab,itemIdx:idx}));setDragItem({dayIdx:activeDayTab,itemIdx:idx})}}
-                          onDragOver={e=>{e.preventDefault();e.currentTarget.classList.add('drag-over')}}
-                          onDragLeave={e=>e.currentTarget.classList.remove('drag-over')}
-                          onDrop={e=>{e.preventDefault();e.currentTarget.classList.remove('drag-over');try{const from=JSON.parse(e.dataTransfer.getData('text/plain'));if(from.dayIdx===activeDayTab)reorderInDay(activeDayTab,from.itemIdx,idx);else moveToDayFn(from.dayIdx,from.itemIdx,activeDayTab)}catch{};setDragItem(null)}}
+                          onDragOver={e=>{e.preventDefault();e.currentTarget.style.background='#f0ebe4'}}
+                          onDragLeave={e=>e.currentTarget.style.background='#fff'}
+                          onDrop={e=>{e.preventDefault();e.currentTarget.style.background='#fff';try{const from=JSON.parse(e.dataTransfer.getData('text/plain'));if(from.dayIdx===activeDayTab)reorderInDay(activeDayTab,from.itemIdx,idx);else moveToDayFn(from.dayIdx,from.itemIdx,activeDayTab)}catch{};setDragItem(null)}}
                           onDragEnd={()=>setDragItem(null)}
                           style={{
-                            display:'flex',alignItems:'center',gap:10,padding:'12px 12px',
-                            background:'white',borderRadius:12,border:'1.5px solid #e2e8f0',
-                            cursor:'grab',transition:'all .15s',
-                            opacity:dragItem?.dayIdx===activeDayTab&&dragItem?.itemIdx===idx?0.4:1
+                            display:'flex',alignItems:'center',gap:10,padding:'11px 12px',
+                            background:'#fff',borderRadius:10,border:'1px solid #ede8e0',
+                            cursor:'grab',transition:'background .1s',
+                            opacity:dragItem?.dayIdx===activeDayTab&&dragItem?.itemIdx===idx?0.35:1
                           }}
                         >
-                          {/* 순서 번호 */}
-                          <div style={{width:30,height:30,borderRadius:'50%',flexShrink:0,background:'linear-gradient(135deg,#3b82f6,#6366f1)',color:'white',fontSize:13,fontWeight:800,display:'flex',alignItems:'center',justifyContent:'center'}}>{idx+1}</div>
+                          {/* 번호 원형 */}
+                          <div style={{width:24,height:24,borderRadius:'50%',flexShrink:0,background:idx===0?'#c8856a':'#e8dfd6',color:idx===0?'#fff':'#a89080',fontSize:11,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}>{idx+1}</div>
                           {/* 드래그 핸들 */}
-                          <span style={{fontSize:14,color:'#cbd5e1',flexShrink:0,cursor:'grab',userSelect:'none'}}>⠿</span>
-                          {/* 아이콘 */}
-                          <span style={{fontSize:20,flexShrink:0}}>{item.emoji||'📍'}</span>
+                          <span style={{fontSize:12,color:'#d8cfc4',flexShrink:0,cursor:'grab',userSelect:'none',letterSpacing:2}}>⠿</span>
                           {/* 정보 */}
                           <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontSize:13.5,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCourseItemName(item)}</div>
-                            <div style={{display:'flex',alignItems:'center',gap:6,marginTop:3}}>
-                              <span style={{fontSize:10,color:'#94a3b8'}}>{getCourseItemCity(item)}</span>
-                              <span style={{fontSize:9,padding:'1px 6px',borderRadius:4,background:item.source==='spot'?'#dbeafe':item.source==='hotspot'?'#fef3c7':'#dcfce7',color:item.source==='spot'?'#2563eb':item.source==='hotspot'?'#d97706':'#16a34a',fontWeight:600}}>{item.source==='spot'?t('courseSpot'):item.source==='hotspot'?t('courseHotspot'):t('courseRestaurant')}</span>
-                              {item.rating && <span style={{fontSize:10,color:'#f59e0b'}}>★{item.rating}</span>}
+                            <div style={{fontSize:13,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCourseItemName(item)}</div>
+                            <div style={{display:'flex',alignItems:'center',gap:5,marginTop:3}}>
+                              <span style={{fontSize:10,color:'#b0a89e'}}>{getCourseItemCity(item)}</span>
+                              <span style={{fontSize:9,padding:'1px 5px',borderRadius:3,background:'#f5efe8',color:'#9a8070',fontWeight:500}}>
+                                {item.source==='spot'?t('courseSpot'):item.source==='hotspot'?t('courseHotspot'):t('courseRestaurant')}
+                              </span>
+                              {item.rating && <span style={{fontSize:9,color:'#c8a870'}}>★{item.rating}</span>}
                             </div>
                           </div>
                           {/* Day 이동 */}
                           {courseDays.length > 1 && (
-                            <select value="" onChange={e=>{if(e.target.value!=='')moveToDayFn(activeDayTab,idx,parseInt(e.target.value));e.target.value=''}} style={{width:60,fontSize:10,padding:'4px 2px',border:'1px solid #e2e8f0',borderRadius:6,color:'#64748b',background:'#f8fafc',cursor:'pointer',flexShrink:0}}>
+                            <select value="" onChange={e=>{if(e.target.value!=='')moveToDayFn(activeDayTab,idx,parseInt(e.target.value));e.target.value=''}}
+                              style={{width:56,fontSize:9,padding:'3px 2px',border:'1px solid #e0d9d0',borderRadius:5,color:'#b0a89e',background:'#faf8f5',cursor:'pointer',flexShrink:0}}>
                               <option value="">{t('courseMove')}</option>
                               {courseDays.map((_,di)=>di!==activeDayTab&&<option key={di} value={di}>Day {di+1}</option>)}
                             </select>
                           )}
                           {/* 삭제 */}
-                          <button onClick={()=>removeFromDay(activeDayTab,idx)} style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#ef4444',width:28,height:28,borderRadius:7,cursor:'pointer',fontSize:12,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
-                            onMouseEnter={e=>{e.currentTarget.style.background='#ef4444';e.currentTarget.style.color='white'}} onMouseLeave={e=>{e.currentTarget.style.background='#fef2f2';e.currentTarget.style.color='#ef4444'}}>✕</button>
+                          <button onClick={()=>removeFromDay(activeDayTab,idx)}
+                            style={{background:'none',border:'none',color:'#d8cfc4',width:24,height:24,borderRadius:5,cursor:'pointer',fontSize:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
+                            onMouseEnter={e=>{e.currentTarget.style.color='#c0604a'}}
+                            onMouseLeave={e=>{e.currentTarget.style.color='#d8cfc4'}}>×</button>
                         </div>
 
-                        {/* 경로 정보 (다음 장소까지) */}
+                        {/* 경로 */}
                         {idx < items.length - 1 && (
-                          <div style={{display:'flex',alignItems:'center',gap:8,padding:'6px 0 6px 18px',position:'relative'}}>
-                            {/* 세로 연결선 */}
-                            <div style={{position:'absolute',left:30,top:0,bottom:0,width:2,background:'linear-gradient(#3b82f6,#6366f1)',opacity:.3}}/>
-                            <div style={{width:20,display:'flex',justifyContent:'center',flexShrink:0}}>
-                              <span style={{fontSize:12,color:'#94a3b8'}}>{courseTransport==='transit'?'🚇':courseTransport==='walking'?'🚶':'🚗'}</span>
-                            </div>
+                          <div style={{display:'flex',alignItems:'center',gap:6,padding:'5px 0 5px 34px'}}>
                             {route ? (
-                              <div style={{display:'flex',alignItems:'center',gap:8,fontSize:11,color:'#64748b',background:'#f8fafc',borderRadius:8,padding:'4px 12px',border:'1px solid #f1f5f9'}}>
-                                <span style={{fontWeight:700,color:'#3b82f6'}}>{route.noRoute ? t('courseNoRoute') : route.duration}</span>
-                                <span style={{color:'#cbd5e1'}}>·</span>
-                                <span>{route.distance}</span>
-                              </div>
+                              <span style={{fontSize:10,color:'#c8b8a8'}}>
+                                — {route.noRoute ? t('courseNoRoute') : `${route.duration} · ${route.distance}`}
+                              </span>
                             ) : loadingRoutes ? (
-                              <div style={{width:14,height:14,borderRadius:'50%',border:'2px solid #e2e8f0',borderTopColor:'#3b82f6',animation:'spin .7s linear infinite'}}/>
+                              <div style={{width:10,height:10,borderRadius:'50%',border:'1.5px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>
                             ) : (
-                              <span style={{fontSize:10,color:'#cbd5e1'}}>{t('courseCalc')}</span>
+                              <span style={{fontSize:10,color:'#d8cfc4'}}>{t('courseCalc')}</span>
                             )}
                           </div>
                         )}
@@ -6862,20 +6874,24 @@ function App() {
             })()}
           </div>
 
-          {/* 플래너 푸터 */}
-          <div style={{padding:'14px 16px',borderTop:'1px solid #e2e8f0',background:'#fafbfc',flexShrink:0,display:'flex',gap:8}}>
+          {/* 푸터 */}
+          <div style={{padding:'14px 20px',borderTop:'1px solid #e8e2da',flexShrink:0,display:'flex',gap:6}}>
             {courseSource === 'ai' ? (
-              <div style={{flex:1,padding:'11px',background:'linear-gradient(135deg,#7c3aed22,#6366f122)',border:'1.5px solid #a78bfa',borderRadius:10,fontSize:13,fontWeight:700,color:'#7c3aed',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
-                ✅ {t('courseTypeAi')} {t('courseSaved')}
+              <div style={{flex:1,padding:'11px',background:'#f5efe8',border:'1px solid #e0d9d0',borderRadius:8,fontSize:12,fontWeight:600,color:'#9a8070',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                {t('courseTypeAi')} — {t('courseSaved')}
               </div>
             ) : (
-              <button onClick={()=>{const s=saveCourseToList('manual');if(s)alert(t('courseSaved'));setShowCoursePlanner(false)}} style={{flex:1,padding:'11px',background:'linear-gradient(135deg,#3b82f6,#6366f1)',border:'none',borderRadius:10,fontSize:13,fontWeight:700,color:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(59,130,246,.3)'}}>
-                💾 {t('courseSave')}
+              <button onClick={()=>{const s=saveCourseToList('manual');if(s)alert(t('courseSaved'));setShowCoursePlanner(false)}}
+                style={{flex:1,padding:'11px',background:'#c8856a',border:'none',borderRadius:8,fontSize:12,fontWeight:700,color:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'all .15s'}}
+                onMouseEnter={e=>e.currentTarget.style.background='#b8745a'}
+                onMouseLeave={e=>e.currentTarget.style.background='#c8856a'}>
+                {t('courseSave')}
               </button>
             )}
-            <button onClick={()=>setShowCoursePlanner(false)} style={{padding:'11px 20px',background:'#f1f5f9',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,fontWeight:600,color:'#64748b',cursor:'pointer'}}>
-              ✕
-            </button>
+            <button onClick={()=>setShowCoursePlanner(false)}
+              style={{padding:'11px 16px',background:'none',border:'1px solid #e0d9d0',borderRadius:8,fontSize:12,fontWeight:500,color:'#b0a89e',cursor:'pointer',transition:'all .15s'}}
+              onMouseEnter={e=>e.currentTarget.style.background='#f0ebe4'}
+              onMouseLeave={e=>e.currentTarget.style.background='none'}>✕</button>
           </div>
         </div>
       )}
