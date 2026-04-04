@@ -5624,12 +5624,8 @@ function App() {
   }
 
   const closeCountry = () => {
-    // 현재 국가 위치에서 줌아웃만 (대한민국으로 돌아가지 않음)
-    const center = selectedCountry ? getCountryCenter(selectedCountry) : { lat: 36, lng: 127.8 }
+    // 줌아웃 없이 상태만 초기화 — 현재 뷰 그대로 유지
     setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null); setShowCountryInfo(false)
-    if (globeRef.current) {
-      globeRef.current.pointOfView({ lat: center.lat, lng: center.lng, altitude: 2.2 }, 1000)
-    }
   }
 
   // Search: all cities + all spots across all countries
@@ -5865,10 +5861,10 @@ function App() {
           {/* AI Course Button */}
           <div style={{marginLeft:4}}>
             <button onClick={()=>{setShowAiModal(true);setShowLangMenu(false);setShowFavorites(false);setShowHamburger(false)}}
-              style={{display:'flex',alignItems:'center',gap:5,background:showAiModal?'rgba(139,92,246,.3)':'rgba(255,255,255,.12)',border:showAiModal?'1px solid rgba(139,92,246,.5)':'1px solid rgba(255,255,255,.2)',borderRadius:20,padding:'5px 12px',cursor:'pointer',color:'white',fontSize:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s'}}
-              onMouseEnter={e=>e.currentTarget.style.background=showAiModal?'rgba(139,92,246,.4)':'rgba(255,255,255,.22)'}
-              onMouseLeave={e=>e.currentTarget.style.background=showAiModal?'rgba(139,92,246,.3)':'rgba(255,255,255,.12)'}>
-              <span style={{fontSize:14}}>🤖</span>
+              style={{display:'flex',alignItems:'center',gap:6,background:showAiModal?'rgba(200,133,106,.35)':'rgba(255,255,255,.13)',border:showAiModal?'1px solid rgba(200,133,106,.6)':'1px solid rgba(255,255,255,.22)',borderRadius:20,padding:'6px 14px',cursor:'pointer',color:'white',fontSize:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s',letterSpacing:'.1px'}}
+              onMouseEnter={e=>e.currentTarget.style.background=showAiModal?'rgba(200,133,106,.45)':'rgba(255,255,255,.22)'}
+              onMouseLeave={e=>e.currentTarget.style.background=showAiModal?'rgba(200,133,106,.35)':'rgba(255,255,255,.13)'}>
+              <div style={{width:16,height:16,borderRadius:4,background:'rgba(255,255,255,.25)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:800,letterSpacing:0}}>AI</div>
               <span>{t('aiCourse')}</span>
             </button>
           </div>
@@ -6037,42 +6033,44 @@ function App() {
       {selectedCity && (
         <>
         {/* 사이드 탭 (핫플 / 맛집) - 패널 왼쪽에 고정 */}
-        <div style={{position:'absolute',top:120,right:sidePanel?840:420,zIndex:1001,display:'flex',flexDirection:'column',gap:6,transition:'right .3s cubic-bezier(.16,1,.3,1)'}}>
+        <div style={{position:'absolute',top:120,right:sidePanel?840:420,zIndex:1001,display:'flex',flexDirection:'column',gap:4,transition:'right .3s cubic-bezier(.16,1,.3,1)'}}>
           <button
             onClick={() => setSidePanel(sidePanel === 'hotspots' ? null : 'hotspots')}
             style={{
-              writingMode:'vertical-rl',textOrientation:'upright',
-              padding:'14px 8px',fontSize:13,fontWeight:800,letterSpacing:4,
-              background: sidePanel === 'hotspots' ? '#1e293b' : '#334155',
-              color:'white',border:'none',borderRadius:'10px 0 0 10px',
-              cursor:'pointer',boxShadow:'-4px 2px 12px rgba(0,0,0,.2)',
-              transition:'all .2s'
+              writingMode:'vertical-rl',textOrientation:'mixed',
+              padding:'16px 7px',fontSize:11,fontWeight:600,letterSpacing:'1px',
+              background: sidePanel === 'hotspots' ? '#c8856a' : 'rgba(250,248,245,.92)',
+              color: sidePanel === 'hotspots' ? '#fff' : '#9a8070',
+              border:'none',borderRadius:'10px 0 0 10px',
+              cursor:'pointer',backdropFilter:'blur(8px)',
+              transition:'all .2s',boxShadow:'-2px 2px 12px rgba(0,0,0,.12)'
             }}
-            onMouseEnter={e=>e.currentTarget.style.background='#1e293b'}
-            onMouseLeave={e=>e.currentTarget.style.background=sidePanel==='hotspots'?'#1e293b':'#334155'}
-          >{t('hotTab')}</button>
+            onMouseEnter={e=>{if(sidePanel!=='hotspots'){e.currentTarget.style.background='rgba(250,248,245,1)';e.currentTarget.style.color='#c8856a'}}}
+            onMouseLeave={e=>{if(sidePanel!=='hotspots'){e.currentTarget.style.background='rgba(250,248,245,.92)';e.currentTarget.style.color='#9a8070'}}}
+          >{t('hotspots')}</button>
           <button
             onClick={() => setSidePanel(sidePanel === 'restaurants' ? null : 'restaurants')}
             style={{
-              writingMode:'vertical-rl',textOrientation:'upright',
-              padding:'14px 8px',fontSize:13,fontWeight:800,letterSpacing:4,
-              background: sidePanel === 'restaurants' ? '#1e293b' : '#475569',
-              color:'white',border:'none',borderRadius:'10px 0 0 10px',
-              cursor:'pointer',boxShadow:'-4px 2px 12px rgba(0,0,0,.2)',
-              transition:'all .2s'
+              writingMode:'vertical-rl',textOrientation:'mixed',
+              padding:'16px 7px',fontSize:11,fontWeight:600,letterSpacing:'1px',
+              background: sidePanel === 'restaurants' ? '#c8856a' : 'rgba(250,248,245,.92)',
+              color: sidePanel === 'restaurants' ? '#fff' : '#9a8070',
+              border:'none',borderRadius:'10px 0 0 10px',
+              cursor:'pointer',backdropFilter:'blur(8px)',
+              transition:'all .2s',boxShadow:'-2px 2px 12px rgba(0,0,0,.12)'
             }}
-            onMouseEnter={e=>e.currentTarget.style.background='#1e293b'}
-            onMouseLeave={e=>e.currentTarget.style.background=sidePanel==='restaurants'?'#1e293b':'#475569'}
-          >{t('foodTab')}</button>
+            onMouseEnter={e=>{if(sidePanel!=='restaurants'){e.currentTarget.style.background='rgba(250,248,245,1)';e.currentTarget.style.color='#c8856a'}}}
+            onMouseLeave={e=>{if(sidePanel!=='restaurants'){e.currentTarget.style.background='rgba(250,248,245,.92)';e.currentTarget.style.color='#9a8070'}}}
+          >{t('foodTab').replace('🍽','').trim()}</button>
         </div>
 
         {/* 사이드 슬라이드 패널 (핫플/맛집 리스트) */}
         {sidePanel && (
           <div style={{
             position:'absolute',top:0,right:420,bottom:0,width:420,zIndex:1000,
-            background:'white',borderLeft:'1.5px solid #e2e8f0',
+            background:'#faf8f5',borderLeft:'1px solid #e8e2da',
             overflowY:'auto',
-            boxShadow:'-8px 0 24px rgba(0,0,0,.1)',
+            boxShadow:'-8px 0 24px rgba(0,0,0,.08)',
             animation:'sidePanelIn .3s cubic-bezier(.16,1,.3,1)'
           }}>
             {/* 헤더 */}
@@ -6118,7 +6116,7 @@ function App() {
             <div style={{padding:'12px 14px'}}>
               {loadingPlaces ? (
                 <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60}}>
-                  <div style={{width:28,height:28,borderRadius:'50%',border:'3px solid #e2e8f0',borderTopColor:'#334155',animation:'spin .7s linear infinite'}}/>
+                  <div style={{width:28,height:28,borderRadius:'50%',border:'2px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>
                 </div>
               ) : (sidePanel === 'hotspots' ? hotspots : restaurants).length > 0 ? (
                 <div style={{display:'flex',flexDirection:'column',gap:10}}>
@@ -6128,15 +6126,15 @@ function App() {
                       target="_blank" rel="noopener noreferrer"
                       style={{
                         textDecoration:'none',background:'white',
-                        border:'1.5px solid #e2e8f0',borderRadius:12,
+                        border:'1px solid #ede8e0',borderRadius:10,
                         overflow:'hidden',cursor:'pointer',transition:'all .2s'
                       }}
                       onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = '#334155'
+                        e.currentTarget.style.borderColor = '#c8b0a0'
                         e.currentTarget.style.boxShadow = '0 4px 12px rgba(51,65,85,0.15)'
                       }}
                       onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = '#e2e8f0'
+                        e.currentTarget.style.borderColor = '#ede8e0'
                         e.currentTarget.style.boxShadow = 'none'
                       }}>
                       <div style={{display:'flex',gap:10,padding:10,alignItems:'center'}}>
@@ -6207,21 +6205,22 @@ function App() {
                 </div>
                 <div style={{fontSize:26,fontWeight:800,letterSpacing:'-.5px',color:'#0f172a'}}>{getCityName(selectedCity?._koName || selectedCity?.name) || ''}</div>
               </div>
-              <div style={{display:'flex',gap:6,flexShrink:0}}>
+              <div style={{display:'flex',gap:5,flexShrink:0}}>
                 <button onClick={()=>{const c=allCitiesFlat.find(x=>x.name===(selectedCity?._koName||selectedCity?.name));if(c){setAiCity(c);setShowAiModal(true)}}}
-                  style={{background:'linear-gradient(135deg,#7c3aed,#3b82f6)',border:'none',color:'white',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 8px rgba(124,58,237,.3)',transition:'all .2s'}}
-                  onMouseEnter={e=>e.currentTarget.style.transform='scale(1.1)'} onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}
-                  title={t("aiAutoGen")}>🤖</button>
+                  style={{background:'#f5f0ea',border:'1px solid #e0d9d0',color:'#c8856a',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:9,fontWeight:800,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s',letterSpacing:0}}
+                  onMouseEnter={e=>{e.currentTarget.style.background='#c8856a';e.currentTarget.style.color='white';e.currentTarget.style.borderColor='#c8856a'}}
+                  onMouseLeave={e=>{e.currentTarget.style.background='#f5f0ea';e.currentTarget.style.color='#c8856a';e.currentTarget.style.borderColor='#e0d9d0'}}
+                  title={t("aiAutoGen")}>AI</button>
                 <button onClick={()=>addToCourse({source:'city',name:selectedCity?._koName||selectedCity?.name,displayName:getCityName(selectedCity?._koName||selectedCity?.name),cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),emoji:selectedCity?.emoji||'📍',lat:selectedCity?.lat,lng:selectedCity?.lng,rating:null})}
-                  style={{background:isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'#3b82f6':'#f1f5f9',border:isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'1.5px solid #3b82f6':'1.5px solid #e2e8f0',color:isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'white':'#94a3b8',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
+                  style={{background:isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'#c8856a':'#f5f0ea',border:isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'none':'1px solid #e0d9d0',color:isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'white':'#b0a89e',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:15,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
                   title={t("courseAddToTrip")}>{isInCourse(selectedCity?._koName||selectedCity?.name,'city')?'✓':'＋'}</button>
                 <button onClick={()=>toggleFav({type:'city',name:selectedCity?._koName||selectedCity?.name,_koName:selectedCity?._koName||selectedCity?.name,displayName:getCityName(selectedCity?._koName||selectedCity?.name),emoji:selectedCity?.emoji,color:selectedCity?.color,countryEn:selectedCity?.countryEn,countryName:countryKo,lat:selectedCity?.lat,lng:selectedCity?.lng})}
-                  style={{background:isFav('city',selectedCity?._koName||selectedCity?.name)?'#fef3c7':'#f1f5f9',border:isFav('city',selectedCity?._koName||selectedCity?.name)?'1.5px solid #fbbf24':'1.5px solid #e2e8f0',color:isFav('city',selectedCity?._koName||selectedCity?.name)?'#f59e0b':'#94a3b8',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
+                  style={{background:isFav('city',selectedCity?._koName||selectedCity?.name)?'#fef3c7':'#f5f0ea',border:isFav('city',selectedCity?._koName||selectedCity?.name)?'1px solid #f0c040':'1px solid #e0d9d0',color:isFav('city',selectedCity?._koName||selectedCity?.name)?'#c8a020':'#b0a89e',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
                   title={t("favToggle")}>{isFav('city',selectedCity?._koName||selectedCity?.name)?'★':'☆'}</button>
                 <button onClick={closePanel}
-                  style={{background:'#f1f5f9',border:'1.5px solid #e2e8f0',color:'#64748b',width:34,height:34,borderRadius:9,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
-                  onMouseEnter={e=>e.currentTarget.style.background='#e2e8f0'}
-                  onMouseLeave={e=>e.currentTarget.style.background='#f1f5f9'}>✕</button>
+                  style={{background:'#f5f0ea',border:'1px solid #e0d9d0',color:'#b0a89e',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all .2s'}}
+                  onMouseEnter={e=>e.currentTarget.style.background='#e8e0d6'}
+                  onMouseLeave={e=>e.currentTarget.style.background='#f5f0ea'}>✕</button>
               </div>
             </div>
             {cityData?.weather && !loading && (
