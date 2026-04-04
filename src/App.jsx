@@ -4805,7 +4805,7 @@ function App() {
     globeRef.current = globe
 
     // 초기 화면: 대한민국 중심
-    setTimeout(() => globe.pointOfView({ lat: 36, lng: 127.8, altitude: 2.2 }), 300)
+    setTimeout(() => globe.pointOfView({ lat: 36, lng: 127.8, altitude: window.innerWidth <= 768 ? 3.0 : 2.2 }), 300)
 
     // ── 뒷면 라벨 숨기기 (지구 뒤쪽 라벨 안 보이게) ──
     const hideBackLabels = () => {
@@ -5706,15 +5706,15 @@ function App() {
         padding:isMobile?'12px 12px 40px':'16px 20px 50px',pointerEvents:'none',
         transition:'right .42s cubic-bezier(.16,1,.3,1)'
       }}>
-        <div style={{display:'flex',alignItems:'center',gap:isMobile?8:12,pointerEvents:'all'}}>
-          <div style={{display:'flex',alignItems:'center',gap:isMobile?6:10,position:'relative'}}>
-            <div onClick={()=>{setShowHamburger(v=>!v);setShowLangMenu(false)}} style={{width:isMobile?34:40,height:isMobile?34:40,borderRadius:11,background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 16px rgba(37,99,235,.4)',cursor:'pointer',transition:'transform .15s'}}
+        <div style={{display:'flex',alignItems:'center',gap:isMobile?4:12,pointerEvents:'all'}}>
+          <div style={{display:'flex',alignItems:'center',gap:isMobile?4:10,position:'relative'}}>
+            <div onClick={()=>{setShowHamburger(v=>!v);setShowLangMenu(false)}} style={{width:isMobile?28:40,height:isMobile?28:40,borderRadius:isMobile?8:11,background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 16px rgba(37,99,235,.4)',cursor:'pointer',transition:'transform .15s'}}
               onMouseEnter={e=>e.currentTarget.style.transform='scale(1.08)'} onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="white" strokeWidth="2.2" strokeLinecap="round"/></svg>
+              <svg width={isMobile?"16":"20"} height={isMobile?"16":"20"} viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="white" strokeWidth="2.2" strokeLinecap="round"/></svg>
             </div>
             <div>
-              <div style={{fontSize:isMobile?16:20,fontWeight:800,letterSpacing:'-.5px',color:'white',lineHeight:1}}>ATLAS</div>
-              <div style={{fontSize:isMobile?7:9,color:'rgba(255,255,255,.6)',letterSpacing:'2.5px',textTransform:'uppercase'}}>{t('appSub')}</div>
+              <div style={{fontSize:isMobile?12:20,fontWeight:800,letterSpacing:'-.5px',color:'white',lineHeight:1}}>ATLAS</div>
+              {!isMobile && <div style={{fontSize:9,color:'rgba(255,255,255,.6)',letterSpacing:'2.5px',textTransform:'uppercase'}}>{t('appSub')}</div>}
             </div>
             {/* Hamburger Dropdown */}
             {showHamburger && (
@@ -5846,12 +5846,12 @@ function App() {
             )}
           </div>
           {/* Language Selector */}
-          <div style={{position:'relative',marginLeft:isMobile?4:8}}>
+          <div style={{position:'relative',marginLeft:isMobile?0:8}}>
             <button onClick={()=>{setShowLangMenu(v=>!v);setShowFavorites(false);setShowHamburger(false)}}
-              style={{display:'flex',alignItems:'center',gap:isMobile?3:5,background:'rgba(255,255,255,.12)',border:'1px solid rgba(255,255,255,.2)',borderRadius:20,padding:isMobile?'4px 8px':'5px 12px 5px 8px',cursor:'pointer',color:'white',fontSize:isMobile?11:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s'}}
+              style={{display:'flex',alignItems:'center',gap:isMobile?2:5,background:'rgba(255,255,255,.12)',border:'1px solid rgba(255,255,255,.2)',borderRadius:isMobile?14:20,padding:isMobile?'3px 6px':'5px 12px 5px 8px',cursor:'pointer',color:'white',fontSize:isMobile?10:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s'}}
               onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.22)'}
               onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}>
-              <span style={{fontSize:isMobile?14:16}}>{LANG_OPTIONS.find(l=>l.code===lang)?.flag}</span>
+              <span style={{fontSize:isMobile?12:16}}>{LANG_OPTIONS.find(l=>l.code===lang)?.flag}</span>
               {!isMobile && <span>{LANG_OPTIONS.find(l=>l.code===lang)?.label}</span>}
               <span style={{fontSize:8,marginLeft:2}}>{showLangMenu?'▲':'▼'}</span>
             </button>
@@ -5872,22 +5872,22 @@ function App() {
             )}
           </div>
           {/* AI Course Button */}
-          <div style={{marginLeft:isMobile?2:4}}>
+          <div style={{marginLeft:isMobile?0:4}}>
             <button onClick={()=>{setShowAiModal(true);setShowLangMenu(false);setShowFavorites(false);setShowHamburger(false)}}
-              style={{display:'flex',alignItems:'center',gap:isMobile?4:6,background:showAiModal?'rgba(200,133,106,.35)':'rgba(255,255,255,.13)',border:showAiModal?'1px solid rgba(200,133,106,.6)':'1px solid rgba(255,255,255,.22)',borderRadius:20,padding:isMobile?'5px 10px':'6px 14px',cursor:'pointer',color:'white',fontSize:isMobile?10:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s',letterSpacing:'.1px'}}
+              style={{display:'flex',alignItems:'center',gap:isMobile?3:6,background:showAiModal?'rgba(200,133,106,.35)':'rgba(255,255,255,.13)',border:showAiModal?'1px solid rgba(200,133,106,.6)':'1px solid rgba(255,255,255,.22)',borderRadius:isMobile?14:20,padding:isMobile?'3px 7px':'6px 14px',cursor:'pointer',color:'white',fontSize:isMobile?9:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s',letterSpacing:'.1px'}}
               onMouseEnter={e=>e.currentTarget.style.background=showAiModal?'rgba(200,133,106,.45)':'rgba(255,255,255,.22)'}
               onMouseLeave={e=>e.currentTarget.style.background=showAiModal?'rgba(200,133,106,.35)':'rgba(255,255,255,.13)'}>
-              <div style={{width:16,height:16,borderRadius:4,background:'rgba(255,255,255,.25)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:800,letterSpacing:0}}>AI</div>
+              <div style={{width:isMobile?14:16,height:isMobile?14:16,borderRadius:4,background:'rgba(255,255,255,.25)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:isMobile?7:9,fontWeight:800,letterSpacing:0}}>AI</div>
               {!isMobile && <span>{t('aiCourse')}</span>}
             </button>
           </div>
           <div style={{marginLeft:'auto',position:'relative'}}>
-            <span style={{position:'absolute',left:11,top:'50%',transform:'translateY(-50%)',fontSize:13,color:'#94a3b8',pointerEvents:'none'}}>🔍</span>
+            <span style={{position:'absolute',left:isMobile?8:11,top:'50%',transform:'translateY(-50%)',fontSize:isMobile?11:13,color:'#94a3b8',pointerEvents:'none'}}>🔍</span>
             <input placeholder={t('search')} value={searchQuery}
               onChange={e=>{setSearchQuery(e.target.value);setShowDrop(true)}}
               onFocus={()=>setShowDrop(true)}
               onBlur={()=>setTimeout(()=>setShowDrop(false),150)}
-              style={{padding:isMobile?'7px 12px 7px 30px':'9px 14px 9px 33px',borderRadius:22,fontSize:isMobile?11:13,width:isMobile?120:215,background:'rgba(255,255,255,.95)',border:'1.5px solid #e2e8f0',color:'#1e293b',outline:'none',boxShadow:'0 2px 12px rgba(0,0,0,.2)'}}/>
+              style={{padding:isMobile?'6px 10px 6px 28px':'9px 14px 9px 33px',borderRadius:isMobile?16:22,fontSize:isMobile?10:13,width:isMobile?140:215,background:'rgba(255,255,255,.95)',border:'1.5px solid #e2e8f0',color:'#1e293b',outline:'none',boxShadow:'0 2px 12px rgba(0,0,0,.2)'}}/>
             {showDrop && filtered.length>0 && (
               <div style={{position:'absolute',top:'calc(100% + 7px)',right:0,background:'white',border:'1.5px solid #e2e8f0',borderRadius:14,overflow:'hidden',width:isMobile?'80vw':250,zIndex:2000,boxShadow:'0 12px 32px rgba(0,0,0,.15)'}}>
                 {filtered.slice(0,8).map((c,i)=>(
@@ -5910,7 +5910,7 @@ function App() {
                     style={{padding:'10px 14px',cursor:'pointer',display:'flex',alignItems:'center',gap:10,borderBottom:i<7?'1px solid #f1f5f9':'none'}}
                     onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
                     onMouseLeave={e=>e.currentTarget.style.background='white'}>
-                    <span style={{fontSize:20}}>{c._searchType === 'spot' ? '📍' : c.emoji}</span>
+                    <span style={{fontSize:20}}>{COUNTRY_INFO[c.countryEn]?.emoji || c.emoji}</span>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:13,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
                         {c._searchType === 'spot' ? c.spotName : getCityName(c._koName || c.name)}
