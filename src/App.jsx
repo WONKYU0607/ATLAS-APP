@@ -4268,6 +4268,7 @@ function App() {
   const [sidePanel, setSidePanel] = useState(null) // 'hotspots' | 'restaurants' | null
   const [showFavorites, setShowFavorites] = useState(false)
   const [showHamburger, setShowHamburger] = useState(false)
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768)
   const [savedCourses, setSavedCourses] = useState(() => {
     try { return JSON.parse(localStorage.getItem('atlas_saved_courses') || '[]') } catch { return [] }
   })
@@ -4655,6 +4656,13 @@ function App() {
 
   // 언어 변경 시 경로 캐시 초기화 (Directions API 응답 언어가 다름)
   useEffect(() => { setRouteCache({}) }, [lang])
+
+  // 모바일 감지
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // 즐겨찾기 (localStorage 저장)
   const [favorites, setFavorites] = useState(() => {
@@ -5681,6 +5689,11 @@ function App() {
         .card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.13)!important}
         .cimg{transition:transform .4s}.card:hover .cimg{transform:scale(1.06)}
         @keyframes spin{to{transform:rotate(360deg)}}
+        @media(max-width:768px){
+          .panel{animation:mobileSlideUp .35s cubic-bezier(.16,1,.3,1)!important}
+          @keyframes mobileSlideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+          ::-webkit-scrollbar{width:2px}
+        }
       `}</style>
 
       {/* Globe */}
@@ -5688,24 +5701,24 @@ function App() {
 
       {/* Header */}
       <div style={{
-        position:'absolute',top:0,left:0,right:selectedCity?(sidePanel?840:420):0,zIndex:1000,
+        position:'absolute',top:0,left:0,right:isMobile?0:(selectedCity?(sidePanel?840:420):0),zIndex:1000,
         background:'linear-gradient(to bottom,rgba(0,0,0,.65) 0%,transparent 100%)',
-        padding:'16px 20px 50px',pointerEvents:'none',
+        padding:isMobile?'12px 12px 40px':'16px 20px 50px',pointerEvents:'none',
         transition:'right .42s cubic-bezier(.16,1,.3,1)'
       }}>
-        <div style={{display:'flex',alignItems:'center',gap:12,pointerEvents:'all'}}>
-          <div style={{display:'flex',alignItems:'center',gap:10,position:'relative'}}>
-            <div onClick={()=>{setShowHamburger(v=>!v);setShowLangMenu(false)}} style={{width:40,height:40,borderRadius:11,background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 16px rgba(37,99,235,.4)',cursor:'pointer',transition:'transform .15s'}}
+        <div style={{display:'flex',alignItems:'center',gap:isMobile?8:12,pointerEvents:'all'}}>
+          <div style={{display:'flex',alignItems:'center',gap:isMobile?6:10,position:'relative'}}>
+            <div onClick={()=>{setShowHamburger(v=>!v);setShowLangMenu(false)}} style={{width:isMobile?34:40,height:isMobile?34:40,borderRadius:11,background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 16px rgba(37,99,235,.4)',cursor:'pointer',transition:'transform .15s'}}
               onMouseEnter={e=>e.currentTarget.style.transform='scale(1.08)'} onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="white" strokeWidth="2.2" strokeLinecap="round"/></svg>
             </div>
             <div>
-              <div style={{fontSize:20,fontWeight:800,letterSpacing:'-.5px',color:'white',lineHeight:1}}>ATLAS</div>
-              <div style={{fontSize:9,color:'rgba(255,255,255,.6)',letterSpacing:'2.5px',textTransform:'uppercase'}}>{t('appSub')}</div>
+              <div style={{fontSize:isMobile?16:20,fontWeight:800,letterSpacing:'-.5px',color:'white',lineHeight:1}}>ATLAS</div>
+              <div style={{fontSize:isMobile?7:9,color:'rgba(255,255,255,.6)',letterSpacing:'2.5px',textTransform:'uppercase'}}>{t('appSub')}</div>
             </div>
             {/* Hamburger Dropdown */}
             {showHamburger && (
-              <div style={{position:'absolute',top:'calc(100% + 10px)',left:0,background:'rgba(15,23,42,.97)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,.15)',borderRadius:16,overflow:'hidden',zIndex:2001,boxShadow:'0 16px 48px rgba(0,0,0,.5)',width:340,maxHeight:'75vh',overflowY:'auto'}}>
+              <div style={{position:'absolute',top:'calc(100% + 10px)',left:0,background:'rgba(15,23,42,.97)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,.15)',borderRadius:16,overflow:'hidden',zIndex:2001,boxShadow:'0 16px 48px rgba(0,0,0,.5)',width:isMobile?Math.min(340,window.innerWidth-24):340,maxHeight:'75vh',overflowY:'auto'}}>
                 {/* 저장된 코스 */}
                 <div style={{padding:'16px 16px 10px',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
                   {/* AI 코스 */}
@@ -5833,13 +5846,13 @@ function App() {
             )}
           </div>
           {/* Language Selector */}
-          <div style={{position:'relative',marginLeft:8}}>
+          <div style={{position:'relative',marginLeft:isMobile?4:8}}>
             <button onClick={()=>{setShowLangMenu(v=>!v);setShowFavorites(false);setShowHamburger(false)}}
-              style={{display:'flex',alignItems:'center',gap:5,background:'rgba(255,255,255,.12)',border:'1px solid rgba(255,255,255,.2)',borderRadius:20,padding:'5px 12px 5px 8px',cursor:'pointer',color:'white',fontSize:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s'}}
+              style={{display:'flex',alignItems:'center',gap:isMobile?3:5,background:'rgba(255,255,255,.12)',border:'1px solid rgba(255,255,255,.2)',borderRadius:20,padding:isMobile?'4px 8px':'5px 12px 5px 8px',cursor:'pointer',color:'white',fontSize:isMobile?11:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s'}}
               onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.22)'}
               onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}>
-              <span style={{fontSize:16}}>{LANG_OPTIONS.find(l=>l.code===lang)?.flag}</span>
-              <span>{LANG_OPTIONS.find(l=>l.code===lang)?.label}</span>
+              <span style={{fontSize:isMobile?14:16}}>{LANG_OPTIONS.find(l=>l.code===lang)?.flag}</span>
+              {!isMobile && <span>{LANG_OPTIONS.find(l=>l.code===lang)?.label}</span>}
               <span style={{fontSize:8,marginLeft:2}}>{showLangMenu?'▲':'▼'}</span>
             </button>
             {showLangMenu && (
@@ -5859,13 +5872,13 @@ function App() {
             )}
           </div>
           {/* AI Course Button */}
-          <div style={{marginLeft:4}}>
+          <div style={{marginLeft:isMobile?2:4}}>
             <button onClick={()=>{setShowAiModal(true);setShowLangMenu(false);setShowFavorites(false);setShowHamburger(false)}}
-              style={{display:'flex',alignItems:'center',gap:6,background:showAiModal?'rgba(200,133,106,.35)':'rgba(255,255,255,.13)',border:showAiModal?'1px solid rgba(200,133,106,.6)':'1px solid rgba(255,255,255,.22)',borderRadius:20,padding:'6px 14px',cursor:'pointer',color:'white',fontSize:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s',letterSpacing:'.1px'}}
+              style={{display:'flex',alignItems:'center',gap:isMobile?4:6,background:showAiModal?'rgba(200,133,106,.35)':'rgba(255,255,255,.13)',border:showAiModal?'1px solid rgba(200,133,106,.6)':'1px solid rgba(255,255,255,.22)',borderRadius:20,padding:isMobile?'5px 10px':'6px 14px',cursor:'pointer',color:'white',fontSize:isMobile?10:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s',letterSpacing:'.1px'}}
               onMouseEnter={e=>e.currentTarget.style.background=showAiModal?'rgba(200,133,106,.45)':'rgba(255,255,255,.22)'}
               onMouseLeave={e=>e.currentTarget.style.background=showAiModal?'rgba(200,133,106,.35)':'rgba(255,255,255,.13)'}>
               <div style={{width:16,height:16,borderRadius:4,background:'rgba(255,255,255,.25)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:800,letterSpacing:0}}>AI</div>
-              <span>{t('aiCourse')}</span>
+              {!isMobile && <span>{t('aiCourse')}</span>}
             </button>
           </div>
           <div style={{marginLeft:'auto',position:'relative'}}>
@@ -5874,9 +5887,9 @@ function App() {
               onChange={e=>{setSearchQuery(e.target.value);setShowDrop(true)}}
               onFocus={()=>setShowDrop(true)}
               onBlur={()=>setTimeout(()=>setShowDrop(false),150)}
-              style={{padding:'9px 14px 9px 33px',borderRadius:22,fontSize:13,width:215,background:'rgba(255,255,255,.95)',border:'1.5px solid #e2e8f0',color:'#1e293b',outline:'none',boxShadow:'0 2px 12px rgba(0,0,0,.2)'}}/>
+              style={{padding:isMobile?'7px 12px 7px 30px':'9px 14px 9px 33px',borderRadius:22,fontSize:isMobile?11:13,width:isMobile?120:215,background:'rgba(255,255,255,.95)',border:'1.5px solid #e2e8f0',color:'#1e293b',outline:'none',boxShadow:'0 2px 12px rgba(0,0,0,.2)'}}/>
             {showDrop && filtered.length>0 && (
-              <div style={{position:'absolute',top:'calc(100% + 7px)',right:0,background:'white',border:'1.5px solid #e2e8f0',borderRadius:14,overflow:'hidden',width:250,zIndex:2000,boxShadow:'0 12px 32px rgba(0,0,0,.15)'}}>
+              <div style={{position:'absolute',top:'calc(100% + 7px)',right:0,background:'white',border:'1.5px solid #e2e8f0',borderRadius:14,overflow:'hidden',width:isMobile?'80vw':250,zIndex:2000,boxShadow:'0 12px 32px rgba(0,0,0,.15)'}}>
                 {filtered.slice(0,8).map((c,i)=>(
                   <div key={i} onMouseDown={()=>{
                     const feat = countries.find(f => f.properties.NAME === c.countryEn)
@@ -5929,17 +5942,21 @@ function App() {
           <>
             {/* Bottom bar */}
             <div style={{
-              position:'absolute',bottom:24,
+              position:'absolute',bottom:isMobile?12:24,
               left:'50%',transform:'translateX(-50%)',
               zIndex:1001,background:'rgba(255,255,255,.96)',backdropFilter:'blur(14px)',
-              border:'1.5px solid #e2e8f0',borderRadius:40,
-              padding:'10px 20px',fontSize:13,color:'#1e293b',
+              border:'1.5px solid #e2e8f0',borderRadius:isMobile?20:40,
+              padding:isMobile?'8px 14px':'10px 20px',fontSize:isMobile?11:13,color:'#1e293b',
               boxShadow:'0 4px 24px rgba(0,0,0,.18)',
-              display:'flex',alignItems:'center',gap:12,whiteSpace:'nowrap',
+              display:'flex',alignItems:'center',gap:isMobile?6:12,
+              whiteSpace:isMobile?'normal':'nowrap',
+              maxWidth:isMobile?'92vw':'none',
+              flexWrap:isMobile?'wrap':'nowrap',
+              justifyContent:isMobile?'center':'flex-start',
             }}>
-              {info && <span style={{fontSize:20}}>{info.emoji}</span>}
-              <span style={{fontWeight:700,fontSize:15}}>{countryKo}</span>
-              {info && <span style={{fontSize:11,color:'#64748b',fontWeight:500}}>{info.tagline}</span>}
+              {info && <span style={{fontSize:isMobile?16:20}}>{info.emoji}</span>}
+              <span style={{fontWeight:700,fontSize:isMobile?13:15}}>{countryKo}</span>
+              {info && !isMobile && <span style={{fontSize:11,color:'#64748b',fontWeight:500}}>{info.tagline}</span>}
               <span style={{color:'#94a3b8',fontSize:12}}>
                 {cities ? `${cities.length}${t('nCities')}` : ''}
               </span>
@@ -5958,8 +5975,8 @@ function App() {
             {/* Country Info Panel */}
             {showCountryInfo && info && (
               <div className="countryInfoPanel" style={{
-                position:'absolute',bottom:68,left:'50%',transform:'translateX(-50%)',
-                zIndex:1000,width:480,maxWidth:'92vw',
+                position:'absolute',bottom:isMobile?56:68,left:'50%',transform:'translateX(-50%)',
+                zIndex:1000,width:isMobile?'95vw':480,maxWidth:'95vw',
                 background:'rgba(255,255,255,.97)',backdropFilter:'blur(16px)',
                 border:'1.5px solid #e2e8f0',borderRadius:18,
                 boxShadow:'0 12px 48px rgba(0,0,0,.22)',
@@ -6022,7 +6039,7 @@ function App() {
 
       {/* Hint */}
       {!selectedCountry && (
-        <div style={{position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:1000,background:'rgba(255,255,255,.9)',backdropFilter:'blur(12px)',border:'1.5px solid rgba(255,255,255,.5)',borderRadius:40,padding:'9px 20px',fontSize:12,color:'#475569',whiteSpace:'nowrap',boxShadow:'0 4px 20px rgba(0,0,0,.2)',pointerEvents:'none'}}>
+        <div style={{position:'absolute',bottom:isMobile?12:24,left:'50%',transform:'translateX(-50%)',zIndex:1000,background:'rgba(255,255,255,.9)',backdropFilter:'blur(12px)',border:'1.5px solid rgba(255,255,255,.5)',borderRadius:40,padding:isMobile?'7px 14px':'9px 20px',fontSize:isMobile?10:12,color:'#475569',whiteSpace:'nowrap',boxShadow:'0 4px 20px rgba(0,0,0,.2)',pointerEvents:'none'}}>
           {t('hintMain')}
         </div>
       )}
@@ -6033,7 +6050,7 @@ function App() {
       {selectedCity && (
         <>
         {/* 사이드 탭 (핫플 / 맛집) - 패널 왼쪽에 고정 */}
-        <div style={{position:'absolute',top:120,right:sidePanel?840:420,zIndex:1001,display:'flex',flexDirection:'column',gap:4,transition:'right .3s cubic-bezier(.16,1,.3,1)'}}>
+        {!isMobile && <div style={{position:'absolute',top:120,right:sidePanel?840:420,zIndex:1001,display:'flex',flexDirection:'column',gap:4,transition:'right .3s cubic-bezier(.16,1,.3,1)'}}>
           <button
             onClick={() => setSidePanel(sidePanel === 'hotspots' ? null : 'hotspots')}
             style={{
@@ -6062,15 +6079,15 @@ function App() {
             onMouseEnter={e=>{if(sidePanel!=='restaurants'){e.currentTarget.style.background='rgba(250,248,245,1)';e.currentTarget.style.color='#c8856a'}}}
             onMouseLeave={e=>{if(sidePanel!=='restaurants'){e.currentTarget.style.background='rgba(250,248,245,.92)';e.currentTarget.style.color='#9a8070'}}}
           >{t('foodTab').replace('🍽','').trim()}</button>
-        </div>
+        </div>}
 
         {/* 사이드 슬라이드 패널 (핫플/맛집 리스트) */}
         {sidePanel && (
           <div style={{
-            position:'absolute',top:0,right:420,bottom:0,width:420,zIndex:1000,
-            background:'#faf8f5',borderLeft:'1px solid #e8e2da',
+            position:'absolute',top:0,right:isMobile?0:420,bottom:0,width:isMobile?'100%':420,zIndex:isMobile?1002:1000,
+            background:'#faf8f5',borderLeft:isMobile?'none':'1px solid #e8e2da',
             overflowY:'auto',
-            boxShadow:'-8px 0 24px rgba(0,0,0,.08)',
+            boxShadow:isMobile?'none':'-8px 0 24px rgba(0,0,0,.08)',
             animation:'sidePanelIn .3s cubic-bezier(.16,1,.3,1)'
           }}>
             {/* 헤더 */}
@@ -6196,7 +6213,7 @@ function App() {
           </div>
         )}
 
-        <div className="panel" style={{position:'absolute',top:0,right:0,bottom:0,width:420,zIndex:1000,background:'white',borderLeft:'1.5px solid #e2e8f0',overflowY:'auto',boxShadow:'-12px 0 40px rgba(0,0,0,.15)'}}>
+        <div className="panel" style={{position:'absolute',top:0,right:0,bottom:0,width:isMobile?'100%':420,zIndex:1000,background:'white',borderLeft:isMobile?'none':'1.5px solid #e2e8f0',overflowY:'auto',boxShadow:isMobile?'none':'-12px 0 40px rgba(0,0,0,.15)'}}>
           <div style={{position:'sticky',top:0,zIndex:10,padding:'20px 20px 14px',background:'linear-gradient(white 87%,transparent)'}}>
             <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
               <div>
@@ -6237,6 +6254,21 @@ function App() {
               </div>
             )}
           </div>
+          {/* 모바일 전용 탭 (핫플/맛집) */}
+          {isMobile && (
+            <div style={{display:'flex',gap:6,padding:'0 20px 10px',borderBottom:'1px solid #f1f5f9'}}>
+              <button onClick={()=>setSidePanel(sidePanel==='hotspots'?null:'hotspots')}
+                style={{flex:1,padding:'8px 0',fontSize:12,fontWeight:600,borderRadius:10,border:'none',cursor:'pointer',
+                  background:sidePanel==='hotspots'?'#c8856a':'#f5f0ea',color:sidePanel==='hotspots'?'#fff':'#9a8070',transition:'all .2s'}}>
+                {t('hotspots')}
+              </button>
+              <button onClick={()=>setSidePanel(sidePanel==='restaurants'?null:'restaurants')}
+                style={{flex:1,padding:'8px 0',fontSize:12,fontWeight:600,borderRadius:10,border:'none',cursor:'pointer',
+                  background:sidePanel==='restaurants'?'#c8856a':'#f5f0ea',color:sidePanel==='restaurants'?'#fff':'#9a8070',transition:'all .2s'}}>
+                {t('foodTab').replace('🍽','').trim()}
+              </button>
+            </div>
+          )}
           <div style={{padding:'0 20px 40px'}}>
             {cityData ? (
               <>
@@ -6686,7 +6718,7 @@ function App() {
 
       {/* ── 코스 플래너 패널 (Warm Cream) ── */}
       {showCoursePlanner && courseDays.length > 0 && (
-        <div style={{position:'absolute',top:72,left:0,bottom:0,width:Math.min(500,typeof window!=='undefined'?window.innerWidth-30:480),zIndex:1100,background:'#faf8f5',borderRight:'1px solid #e8e2da',boxShadow:'16px 0 48px rgba(0,0,0,.1)',display:'flex',flexDirection:'column',animation:'coursePlannerIn .35s cubic-bezier(.16,1,.3,1)'}}>
+        <div style={{position:'absolute',top:isMobile?0:72,left:0,bottom:0,width:isMobile?'100%':Math.min(500,typeof window!=='undefined'?window.innerWidth-30:480),zIndex:1100,background:'#faf8f5',borderRight:isMobile?'none':'1px solid #e8e2da',boxShadow:isMobile?'none':'16px 0 48px rgba(0,0,0,.1)',display:'flex',flexDirection:'column',animation:'coursePlannerIn .35s cubic-bezier(.16,1,.3,1)'}}>
 
           {/* 헤더 */}
           <div style={{padding:'20px 20px 0',flexShrink:0}}>
