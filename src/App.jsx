@@ -366,6 +366,12 @@ const COUNTRY_CITIES = {
     { name:"그랜드캐니언", lat:36.10, lng:-112.11, emoji:"🏜️", color:"#e67e22" },
     { name:"옐로스톤", lat:44.43, lng:-110.59, emoji:"🌋", color:"#27ae60" },
     { name:"샌디에이고", lat:32.72, lng:-117.16, emoji:"🌞", color:"#f39c12" },
+    { name:"덴버", lat:39.74, lng:-104.98, emoji:"🏔️", color:"#8B4513" },
+    { name:"내슈빌", lat:36.17, lng:-86.78, emoji:"🎸", color:"#c0392b" },
+    { name:"포틀랜드", lat:45.52, lng:-122.68, emoji:"🌲", color:"#27ae60" },
+    { name:"피닉스", lat:33.45, lng:-112.07, emoji:"🌵", color:"#e67e22" },
+    { name:"올랜도", lat:28.54, lng:-81.38, emoji:"🎡", color:"#9b59b6" },
+    { name:"나이아가라폭포", lat:43.08, lng:-79.07, emoji:"💧", color:"#3498db" },
   ],
   "Australia": [
     { name:"시드니", lat:-33.87, lng:151.21, emoji:"🎭", color:"#1abc9c" },
@@ -540,6 +546,12 @@ const COUNTRY_CITIES = {
   "Hungary": [
     { name:"부다페스트", lat:47.50, lng:19.04, emoji:"🏰", color:"#e74c3c" },
     { name:"에게르", lat:47.90, lng:20.38, emoji:"🍷", color:"#9b59b6" },
+  ],
+  "Slovenia": [
+    { name:"류블랴나", lat:46.05, lng:14.51, emoji:"🏰", color:"#3498db" },
+    { name:"블레드", lat:46.37, lng:14.11, emoji:"🏔️", color:"#2ecc71" },
+    { name:"피란", lat:45.53, lng:13.57, emoji:"⛵", color:"#e74c3c" },
+    { name:"마리보르", lat:46.56, lng:15.65, emoji:"🍷", color:"#9b59b6" },
   ],
   "Croatia": [
     { name:"두브로브니크", lat:42.66, lng:18.05, emoji:"🌊", color:"#3498db" },
@@ -737,6 +749,11 @@ const COUNTRY_CITIES = {
   "Taiwan": [
     { name:"타이베이", lat:25.03, lng:121.57, emoji:"🏙️", color:"#e74c3c" },
     { name:"지우펀", lat:25.11, lng:121.84, emoji:"🏮", color:"#f39c12" },
+    { name:"가오슝", lat:22.63, lng:120.30, emoji:"🌊", color:"#3498db" },
+    { name:"타이난", lat:22.99, lng:120.20, emoji:"🏛️", color:"#9b59b6" },
+    { name:"타이중", lat:24.16, lng:120.65, emoji:"🌿", color:"#2ecc71" },
+    { name:"화롄", lat:23.99, lng:121.60, emoji:"🏔️", color:"#16a085" },
+    { name:"타로코", lat:24.18, lng:121.62, emoji:"⛰️", color:"#e67e22" },
   ],
   "Maldives": [
     { name:"말레", lat:4.18, lng:73.51, emoji:"🏝️", color:"#3498db" },
@@ -758,6 +775,9 @@ const COUNTRY_CITIES = {
   ],
   "Georgia": [
     { name:"트빌리시", lat:41.72, lng:44.80, emoji:"⛪", color:"#9b59b6" },
+    { name:"카즈베기", lat:42.65, lng:44.66, emoji:"🏔️", color:"#3498db" },
+    { name:"메스티아", lat:43.05, lng:42.73, emoji:"🗼", color:"#2ecc71" },
+    { name:"시그나기", lat:41.62, lng:45.92, emoji:"🍷", color:"#e74c3c" },
   ],
   "Montenegro": [
     { name:"코토르", lat:42.45, lng:18.77, emoji:"🏰", color:"#3498db" },
@@ -947,7 +967,7 @@ const COUNTRY_ISO = {
 "Ireland":"IE","Belgium":"BE","Maldives":"MV","Saudi Arabia":"SA","Iran":"IR",
 "Uzbekistan":"UZ","Laos":"LA","Mongolia":"MN","Romania":"RO","Georgia":"GE",
 "Ecuador":"EC","Bolivia":"BO","Ethiopia":"ET","Ghana":"GH","Panama":"PA",
-"Montenegro":"ME","Tunisia":"TN","Oman":"OM","Qatar":"QA","Costa Rica":"CR",
+"Montenegro":"ME","Tunisia":"TN","Oman":"OM","Qatar":"QA","Costa Rica":"CR","Slovenia":"SI",
 "Dominican Republic":"DO","Guatemala":"GT","Jamaica":"JM","Latvia":"LV",
 "Lithuania":"LT","Estonia":"EE","Cyprus":"CY","Albania":"AL","Serbia":"RS",
 "Namibia":"NA","Zimbabwe":"ZW","Fiji":"FJ","Madagascar":"MG","Mauritius":"MU",
@@ -1160,7 +1180,7 @@ const CITY_I18N = {
 // 영국
 "런던":["London","ロンドン","伦敦"],"에든버러":["Edinburgh","エディンバラ","爱丁堡"],"맨체스터":["Manchester","マンチェスター","曼彻斯特"],"바스":["Bath","バース","巴斯"],"옥스퍼드":["Oxford","オックスフォード","牛津"],"케임브리지":["Cambridge","ケンブリッジ","剑桥"],"요크":["York","ヨーク","约克"],"리버풀":["Liverpool","リバプール","利物浦"],"코츠월즈":["Cotswolds","コッツウォルズ","科茨沃尔德"],"글래스고":["Glasgow","グラスゴー","格拉斯哥"],
 // 미국
-"뉴욕":["New York","ニューヨーク","纽约"],"로스앤젤레스":["Los Angeles","ロサンゼルス","洛杉矶"],"샌프란시스코":["San Francisco","サンフランシスコ","旧金山"],"라스베이거스":["Las Vegas","ラスベガス","拉斯维加斯"],"마이애미":["Miami","マイアミ","迈阿密"],"시카고":["Chicago","シカゴ","芝加哥"],"워싱턴DC":["Washington D.C.","ワシントンD.C.","华盛顿"],"보스턴":["Boston","ボストン","波士顿"],"뉴올리언스":["New Orleans","ニューオーリンズ","新奥尔良"],"시애틀":["Seattle","シアトル","西雅图"],"하와이":["Hawaii","ハワイ","夏威夷"],"그랜드캐니언":["Grand Canyon","グランドキャニオン","大峡谷"],"옐로스톤":["Yellowstone","イエローストーン","黄石"],"샌디에이고":["San Diego","サンディエゴ","圣迭戈"],
+"뉴욕":["New York","ニューヨーク","纽约"],"로스앤젤레스":["Los Angeles","ロサンゼルス","洛杉矶"],"샌프란시스코":["San Francisco","サンフランシスコ","旧金山"],"라스베이거스":["Las Vegas","ラスベガス","拉斯维加斯"],"마이애미":["Miami","マイアミ","迈阿密"],"시카고":["Chicago","シカゴ","芝加哥"],"워싱턴DC":["Washington D.C.","ワシントンD.C.","华盛顿"],"보스턴":["Boston","ボストン","波士顿"],"뉴올리언스":["New Orleans","ニューオーリンズ","新奥尔良"],"시애틀":["Seattle","シアトル","西雅图"],"하와이":["Hawaii","ハワイ","夏威夷"],"그랜드캐니언":["Grand Canyon","グランドキャニオン","大峡谷"],"옐로스톤":["Yellowstone","イエローストーン","黄石"],"샌디에이고":["San Diego","サンディエゴ","圣迭戈"],"덴버":["Denver","デンバー","丹佛"],"내슈빌":["Nashville","ナッシュビル","纳什维尔"],"포틀랜드":["Portland","ポートランド","波特兰"],"피닉스":["Phoenix","フェニックス","凤凰城"],"올랜도":["Orlando","オーランド","奥兰多"],"나이아가라폭포":["Niagara Falls","ナイアガラの滝","尼亚加拉大瀑布"],
 // 호주
 "시드니":["Sydney","シドニー","悉尼"],"멜버른":["Melbourne","メルボルン","墨尔本"],"케언즈":["Cairns","ケアンズ","凯恩斯"],"울루루":["Uluru","ウルル","乌卢鲁"],"브리즈번":["Brisbane","ブリスベン","布里斯班"],"퍼스":["Perth","パース","珀斯"],"골드코스트":["Gold Coast","ゴールドコースト","黄金海岸"],"그레이트배리어리프":["Great Barrier Reef","グレートバリアリーフ","大堡礁"],"태즈메이니아":["Tasmania","タスマニア","塔斯马尼亚"],
 // 태국
@@ -1189,8 +1209,8 @@ const CITY_I18N = {
 "카트만두":["Kathmandu","カトマンズ","加德满都"],"포카라":["Pokhara","ポカラ","博卡拉"],"치트완":["Chitwan","チトワン","奇特旺"],"룸비니":["Lumbini","ルンビニ","蓝毗尼"],"콜롬보":["Colombo","コロンボ","科伦坡"],"캔디":["Kandy","キャンディ","康提"],"갈레":["Galle","ゴール","加勒"],"시기리야":["Sigiriya","シーギリヤ","狮子岩"],"누와라엘리야":["Nuwara Eliya","ヌワラエリヤ","努沃勒埃利耶"],"마닐라":["Manila","マニラ","马尼拉"],"팔라완":["Palawan","パラワン","巴拉望"],"보라카이":["Boracay","ボラカイ","长滩岛"],"세부":["Cebu","セブ","宿务"],"시아르가오":["Siargao","シアルガオ","锡亚高"],
 // 포르투갈·네덜란드·체코·오스트리아·스위스
 "리스본":["Lisbon","リスボン","里斯本"],"포르투":["Porto","ポルト","波尔图"],"신트라":["Sintra","シントラ","辛特拉"],"알가르브":["Algarve","アルガルヴェ","阿尔加维"],"코임브라":["Coimbra","コインブラ","科英布拉"],"마데이라":["Madeira","マデイラ","马德拉"],"암스테르담":["Amsterdam","アムステルダム","阿姆斯特丹"],"로테르담":["Rotterdam","ロッテルダム","鹿特丹"],"헤이그":["The Hague","ハーグ","海牙"],"위트레흐트":["Utrecht","ユトレヒト","乌得勒支"],"마스트리흐트":["Maastricht","マーストリヒト","马斯特里赫特"],"프라하":["Prague","プラハ","布拉格"],"체스키크룸로프":["Český Krumlov","チェスキー・クルムロフ","克鲁姆洛夫"],"브르노":["Brno","ブルノ","布尔诺"],"빈":["Vienna","ウィーン","维也纳"],"잘츠부르크":["Salzburg","ザルツブルク","萨尔茨堡"],"인스브루크":["Innsbruck","インスブルック","因斯布鲁克"],"할슈타트":["Hallstatt","ハルシュタット","哈尔施塔特"],"그라츠":["Graz","グラーツ","格拉茨"],"취리히":["Zurich","チューリッヒ","苏黎世"],"제네바":["Geneva","ジュネーヴ","日内瓦"],"인터라켄":["Interlaken","インターラーケン","因特拉肯"],"루체른":["Lucerne","ルツェルン","卢塞恩"],"체르마트":["Zermatt","ツェルマット","采尔马特"],"베른":["Bern","ベルン","伯尔尼"],
-// 헝가리·크로아티아
-"부다페스트":["Budapest","ブダペスト","布达佩斯"],"에게르":["Eger","エゲル","埃格尔"],"두브로브니크":["Dubrovnik","ドゥブロヴニク","杜布罗夫尼克"],"자그레브":["Zagreb","ザグレブ","萨格勒布"],"플리트비체":["Plitvice","プリトヴィツェ","普利特维采"],"스플리트":["Split","スプリト","斯普利特"],"흐바르":["Hvar","フヴァル","赫瓦尔"],
+// 헝가리·슬로베니아·크로아티아
+"부다페스트":["Budapest","ブダペスト","布达佩斯"],"에게르":["Eger","エゲル","埃格尔"],"류블랴나":["Ljubljana","リュブリャナ","卢布尔雅那"],"블레드":["Bled","ブレッド","布莱德"],"피란":["Piran","ピラン","皮兰"],"마리보르":["Maribor","マリボル","马里博尔"],"두브로브니크":["Dubrovnik","ドゥブロヴニク","杜布罗夫尼克"],"자그레브":["Zagreb","ザグレブ","萨格勒布"],"플리트비체":["Plitvice","プリトヴィツェ","普利特维采"],"스플리트":["Split","スプリト","斯普利特"],"흐바르":["Hvar","フヴァル","赫瓦尔"],
 // 북유럽
 "오슬로":["Oslo","オスロ","奥斯陆"],"베르겐":["Bergen","ベルゲン","卑尔根"],"플롬":["Flåm","フロム","弗洛姆"],"트롬쇠":["Tromsø","トロムソ","特罗姆瑟"],"로포텐":["Lofoten","ロフォーテン","罗弗敦"],"게이랑에르":["Geiranger","ガイランゲル","盖朗厄尔"],"스톡홀름":["Stockholm","ストックホルム","斯德哥尔摩"],"예테보리":["Gothenburg","ヨーテボリ","哥德堡"],"말뫼":["Malmö","マルメ","马尔默"],"아비스코":["Abisko","アビスコ","阿比斯库"],"코펜하겐":["Copenhagen","コペンハーゲン","哥本哈根"],"오르후스":["Aarhus","オーフス","奥胡斯"],"오덴세":["Odense","オーデンセ","欧登塞"],"헬싱키":["Helsinki","ヘルシンキ","赫尔辛基"],"로바니에미":["Rovaniemi","ロヴァニエミ","罗瓦涅米"],"탐페레":["Tampere","タンペレ","坦佩雷"],"레이캬비크":["Reykjavik","レイキャヴィーク","雷克雅未克"],"아퀴레이리":["Akureyri","アークレイリ","阿库雷里"],"블루라군":["Blue Lagoon","ブルーラグーン","蓝湖"],"요쿨살론":["Jökulsárlón","ヨークルスアゥルロゥン","杰古沙龙"],"골든서클":["Golden Circle","ゴールデンサークル","黄金圈"],
 // 폴란드·러시아
@@ -1210,9 +1230,9 @@ const CITY_I18N = {
 // 사우디·이란·우즈벡
 "리야드":["Riyadh","リヤド","利雅得"],"제다":["Jeddah","ジェッダ","吉达"],"알울라":["AlUla","アルウラ","欧拉"],"메카":["Mecca","メッカ","麦加"],"테헤란":["Tehran","テヘラン","德黑兰"],"이스파한":["Isfahan","イスファハーン","伊斯法罕"],"시라즈":["Shiraz","シーラーズ","设拉子"],"페르세폴리스":["Persepolis","ペルセポリス","波斯波利斯"],"사마르칸트":["Samarkand","サマルカンド","撒马尔罕"],"부하라":["Bukhara","ブハラ","布哈拉"],"히바":["Khiva","ヒヴァ","希瓦"],"타슈켄트":["Tashkent","タシケント","塔什干"],
 // 에티오피아·가나·아일랜드·벨기에·대만·몰디브
-"아디스아바바":["Addis Ababa","アディスアベバ","亚的斯亚贝巴"],"랄리벨라":["Lalibela","ラリベラ","拉利贝拉"],"악숨":["Axum","アクスム","阿克苏姆"],"다나킬사막":["Danakil Desert","ダナキル砂漠","达纳基尔沙漠"],"아크라":["Accra","アクラ","阿克拉"],"케이프코스트":["Cape Coast","ケープコースト","海岸角"],"쿠마시":["Kumasi","クマシ","库马西"],"더블린":["Dublin","ダブリン","都柏林"],"골웨이":["Galway","ゴールウェイ","戈尔韦"],"브뤼셀":["Brussels","ブリュッセル","布鲁塞尔"],"브뤼헤":["Bruges","ブルージュ","布鲁日"],"타이베이":["Taipei","台北","台北"],"지우펀":["Jiufen","九份","九份"],"말레":["Malé","マレ","马累"],
+"아디스아바바":["Addis Ababa","アディスアベバ","亚的斯亚贝巴"],"랄리벨라":["Lalibela","ラリベラ","拉利贝拉"],"악숨":["Axum","アクスム","阿克苏姆"],"다나킬사막":["Danakil Desert","ダナキル砂漠","达纳基尔沙漠"],"아크라":["Accra","アクラ","阿克拉"],"케이프코스트":["Cape Coast","ケープコースト","海岸角"],"쿠마시":["Kumasi","クマシ","库马西"],"더블린":["Dublin","ダブリン","都柏林"],"골웨이":["Galway","ゴールウェイ","戈尔韦"],"브뤼셀":["Brussels","ブリュッセル","布鲁塞尔"],"브뤼헤":["Bruges","ブルージュ","布鲁日"],"타이베이":["Taipei","台北","台北"],"지우펀":["Jiufen","九份","九份"],"가오슝":["Kaohsiung","高雄","高雄"],"타이난":["Tainan","台南","台南"],"타이중":["Taichung","台中","台中"],"화롄":["Hualien","花蓮","花莲"],"타로코":["Taroko","太魯閣","太鲁阁"],"말레":["Malé","マレ","马累"],
 // 코스타리카·파나마·에콰도르·루마니아·조지아·몬테네그로·몽골·라오스
-"산호세":["San José","サンホセ","圣何塞"],"아레날":["Arenal","アレナル","阿雷纳尔"],"파나마시티":["Panama City","パナマシティ","巴拿马城"],"키토":["Quito","キト","基多"],"갈라파고스":["Galápagos","ガラパゴス","加拉帕戈斯"],"부쿠레슈티":["Bucharest","ブカレスト","布加勒斯特"],"브라쇼프":["Brașov","ブラショフ","布拉索夫"],"트빌리시":["Tbilisi","トビリシ","第比利斯"],"코토르":["Kotor","コトル","科托尔"],"울란바토르":["Ulaanbaatar","ウランバートル","乌兰巴托"],"루앙프라방":["Luang Prabang","ルアンパバーン","琅勃拉邦"],"비엔티안":["Vientiane","ビエンチャン","万象"],
+"산호세":["San José","サンホセ","圣何塞"],"아레날":["Arenal","アレナル","阿雷纳尔"],"파나마시티":["Panama City","パナマシティ","巴拿马城"],"키토":["Quito","キト","基多"],"갈라파고스":["Galápagos","ガラパゴス","加拉帕戈斯"],"부쿠레슈티":["Bucharest","ブカレスト","布加勒斯特"],"브라쇼프":["Brașov","ブラショフ","布拉索夫"],"트빌리시":["Tbilisi","トビリシ","第比利斯"],"카즈베기":["Kazbegi","カズベギ","卡兹别吉"],"메스티아":["Mestia","メスティア","梅斯蒂亚"],"시그나기":["Sighnaghi","シグナギ","希纳吉"],"코토르":["Kotor","コトル","科托尔"],"울란바토르":["Ulaanbaatar","ウランバートル","乌兰巴托"],"루앙프라방":["Luang Prabang","ルアンパバーン","琅勃拉邦"],"비엔티안":["Vientiane","ビエンチャン","万象"],
 // 소규모 국가 수도 등
 "튀니스":["Tunis","チュニス","突尼斯"],"무스카트":["Muscat","マスカット","马斯喀特"],"도하":["Doha","ドーハ","多哈"],"라파스":["La Paz","ラパス","拉巴斯"],"우유니":["Uyuni","ウユニ","乌尤尼"],"푼타카나":["Punta Cana","プンタカナ","蓬塔卡纳"],"안티구아":["Antigua","アンティグア","安提瓜"],"킹스턴":["Kingston","キングストン","金斯敦"],"몬테고베이":["Montego Bay","モンテゴ・ベイ","蒙特哥湾"],"리가":["Riga","リガ","里加"],"빌뉴스":["Vilnius","ヴィリニュス","维尔纽斯"],"탈린":["Tallinn","タリン","塔林"],"파포스":["Paphos","パフォス","帕福斯"],"티라나":["Tirana","ティラナ","地拉那"],"베오그라드":["Belgrade","ベオグラード","贝尔格莱德"],"빈트후크":["Windhoek","ウィントフック","温得和克"],"소수스블레이":["Sossusvlei","ソッサスフレイ","索苏斯弗莱"],"빅토리아폴스":["Victoria Falls","ヴィクトリアフォールズ","维多利亚瀑布"],"나디":["Nadi","ナンディ","楠迪"],"안타나나리보":["Antananarivo","アンタナナリボ","塔那那利佛"],"포트루이스":["Port Louis","ポートルイス","路易港"],"베이루트":["Beirut","ベイルート","贝鲁特"],"키이우":["Kyiv","キーウ","基辅"],"르비우":["Lviv","リヴィウ","利沃夫"],"라호르":["Lahore","ラホール","拉合尔"],"이슬라마바드":["Islamabad","イスラマバード","伊斯兰堡"],"룩셈부르크시티":["Luxembourg City","ルクセンブルク","卢森堡"],"브라티슬라바":["Bratislava","ブラチスラバ","布拉迪斯拉发"],"소피아":["Sofia","ソフィア","索菲亚"],"키갈리":["Kigali","キガリ","基加利"],"다카르":["Dakar","ダカール","达喀尔"],"알마티":["Almaty","アルマトイ","阿拉木图"],
 // 나머지 수도 도시
@@ -1252,6 +1272,7 @@ const COUNTRY_INFO = {
   "Switzerland": { capital:"베른", population:"880만", area:"41,284 km²", lang:"독일어·프랑스어·이탈리아어·로만슈어", currency:"프랑 (CHF)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+41", drive:"우측", tagline:"알프스 중심의 정밀한 나라", continent:"유럽", emoji:"🇨🇭" },
   "Hungary": { capital:"부다페스트", population:"970만", area:"93,028 km²", lang:"헝가리어", currency:"포린트 (HUF)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+36", drive:"우측", tagline:"다뉴브 강의 진주", continent:"유럽", emoji:"🇭🇺" },
   "Croatia": { capital:"자그레브", population:"390만", area:"56,594 km²", lang:"크로아티아어", currency:"유로 (EUR)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+385", drive:"우측", tagline:"아드리아해의 보석", continent:"유럽", emoji:"🇭🇷" },
+  "Slovenia": { capital:"류블랴나", population:"215만", area:"20,273 km²", lang:"슬로베니아어", currency:"유로 (EUR)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+386", drive:"우측", tagline:"알프스와 아드리아해 사이의 초록 나라", continent:"유럽", emoji:"🇸🇮" },
   "Greece": { capital:"아테네", population:"1,050만", area:"131,957 km²", lang:"그리스어", currency:"유로 (EUR)", timezone:"UTC+2", timeDiff:"-7시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+30", drive:"우측", tagline:"서양 문명의 요람", continent:"유럽", emoji:"🇬🇷" },
   "Norway": { capital:"오슬로", population:"550만", area:"385,207 km²", lang:"노르웨이어", currency:"크로네 (NOK)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+47", drive:"우측", tagline:"피오르드와 오로라의 나라", continent:"유럽", emoji:"🇳🇴" },
   "Sweden": { capital:"스톡홀름", population:"1,050만", area:"450,295 km²", lang:"스웨덴어", currency:"크로나 (SEK)", timezone:"UTC+1", timeDiff:"-8시간", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+46", drive:"우측", tagline:"디자인과 복지의 스칸디나비아", continent:"유럽", emoji:"🇸🇪" },
@@ -1560,6 +1581,7 @@ const COUNTRY_I18N = {
 "Switzerland":{en:["Bern","Precision country at the heart of the Alps"],ja:["ベルン","アルプスの中心の精密な国"],zh:["伯尔尼","阿尔卑斯山中心的精密之国"]},
 "Hungary":{en:["Budapest","Pearl of the Danube"],ja:["ブダペスト","ドナウの真珠"],zh:["布达佩斯","多瑙河上的明珠"]},
 "Croatia":{en:["Zagreb","Jewel of the Adriatic"],ja:["ザグレブ","アドリア海の宝石"],zh:["萨格勒布","亚得里亚海的宝石"]},
+"Slovenia":{en:["Ljubljana","Green country between Alps and Adriatic"],ja:["リュブリャナ","アルプスとアドリア海の緑の国"],zh:["卢布尔雅那","阿尔卑斯与亚得里亚海之间的绿色国度"]},
 "Greece":{en:["Athens","Cradle of Western civilization"],ja:["アテネ","西洋文明の揺りかご"],zh:["雅典","西方文明的摇篮"]},
 "Norway":{en:["Oslo","Land of fjords and northern lights"],ja:["オスロ","フィヨルドとオーロラの国"],zh:["奥斯陆","峡湾与极光之国"]},
 "Sweden":{en:["Stockholm","Scandinavian design and welfare"],ja:["ストックホルム","デザインと福祉のスカンジナビア"],zh:["斯德哥尔摩","设计与福利的斯堪的纳维亚"]},
@@ -2438,6 +2460,36 @@ const CITY_DATA = {
   {name:"발보아 파크", wikiTitle:"Balboa Park", type:"문화", desc:"17개의 박물관과 정원이 있는 거대한 문화공원입니다. 스패니시 리바이벌 건축이 아름답고 무료 공연도 자주 열립니다.", rating:4.6, openTime:"24시간", price:"무료(박물관별)", website:"https://en.wikipedia.org/wiki/Balboa_Park"},
   {name:"코로나도 해변", wikiTitle:"Coronado, California", type:"자연", desc:"금빛 모래가 빛나는 미국 최고의 해변 중 하나입니다. 유서 깊은 호텔 델 코로나도와 함께 이 지역의 상징입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Coronado,_California"},
 ]},
+"덴버": { description:"덴버는 로키산맥 관문 도시로 해발 1,600m의 '마일하이 시티'입니다. 스키 리조트 접근성과 활기찬 예술·음식 문화가 매력입니다.", spots:[
+  {name:"록키 마운틴 국립공원", wikiTitle:"Rocky Mountain National Park", type:"자연", desc:"4,000m급 봉우리 72개가 솟은 장엄한 국립공원. 트레일 리지 로드는 세계 최고의 드라이브 코스 중 하나입니다.", rating:4.9, openTime:"24시간", price:"$35(차량)", website:"https://en.wikipedia.org/wiki/Rocky_Mountain_National_Park"},
+  {name:"16번가 몰", wikiTitle:"16th Street Mall", type:"도시", desc:"덴버 도심을 가로지르는 보행자 전용 거리. 레스토랑, 쇼핑, 공연이 어우러진 활기찬 공간입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/16th_Street_Mall"},
+  {name:"덴버 미술관", wikiTitle:"Denver Art Museum", type:"문화", desc:"다니엘 리베스킨트가 설계한 독특한 외관의 미술관. 아메리카 원주민 예술 컬렉션이 미국 최고 수준입니다.", rating:4.5, openTime:"10:00~17:00", price:"$10~", website:"https://en.wikipedia.org/wiki/Denver_Art_Museum"},
+]},
+"내슈빌": { description:"내슈빌은 컨트리 음악의 수도로 라이브 음악과 뜨거운 치킨, 버번 위스키로 유명한 테네시의 문화 중심지입니다.", spots:[
+  {name:"브로드웨이 혼키 통크 거리", wikiTitle:"Broadway (Nashville)", type:"문화", desc:"24시간 라이브 컨트리 음악이 흘러나오는 술집과 공연장이 빽빽이 들어선 내슈빌의 심장부입니다.", rating:4.5, openTime:"24시간", price:"무료(입장)", website:"https://en.wikipedia.org/wiki/Broadway_(Nashville)"},
+  {name:"컨트리 뮤직 명예의 전당", wikiTitle:"Country Music Hall of Fame and Museum", type:"문화", desc:"컨트리 음악의 역사와 전설적인 아티스트들의 유물을 전시하는 세계 최대의 음악 박물관 중 하나입니다.", rating:4.6, openTime:"09:00~17:00", price:"$29.95", website:"https://en.wikipedia.org/wiki/Country_Music_Hall_of_Fame_and_Museum"},
+  {name:"그랜드 올 오프리", wikiTitle:"Grand Ole Opry", type:"문화", desc:"1925년 시작된 세계에서 가장 오래된 라이브 컨트리 음악 방송 프로그램으로 지금도 매주 공연이 펼쳐집니다.", rating:4.7, openTime:"공연 시간대", price:"$40~", website:"https://en.wikipedia.org/wiki/Grand_Ole_Opry"},
+]},
+"포틀랜드": { description:"포틀랜드는 오리건주의 최대 도시로 커피·도넛·독립 서점 문화와 인근 마운트 후드, 컬럼비아 협곡의 자연이 어우러집니다.", spots:[
+  {name:"파월스 서점", wikiTitle:"Powell's Books", type:"문화", desc:"전체 블록 한 구역을 차지하는 세계 최대의 독립 서점. 신간과 중고책이 함께 있으며 희귀본 섹션도 유명합니다.", rating:4.7, openTime:"09:00~21:00", price:"무료", website:"https://en.wikipedia.org/wiki/Powell%27s_Books"},
+  {name:"컬럼비아 리버 협곡", wikiTitle:"Columbia River Gorge", type:"자연", desc:"멀트노마 폭포(189m)를 포함한 수십 개의 폭포가 있는 장엄한 협곡. 하이킹과 윈드서핑의 성지입니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Columbia_River_Gorge"},
+  {name:"파이어니어 코트하우스 스퀘어", wikiTitle:"Pioneer Courthouse Square", type:"도시", desc:"포틀랜드의 거실이라 불리는 중심 광장. 연중 이벤트와 파머스 마켓, 아이스링크 등이 열립니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Pioneer_Courthouse_Square"},
+]},
+"피닉스": { description:"피닉스는 소노란 사막 한가운데 솟아난 미국 5대 도시로 선인장 숲, 스파 리조트, 세계적인 골프장으로 유명합니다.", spots:[
+  {name:"사구아로 국립공원", wikiTitle:"Saguaro National Park", type:"자연", desc:"거대한 사구아로 선인장 숲이 펼쳐지는 국립공원. 일몰 때 붉게 물드는 선인장 실루엣이 장관입니다.", rating:4.7, openTime:"일출~일몰", price:"$25(차량)", website:"https://en.wikipedia.org/wiki/Saguaro_National_Park"},
+  {name:"세도나", wikiTitle:"Sedona, Arizona", type:"자연", desc:"붉은 사암 지형이 신비로운 기운을 내뿜는 뉴에이지 성지. 하이킹, 지프 투어, 스파가 인기입니다.", rating:4.8, openTime:"24시간", price:"Red Rock Pass $5~", website:"https://en.wikipedia.org/wiki/Sedona,_Arizona"},
+  {name:"데저트 보태니컬 가든", wikiTitle:"Desert Botanical Garden", type:"자연", desc:"소노란 사막의 식물 50,000여 그루를 전시하는 세계 최고의 사막 식물원입니다.", rating:4.5, openTime:"07:00~20:00", price:"$29.95", website:"https://en.wikipedia.org/wiki/Desert_Botanical_Garden"},
+]},
+"올랜도": { description:"올랜도는 세계 최대의 테마파크 집결지로 월트 디즈니 월드, 유니버설, 씨월드 등이 모여 있는 꿈의 도시입니다.", spots:[
+  {name:"월트 디즈니 월드", wikiTitle:"Walt Disney World Resort", type:"문화", desc:"세계 최대의 테마파크 리조트. 매직 킹덤, 엡콧, 할리우드 스튜디오, 애니멀 킹덤 등 4개 파크와 워터파크를 포함합니다.", rating:4.7, openTime:"09:00~22:00", price:"$109~", website:"https://en.wikipedia.org/wiki/Walt_Disney_World_Resort"},
+  {name:"유니버설 올랜도", wikiTitle:"Universal Orlando Resort", type:"문화", desc:"해리포터 마법사의 세계와 슈퍼 닌텐도 월드가 있는 테마파크. 아이맥스급 라이드가 인기입니다.", rating:4.6, openTime:"09:00~21:00", price:"$109~", website:"https://en.wikipedia.org/wiki/Universal_Orlando_Resort"},
+  {name:"케네디 우주센터", wikiTitle:"Kennedy Space Center", type:"문화", desc:"NASA의 발사 기지에서 실제 우주선과 로켓을 가까이서 볼 수 있습니다. 우주비행사와의 만남 프로그램도 운영합니다.", rating:4.6, openTime:"09:00~18:00", price:"$75", website:"https://en.wikipedia.org/wiki/Kennedy_Space_Center_Visitor_Complex"},
+]},
+"나이아가라폭포": { description:"나이아가라 폭포는 미국과 캐나다 국경에 걸쳐 있는 세계 3대 폭포로 초당 240만 리터의 물이 떨어지는 장대한 자연의 힘을 느낄 수 있습니다.", spots:[
+  {name:"호스슈 폭포", wikiTitle:"Horseshoe Falls", type:"자연", desc:"나이아가라 폭포 중 가장 크고 웅장한 캐나다 측 폭포. '안개 속의 아가씨' 보트 투어에서 폭포 바로 아래까지 접근합니다.", rating:4.9, openTime:"24시간", price:"무료(보트 투어 $30~)", website:"https://en.wikipedia.org/wiki/Horseshoe_Falls"},
+  {name:"나이아가라 폭포 야경", wikiTitle:"Niagara Falls", type:"자연", desc:"매일 밤 컬러풀한 조명이 폭포를 물들이는 장관. 카지노 타워 전망대에서 한눈에 조망합니다.", rating:4.8, openTime:"일몰 후", price:"무료", website:"https://en.wikipedia.org/wiki/Niagara_Falls"},
+  {name:"나이아가라 온 더 레이크", wikiTitle:"Niagara-on-the-Lake", type:"문화", desc:"폭포에서 20분 거리의 그림 같은 소도시. 와이너리 투어와 쇼 극장이 유명합니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Niagara-on-the-Lake"},
+]},
 
 // ────────────────────────── 호주 ──────────────────────────
 "시드니": { description:"시드니는 호주 최대의 도시로 오페라 하우스와 하버 브릿지, 본다이 해변이 상징적입니다. 아름다운 항구와 현대적 도시가 조화를 이룹니다.", spots:[
@@ -3085,6 +3137,26 @@ const CITY_DATA = {
   {name:"미녀의 골짜기 와인마을", wikiTitle:"Eger, Hungary", type:"음식", desc:"수십 개의 와인 셀러가 모인 골짜기로 유명한 에게르 불스블러드 레드 와인을 시음할 수 있습니다.", rating:4.5, openTime:"10:00~20:00", price:"HUF 500~(시음)", website:"https://en.wikipedia.org/wiki/Egri_Bikavér"},
 ]},
 
+// ────────────────────────── 슬로베니아 ──────────────────────────
+"류블랴나": { description:"류블랴나는 알프스와 아드리아해 사이에 자리한 슬로베니아의 수도로 중세 성과 류블랴니차 강변의 카페 문화가 매력적인 아담한 도시입니다.", spots:[
+  {name:"류블랴나 성", wikiTitle:"Ljubljana Castle", type:"역사", desc:"시내 언덕 위에 솟은 중세 성으로 케이블카로 오르면 도시 전경과 알프스 산맥이 한눈에 보입니다.", rating:4.6, openTime:"09:00~21:00", price:"€13", website:"https://en.wikipedia.org/wiki/Ljubljana_Castle"},
+  {name:"트리플 브릿지", wikiTitle:"Triple Bridge (Ljubljana)", type:"랜드마크", desc:"류블랴니차 강을 가로지르는 세 개의 다리가 나란히 놓인 도시의 상징. 다리 주변 노천 카페 문화가 유명합니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Triple_Bridge_(Ljubljana)"},
+  {name:"류블랴나 중앙시장", wikiTitle:"Central Market, Ljubljana", type:"음식", desc:"강변을 따라 펼쳐지는 야외 시장으로 신선한 채소, 치즈, 꿀 등 슬로베니아 특산품을 만날 수 있습니다.", rating:4.4, openTime:"06:00~16:00", price:"무료", website:"https://en.wikipedia.org/wiki/Central_Market,_Ljubljana"},
+]},
+"블레드": { description:"블레드는 줄리안 알프스 산자락의 에메랄드빛 호수에 작은 섬과 절벽 위 성이 어우러진 동화 같은 풍경으로 유럽 최고의 비경 중 하나입니다.", spots:[
+  {name:"블레드 성", wikiTitle:"Bled Castle", type:"역사", desc:"100m 절벽 위에 솟은 슬로베니아 최고(最古)의 성. 블레드 호수와 알프스를 배경으로 한 전망이 압도적입니다.", rating:4.7, openTime:"08:00~20:00", price:"€15", website:"https://en.wikipedia.org/wiki/Bled_Castle"},
+  {name:"블레드 섬 성모 교회", wikiTitle:"Church of the Assumption of Mary (Bled)", type:"역사", desc:"호수 한가운데 섬에 세워진 바로크 성당. 전통 나무배 플레트나를 타고 건너가 99계단을 오릅니다.", rating:4.8, openTime:"08:00~19:00", price:"€14(플레트나 포함)", website:"https://en.wikipedia.org/wiki/Bled_Island"},
+  {name:"빈트가르 협곡", wikiTitle:"Vintgar Gorge", type:"자연", desc:"블레드에서 4km 거리의 아름다운 협곡. 에메랄드빛 라도브나 강 위 목조 데크를 따라 1.6km 트레킹합니다.", rating:4.7, openTime:"08:00~18:00", price:"€10", website:"https://en.wikipedia.org/wiki/Vintgar_Gorge"},
+]},
+"피란": { description:"피란은 아드리아해에 돌출된 반도 끝에 자리한 중세 베네치아풍 항구 도시로 미로 같은 골목과 오렌지 지붕, 지중해 풍광이 일품입니다.", spots:[
+  {name:"타르티니 광장", wikiTitle:"Tartini Square", type:"역사", desc:"베이올리니스트 타르티니의 동상이 서 있는 피란의 중심 광장. 베네치아풍 건물들이 반원으로 둘러싼 아름다운 공간입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Tartini_Square"},
+  {name:"성 조르지오 성당 종탑", wikiTitle:"Cathedral of St. George, Piran", type:"역사", desc:"언덕 위 성당의 종탑에서 피란 구시가지와 아드리아해를 360도로 조망할 수 있습니다.", rating:4.5, openTime:"10:00~17:00", price:"€2", website:"https://en.wikipedia.org/wiki/Cathedral_of_St._George,_Piran"},
+]},
+"마리보르": { description:"마리보르는 슬로베니아 제2의 도시이자 세계에서 가장 오래된 포도나무가 있는 와인 도시로 드라바 강변의 구시가지가 아름답습니다.", spots:[
+  {name:"올드 바인 하우스", wikiTitle:"Old Vine House", type:"문화", desc:"수령 400년이 넘는 세계 최고령 포도나무가 살아있는 박물관. 이 포도나무에서 나온 와인은 세계 지도자들에게 선물로 증정됩니다.", rating:4.5, openTime:"10:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Old_Vine_House"},
+  {name:"마리보르 성", wikiTitle:"Maribor Castle", type:"역사", desc:"드라바 강변에 자리한 15세기 성으로 현재는 지역 역사 박물관으로 사용됩니다.", rating:4.3, openTime:"10:00~18:00", price:"€3", website:"https://en.wikipedia.org/wiki/Maribor_Castle"},
+]},
+
 // ────────────────────────── 크로아티아 ──────────────────────────
 "두브로브니크": { description:"두브로브니크는 '아드리아해의 진주'로 불리는 중세 성벽 도시로 드라마 '왕좌의 게임' 촬영지로 더욱 유명해졌습니다.", spots:[
   {name:"성벽 걷기", wikiTitle:"Walls of Dubrovnik", type:"역사", desc:"2km에 달하는 중세 성벽 위를 걸으며 아드리아해와 주황빛 지붕의 구시가지를 조망하는 코스입니다.", rating:4.8, openTime:"08:00~18:30", price:"€35", website:"https://www.dubrovnik.hr"},
@@ -3575,6 +3647,27 @@ const CITY_DATA = {
 "지우펀": { description:"지우펀은 산비탈의 계단식 골목과 홍등이 지브리 애니메이션 '센과 치히로'를 떠올리게 하는 마을입니다.", spots:[
   {name:"지우펀 올드스트리트", wikiTitle:"Jiufen", type:"문화", desc:"붉은 등불이 걸린 좁은 골목에 차집, 토란볼 가게, 기념품점이 빼곡합니다.", rating:4.5, openTime:"10:00~20:00", price:"무료", website:"https://en.wikipedia.org/wiki/Jiufen"},
 ]},
+"가오슝": { description:"가오슝은 대만 제2의 도시로 러브하버, 용호탑, 활기찬 야시장이 인상적인 항구 도시입니다.", spots:[
+  {name:"용호탑", wikiTitle:"Dragon and Tiger Pagodas", type:"역사", desc:"蓮池潭 연지담 호수 위에 세워진 7층 용탑과 호랑이탑. 용의 입으로 들어가 호랑이 입으로 나오면 행운이 온다는 전설이 있습니다.", rating:4.5, openTime:"07:00~22:00", price:"무료", website:"https://en.wikipedia.org/wiki/Dragon_and_Tiger_Pagodas"},
+  {name:"러브하버", wikiTitle:"Love River (Kaohsiung)", type:"도시", desc:"가오슝의 낭만적인 항구 지구로 야경이 아름답고 카페와 레스토랑이 즐비합니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Love_River_(Kaohsiung)"},
+  {name:"치진섬", wikiTitle:"Cijin District", type:"자연", desc:"페리로 10분이면 닿는 작은 섬으로 해산물 거리와 자전거 코스가 유명합니다.", rating:4.4, openTime:"24시간", price:"페리 NT$15", website:"https://en.wikipedia.org/wiki/Cijin_District"},
+]},
+"타이난": { description:"타이난은 대만에서 가장 오래된 도시로 '대만의 교토'라 불리며 300여 개의 사원과 맛집이 집중돼 있습니다.", spots:[
+  {name:"안핑 고성", wikiTitle:"Fort Zeelandia", type:"역사", desc:"17세기 네덜란드가 쌓은 포르모사 최초의 요새. 붉은 벽돌과 열대 수목이 어우러집니다.", rating:4.5, openTime:"08:30~17:30", price:"NT$50", website:"https://en.wikipedia.org/wiki/Fort_Zeelandia_(Taiwan)"},
+  {name:"적감루", wikiTitle:"Chihkan Tower", type:"역사", desc:"17세기 네덜란드가 건설한 요새 위에 지어진 중국식 건물로 타이난의 상징입니다.", rating:4.4, openTime:"08:30~21:00", price:"NT$50", website:"https://en.wikipedia.org/wiki/Chihkan_Tower"},
+]},
+"타이중": { description:"타이중은 대만 중부의 문화 도시로 레인보우 빌리지, 국립 자연과학 박물관, 미식 거리가 풍부합니다.", spots:[
+  {name:"레인보우 빌리지", wikiTitle:"Rainbow Village, Taichung", type:"문화", desc:"황영부 할아버지가 혼자 그린 형형색색의 벽화 마을. 철거 위기에서 관광 명소로 살아남았습니다.", rating:4.5, openTime:"06:00~19:00", price:"무료", website:"https://en.wikipedia.org/wiki/Rainbow_Village,_Taichung"},
+  {name:"펑자 야시장", wikiTitle:"Fengjia Night Market", type:"음식", desc:"대만 최대 규모의 야시장 중 하나로 창의적인 길거리 음식의 발상지입니다.", rating:4.5, openTime:"17:00~01:00", price:"무료", website:"https://en.wikipedia.org/wiki/Fengjia_Night_Market"},
+]},
+"화롄": { description:"화롄은 타이완 동부 해안의 관문 도시로 태평양과 중앙산맥이 만나는 웅장한 자연 경관을 자랑합니다.", spots:[
+  {name:"칠성담 해변", wikiTitle:"Qixingtan Beach", type:"자연", desc:"검은 자갈로 유명한 해변에서 중앙산맥과 태평양의 장관이 동시에 펼쳐집니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Qixingtan_Beach"},
+  {name:"화롄 야시장", wikiTitle:"Hualien", type:"음식", desc:"아미족 원주민 문화와 대만 미식이 어우러진 현지인 단골 야시장입니다.", rating:4.3, openTime:"17:00~23:00", price:"무료", website:"https://en.wikipedia.org/wiki/Hualien_City"},
+]},
+"타로코": { description:"타로코 협곡은 대리석으로 이루어진 세계 최대급 협곡으로 대만 최고의 자연 경관을 자랑하는 국립공원입니다.", spots:[
+  {name:"타로코 협곡", wikiTitle:"Taroko Gorge", type:"자연", desc:"19km에 걸쳐 펼쳐진 순백의 대리석 협곡. 입곡 터널, 연자구 폭포 등 절경이 이어집니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Taroko_Gorge"},
+  {name:"청수단애", wikiTitle:"Qingshui Cliffs", type:"자연", desc:"태평양을 향해 1,000m 직벽으로 깎아지른 절벽. 세계 10대 절경 중 하나로 꼽힙니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Qingshui_Cliffs"},
+]},
 "말레": { description:"몰디브의 수도 말레는 1,200개 산호섬으로 이루어진 인도양의 열대 낙원으로 가는 관문입니다.", spots:[
   {name:"수상 빌라 리조트", wikiTitle:"Maldives", type:"자연", desc:"투명한 바다 위 수상 빌라에서 산호초 스노클링과 돌고래를 만나는 꿈의 휴양지입니다.", rating:4.9, openTime:"연중", price:"리조트별", website:"https://en.wikipedia.org/wiki/Maldives"},
 ]},
@@ -3602,6 +3695,18 @@ const CITY_DATA = {
 "트빌리시": { description:"트빌리시는 코카서스 산맥 아래 유럽과 아시아가 만나는 조지아의 수도로 와인과 온천이 유명합니다.", spots:[
   {name:"나리칼라 요새", wikiTitle:"Narikala", type:"역사", desc:"4세기에 건설된 요새에서 트빌리시 구시가지와 쿠라강을 조망합니다.", rating:4.5, openTime:"24시간", price:"무료(케이블카 GEL 2.5)", website:"https://en.wikipedia.org/wiki/Narikala"},
   {name:"유황 온천 지구", wikiTitle:"Abanotubani", type:"문화", desc:"트빌리시의 이름 유래가 된 유황 온천 지구로 돔형 목욕탕이 특징입니다.", rating:4.4, openTime:"09:00~23:00", price:"GEL 30~80", website:"https://en.wikipedia.org/wiki/Abanotubani"},
+]},
+"카즈베기": { description:"카즈베기는 코카서스 대산맥 해발 2,170m에 자리한 산악 마을로 게르게티 삼위일체 교회와 카즈베기산의 절경이 펼쳐집니다.", spots:[
+  {name:"게르게티 삼위일체 교회", wikiTitle:"Gergeti Trinity Church", type:"역사", desc:"해발 2,170m 산 위에 홀로 선 14세기 교회. 카즈베기산을 배경으로 한 풍경이 조지아 최고의 절경으로 꼽힙니다.", rating:4.9, openTime:"10:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Gergeti_Trinity_Church"},
+  {name:"카즈베기 국립공원", wikiTitle:"Kazbegi National Park", type:"자연", desc:"만년설로 덮인 카즈베기봉(5,047m)을 품은 국립공원. 트레킹, 하이킹 천국입니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Kazbegi_National_Park"},
+]},
+"메스티아": { description:"메스티아는 스반 지방의 중심 마을로 유네스코 세계유산인 스반 탑들과 코카서스 최고봉 우쉬바산이 인상적입니다.", spots:[
+  {name:"스반 탑", wikiTitle:"Svan towers", type:"역사", desc:"중세 스반 족이 적의 침입을 막기 위해 쌓은 돌탑. 마을 곳곳에 20여 개가 남아 있어 유네스코 세계유산에 등재됐습니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Svan_towers"},
+  {name:"메스티아 박물관", wikiTitle:"Svaneti Museum of History and Ethnography", type:"문화", desc:"스반 지방의 중세 아이콘화, 금·은공예품, 갑옷 등 귀중한 유물을 소장한 박물관입니다.", rating:4.4, openTime:"10:00~17:00", price:"GEL 10", website:"https://en.wikipedia.org/wiki/Svaneti_Museum_of_History_and_Ethnography"},
+]},
+"시그나기": { description:"시그나기는 조지아 와인의 산지 카헤티 지방의 작은 산악 마을로 포도밭 전망과 알라자니 계곡이 아름다운 '사랑의 도시'입니다.", spots:[
+  {name:"시그나기 성벽", wikiTitle:"Sighnaghi", type:"역사", desc:"18세기에 지어진 28개 탑을 연결한 성벽이 마을을 둘러싸고 있으며, 카헤티 포도밭과 알라자니 계곡 전망이 환상적입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Sighnaghi"},
+  {name:"보드베 수녀원", wikiTitle:"Bodbe Monastery", type:"역사", desc:"조지아를 기독교화한 성 니노의 무덤이 있는 9세기 수녀원. 조지아 정교 신자들의 성지입니다.", rating:4.7, openTime:"09:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Bodbe_Monastery"},
 ]},
 "코토르": { description:"코토르는 아드리아해 피오르 끝에 자리한 중세 성벽 도시로 유네스코 세계유산입니다.", spots:[
   {name:"코토르 성벽", wikiTitle:"Kotor", type:"역사", desc:"1,350개 계단을 올라가면 코토르 만과 구시가지의 숨막히는 전경이 펼쳐집니다.", rating:4.7, openTime:"08:00~20:00", price:"€8", website:"https://en.wikipedia.org/wiki/Kotor"},
@@ -4927,9 +5032,9 @@ function App() {
         return 0.004
       })
       .polygonLabel(feat => {
+        // 국가 선택 중에는 모든 툴팁 숨김 (마우스 따라다니는 박스 방지)
+        if (hasSelection) return ''
         const name = feat.properties.NAME
-        // 선택된 국가 위에서는 툴팁 숨김
-        if (hasSelection && name === selectedCountry?.properties?.NAME) return ''
         const koName = getCountryName(name)
         const hasCities = COUNTRY_CITIES[name]
         return `<div style="background:rgba(15,23,42,0.92);border-radius:10px;padding:8px 14px;font-family:Pretendard,Inter,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);">
@@ -5028,6 +5133,7 @@ function App() {
     "Romania": { alt: 0.2, lat: 46.0, lng: 25.0 },
     "Georgia": { alt: 0.12, lat: 42.3, lng: 43.5 },
     "Montenegro": { alt: 0.08, lat: 42.7, lng: 19.4 },
+    "Slovenia": { alt: 0.1, lat: 46.1, lng: 14.8 },
     "Mongolia": { alt: 0.6, lat: 47.5, lng: 105.0 },
     "Laos": { alt: 0.3, lat: 18.5, lng: 103.5 },
     "Tunisia": { alt: 0.2, lat: 34.5, lng: 9.5 },
