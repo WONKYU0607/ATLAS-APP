@@ -1739,7 +1739,7 @@ const translateCountryInfo = (info, cName, lang) => {
     continent: CONTINENT_I18N[info.continent]?.[lang] || info.continent,
     drive: DRIVE_I18N[info.drive]?.[lang] || info.drive,
     visa: translateVisa(info.visa, lang),
-    timeDiff: translateTimeDiff(info.timeDiff, lang),
+    bestSeason: info.bestSeason,
   }
 }
 
