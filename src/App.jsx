@@ -5141,15 +5141,14 @@ function App() {
       })
       .polygonLabel(() => '')
       .onPolygonHover(feat => {
-        // 선택된 국가 위에서는 호버 끄기 (도시 클릭 우선), 다른 국가는 호버 허용
-        if (feat && hasSelection && feat.properties?.NAME === selectedCountry?.properties?.NAME) return
+        // 국가 선택 중에는 다른 나라 호버 완전 차단
+        if (hasSelection) return
         setHoveredCountry(feat ? feat.properties.NAME : null)
       })
       .onPolygonClick(feat => {
-        // 도시 라벨 클릭 직후면 무시 (국경 근처 도시 오클릭 방지)
+        // 국가 선택 중에는 다른 나라 클릭 완전 차단 (국경 근처 도시 오클릭 방지)
+        if (hasSelection) return
         if (justClickedCityRef.current) return
-        // 현재 선택된 국가 클릭은 무시 (도시 라벨 클릭 우선), 다른 국가는 바로 이동
-        if (hasSelection && feat?.properties?.NAME === selectedCountry?.properties?.NAME) return
         handleCountryClick(feat)
       })
   }, [countries, hoveredCountry, selectedCountry, lang])
@@ -6266,9 +6265,18 @@ function App() {
                   </div>
                 ) : (
                   <>
-                    <p style={{fontSize:13.5,color:'#475569',lineHeight:1.8,margin:'0 0 20px',borderLeft:`3px solid ${selectedCity?.color||'#3b82f6'}`,paddingLeft:14}}>
-                      {trDesc(selectedCity?._koName||selectedCity?.name) || cityData.description}
-                    </p>
+                    {/* 도시 설명 - 번역 있으면 표시, ko모드면 한국어, 번역 없으면 숨김 */}
+                    {(() => {
+                      const cityKey = selectedCity?._koName || selectedCity?.name
+                      const desc = lang === 'ko'
+                        ? cityData.description
+                        : (trDesc(cityKey) || null)
+                      return desc ? (
+                        <p style={{fontSize:13.5,color:'#475569',lineHeight:1.8,margin:'0 0 20px',borderLeft:`3px solid ${selectedCity?.color||'#3b82f6'}`,paddingLeft:14}}>
+                          {desc}
+                        </p>
+                      ) : null
+                    })()}
 
                     {/* 공유 버튼 */}
                     <div style={{display:'flex',gap:8,marginTop:16,marginBottom:16,position:'relative'}}>
