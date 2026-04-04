@@ -1241,6 +1241,20 @@ const CITY_I18N = {
 
 
 // ── 국가 기본정보 데이터 ──────────────────────────────────────────────
+// 국기 이모지 → ISO 코드 → 이미지 URL 변환
+const flagEmojiToCode = (emoji) => {
+  if (!emoji) return null
+  const codePoints = [...emoji].map(c => c.codePointAt(0))
+  if (codePoints.length < 2) return null
+  const code = codePoints.map(cp => String.fromCharCode(cp - 0x1F1E6 + 65)).join('')
+  return code.length === 2 ? code.toLowerCase() : null
+}
+const getFlagImg = (emoji, size = 20) => {
+  const code = flagEmojiToCode(emoji)
+  if (!code) return null
+  return `https://flagcdn.com/w${size <= 20 ? 40 : 80}/${code}.png`
+}
+
 const COUNTRY_INFO = {
   "South Korea": { capital:"서울", population:"5,200만", area:"100,210 km²", lang:"한국어", currency:"원 (KRW)", timezone:"UTC+9", bestSeason:"Mar–May, Sep–Nov", visa:"—", voltage:"220V / 60Hz", callCode:"+82", drive:"우측", tagline:"한류와 전통이 공존하는 다이나믹 코리아", continent:"아시아", emoji:"🇰🇷" },
   "Japan": { capital:"도쿄", population:"1억 2,500만", area:"377,975 km²", lang:"일본어", currency:"엔 (JPY)", timezone:"UTC+9", bestSeason:"Mar–May, Oct–Nov", visa:"90일 무비자", voltage:"100V / 50·60Hz", callCode:"+81", drive:"좌측", tagline:"전통과 첨단이 어우러진 사무라이의 나라", continent:"아시아", emoji:"🇯🇵" },
@@ -4833,7 +4847,10 @@ function App() {
 
     const onResize = () => {
       globe.width(window.innerWidth)
-      globe.height(window.innerHeight)
+      // 모바일 키보드로 인한 높이 변화 무시
+      if (window.innerWidth > 768) {
+        globe.height(window.innerHeight)
+      }
     }
     window.addEventListener('resize', onResize)
     return () => { window.removeEventListener('resize', onResize); clearInterval(labelInterval) }
@@ -5343,9 +5360,10 @@ function App() {
 
     const center = getCountryCenter(feat)
     const altitude = getCountryAltitude(feat)
+    const mobileAlt = window.innerWidth <= 768 ? altitude * 1.5 : altitude
 
     globe.controls().autoRotate = false
-    globe.pointOfView({ lat: center.lat, lng: center.lng, altitude }, 1300)
+    globe.pointOfView({ lat: center.lat, lng: center.lng, altitude: mobileAlt }, 1300)
   }
 
   const handleCityClick = (city) => {
@@ -5361,7 +5379,8 @@ function App() {
       const cz = countryName && COUNTRY_ZOOM[countryName]
       const baseAlt = cz ? cz.alt : 0.3
       const cityAlt = Math.max(Math.min(baseAlt * 0.45, 0.15), 0.06)
-      globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: cityAlt }, 900)
+      const finalCityAlt = window.innerWidth <= 768 ? cityAlt * 1.4 : cityAlt
+      globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: finalCityAlt }, 900)
     } catch(e) { console.error('city click error:', e) }
   }
 
@@ -5627,7 +5646,8 @@ function App() {
     if (selectedCountry && globeRef.current) {
       const center = getCountryCenter(selectedCountry)
       const altitude = getCountryAltitude(selectedCountry)
-      globeRef.current.pointOfView({ lat: center.lat, lng: center.lng, altitude }, 900)
+      const mAlt = window.innerWidth <= 768 ? altitude * 1.5 : altitude
+      globeRef.current.pointOfView({ lat: center.lat, lng: center.lng, altitude: mAlt }, 900)
     }
   }
 
@@ -5910,7 +5930,11 @@ function App() {
                     style={{padding:'10px 14px',cursor:'pointer',display:'flex',alignItems:'center',gap:10,borderBottom:i<7?'1px solid #f1f5f9':'none'}}
                     onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
                     onMouseLeave={e=>e.currentTarget.style.background='white'}>
-                    <span style={{fontSize:20}}>{COUNTRY_INFO[c.countryEn]?.emoji || c.emoji}</span>
+                    {getFlagImg(COUNTRY_INFO[c.countryEn]?.emoji) ? (
+                      <img src={getFlagImg(COUNTRY_INFO[c.countryEn]?.emoji)} alt="" style={{width:22,height:16,objectFit:'cover',borderRadius:2,border:'1px solid #e2e8f0',flexShrink:0}}/>
+                    ) : (
+                      <span style={{fontSize:20}}>{c.emoji}</span>
+                    )}
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:13,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
                         {c._searchType === 'spot' ? c.spotName : getCityName(c._koName || c.name)}
@@ -5975,8 +5999,9 @@ function App() {
             {/* Country Info Panel */}
             {showCountryInfo && info && (
               <div className="countryInfoPanel" style={{
-                position:'absolute',bottom:isMobile?56:68,left:'50%',transform:'translateX(-50%)',
+                position:'absolute',bottom:isMobile?90:68,left:'50%',transform:'translateX(-50%)',
                 zIndex:1000,width:isMobile?'95vw':480,maxWidth:'95vw',
+                maxHeight:isMobile?'65vh':'none',overflowY:isMobile?'auto':'hidden',
                 background:'rgba(255,255,255,.97)',backdropFilter:'blur(16px)',
                 border:'1.5px solid #e2e8f0',borderRadius:18,
                 boxShadow:'0 12px 48px rgba(0,0,0,.22)',
@@ -6585,7 +6610,11 @@ function App() {
                 <div style={{fontSize:12,fontWeight:600,color:'#1a1714',marginBottom:6}}>{t('aiSelectCity')}</div>
                 {aiCity ? (
                   <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',background:'#f5f0ea',border:'1px solid #e0d9d0',borderRadius:10}}>
-                    <span style={{fontSize:18}}>{aiCity.emoji||'📍'}</span>
+                    {getFlagImg(COUNTRY_INFO[aiCity.countryEn]?.emoji) ? (
+                      <img src={getFlagImg(COUNTRY_INFO[aiCity.countryEn]?.emoji)} alt="" style={{width:22,height:16,objectFit:'cover',borderRadius:2,border:'1px solid #e2e8f0',flexShrink:0}}/>
+                    ) : (
+                      <span style={{fontSize:18}}>{aiCity.emoji||'📍'}</span>
+                    )}
                     <div style={{flex:1}}>
                       <span style={{fontSize:14,fontWeight:600,color:'#1a1714'}}>{getCityName(aiCity.name)}</span>
                       <span style={{fontSize:11,color:'#b0a89e',marginLeft:6}}>{aiCity.countryKo}</span>
@@ -6606,7 +6635,11 @@ function App() {
                             style={{display:'flex',alignItems:'center',gap:8,padding:'9px 14px',cursor:'pointer',transition:'background .1s',borderBottom:i<aiCityResults.length-1?'1px solid #f8fafc':'none'}}
                             onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
                             onMouseLeave={e=>e.currentTarget.style.background='white'}>
-                            <span style={{fontSize:16}}>{c.emoji||'📍'}</span>
+                            {getFlagImg(COUNTRY_INFO[c.countryEn]?.emoji) ? (
+                              <img src={getFlagImg(COUNTRY_INFO[c.countryEn]?.emoji)} alt="" style={{width:20,height:14,objectFit:'cover',borderRadius:2,border:'1px solid #e2e8f0',flexShrink:0}}/>
+                            ) : (
+                              <span style={{fontSize:16}}>{c.emoji||'📍'}</span>
+                            )}
                             <span style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{c.name}</span>
                             <span style={{fontSize:11,color:'#94a3b8'}}>{c.countryKo}</span>
                           </div>
