@@ -5000,27 +5000,30 @@ function App() {
   const getCourseItemCity = (item) => getCityName(item.cityName || item.name)
 
 
-  // Load world GeoJSON (110m 경량 + 진한 국경선, 빈 공간 없음)
+  // Load world GeoJSON (커스텀 간소화 50m 우선 → 110m fallback)
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
+    const load110m = () => fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
       .then(r => r.json())
-      .then(data => {
-        // 폴리곤 내부 구멍(holes) 제거 → 중국, 러시아 등 빈 공간 해결
-        const fixed = data.features.map(feat => {
-          const geom = feat.geometry
-          if (geom.type === 'Polygon') {
-            // Polygon: 첫 번째 링만 유지 (나머지는 holes)
-            return { ...feat, geometry: { ...geom, coordinates: [geom.coordinates[0]] } }
-          }
-          if (geom.type === 'MultiPolygon') {
-            // MultiPolygon: 각 폴리곤에서 첫 번째 링만 유지
-            return { ...feat, geometry: { ...geom, coordinates: geom.coordinates.map(poly => [poly[0]]) } }
-          }
-          return feat
-        })
-        setCountries(fixed)
+    
+    const processGeo = (data) => {
+      const fixed = data.features.map(feat => {
+        const geom = feat.geometry
+        if (geom.type === 'Polygon') {
+          return { ...feat, geometry: { ...geom, coordinates: [geom.coordinates[0]] } }
+        }
+        if (geom.type === 'MultiPolygon') {
+          return { ...feat, geometry: { ...geom, coordinates: geom.coordinates.map(poly => [poly[0]]) } }
+        }
+        return feat
       })
-      .catch(() => {})
+      setCountries(fixed)
+    }
+    
+    // 커스텀 파일 우선 시도, 없으면 110m fallback
+    fetch('/countries.json')
+      .then(r => { if (!r.ok) throw new Error('no local'); return r.json() })
+      .then(data => setCountries(data.features))
+      .catch(() => load110m().then(processGeo).catch(() => {}))
   }, [])
 
   // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
@@ -5379,7 +5382,7 @@ function App() {
       .polygonCapColor(feat => {
         const name = feat.properties.NAME
         if (hasSelection) {
-          if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.15)'
+          if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.22)'
           if (hoveredCountry === name) return 'rgba(255,220,50,0.35)'
           return 'rgba(0,0,0,0)'
         }
@@ -5390,7 +5393,7 @@ function App() {
       .polygonStrokeColor(feat => {
         const name = feat.properties.NAME
         if (hasSelection) {
-          if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.6)'
+          if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.7)'
           if (hoveredCountry === name) return 'rgba(255,220,50,0.7)'
           return 'rgba(255,255,255,0.12)'
         }
@@ -5399,9 +5402,9 @@ function App() {
       })
       .polygonAltitude(feat => {
         const name = feat.properties.NAME
-        if (hasSelection && selectedCountry?.properties.NAME === name) return 0.002
-        if (hoveredCountry === name) return 0.003
-        return 0.001
+        if (hasSelection && selectedCountry?.properties.NAME === name) return 0.006
+        if (hoveredCountry === name) return 0.005
+        return 0.003
       })
       .polygonLabel(() => '')
       .onPolygonHover(feat => {
