@@ -481,7 +481,7 @@ const COUNTRY_CITIES = {
     { name:"씨엠립", lat:13.37, lng:103.87, emoji:"🏛️", color:"#e74c3c" },
     { name:"프놈펜", lat:11.56, lng:104.93, emoji:"🏙️", color:"#3498db" },
     { name:"시아누크빌", lat:10.63, lng:103.50, emoji:"🏖️", color:"#2ecc71" },
-  ],
+    { name:"시아누크빌", lat:10.63, lng:103.50, emoji:"🏖️", color:"#3498db" }],
   "Myanmar": [
     { name:"양곤", lat:16.87, lng:96.19, emoji:"🛕", color:"#f39c12" },
     { name:"바간", lat:21.17, lng:94.86, emoji:"🏯", color:"#e74c3c" },
@@ -507,7 +507,7 @@ const COUNTRY_CITIES = {
     { name:"보라카이", lat:11.97, lng:121.92, emoji:"🌴", color:"#f39c12" },
     { name:"세부", lat:10.32, lng:123.89, emoji:"🐬", color:"#2ecc71" },
     { name:"시아르가오", lat:9.85, lng:126.05, emoji:"🏄", color:"#9b59b6" },
-  ],
+    { name:"시아르가오", lat:9.85, lng:126.05, emoji:"🏄", color:"#2ecc71" }],
   "Portugal": [
     { name:"리스본", lat:38.72, lng:-9.14, emoji:"🏙️", color:"#92400e" },
     { name:"포르투", lat:41.15, lng:-8.61, emoji:"🍷", color:"#e74c3c" },
@@ -527,7 +527,8 @@ const COUNTRY_CITIES = {
     { name:"프라하", lat:50.08, lng:14.44, emoji:"🏰", color:"#065f46" },
     { name:"체스키크룸로프", lat:48.82, lng:14.32, emoji:"🏯", color:"#e74c3c" },
     { name:"브르노", lat:49.19, lng:16.61, emoji:"🏙️", color:"#3498db" },
-  ],
+    { name:"체스키크룸로프", lat:48.81, lng:14.32, emoji:"🏰", color:"#e67e22" },
+    { name:"카를로비바리", lat:50.23, lng:12.88, emoji:"♨️", color:"#3498db" }],
   "Austria": [
     { name:"빈", lat:48.22, lng:16.35, emoji:"🎵", color:"#5b21b6" },
     { name:"잘츠부르크", lat:47.80, lng:13.04, emoji:"🎶", color:"#3498db" },
@@ -546,7 +547,8 @@ const COUNTRY_CITIES = {
   "Hungary": [
     { name:"부다페스트", lat:47.50, lng:19.04, emoji:"🏰", color:"#e74c3c" },
     { name:"에게르", lat:47.90, lng:20.38, emoji:"🍷", color:"#9b59b6" },
-  ],
+    { name:"에게르", lat:47.90, lng:20.38, emoji:"🏰", color:"#e74c3c" },
+    { name:"페치", lat:46.07, lng:18.23, emoji:"🕌", color:"#f39c12" }],
   "Slovenia": [
     { name:"류블랴나", lat:46.05, lng:14.51, emoji:"🏰", color:"#3498db" },
     { name:"블레드", lat:46.37, lng:14.11, emoji:"🏔️", color:"#2ecc71" },
@@ -578,12 +580,12 @@ const COUNTRY_CITIES = {
     { name:"코펜하겐", lat:55.68, lng:12.57, emoji:"🧜", color:"#3498db" },
     { name:"오르후스", lat:56.15, lng:10.21, emoji:"🎨", color:"#2ecc71" },
     { name:"오덴세", lat:55.40, lng:10.38, emoji:"📖", color:"#e74c3c" },
-  ],
+    { name:"빌룬드", lat:55.73, lng:9.13, emoji:"🧱", color:"#f1c40f" }],
   "Finland": [
     { name:"헬싱키", lat:60.17, lng:24.94, emoji:"🏛️", color:"#2980b9" },
     { name:"로바니에미", lat:66.50, lng:25.72, emoji:"🎅", color:"#3498db" },
     { name:"탐페레", lat:61.50, lng:23.77, emoji:"🏭", color:"#e74c3c" },
-  ],
+    { name:"투르쿠", lat:60.45, lng:22.27, emoji:"🏛️", color:"#3498db" }],
   "Iceland": [
     { name:"레이캬비크", lat:64.13, lng:-21.82, emoji:"🌋", color:"#1e3a8a" },
     { name:"아퀴레이리", lat:65.68, lng:-18.10, emoji:"❄️", color:"#3498db" },
@@ -737,15 +739,18 @@ const COUNTRY_CITIES = {
     { name:"아크라", lat:5.56, lng:-0.20, emoji:"🏙️", color:"#f39c12" },
     { name:"케이프코스트", lat:5.10, lng:-1.25, emoji:"🏰", color:"#3498db" },
     { name:"쿠마시", lat:6.69, lng:-1.62, emoji:"👑", color:"#2ecc71" },
-  ],
+    { name:"케이프코스트", lat:5.10, lng:-1.25, emoji:"🏰", color:"#e67e22" }],
   "Ireland": [
     { name:"더블린", lat:53.35, lng:-6.26, emoji:"🍀", color:"#2ecc71" },
     { name:"골웨이", lat:53.27, lng:-9.05, emoji:"🎵", color:"#3498db" },
-  ],
+    { name:"코크", lat:51.90, lng:-8.47, emoji:"🍀", color:"#27ae60" },
+    { name:"킬라니", lat:52.06, lng:-9.51, emoji:"🌿", color:"#2ecc71" }],
   "Belgium": [
     { name:"브뤼셀", lat:50.85, lng:4.35, emoji:"🧇", color:"#f39c12" },
     { name:"브뤼헤", lat:51.21, lng:3.22, emoji:"🏰", color:"#3498db" },
-  ],
+    { name:"브뤼헤", lat:51.21, lng:3.22, emoji:"🏛️", color:"#8e44ad" },
+    { name:"안트베르펜", lat:51.22, lng:4.40, emoji:"💎", color:"#e74c3c" },
+    { name:"겐트", lat:51.05, lng:3.72, emoji:"🏰", color:"#2ecc71" }],
   "Taiwan": [
     { name:"타이베이", lat:25.03, lng:121.57, emoji:"🏙️", color:"#e74c3c" },
     { name:"지우펀", lat:25.11, lng:121.84, emoji:"🏮", color:"#f39c12" },
@@ -761,18 +766,21 @@ const COUNTRY_CITIES = {
   "Costa Rica": [
     { name:"산호세", lat:9.93, lng:-84.08, emoji:"🌿", color:"#2ecc71" },
     { name:"아레날", lat:10.46, lng:-84.70, emoji:"🌋", color:"#e74c3c" },
-  ],
+    { name:"아레날", lat:10.46, lng:-84.64, emoji:"🌋", color:"#e74c3c" },
+    { name:"몬테베르데", lat:10.31, lng:-84.82, emoji:"🌿", color:"#27ae60" }],
   "Panama": [
     { name:"파나마시티", lat:8.98, lng:-79.52, emoji:"🏙️", color:"#3498db" },
-  ],
+    { name:"보카스델토로", lat:9.34, lng:-82.24, emoji:"🏝️", color:"#2980b9" }],
   "Ecuador": [
     { name:"키토", lat:-0.18, lng:-78.47, emoji:"🏔️", color:"#e74c3c" },
     { name:"갈라파고스", lat:-0.95, lng:-90.97, emoji:"🐢", color:"#2ecc71" },
-  ],
+    { name:"바뇨스", lat:-1.40, lng:-78.42, emoji:"🌋", color:"#e74c3c" },
+    { name:"오타발로", lat:0.23, lng:-78.26, emoji:"🎨", color:"#9b59b6" }],
   "Romania": [
     { name:"부쿠레슈티", lat:44.43, lng:26.10, emoji:"🏛️", color:"#3498db" },
     { name:"브라쇼프", lat:45.66, lng:25.61, emoji:"🏰", color:"#e74c3c" },
-  ],
+    { name:"브라쇼브", lat:45.65, lng:25.61, emoji:"🏔️", color:"#2ecc71" },
+    { name:"시비우", lat:45.80, lng:24.15, emoji:"🏘️", color:"#e67e22" }],
   "Georgia": [
     { name:"트빌리시", lat:41.72, lng:44.80, emoji:"⛪", color:"#9b59b6" },
     { name:"카즈베기", lat:42.65, lng:44.66, emoji:"🏔️", color:"#3498db" },
@@ -781,97 +789,105 @@ const COUNTRY_CITIES = {
   ],
   "Montenegro": [
     { name:"코토르", lat:42.45, lng:18.77, emoji:"🏰", color:"#3498db" },
-  ],
+    { name:"코토르", lat:42.42, lng:18.77, emoji:"🏔️", color:"#2c3e50" },
+    { name:"부드바", lat:42.29, lng:18.84, emoji:"🏖️", color:"#e67e22" }],
   "Mongolia": [
     { name:"울란바토르", lat:47.92, lng:106.91, emoji:"🏙️", color:"#e74c3c" },
-  ],
+    { name:"테를지", lat:47.80, lng:107.42, emoji:"🏔️", color:"#27ae60" }],
   "Laos": [
     { name:"루앙프라방", lat:19.89, lng:102.14, emoji:"🛕", color:"#f39c12" },
     { name:"비엔티안", lat:17.97, lng:102.63, emoji:"🏙️", color:"#3498db" },
-  ],
+    { name:"방비엥", lat:18.92, lng:102.45, emoji:"🏔️", color:"#2ecc71" }],
   "Tunisia": [
     { name:"튀니스", lat:36.81, lng:10.17, emoji:"🕌", color:"#e74c3c" },
-  ],
+    { name:"카르타고", lat:36.85, lng:10.32, emoji:"🏛️", color:"#e67e22" },
+    { name:"시디부사이드", lat:36.87, lng:10.35, emoji:"🏘️", color:"#3498db" }],
   "Oman": [
     { name:"무스카트", lat:23.59, lng:58.38, emoji:"🕌", color:"#f39c12" },
-  ],
+    { name:"니즈와", lat:22.93, lng:57.53, emoji:"🏰", color:"#e67e22" }],
   "Qatar": [
     { name:"도하", lat:25.30, lng:51.53, emoji:"🏙️", color:"#3498db" },
-  ],
+    { name:"알주바라", lat:25.73, lng:50.72, emoji:"🏛️", color:"#c0392b" }],
   "Bolivia": [
     { name:"라파스", lat:-16.50, lng:-68.15, emoji:"🏔️", color:"#e74c3c" },
     { name:"우유니", lat:-20.46, lng:-66.83, emoji:"🪞", color:"#3498db" },
-  ],
+    { name:"수크레", lat:-19.04, lng:-65.26, emoji:"🏛️", color:"#e74c3c" }],
   "Dominican Republic": [
     { name:"푼타카나", lat:18.58, lng:-68.40, emoji:"🏖️", color:"#2ecc71" },
-  ],
+    { name:"푼타카나", lat:18.58, lng:-68.40, emoji:"🌴", color:"#2ecc71" }],
   "Guatemala": [
     { name:"안티구아", lat:14.56, lng:-90.73, emoji:"🌋", color:"#e74c3c" },
-  ],
+    { name:"안티구아", lat:14.56, lng:-90.73, emoji:"🏛️", color:"#f39c12" }],
   "Jamaica": [
     { name:"킹스턴", lat:18.00, lng:-76.79, emoji:"🎵", color:"#f39c12" },
     { name:"몬테고베이", lat:18.47, lng:-77.92, emoji:"🏖️", color:"#3498db" },
-  ],
+    { name:"네그릴", lat:18.27, lng:-78.35, emoji:"🏖️", color:"#f39c12" }],
   "Latvia": [
     { name:"리가", lat:56.95, lng:24.12, emoji:"🏛️", color:"#9b59b6" },
-  ],
+    { name:"유르말라", lat:56.97, lng:23.77, emoji:"🏖️", color:"#2980b9" }],
   "Lithuania": [
     { name:"빌뉴스", lat:54.69, lng:25.28, emoji:"🏰", color:"#e74c3c" },
-  ],
+    { name:"카우나스", lat:54.90, lng:23.90, emoji:"🏛️", color:"#2ecc71" },
+    { name:"트라카이", lat:54.65, lng:24.93, emoji:"🏰", color:"#e74c3c" }],
   "Estonia": [
     { name:"탈린", lat:59.43, lng:24.75, emoji:"🏰", color:"#3498db" },
-  ],
+    { name:"타르투", lat:58.38, lng:26.72, emoji:"🎓", color:"#3498db" }],
   "Cyprus": [
     { name:"파포스", lat:34.77, lng:32.43, emoji:"🏛️", color:"#f39c12" },
-  ],
+    { name:"파포스", lat:34.78, lng:32.42, emoji:"🏛️", color:"#f39c12" },
+    { name:"리마솔", lat:34.68, lng:33.04, emoji:"🏖️", color:"#3498db" }],
   "Albania": [
     { name:"티라나", lat:41.33, lng:19.82, emoji:"🏙️", color:"#e74c3c" },
-  ],
+    { name:"베라트", lat:40.71, lng:19.95, emoji:"🏘️", color:"#e74c3c" },
+    { name:"사란다", lat:39.87, lng:20.01, emoji:"🏖️", color:"#2980b9" }],
   "Serbia": [
     { name:"베오그라드", lat:44.80, lng:20.47, emoji:"🏰", color:"#3498db" },
-  ],
+    { name:"노비사드", lat:45.25, lng:19.85, emoji:"🏰", color:"#9b59b6" }],
   "Namibia": [
     { name:"빈트후크", lat:-22.56, lng:17.08, emoji:"🏜️", color:"#e67e22" },
     { name:"소수스블레이", lat:-24.73, lng:15.29, emoji:"🏜️", color:"#e74c3c" },
-  ],
+    { name:"소수스블레이", lat:-24.73, lng:15.29, emoji:"🏜️", color:"#f39c12" }],
   "Zimbabwe": [
     { name:"빅토리아폴스", lat:-17.92, lng:25.86, emoji:"💧", color:"#3498db" },
   ],
   "Fiji": [
     { name:"나디", lat:-17.77, lng:177.95, emoji:"🏝️", color:"#2ecc71" },
-  ],
+    { name:"마마누카", lat:-17.77, lng:177.10, emoji:"🏝️", color:"#3498db" }],
   "Madagascar": [
     { name:"안타나나리보", lat:-18.88, lng:47.51, emoji:"🦎", color:"#2ecc71" },
-  ],
+    { name:"노시베", lat:-13.33, lng:48.27, emoji:"🏝️", color:"#2980b9" }],
   "Mauritius": [
     { name:"포트루이스", lat:-20.16, lng:57.50, emoji:"🏝️", color:"#3498db" },
   ],
   "Lebanon": [
     { name:"베이루트", lat:33.89, lng:35.51, emoji:"🏙️", color:"#e74c3c" },
-  ],
+    { name:"비블로스", lat:34.12, lng:35.65, emoji:"🏛️", color:"#e67e22" },
+    { name:"바알베크", lat:34.01, lng:36.21, emoji:"🏛️", color:"#c0392b" }],
   "Ukraine": [
     { name:"키이우", lat:50.45, lng:30.52, emoji:"🏛️", color:"#3498db" },
     { name:"르비우", lat:49.84, lng:24.03, emoji:"🏰", color:"#2ecc71" },
-  ],
+    { name:"오데사", lat:46.48, lng:30.74, emoji:"🏖️", color:"#3498db" },
+    { name:"체르니우치", lat:48.29, lng:25.94, emoji:"🏛️", color:"#9b59b6" }],
   "Pakistan": [
     { name:"라호르", lat:31.52, lng:74.30, emoji:"🕌", color:"#2ecc71" },
     { name:"이슬라마바드", lat:33.69, lng:73.04, emoji:"🏙️", color:"#3498db" },
-  ],
+    { name:"훈자", lat:36.32, lng:74.65, emoji:"🏔️", color:"#2ecc71" }],
   "Luxembourg": [
     { name:"룩셈부르크시티", lat:49.61, lng:6.13, emoji:"🏰", color:"#9b59b6" },
   ],
   "Slovakia": [
     { name:"브라티슬라바", lat:48.16, lng:17.12, emoji:"🏰", color:"#3498db" },
-  ],
+    { name:"코시체", lat:48.72, lng:21.26, emoji:"🏛️", color:"#e74c3c" }],
   "Bulgaria": [
     { name:"소피아", lat:42.70, lng:23.32, emoji:"⛪", color:"#e74c3c" },
-  ],
+    { name:"플로브디프", lat:42.15, lng:24.75, emoji:"🏛️", color:"#3498db" },
+    { name:"벨리코투르노보", lat:43.08, lng:25.63, emoji:"🏰", color:"#e74c3c" }],
   "Rwanda": [
     { name:"키갈리", lat:-1.94, lng:30.06, emoji:"🏙️", color:"#2ecc71" },
-  ],
+    { name:"무산제", lat:-1.50, lng:29.63, emoji:"🦍", color:"#27ae60" }],
   "Senegal": [
     { name:"다카르", lat:14.72, lng:-17.47, emoji:"🌍", color:"#f39c12" },
-  ],
+    { name:"생루이", lat:16.02, lng:-16.50, emoji:"🏘️", color:"#f39c12" }],
   "Kazakhstan": [
     { name:"알마티", lat:43.24, lng:76.95, emoji:"🏔️", color:"#3498db" },
   ],
@@ -887,7 +903,8 @@ const COUNTRY_CITIES = {
   "Belize": [{ name:"벨리즈시티", lat:17.50, lng:-88.20, emoji:"🏝️", color:"#2ecc71" }],
   "Benin": [{ name:"코토누", lat:6.37, lng:2.39, emoji:"🌍", color:"#f39c12" }],
   "Bhutan": [{ name:"팀부", lat:27.47, lng:89.64, emoji:"🛕", color:"#e67e22" }],
-  "Bosnia and Herzegovina": [{ name:"사라예보", lat:43.86, lng:18.41, emoji:"🏰", color:"#e74c3c" }],
+  "Bosnia and Herzegovina": [{ name:"사라예보", lat:43.86, lng:18.41, emoji:"🏰", color:"#e74c3c" },
+    { name:"모스타르", lat:43.34, lng:17.81, emoji:"🌉", color:"#2ecc71" }],
   "Botswana": [{ name:"가보로네", lat:-24.65, lng:25.91, emoji:"🐘", color:"#2ecc71" }],
   "Brunei": [{ name:"반다르스리브가완", lat:4.94, lng:114.95, emoji:"🕌", color:"#f39c12" }],
   "Burkina Faso": [{ name:"와가두구", lat:12.37, lng:-1.52, emoji:"🌍", color:"#e67e22" }],
@@ -927,7 +944,8 @@ const COUNTRY_CITIES = {
   "Niger": [{ name:"니아메", lat:13.51, lng:2.11, emoji:"🌍", color:"#f39c12" }],
   "Nigeria": [{ name:"라고스", lat:6.52, lng:3.38, emoji:"🏙️", color:"#2ecc71" }, { name:"아부자", lat:9.06, lng:7.49, emoji:"🏛️", color:"#e74c3c" }],
   "North Korea": [{ name:"평양", lat:39.02, lng:125.75, emoji:"🏛️", color:"#e74c3c" }],
-  "North Macedonia": [{ name:"스코페", lat:41.99, lng:21.43, emoji:"🏛️", color:"#e67e22" }],
+  "North Macedonia": [{ name:"스코페", lat:41.99, lng:21.43, emoji:"🏛️", color:"#e67e22" },
+    { name:"오흐리드", lat:41.12, lng:20.80, emoji:"🏖️", color:"#3498db" }],
   "Papua New Guinea": [{ name:"포트모르즈비", lat:-6.31, lng:147.15, emoji:"🌿", color:"#2ecc71" }],
   "Paraguay": [{ name:"아순시온", lat:-25.26, lng:-57.58, emoji:"🏙️", color:"#3498db" }],
   "Republic of the Congo": [{ name:"브라자빌", lat:-4.27, lng:15.28, emoji:"🌍", color:"#2ecc71" }],
@@ -1212,7 +1230,7 @@ const CITY_I18N = {
 // 헝가리·슬로베니아·크로아티아
 "부다페스트":["Budapest","ブダペスト","布达佩斯"],"에게르":["Eger","エゲル","埃格尔"],"류블랴나":["Ljubljana","リュブリャナ","卢布尔雅那"],"블레드":["Bled","ブレッド","布莱德"],"피란":["Piran","ピラン","皮兰"],"마리보르":["Maribor","マリボル","马里博尔"],"두브로브니크":["Dubrovnik","ドゥブロヴニク","杜布罗夫尼克"],"자그레브":["Zagreb","ザグレブ","萨格勒布"],"플리트비체":["Plitvice","プリトヴィツェ","普利特维采"],"스플리트":["Split","スプリト","斯普利特"],"흐바르":["Hvar","フヴァル","赫瓦尔"],
 // 북유럽
-"오슬로":["Oslo","オスロ","奥斯陆"],"베르겐":["Bergen","ベルゲン","卑尔根"],"플롬":["Flåm","フロム","弗洛姆"],"트롬쇠":["Tromsø","トロムソ","特罗姆瑟"],"로포텐":["Lofoten","ロフォーテン","罗弗敦"],"게이랑에르":["Geiranger","ガイランゲル","盖朗厄尔"],"스톡홀름":["Stockholm","ストックホルム","斯德哥尔摩"],"예테보리":["Gothenburg","ヨーテボリ","哥德堡"],"말뫼":["Malmö","マルメ","马尔默"],"아비스코":["Abisko","アビスコ","阿比斯库"],"코펜하겐":["Copenhagen","コペンハーゲン","哥本哈根"],"오르후스":["Aarhus","オーフス","奥胡斯"],"오덴세":["Odense","オーデンセ","欧登塞"],"헬싱키":["Helsinki","ヘルシンキ","赫尔辛基"],"로바니에미":["Rovaniemi","ロヴァニエミ","罗瓦涅米"],"탐페레":["Tampere","タンペレ","坦佩雷"],"레이캬비크":["Reykjavik","レイキャヴィーク","雷克雅未克"],"아퀴레이리":["Akureyri","アークレイリ","阿库雷里"],"블루라군":["Blue Lagoon","ブルーラグーン","蓝湖"],"요쿨살론":["Jökulsárlón","ヨークルスアゥルロゥン","杰古沙龙"],"골든서클":["Golden Circle","ゴールデンサークル","黄金圈"],
+"오슬로":["Oslo","オスロ","奥斯陆"],"베르겐":["Bergen","ベルゲン","卑尔根"],"플롬":["Flåm","フロム","弗洛姆"],"트롬쇠":["Tromsø","トロムソ","特罗姆瑟"],"로포텐":["Lofoten","ロフォーテン","罗弗敦"],"게이랑에르":["Geiranger","ガイランゲル","盖朗厄尔"],"스톡홀름":["Stockholm","ストックホルム","斯德哥尔摩"],"예테보리":["Gothenburg","ヨーテボリ","哥德堡"],"말뫼":["Malmö","マルメ","马尔默"],"아비스코":["Abisko","アビスコ","阿比斯库"],"코펜하겐":["Copenhagen","コペンハーゲン","哥本哈根"],"오르후스":["Aarhus","オーフス","奥胡斯"],"오덴세":["Odense","オーデンセ","欧登塞"],"헬싱키":["Helsinki","ヘルシンキ","赫尔辛基"],"로바니에미":["Rovaniemi","ロヴァニエミ","罗瓦涅米"],"탐페레":["Tampere","タンペレ","坦佩雷"],"레이캬비크":["Reykjavik","レイキャヴィーク","雷克雅未克"],"아퀴레이리":["Akureyri","アークレイリ","阿库雷里"],"블루라군":["Blue Lagoon","ブルーラグーン","蓝湖"],"요쿨살론":["Jökulsárlón","ヨークルスアゥルロゥン","杰古沙龙"],"골든서클":["Golden Circle","ゴールデンサークル","黄金圈"],"브뤼헤":["Bruges","ブリュージュ","布鲁日"],"안트베르펜":["Antwerp","アントワープ","安特卫普"],"겐트":["Ghent","ゲント","根特"],"코크":["Cork","コーク","科克"],"킬라니":["Killarney","キラーニー","基拉尼"],"에게르":["Eger","エゲル","埃格尔"],"페치":["Pécs","ペーチ","佩奇"],"브라쇼브":["Brașov","ブラショフ","布拉索夫"],"시비우":["Sibiu","シビウ","锡比乌"],"플로브디프":["Plovdiv","プロヴディフ","普罗夫迪夫"],"벨리코투르노보":["Veliko Tarnovo","ヴェリコタルノヴォ","大特尔诺沃"],"체스키크룸로프":["Český Krumlov","チェスキークルムロフ","捷克克鲁姆洛夫"],"카를로비바리":["Karlovy Vary","カルロヴィヴァリ","卡罗维发利"],"코토르":["Kotor","コトル","科托尔"],"부드바":["Budva","ブドヴァ","布德瓦"],"베라트":["Berat","ベラト","培拉特"],"사란다":["Sarandë","サランダ","萨兰达"],"노비사드":["Novi Sad","ノヴィサド","诺维萨德"],"코시체":["Košice","コシツェ","科希策"],"파포스":["Paphos","パフォス","帕福斯"],"리마솔":["Limassol","リマソール","利马索尔"],"모스타르":["Mostar","モスタル","莫斯塔尔"],"오흐리드":["Ohrid","オフリド","奥赫里德"],"카르타고":["Carthage","カルタゴ","迦太基"],"시디부사이드":["Sidi Bou Said","シディブサイド","西迪布赛义德"],"아레날":["Arenal","アレナル","阿雷纳尔"],"몬테베르데":["Monteverde","モンテベルデ","蒙特维多"],"안티구아":["Antigua Guatemala","アンティグア","安提瓜"],"비블로스":["Byblos","ビブロス","朱拜勒"],"바알베크":["Baalbek","バールベック","巴尔贝克"],"테를지":["Terelj","テレルジ","特勒吉"],"방비엥":["Vang Vieng","バンビエン","万荣"],"빌룬드":["Billund","ビルン","比隆"],"투르쿠":["Turku","トゥルク","图尔库"],"유르말라":["Jūrmala","ユールマラ","尤尔马拉"],"카우나스":["Kaunas","カウナス","考纳斯"],"트라카이":["Trakai","トラカイ","特拉凯"],"타르투":["Tartu","タルトゥ","塔尔图"],"푼타카나":["Punta Cana","プンタカナ","蓬塔卡纳"],"보카스델토로":["Bocas del Toro","ボカスデルトロ","博卡斯德尔托罗"],"바뇨스":["Baños","バニョス","巴尼奥斯"],"오타발로":["Otavalo","オタバロ","奥塔瓦洛"],"수크레":["Sucre","スクレ","苏克雷"],"네그릴":["Negril","ネグリル","内格里尔"],"니즈와":["Nizwa","ニズワ","尼兹瓦"],"생루이":["Saint-Louis","サンルイ","圣路易"],"무산제":["Musanze","ムサンゼ","穆桑泽"],"노시베":["Nosy Be","ノシベ","诺西贝"],"케이프코스트":["Cape Coast","ケープコースト","海岸角"],"소수스블레이":["Sossusvlei","ソススフレイ","索苏斯弗雷"],"시아르가오":["Siargao","シアルガオ","锡亚高"],"시아누크빌":["Sihanoukville","シアヌークビル","西哈努克城"],"오데사":["Odesa","オデッサ","敖德萨"],"체르니우치":["Chernivtsi","チェルニウツィー","切尔诺夫策"],"훈자":["Hunza","フンザ","罕萨"],"마마누카":["Mamanuca","ママヌカ","玛玛努卡"],"알주바라":["Al Zubarah","アルズバラ","祖巴拉"],
 // 폴란드·러시아
 "크라쿠프":["Kraków","クラクフ","克拉科夫"],"바르샤바":["Warsaw","ワルシャワ","华沙"],"브로츠와프":["Wrocław","ヴロツワフ","弗罗茨瓦夫"],"그단스크":["Gdańsk","グダンスク","格但斯克"],"자코파네":["Zakopane","ザコパネ","扎科帕内"],"모스크바":["Moscow","モスクワ","莫斯科"],"상트페테르부르크":["St. Petersburg","サンクトペテルブルク","圣彼得堡"],"바이칼호":["Lake Baikal","バイカル湖","贝加尔湖"],"소치":["Sochi","ソチ","索契"],"블라디보스토크":["Vladivostok","ウラジオストク","海参崴"],
 // 아프리카
@@ -3349,6 +3367,203 @@ const CITY_DATA = {
 "오덴세": { description:"오덴세는 한스 크리스티안 안데르센의 고향으로 동화의 도시 분위기가 가득합니다. 덴마크 세 번째로 큰 도시입니다.", spots:[
   {name:"안데르센 생가 & 박물관", wikiTitle:"Hans Christian Andersen Museum", type:"문화", desc:"안데르센이 태어난 집과 그의 삶·작품을 다룬 박물관으로 일본 건축가 구마 겐고가 설계한 신관이 인상적입니다.", rating:4.5, openTime:"10:00~18:00", price:"DKK 170", website:"https://hcandersenshus.dk"},
   {name:"오덴세 구시가지", wikiTitle:"Odense", type:"역사", desc:"색색의 목조 건물과 조약돌 거리가 어우러진 동화 같은 분위기의 도심입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Odense"},
+]},
+
+
+// ────────────────── 추가 도시 (700개 달성) ──────────────────
+// 벨기에
+"브뤼헤": { description:"브뤼헤는 중세 건축물이 완벽히 보존된 벨기에의 보석 같은 운하 도시입니다.", spots:[
+  {name:"마르크트 광장", wikiTitle:"Markt (Bruges)", type:"역사", desc:"중세 종탑과 길드 하우스가 둘러싼 브뤼헤의 심장부입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Markt_(Bruges)"},
+  {name:"벨포르트 종탑", wikiTitle:"Belfry of Bruges", type:"랜드마크", desc:"83m 높이의 중세 종탑으로 366개 계단을 올라가면 도시 전경이 펼쳐집니다.", rating:4.6, openTime:"09:30~18:00", price:"€14", website:"https://en.wikipedia.org/wiki/Belfry_of_Bruges"},
+  {name:"성혈 성당", wikiTitle:"Basilica of the Holy Blood", type:"종교", desc:"12세기에 십자군이 가져온 예수의 성혈 유물을 모신 성당입니다.", rating:4.5, openTime:"09:30~17:00", price:"무료", website:"https://en.wikipedia.org/wiki/Basilica_of_the_Holy_Blood"},
+]},
+"안트베르펜": { description:"안트베르펜은 다이아몬드 거래의 세계 수도이자 루벤스의 고향, 패션의 도시입니다.", spots:[
+  {name:"안트베르펜 대성당", wikiTitle:"Cathedral of Our Lady (Antwerp)", type:"종교", desc:"루벤스의 걸작이 걸린 벨기에 최대의 고딕 성당입니다.", rating:4.7, openTime:"10:00~17:00", price:"€12", website:"https://en.wikipedia.org/wiki/Cathedral_of_Our_Lady_(Antwerp)"},
+  {name:"중앙역", wikiTitle:"Antwerpen-Centraal railway station", type:"랜드마크", desc:"세계에서 가장 아름다운 기차역으로 꼽히는 네오바로크 건축물입니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Antwerpen-Centraal_railway_station"},
+  {name:"MAS 박물관", wikiTitle:"Museum aan de Stroom", type:"문화", desc:"항구 지역의 현대적 박물관으로 옥상에서 도시 전경을 감상할 수 있습니다.", rating:4.5, openTime:"10:00~17:00", price:"€10", website:"https://en.wikipedia.org/wiki/Museum_aan_de_Stroom"},
+]},
+"겐트": { description:"겐트는 중세 건축과 활기찬 대학 문화가 어우러진 벨기에의 숨겨진 보석입니다.", spots:[
+  {name:"그라벤스틴 성", wikiTitle:"Gravensteen", type:"역사", desc:"12세기 플랑드르 백작의 성으로 해자에 둘러싸인 장엄한 중세 요새입니다.", rating:4.5, openTime:"10:00~18:00", price:"€12", website:"https://en.wikipedia.org/wiki/Gravensteen"},
+  {name:"성 바보 대성당", wikiTitle:"Saint Bavo's Cathedral, Ghent", type:"종교", desc:"반 에이크 형제의 걸작 '어린양에 대한 경배'가 있는 성당입니다.", rating:4.7, openTime:"08:30~17:00", price:"€4", website:"https://en.wikipedia.org/wiki/Saint_Bavo%27s_Cathedral,_Ghent"},
+]},
+"코크": { description:"코크는 아일랜드 제2의 도시로 활기찬 음식 문화와 역사가 어우러진 항구 도시입니다.", spots:[
+  {name:"잉글리시 마켓", wikiTitle:"English Market", type:"음식", desc:"1788년부터 운영된 실내 시장으로 아일랜드 최고의 로컬 푸드를 만날 수 있습니다.", rating:4.6, openTime:"08:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/English_Market"},
+  {name:"블라니 성", wikiTitle:"Blarney Castle", type:"역사", desc:"말재주를 선물한다는 블라니 스톤으로 유명한 중세 성입니다.", rating:4.5, openTime:"09:00~18:00", price:"€18", website:"https://en.wikipedia.org/wiki/Blarney_Castle"},
+]},
+"킬라니": { description:"킬라니는 아일랜드 남서부의 자연 경관이 빼어난 관광 도시로 링 오브 케리의 출발점입니다.", spots:[
+  {name:"킬라니 국립공원", wikiTitle:"Killarney National Park", type:"자연", desc:"아일랜드 최초의 국립공원으로 호수와 산, 레드디어가 서식합니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Killarney_National_Park"},
+  {name:"링 오브 케리", wikiTitle:"Ring of Kerry", type:"자연", desc:"아일랜드에서 가장 유명한 179km 해안 드라이브 코스입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Ring_of_Kerry"},
+]},
+"에게르": { description:"에게르는 바로크 건축과 유명한 에게르 와인, 터키식 온천으로 유명한 헝가리의 역사 도시입니다.", spots:[
+  {name:"에게르 성", wikiTitle:"Eger Castle", type:"역사", desc:"1552년 오스만 제국의 공격을 막아낸 영웅적 전투로 유명한 성입니다.", rating:4.5, openTime:"10:00~18:00", price:"HUF 2,200", website:"https://en.wikipedia.org/wiki/Eger_Castle"},
+  {name:"미나렛", wikiTitle:"Minaret of Eger", type:"역사", desc:"유럽 최북단의 오스만 미나렛으로 40m 높이의 좁은 나선 계단을 올라갈 수 있습니다.", rating:4.3, openTime:"10:00~18:00", price:"HUF 500", website:"https://en.wikipedia.org/wiki/Minaret_of_Eger"},
+]},
+"페치": { description:"페치는 로마 시대부터 이어진 다문화 역사와 예술의 도시로 헝가리 남부의 보석입니다.", spots:[
+  {name:"세체니 광장", wikiTitle:"Széchenyi Square (Pécs)", type:"역사", desc:"페치의 중심 광장으로 모스크와 성당이 공존하는 독특한 풍경을 자랑합니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/P%C3%A9cs"},
+  {name:"초기 기독교 묘지", wikiTitle:"Early Christian Necropolis of Pécs", type:"역사", desc:"4세기 초기 기독교 지하 묘지로 유네스코 세계유산입니다.", rating:4.5, openTime:"10:00~18:00", price:"HUF 2,000", website:"https://en.wikipedia.org/wiki/Early_Christian_Necropolis_of_P%C3%A9cs"},
+]},
+"브라쇼브": { description:"브라쇼브는 트란실바니아의 중심 도시로 중세 성벽과 카르파티아 산맥에 둘러싸인 동화 같은 곳입니다.", spots:[
+  {name:"블랙 처치", wikiTitle:"Black Church (Brașov)", type:"역사", desc:"트란실바니아 최대의 고딕 교회로 화재 후 검게 변한 외벽이 특징입니다.", rating:4.6, openTime:"10:00~19:00", price:"RON 15", website:"https://en.wikipedia.org/wiki/Black_Church_(Bra%C8%99ov)"},
+  {name:"브란 성", wikiTitle:"Bran Castle", type:"역사", desc:"드라큘라의 성으로 알려진 중세 요새로 브라쇼브 인근 산 위에 자리합니다.", rating:4.3, openTime:"09:00~18:00", price:"RON 50", website:"https://en.wikipedia.org/wiki/Bran_Castle"},
+]},
+"시비우": { description:"시비우는 루마니아에서 가장 아름다운 중세 도시로 2007년 유럽 문화수도였습니다.", spots:[
+  {name:"대광장", wikiTitle:"Piața Mare, Sibiu", type:"역사", desc:"바로크 건물들이 둘러싼 시비우의 중심 광장으로 브루켄탈 궁전이 있습니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Pia%C8%9Ba_Mare,_Sibiu"},
+  {name:"거짓말쟁이 다리", wikiTitle:"Bridge of Lies", type:"랜드마크", desc:"루마니아 최초의 철제 다리로 거짓말을 하면 무너진다는 전설이 있습니다.", rating:4.2, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Bridge_of_Lies_(Sibiu)"},
+]},
+"플로브디프": { description:"플로브디프는 유럽에서 가장 오래된 도시 중 하나로 7,000년의 역사를 간직한 불가리아의 문화 수도입니다.", spots:[
+  {name:"로마 원형극장", wikiTitle:"Plovdiv Roman theatre", type:"역사", desc:"2세기에 건설된 로마 원형극장으로 7,000석 규모이며 여전히 공연이 열립니다.", rating:4.7, openTime:"09:00~18:00", price:"BGN 5", website:"https://en.wikipedia.org/wiki/Plovdiv_Roman_theatre"},
+  {name:"구시가지", wikiTitle:"Old town of Plovdiv", type:"역사", desc:"19세기 불가리아 부흥기 건축물이 보존된 언덕 위의 아름다운 구시가입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Old_town_of_Plovdiv"},
+]},
+"벨리코투르노보": { description:"벨리코투르노보는 중세 불가리아 제국의 수도로 절벽 위에 세워진 장엄한 요새 도시입니다.", spots:[
+  {name:"차레베츠 요새", wikiTitle:"Tsarevets (fortress)", type:"역사", desc:"제2 불가리아 제국의 왕궁과 성당이 있던 언덕 위의 요새입니다.", rating:4.6, openTime:"08:00~19:00", price:"BGN 6", website:"https://en.wikipedia.org/wiki/Tsarevets_(fortress)"},
+]},
+"체스키크룸로프": { description:"체스키크룸로프는 블타바 강이 감싸 도는 체코의 동화 같은 중세 마을로 유네스코 세계유산입니다.", spots:[
+  {name:"체스키크룸로프 성", wikiTitle:"Český Krumlov Castle", type:"역사", desc:"프라하 성 다음으로 큰 체코 제2의 성으로 바로크 극장이 보존되어 있습니다.", rating:4.7, openTime:"09:00~17:00", price:"CZK 300", website:"https://en.wikipedia.org/wiki/%C4%8Cesk%C3%BD_Krumlov_Castle"},
+  {name:"구시가지", wikiTitle:"Český Krumlov", type:"역사", desc:"블타바 강변의 중세 건물과 좁은 골목이 그대로 보존된 유네스코 세계유산입니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/%C4%8Cesk%C3%BD_Krumlov"},
+]},
+"카를로비바리": { description:"카를로비바리는 14세기부터 유럽 왕족들이 찾은 체코 최고의 온천 도시입니다.", spots:[
+  {name:"밀 콜로네이드", wikiTitle:"Mill Colonnade", type:"랜드마크", desc:"5개의 온천수가 솟는 네오르네상스 양식의 아름다운 주랑입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Mill_Colonnade"},
+]},
+"코토르": { description:"코토르는 아드리아해의 숨겨진 보석으로 중세 성벽과 피오르드 같은 만이 절경을 이루는 도시입니다.", spots:[
+  {name:"코토르 구시가지", wikiTitle:"Kotor", type:"역사", desc:"베네치아 시대의 건축물이 보존된 유네스코 세계유산 구시가입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Kotor"},
+  {name:"성 요한 요새", wikiTitle:"Fortifications of Kotor", type:"역사", desc:"1,350개 계단을 올라가면 코토르만의 숨막히는 전경이 펼쳐집니다.", rating:4.8, openTime:"08:00~20:00", price:"€8", website:"https://en.wikipedia.org/wiki/Fortifications_of_Kotor"},
+]},
+"부드바": { description:"부드바는 2,500년 역사의 아드리아해 해변 리조트 도시로 몬테네그로 관광의 중심입니다.", spots:[
+  {name:"부드바 구시가지", wikiTitle:"Budva", type:"역사", desc:"좁은 골목과 베네치아 시대 건물이 반도 위에 자리한 아름다운 구시가입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Budva"},
+  {name:"스베티 스테판", wikiTitle:"Sveti Stefan", type:"자연", desc:"아드리아해의 작은 섬 위에 세워진 럭셔리 리조트 마을로 절경을 자랑합니다.", rating:4.6, openTime:"외부 관람", price:"무료", website:"https://en.wikipedia.org/wiki/Sveti_Stefan"},
+]},
+"베라트": { description:"베라트는 '천 개의 창문의 도시'로 불리는 알바니아의 유네스코 세계유산 도시입니다.", spots:[
+  {name:"베라트 성", wikiTitle:"Berat Castle", type:"역사", desc:"언덕 위의 13세기 성채로 내부에 주민이 거주하는 살아있는 유산입니다.", rating:4.5, openTime:"24시간", price:"ALK 200", website:"https://en.wikipedia.org/wiki/Berat_Castle"},
+  {name:"망갈렘 지구", wikiTitle:"Mangalem", type:"역사", desc:"오스만 시대 하얀 집들이 계단식으로 줄지어선 유네스코 등재 역사 지구입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Mangalem"},
+]},
+"사란다": { description:"사란다는 알바니아 남부의 아름다운 해안 도시로 그리스 코르푸 섬이 바라보이는 리조트입니다.", spots:[
+  {name:"블루아이", wikiTitle:"Blue Eye (water spring)", type:"자연", desc:"깊이를 알 수 없는 신비로운 청록색 용천수로 알바니아의 자연 경이입니다.", rating:4.7, openTime:"24시간", price:"ALL 50", website:"https://en.wikipedia.org/wiki/Blue_Eye_(water_spring)"},
+]},
+"노비사드": { description:"노비사드는 세르비아 제2의 도시로 EXIT 페스티벌과 다뉴브 강변 요새로 유명합니다.", spots:[
+  {name:"페트로바라딘 요새", wikiTitle:"Petrovaradin Fortress", type:"역사", desc:"다뉴브강 위의 거대한 18세기 요새로 EXIT 음악 축제가 열리는 장소입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Petrovaradin_Fortress"},
+]},
+"모스타르": { description:"모스타르는 오스만 시대의 아름다운 다리로 유명한 보스니아의 역사 도시입니다.", spots:[
+  {name:"스타리 모스트", wikiTitle:"Stari Most", type:"역사", desc:"16세기 오스만 시대에 건설된 아치형 돌다리로 유네스코 세계유산입니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Stari_Most"},
+]},
+"오흐리드": { description:"오흐리드는 유럽에서 가장 오래된 호수 중 하나인 오흐리드 호수변의 유네스코 세계유산 도시입니다.", spots:[
+  {name:"성 요한 카네오 교회", wikiTitle:"Church of St. John at Kaneo", type:"종교", desc:"오흐리드 호수 절벽 위에 자리한 13세기 교회로 북마케도니아의 상징입니다.", rating:4.8, openTime:"09:00~17:00", price:"MKD 100", website:"https://en.wikipedia.org/wiki/Church_of_St._John_at_Kaneo"},
+]},
+"카르타고": { description:"카르타고는 로마와 대적했던 고대 문명의 유적이 남아있는 튀니지의 역사 도시입니다.", spots:[
+  {name:"카르타고 유적", wikiTitle:"Carthage", type:"역사", desc:"페니키아인이 세운 고대 도시 유적으로 유네스코 세계유산입니다.", rating:4.5, openTime:"08:00~17:00", price:"TND 12", website:"https://en.wikipedia.org/wiki/Carthage"},
+  {name:"안토니누스 목욕탕", wikiTitle:"Antonine Baths", type:"역사", desc:"아프리카 최대의 로마 목욕탕 유적으로 지중해가 내려다보입니다.", rating:4.4, openTime:"08:00~17:00", price:"포함", website:"https://en.wikipedia.org/wiki/Antonine_Baths"},
+]},
+"시디부사이드": { description:"시디부사이드는 하얀 벽과 파란 문이 인상적인 튀니지의 지중해 절벽 마을입니다.", spots:[
+  {name:"시디부사이드 마을", wikiTitle:"Sidi Bou Said", type:"도시", desc:"흰색과 파란색으로 통일된 건물들이 지중해를 배경으로 펼쳐지는 예술가의 마을입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Sidi_Bou_Said"},
+]},
+"아레날": { description:"아레날은 활화산과 열대우림이 만나는 코스타리카의 어드벤처 수도입니다.", spots:[
+  {name:"아레날 화산", wikiTitle:"Arenal Volcano", type:"자연", desc:"코스타리카에서 가장 활발한 화산으로 온천과 하이킹이 인기입니다.", rating:4.7, openTime:"08:00~16:00", price:"$15", website:"https://en.wikipedia.org/wiki/Arenal_Volcano"},
+  {name:"라포르투나 폭포", wikiTitle:"La Fortuna Waterfall", type:"자연", desc:"70m 높이의 폭포로 500개 계단을 내려가 수영할 수 있습니다.", rating:4.6, openTime:"07:30~17:00", price:"$18", website:"https://en.wikipedia.org/wiki/La_Fortuna_Waterfall"},
+]},
+"몬테베르데": { description:"몬테베르데는 구름 숲 보호구역으로 유명한 코스타리카의 생태 관광 명소입니다.", spots:[
+  {name:"몬테베르데 구름숲", wikiTitle:"Monteverde Cloud Forest Reserve", type:"자연", desc:"해발 1,400m의 열대 구름숲으로 케찰 등 희귀 조류의 서식지입니다.", rating:4.8, openTime:"07:00~16:00", price:"$25", website:"https://en.wikipedia.org/wiki/Monteverde_Cloud_Forest_Reserve"},
+]},
+"안티구아": { description:"안티구아 과테말라는 스페인 식민지 시대의 건축물이 보존된 유네스코 세계유산 도시입니다.", spots:[
+  {name:"산타카탈리나 아치", wikiTitle:"Santa Catalina Arch", type:"랜드마크", desc:"과테말라에서 가장 유명한 랜드마크로 아구아 화산을 배경으로 한 사진이 유명합니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Santa_Catalina_Arch,_Antigua_Guatemala"},
+]},
+"비블로스": { description:"비블로스는 7,000년 역사의 세계에서 가장 오래된 도시 중 하나로 레바논의 보석입니다.", spots:[
+  {name:"비블로스 성", wikiTitle:"Byblos Castle", type:"역사", desc:"십자군이 12세기에 세운 성으로 페니키아·로마 유적 위에 자리합니다.", rating:4.5, openTime:"09:00~18:00", price:"LBP 5,000", website:"https://en.wikipedia.org/wiki/Byblos_Castle"},
+]},
+"바알베크": { description:"바알베크는 로마 제국 최대의 신전 유적이 남아있는 레바논의 고대 도시입니다.", spots:[
+  {name:"바알베크 신전", wikiTitle:"Baalbek", type:"역사", desc:"목성 신전의 거대한 기둥이 남아있는 로마 시대 최대 규모의 신전 유적입니다.", rating:4.8, openTime:"08:30~18:00", price:"LBP 5,000", website:"https://en.wikipedia.org/wiki/Baalbek"},
+]},
+"테를지": { description:"테를지는 울란바토르 인근의 국립공원으로 몽골 유목 문화를 체험할 수 있는 대초원입니다.", spots:[
+  {name:"테를지 국립공원", wikiTitle:"Gorkhi-Terelj National Park", type:"자연", desc:"거북바위와 초원이 어우러진 몽골의 대표적 국립공원으로 게르 체험이 가능합니다.", rating:4.6, openTime:"24시간", price:"MNT 3,000", website:"https://en.wikipedia.org/wiki/Gorkhi-Terelj_National_Park"},
+]},
+"방비엥": { description:"방비엥은 라오스의 자연 어드벤처 수도로 석회암 절벽과 남쏭 강의 절경이 펼쳐집니다.", spots:[
+  {name:"블루 라군", wikiTitle:"Vang Vieng", type:"자연", desc:"석회암 동굴과 에메랄드빛 자연 수영장이 어우러진 라오스의 명소입니다.", rating:4.5, openTime:"08:00~17:00", price:"LAK 10,000", website:"https://en.wikipedia.org/wiki/Vang_Vieng"},
+]},
+"빌룬드": { description:"빌룬드는 레고의 탄생지로 레고랜드 테마파크가 있는 덴마크의 작은 도시입니다.", spots:[
+  {name:"레고랜드", wikiTitle:"Legoland Billund", type:"랜드마크", desc:"세계 최초의 레고랜드 테마파크로 6천만 개 이상의 레고 블록으로 세계를 재현했습니다.", rating:4.5, openTime:"10:00~18:00", price:"DKK 449", website:"https://en.wikipedia.org/wiki/Legoland_Billund"},
+  {name:"레고 하우스", wikiTitle:"Lego House", type:"문화", desc:"BIG 건축사무소가 설계한 레고 체험 뮤지엄으로 창의력의 세계가 펼쳐집니다.", rating:4.7, openTime:"10:00~18:00", price:"DKK 229", website:"https://en.wikipedia.org/wiki/Lego_House_(museum)"},
+]},
+"투르쿠": { description:"투르쿠는 핀란드에서 가장 오래된 도시로 중세 성과 아우라 강변의 문화가 매력적입니다.", spots:[
+  {name:"투르쿠 성", wikiTitle:"Turku Castle", type:"역사", desc:"13세기에 건설된 핀란드 최대의 중세 성으로 역사 박물관이 있습니다.", rating:4.5, openTime:"10:00~18:00", price:"€12", website:"https://en.wikipedia.org/wiki/Turku_Castle"},
+]},
+"코시체": { description:"코시체는 슬로바키아 제2의 도시로 2013년 유럽 문화수도, 고딕 성당이 아름다운 곳입니다.", spots:[
+  {name:"성 엘리자베스 대성당", wikiTitle:"Cathedral of St. Elisabeth, Košice", type:"종교", desc:"유럽 최동단의 고딕 대성당으로 슬로바키아 최대의 교회입니다.", rating:4.6, openTime:"09:00~17:00", price:"€3", website:"https://en.wikipedia.org/wiki/Cathedral_of_St._Elisabeth,_Ko%C5%A1ice"},
+]},
+"파포스": { description:"파포스는 아프로디테 탄생 전설의 무대로 고대 유적이 풍부한 키프로스의 해안 도시입니다.", spots:[
+  {name:"파포스 고고학 공원", wikiTitle:"Paphos Archaeological Park", type:"역사", desc:"로마 시대 모자이크 바닥이 보존된 유네스코 세계유산입니다.", rating:4.7, openTime:"08:30~17:00", price:"€4.50", website:"https://en.wikipedia.org/wiki/Paphos_Archaeological_Park"},
+  {name:"아프로디테 바위", wikiTitle:"Aphrodite's Rock", type:"자연", desc:"미의 여신 아프로디테가 바다 거품에서 태어났다는 전설의 해안 바위입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Aphrodite%27s_Rock"},
+]},
+"리마솔": { description:"리마솔은 키프로스 제2의 도시로 해변 리조트와 고대 유적, 와인 산지가 어우러진 곳입니다.", spots:[
+  {name:"리마솔 성", wikiTitle:"Limassol Castle", type:"역사", desc:"리처드 사자심왕이 결혼식을 올린 중세 성으로 중세 박물관이 있습니다.", rating:4.3, openTime:"09:00~17:00", price:"€4.50", website:"https://en.wikipedia.org/wiki/Limassol_Castle"},
+]},
+"유르말라": { description:"유르말라는 리가 인근의 발트해 해변 리조트로 32km의 백사장이 펼쳐지는 휴양 도시입니다.", spots:[
+  {name:"유르말라 해변", wikiTitle:"Jūrmala", type:"자연", desc:"발트해 연안 최대의 해변 리조트로 아르누보 목조 건축이 보존되어 있습니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/J%C5%ABrmala"},
+]},
+"카우나스": { description:"카우나스는 리투아니아 제2의 도시로 아르데코 건축과 전간기 모더니즘이 독특한 곳입니다.", spots:[
+  {name:"카우나스 성", wikiTitle:"Kaunas Castle", type:"역사", desc:"14세기 고딕 양식의 성으로 리투아니아에서 가장 오래된 석조 요새입니다.", rating:4.3, openTime:"10:00~18:00", price:"€3", website:"https://en.wikipedia.org/wiki/Kaunas_Castle"},
+]},
+"트라카이": { description:"트라카이는 호수 위의 붉은 벽돌 성으로 유명한 리투아니아의 옛 수도입니다.", spots:[
+  {name:"트라카이 섬 성", wikiTitle:"Trakai Island Castle", type:"역사", desc:"갈베 호수 위 섬에 지어진 15세기 고딕 성으로 리투아니아의 상징입니다.", rating:4.7, openTime:"10:00~19:00", price:"€10", website:"https://en.wikipedia.org/wiki/Trakai_Island_Castle"},
+]},
+"타르투": { description:"타르투는 에스토니아에서 가장 오래된 대학 도시로 지적인 분위기와 젊은 에너지가 넘칩니다.", spots:[
+  {name:"타르투 대학교", wikiTitle:"University of Tartu", type:"문화", desc:"1632년 설립된 에스토니아 최고의 대학으로 역사적인 메인 빌딩이 인상적입니다.", rating:4.5, openTime:"외부 관람", price:"무료", website:"https://en.wikipedia.org/wiki/University_of_Tartu"},
+]},
+"푼타카나": { description:"푼타카나는 도미니카 공화국 동부의 세계적인 비치 리조트 지역입니다.", spots:[
+  {name:"바바로 비치", wikiTitle:"Bávaro", type:"자연", desc:"코코넛 야자수와 터콰이즈 바다가 어우러진 카리브해 최고의 해변입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/B%C3%A1varo"},
+]},
+"보카스델토로": { description:"보카스델토로는 카리브해의 열대 군도로 파나마의 대표 해양 관광지입니다.", spots:[
+  {name:"스타피쉬 비치", wikiTitle:"Bocas del Toro", type:"자연", desc:"얕은 바다에 불가사리가 가득한 천연 비치로 카리브해의 숨겨진 낙원입니다.", rating:4.6, openTime:"24시간", price:"보트 $5", website:"https://en.wikipedia.org/wiki/Bocas_del_Toro"},
+]},
+"바뇨스": { description:"바뇨스는 에콰도르 안데스 산맥의 온천 도시로 화산과 폭포, 어드벤처의 도시입니다.", spots:[
+  {name:"악마의 물솥 폭포", wikiTitle:"Pailón del Diablo", type:"자연", desc:"에콰도르에서 가장 유명한 폭포로 바위 틈 사이로 들어가 폭포 뒤를 볼 수 있습니다.", rating:4.7, openTime:"08:00~17:00", price:"$2", website:"https://en.wikipedia.org/wiki/Pail%C3%B3n_del_Diablo"},
+]},
+"오타발로": { description:"오타발로는 안데스 산맥의 원주민 시장으로 유명한 에콰도르의 문화 도시입니다.", spots:[
+  {name:"오타발로 시장", wikiTitle:"Otavalo", type:"문화", desc:"남미 최대의 원주민 시장으로 직물, 수공예품을 만날 수 있습니다.", rating:4.5, openTime:"토요일 07:00~14:00", price:"무료", website:"https://en.wikipedia.org/wiki/Otavalo"},
+]},
+"수크레": { description:"수크레는 볼리비아의 헌법상 수도로 하얀 식민지 건축물이 아름다운 유네스코 세계유산 도시입니다.", spots:[
+  {name:"수크레 역사 지구", wikiTitle:"Sucre", type:"역사", desc:"하얀 석회 건물이 줄지어선 식민지 시대 역사 지구로 유네스코 세계유산입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Sucre"},
+]},
+"네그릴": { description:"네그릴은 자메이카 서부의 11km 백사장과 절벽 다이빙으로 유명한 카리브해 리조트입니다.", spots:[
+  {name:"세븐마일 비치", wikiTitle:"Seven Mile Beach (Jamaica)", type:"자연", desc:"자메이카에서 가장 유명한 해변으로 석양이 아름다운 카리브해의 낙원입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Seven_Mile_Beach_(Jamaica)"},
+]},
+"니즈와": { description:"니즈와는 오만 내륙의 옛 수도로 거대한 원형 요새와 전통 수크가 매력적인 역사 도시입니다.", spots:[
+  {name:"니즈와 요새", wikiTitle:"Nizwa Fort", type:"역사", desc:"17세기에 건설된 거대한 원형 탑의 요새로 오만에서 가장 많이 방문하는 유적입니다.", rating:4.6, openTime:"09:00~16:00", price:"OMR 5", website:"https://en.wikipedia.org/wiki/Nizwa_Fort"},
+]},
+"생루이": { description:"생루이는 세네갈 북부의 식민지 시대 건축물이 보존된 유네스코 세계유산 섬 도시입니다.", spots:[
+  {name:"생루이 섬", wikiTitle:"Saint-Louis, Senegal", type:"역사", desc:"세네갈 강 위의 섬 도시로 프랑스 식민지 시대 건축물이 보존된 유네스코 세계유산입니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Saint-Louis,_Senegal"},
+]},
+"무산제": { description:"무산제는 르완다 북서부의 화산 지대로 멸종 위기 산악 고릴라 트레킹의 출발지입니다.", spots:[
+  {name:"화산 국립공원", wikiTitle:"Volcanoes National Park", type:"자연", desc:"멸종 위기 산악 고릴라를 만날 수 있는 르완다의 보호 구역입니다.", rating:4.9, openTime:"06:00~18:00", price:"$1,500", website:"https://en.wikipedia.org/wiki/Volcanoes_National_Park"},
+]},
+"노시베": { description:"노시베는 마다가스카르 북서쪽의 열대 섬으로 아름다운 해변과 여우원숭이가 서식합니다.", spots:[
+  {name:"노시베 해변", wikiTitle:"Nosy Be", type:"자연", desc:"마다가스카르 최고의 해변 리조트 섬으로 스노클링과 다이빙이 유명합니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Nosy_Be"},
+]},
+"케이프코스트": { description:"케이프코스트는 가나의 옛 수도로 대서양 노예무역의 역사가 남아있는 해안 도시입니다.", spots:[
+  {name:"케이프코스트 성", wikiTitle:"Cape Coast Castle", type:"역사", desc:"대서양 노예무역의 거점이었던 유네스코 세계유산으로 가슴 아픈 역사의 현장입니다.", rating:4.6, openTime:"09:00~16:30", price:"GHS 90", website:"https://en.wikipedia.org/wiki/Cape_Coast_Castle"},
+]},
+"소수스블레이": { description:"소수스블레이는 나미비아의 붉은 모래 사막으로 세계에서 가장 높은 사구가 있는 초현실적 풍경입니다.", spots:[
+  {name:"소수스블레이 사구", wikiTitle:"Sossusvlei", type:"자연", desc:"높이 300m 이상의 붉은 모래 사구와 하얀 소금 호수가 만드는 초현실적 풍경입니다.", rating:4.9, openTime:"일출~일몰", price:"N$80", website:"https://en.wikipedia.org/wiki/Sossusvlei"},
+  {name:"데드블레이", wikiTitle:"Deadvlei", type:"자연", desc:"900년 전 말라죽은 나무들이 하얀 소금 바닥 위에 서있는 초현실적 장소입니다.", rating:4.8, openTime:"일출~일몰", price:"포함", website:"https://en.wikipedia.org/wiki/Deadvlei"},
+]},
+"시아르가오": { description:"시아르가오는 필리핀의 서핑 수도로 클라우드 나인 파도와 열대 섬 호핑이 유명합니다.", spots:[
+  {name:"클라우드 나인", wikiTitle:"Cloud 9 (surfing)", type:"자연", desc:"세계적으로 유명한 서핑 스팟으로 두꺼운 배럴 파도가 서퍼들의 성지입니다.", rating:4.7, openTime:"24시간", price:"PHP 50", website:"https://en.wikipedia.org/wiki/Cloud_9_(surfing)"},
+]},
+"시아누크빌": { description:"시아누크빌은 캄보디아 남부의 해변 도시로 아름다운 섬들과 해양 액티비티의 거점입니다.", spots:[
+  {name:"롱 세트 비치", wikiTitle:"Sihanoukville", type:"자연", desc:"캄보디아에서 가장 긴 해변으로 백사장과 야자수가 늘어선 열대 낙원입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Sihanoukville"},
+]},
+"오데사": { description:"오데사는 우크라이나 남부의 흑해 연안 항구 도시로 유럽적 건축미와 해변이 매력적입니다.", spots:[
+  {name:"포템킨 계단", wikiTitle:"Potemkin Stairs", type:"랜드마크", desc:"192개의 거대한 계단으로 영화 '전함 포템킨'으로 유명한 오데사의 상징입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Potemkin_Stairs"},
+  {name:"오데사 오페라 극장", wikiTitle:"Odesa National Academic Opera and Ballet Theater", type:"문화", desc:"유럽에서 가장 아름다운 오페라 극장 중 하나로 화려한 인테리어가 인상적입니다.", rating:4.7, openTime:"공연 시간", price:"UAH 100~", website:"https://en.wikipedia.org/wiki/Odesa_National_Academic_Opera_and_Ballet_Theater"},
+]},
+"체르니우치": { description:"체르니우치는 우크라이나 서부의 합스부르크 시대 건축물이 아름다운 도시입니다.", spots:[
+  {name:"체르니우치 대학교", wikiTitle:"Chernivtsi University", type:"문화", desc:"체코 건축가가 설계한 유네스코 세계유산 건물로 비잔틴·무어 양식이 독특합니다.", rating:4.7, openTime:"09:00~17:00", price:"UAH 60", website:"https://en.wikipedia.org/wiki/Chernivtsi_University"},
+]},
+"훈자": { description:"훈자는 파키스탄 북부 카라코람 산맥의 해발 2,500m 고원 마을로 히말라야 절경의 보고입니다.", spots:[
+  {name:"카리마바드", wikiTitle:"Karimabad", type:"자연", desc:"라카포시와 울타르 봉우리가 병풍처럼 둘러싼 훈자 계곡의 중심 마을입니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Karimabad,_Hunza"},
+]},
+"마마누카": { description:"마마누카는 피지 본섬 서쪽의 화산 군도로 영화 캐스트어웨이 촬영지입니다.", spots:[
+  {name:"마마누카 제도", wikiTitle:"Mamanuca Islands", type:"자연", desc:"20여 개의 열대 섬으로 이루어진 군도로 세계적인 다이빙과 서핑 명소입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Mamanuca_Islands"},
+]},
+"알주바라": { description:"알주바라는 카타르 북부의 유네스코 세계유산 고고학 유적지입니다.", spots:[
+  {name:"알주바라 요새", wikiTitle:"Al Zubarah", type:"역사", desc:"18세기 진주 무역의 중심지였던 고고학 유적으로 유네스코 세계유산입니다.", rating:4.3, openTime:"09:00~17:00", price:"무료", website:"https://en.wikipedia.org/wiki/Al_Zubarah"},
 ]},
 
 // ────────────────────────── 누락 도시 추가 ──────────────────────────
@@ -6925,6 +7140,28 @@ function App() {
                               {item.rating && <span style={{fontSize:9,color:'#d97706'}}>★{item.rating}</span>}
                             </div>
                           </div>
+                          {/* 이동 버튼 → 해당 도시/관광지로 바로 이동 */}
+                          <button onClick={()=>{
+                            const city = allCitiesFlat.find(c => c.name === item.cityName)
+                            if (!city) return
+                            const feat = countries.find(f => f.properties.NAME === city.countryEn)
+                            if (feat) setSelectedCountry(feat)
+                            setTimeout(() => {
+                              handleCityClick(city)
+                              if (item.source === 'spot' && item.name) {
+                                setTimeout(() => {
+                                  const spotData = CITY_DATA[item.cityName]
+                                  const spot = spotData?.spots?.find(s => s.name === item.name)
+                                  if (spot) setSelectedSpot(spot)
+                                }, 800)
+                              }
+                            }, 200)
+                            setShowCoursePlanner(false)
+                          }}
+                            style={{background:'none',border:'1px solid #e0d9d0',color:'#b0a89e',width:24,height:24,borderRadius:5,cursor:'pointer',fontSize:11,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
+                            onMouseEnter={e=>{e.currentTarget.style.color='#3b82f6';e.currentTarget.style.borderColor='#93c5fd';e.currentTarget.style.background='#eff6ff'}}
+                            onMouseLeave={e=>{e.currentTarget.style.color='#b0a89e';e.currentTarget.style.borderColor='#e0d9d0';e.currentTarget.style.background='none'}}
+                            title="이동">→</button>
                           {/* Day 이동 */}
                           {courseDays.length > 1 && (
                             <select value="" onChange={e=>{if(e.target.value!=='')moveToDayFn(activeDayTab,idx,parseInt(e.target.value));e.target.value=''}}
