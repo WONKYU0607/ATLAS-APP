@@ -5000,9 +5000,9 @@ function App() {
   const getCourseItemCity = (item) => getCityName(item.cityName || item.name)
 
 
-  // Load world GeoJSON (110m 경량 + 폴리곤 구멍 제거 → 빠른 렌더링, 빈 공간 없음)
+  // Load world GeoJSON (50m 중해상도 → 정확한 국경선, 빈 공간 없음)
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
+    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson')
       .then(r => r.json())
       .then(data => {
         // 폴리곤 내부 구멍(holes) 제거 → 중국, 러시아 등 빈 공간 해결
@@ -5390,18 +5390,18 @@ function App() {
       .polygonStrokeColor(feat => {
         const name = feat.properties.NAME
         if (hasSelection) {
-          if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.5)'
-          if (hoveredCountry === name) return 'rgba(255,220,50,0.6)'
-          return 'rgba(255,255,255,0.05)'
+          if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.6)'
+          if (hoveredCountry === name) return 'rgba(255,220,50,0.7)'
+          return 'rgba(255,255,255,0.12)'
         }
-        if (hoveredCountry === name) return 'rgba(255,220,50,0.6)'
-        return 'rgba(255,255,255,0.15)'
+        if (hoveredCountry === name) return 'rgba(255,220,50,0.7)'
+        return 'rgba(255,255,255,0.35)'
       })
       .polygonAltitude(feat => {
         const name = feat.properties.NAME
-        if (hasSelection && selectedCountry?.properties.NAME === name) return 0.003
-        if (hoveredCountry === name) return 0.005
-        return 0.004
+        if (hasSelection && selectedCountry?.properties.NAME === name) return 0.002
+        if (hoveredCountry === name) return 0.003
+        return 0.001
       })
       .polygonLabel(() => '')
       .onPolygonHover(feat => {
