@@ -4816,6 +4816,11 @@ function App() {
     globe.camera().position.z = 260
     globe.controls().autoRotate = false
     globe.controls().zoomSpeed = 1.5
+    globe.controls().minPolarAngle = 0.1
+    globe.controls().maxPolarAngle = Math.PI - 0.1
+    globe.controls().enableDamping = true
+    globe.controls().dampingFactor = 0.15
+    globe.controls().rotateSpeed = 0.8
     globeRef.current = globe
 
     // 초기 화면: 대한민국 중심
@@ -4898,16 +4903,16 @@ function App() {
   // ── 도시 라벨 (지구본 표면에 HTML로 표시) ──────────────────────────
   // 대양 라벨 데이터
   const OCEAN_LABELS = [
-    { lat: 0, lng: -140, name: '태평양', nameEn: 'Pacific Ocean', _type: 'ocean' },
-    { lat: 30, lng: -45, name: '대서양', nameEn: 'Atlantic Ocean', _type: 'ocean' },
-    { lat: -15, lng: 75, name: '인도양', nameEn: 'Indian Ocean', _type: 'ocean' },
-    { lat: 75, lng: 0, name: '북극해', nameEn: 'Arctic Ocean', _type: 'ocean' },
-    { lat: -60, lng: 0, name: '남극해', nameEn: 'Southern Ocean', _type: 'ocean' },
-    { lat: -30, lng: -140, name: '남태평양', nameEn: 'South Pacific', _type: 'ocean' },
-    { lat: -30, lng: -15, name: '남대서양', nameEn: 'South Atlantic', _type: 'ocean' },
+    { lat: 0, lng: -140, name: lang==='ko'?'태평양':lang==='ja'?'太平洋':lang==='zh'?'太平洋':'Pacific Ocean', _type: 'ocean' },
+    { lat: 30, lng: -45, name: lang==='ko'?'대서양':lang==='ja'?'大西洋':lang==='zh'?'大西洋':'Atlantic Ocean', _type: 'ocean' },
+    { lat: -15, lng: 75, name: lang==='ko'?'인도양':lang==='ja'?'インド洋':lang==='zh'?'印度洋':'Indian Ocean', _type: 'ocean' },
+    { lat: 75, lng: 0, name: lang==='ko'?'북극해':lang==='ja'?'北極海':lang==='zh'?'北冰洋':'Arctic Ocean', _type: 'ocean' },
+    { lat: -60, lng: 0, name: lang==='ko'?'남극해':lang==='ja'?'南極海':lang==='zh'?'南冰洋':'Southern Ocean', _type: 'ocean' },
+    { lat: -30, lng: -140, name: lang==='ko'?'남태평양':lang==='ja'?'南太平洋':lang==='zh'?'南太平洋':'South Pacific', _type: 'ocean' },
+    { lat: -30, lng: -15, name: lang==='ko'?'남대서양':lang==='ja'?'南大西洋':lang==='zh'?'南大西洋':'South Atlantic', _type: 'ocean' },
     // 지리 기준선 라벨
-    { lat: 0.8, lng: 50, name: '적도 (Equator)', _type: 'geoline' },
-    { lat: 10, lng: 175, name: '날짜변경선', _type: 'geoline' },
+    { lat: 0.8, lng: 50, name: lang==='ko'?'적도 (Equator)':lang==='ja'?'赤道':'Equator', _type: 'geoline' },
+    { lat: 10, lng: 175, name: lang==='ko'?'날짜변경선':lang==='ja'?'日付変更線':lang==='zh'?'国际日期变更线':'International Date Line', _type: 'geoline' },
   ]
 
   useEffect(() => {
@@ -5690,7 +5695,7 @@ function App() {
     <div style={{width:'100vw',height:'100vh',overflow:'hidden',position:'relative',fontFamily:"'Pretendard','Inter',system-ui,sans-serif",background:'#000'}}>
       <style>{`
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        *{box-sizing:border-box;margin:0;padding:0}
+        *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
         ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px}
         .panel{animation:sIn .42s cubic-bezier(.16,1,.3,1)}
         .countryInfoPanel{animation:cInfoIn .35s cubic-bezier(.16,1,.3,1)}
@@ -5937,7 +5942,7 @@ function App() {
                     )}
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:13,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                        {c._searchType === 'spot' ? c.spotName : getCityName(c._koName || c.name)}
+                        {c._searchType === 'spot' ? (trSpot(c._koName || c.name, c.spotName)?.name || c.spotName) : getCityName(c._koName || c.name)}
                       </div>
                       <div style={{fontSize:11,color:'#94a3b8'}}>
                         {c._searchType === 'spot'
@@ -6851,10 +6856,10 @@ function App() {
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       <span style={{fontSize:12,fontWeight:700,color:'#1a1714'}}>Day {activeDayTab+1}</span>
                       {courseTripStart && <span style={{fontSize:11,color:'#c8856a'}}>{formatDate(getDayDate(activeDayTab))}</span>}
-                      <span style={{fontSize:11,color:'#c8b8a8'}}>{items.length}{t('coursePlace')}</span>
+                      <span style={{fontSize:11,color:'#6b7280'}}>{items.length}{t('coursePlace')}</span>
                     </div>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      {totalMin > 0 && <span style={{fontSize:11,color:'#b0a89e'}}>{totalHr > 0 ? `${totalHr}${t('courseHour')} ${totalMinRem}${t('courseMin')}` : `${totalMin}${t('courseMin')}`}</span>}
+                      {totalMin > 0 && <span style={{fontSize:11,color:'#374151',fontWeight:500}}>{totalHr > 0 ? `${totalHr}${t('courseHour')} ${totalMinRem}${t('courseMin')}` : `${totalMin}${t('courseMin')}`}</span>}
                       {loadingRoutes && <div style={{width:12,height:12,borderRadius:'50%',border:'1.5px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>}
                       {courseDays.length > 1 && (
                         <button onClick={()=>removeCourseDay(activeDayTab)}
@@ -6894,11 +6899,11 @@ function App() {
                           <div style={{flex:1,minWidth:0}}>
                             <div style={{fontSize:13,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCourseItemName(item)}</div>
                             <div style={{display:'flex',alignItems:'center',gap:5,marginTop:3}}>
-                              <span style={{fontSize:10,color:'#b0a89e'}}>{getCourseItemCity(item)}</span>
-                              <span style={{fontSize:9,padding:'1px 5px',borderRadius:3,background:'#f5efe8',color:'#9a8070',fontWeight:500}}>
+                              <span style={{fontSize:10,color:'#6b7280'}}>{getCourseItemCity(item)}</span>
+                              <span style={{fontSize:9,padding:'1px 5px',borderRadius:3,background:'#f5efe8',color:'#6b5c4f',fontWeight:500}}>
                                 {item.source==='spot'?t('courseSpot'):item.source==='hotspot'?t('courseHotspot'):t('courseRestaurant')}
                               </span>
-                              {item.rating && <span style={{fontSize:9,color:'#c8a870'}}>★{item.rating}</span>}
+                              {item.rating && <span style={{fontSize:9,color:'#d97706'}}>★{item.rating}</span>}
                             </div>
                           </div>
                           {/* Day 이동 */}
@@ -6920,7 +6925,7 @@ function App() {
                         {idx < items.length - 1 && (
                           <div style={{display:'flex',alignItems:'center',gap:6,padding:'5px 0 5px 34px'}}>
                             {route ? (
-                              <span style={{fontSize:10,color:'#c8b8a8'}}>
+                              <span style={{fontSize:10,color:'#64748b',fontWeight:500}}>
                                 — {route.noRoute ? t('courseNoRoute') : `${route.duration} · ${route.distance}`}
                               </span>
                             ) : loadingRoutes ? (
