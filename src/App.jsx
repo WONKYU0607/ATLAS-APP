@@ -4816,11 +4816,11 @@ function App() {
     globe.camera().position.z = 260
     globe.controls().autoRotate = false
     globe.controls().zoomSpeed = 1.5
-    globe.controls().minPolarAngle = 0.1
-    globe.controls().maxPolarAngle = Math.PI - 0.1
+    globe.controls().minPolarAngle = 0
+    globe.controls().maxPolarAngle = Math.PI
     globe.controls().enableDamping = true
-    globe.controls().dampingFactor = 0.15
-    globe.controls().rotateSpeed = 0.8
+    globe.controls().dampingFactor = 0.12
+    globe.controls().rotateSpeed = 1.0
     globeRef.current = globe
 
     // 초기 화면: 대한민국 중심
@@ -4994,15 +4994,15 @@ function App() {
 
         if (d._type === 'geoline') {
           el.style.cssText = 'pointer-events:none;'
-          const isEquator = d.name.includes('적도')
-          const isDate = d.name.includes('날짜')
+          const isEquator = d.name.includes('적도') || d.name.includes('Equator') || d.name.includes('赤道')
+          const isDate = !isEquator
           el.innerHTML = `<div style="
             transform:translate(-50%,-50%);
             font-family:Pretendard,Inter,sans-serif;
             font-size:8px;
             font-weight:600;
             letter-spacing:2px;
-            color:${isEquator ? 'rgba(239,68,68,0.45)' : isDate ? 'rgba(251,191,36,0.4)' : 'rgba(255,255,255,0.25)'};
+            color:${isEquator ? 'rgba(239,68,68,0.55)' : 'rgba(251,191,36,0.65)'};
             white-space:nowrap;
             user-select:none;
           ">${d.name}</div>`
@@ -5012,10 +5012,10 @@ function App() {
             transform:translate(-50%,-50%);
             font-family:Pretendard,Inter,sans-serif;
             font-size:11px;
-            font-weight:400;
+            font-weight:500;
             font-style:italic;
             letter-spacing:6px;
-            color:rgba(120,180,255,0.4);
+            color:rgba(130,190,255,0.6);
             text-shadow:0 0 8px rgba(0,40,100,0.5);
             white-space:nowrap;
             user-select:none;
