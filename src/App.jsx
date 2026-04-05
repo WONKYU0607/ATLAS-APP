@@ -4732,22 +4732,41 @@ function App() {
   const trDesc = (cityKey) => trCity(cityKey)?.description || null
   const trSpot = (cityKey, spotName) => {
     const cityTr = trCity(cityKey)
+    // wikiTitle 가져오기 (name이 null일 때 fallback용)
+    const getWikiName = () => {
+      if (lang === 'ko') return null
+      const cityData2 = CITY_DATA[cityKey]
+      const spot = cityData2?.spots?.find(s => s.name === spotName)
+      return spot?.wikiTitle || null
+    }
     if (cityTr?.spots) {
       // 1차: 정확한 키 매칭
       const exact = cityTr.spots[spotName]
-      if (exact) return exact
-      // 2차: 퍼지 매칭 (CITY_DATA_I18N 키가 더 길거나 짧은 경우 대응)
-      // 예: CITY_DATA "센소지" ↔ CITY_DATA_I18N "센소지(아사쿠사)"
+      if (exact) {
+        // name이 null이면 wikiTitle로 대체
+        if (!exact.name) {
+          const wikiName = getWikiName()
+          return { name: wikiName || spotName, desc: exact.desc || '' }
+        }
+        return exact
+      }
+      // 2차: 퍼지 매칭
       const fuzzyKey = Object.keys(cityTr.spots).find(
         k => k.startsWith(spotName) || spotName.startsWith(k)
       )
-      if (fuzzyKey) return cityTr.spots[fuzzyKey]
+      if (fuzzyKey) {
+        const fuzzy = cityTr.spots[fuzzyKey]
+        if (!fuzzy.name) {
+          const wikiName = getWikiName()
+          return { name: wikiName || spotName, desc: fuzzy.desc || '' }
+        }
+        return fuzzy
+      }
     }
-    // wikiTitle fallback for name (desc는 null → 한국어 노출 방지)
+    // 번역 데이터 자체가 없는 경우 → wikiTitle fallback
     if (lang !== 'ko') {
-      const cityData2 = CITY_DATA[cityKey]
-      const spot = cityData2?.spots?.find(s => s.name === spotName)
-      if (spot?.wikiTitle) return { name: spot.wikiTitle, desc: '' }
+      const wikiName = getWikiName()
+      if (wikiName) return { name: wikiName, desc: '' }
     }
     return null
   }
