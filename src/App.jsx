@@ -5000,9 +5000,9 @@ function App() {
   const getCourseItemCity = (item) => getCityName(item.cityName || item.name)
 
 
-  // Load world GeoJSON (50m 중해상도 → 정확한 국경선, 빈 공간 없음)
+  // Load world GeoJSON (110m 경량 + 진한 국경선, 빈 공간 없음)
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson')
+    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
       .then(r => r.json())
       .then(data => {
         // 폴리곤 내부 구멍(holes) 제거 → 중국, 러시아 등 빈 공간 해결
