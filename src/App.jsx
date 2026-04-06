@@ -1077,6 +1077,8 @@ const T = {
   coursePlace:{ko:'곳',en:' places',ja:'ヶ所',zh:'处'},
   courseDay:{ko:'일',en:' days',ja:'日間',zh:'天'},
   courseDeleteAll:{ko:'전체삭제',en:'Clear all',ja:'全削除',zh:'全部删除'},
+  courseDownloadPPT:{ko:'PPT',en:'PPT',ja:'PPT',zh:'PPT'},
+  courseDownloadWord:{ko:'Word',en:'Word',ja:'Word',zh:'Word'},
   courseDeleteConfirm:{ko:'코스를 모두 비울까요?',en:'Clear all course items?',ja:'コースを全て削除しますか？',zh:'清空所有路线？'},
   courseComplete:{ko:'✓ 완료',en:'✓ Done',ja:'✓ 完了',zh:'✓ 完成'},
   courseEmptyTitle:{ko:'이 날에 장소가 없습니다',en:'No places for this day',ja:'この日の予定はありません',zh:'这一天没有安排'},
@@ -4999,6 +5001,186 @@ function App() {
   }
   const getCourseItemCity = (item) => getCityName(item.cityName || item.name)
 
+  // ── 코스 다운로드 (PPT / Word) ──
+  const downloadCoursePPT = async () => {
+    // pptxgenjs CDN 로드
+    if (!window.PptxGenJS) {
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js'
+      document.head.appendChild(script)
+      await new Promise((res, rej) => { script.onload = res; script.onerror = rej })
+    }
+    const pptx = new window.PptxGenJS()
+    pptx.layout = 'LAYOUT_WIDE'
+    pptx.author = 'ATLAS Travel Explorer'
+
+    // 코스 도시 이름 추출
+    const cityNames = [...new Set(courseDays.flatMap(d => d.items.map(i => getCourseItemCity(i))))]
+    const dateRange = courseTripStart ? `${formatDate(getDayDate(0))} – ${formatDate(getDayDate(courseDays.length-1))}` : ''
+
+    // ── 표지 슬라이드 ──
+    const cover = pptx.addSlide()
+    cover.background = { color: '1a1714' }
+    cover.addText('ATLAS', { x: 0.8, y: 1.2, w: 11, fontSize: 18, color: 'c8856a', fontFace: 'Arial', bold: true, letterSpacing: 8 })
+    cover.addText(cityNames.join(', ') + (dateRange ? `\n${dateRange}` : ''), {
+      x: 0.8, y: 1.8, w: 11, fontSize: 36, color: 'FFFFFF', fontFace: 'Arial', bold: true, lineSpacingMultiple: 1.3
+    })
+    cover.addText(`${courseItems.length} ${lang==='ko'?'곳':'places'} · ${courseDays.length} ${lang==='ko'?'일':'days'}`, {
+      x: 0.8, y: 3.5, w: 11, fontSize: 16, color: 'b0a89e', fontFace: 'Arial'
+    })
+
+    // ── Day별 슬라이드 ──
+    courseDays.forEach((day, di) => {
+      const slide = pptx.addSlide()
+      slide.background = { color: 'FAFAF8' }
+
+      // Day 헤더
+      slide.addText(`Day ${di + 1}`, { x: 0.6, y: 0.3, w: 3, fontSize: 28, color: 'c8856a', bold: true, fontFace: 'Arial' })
+      if (courseTripStart) {
+        slide.addText(formatDate(getDayDate(di)), { x: 3.5, y: 0.45, w: 3, fontSize: 14, color: '94a3b8', fontFace: 'Arial' })
+      }
+      slide.addShape(pptx.shapes.LINE, { x: 0.6, y: 0.9, w: 12, line: { color: 'e8e2da', width: 1 } })
+
+      // 장소 목록
+      day.items.forEach((item, idx) => {
+        const y = 1.1 + idx * 0.75
+        if (y > 6.5) return // 슬라이드 넘침 방지
+
+        // 번호 원
+        slide.addShape(pptx.shapes.OVAL, {
+          x: 0.6, y: y, w: 0.35, h: 0.35,
+          fill: { color: idx === 0 ? 'c8856a' : 'e8dfd6' },
+        })
+        slide.addText(`${idx + 1}`, {
+          x: 0.6, y: y, w: 0.35, h: 0.35,
+          fontSize: 10, color: idx === 0 ? 'FFFFFF' : 'a89080',
+          align: 'center', valign: 'middle', fontFace: 'Arial', bold: true
+        })
+
+        // 장소명
+        slide.addText(getCourseItemName(item), {
+          x: 1.15, y: y, w: 7, fontSize: 16, color: '1a1714', bold: true, fontFace: 'Arial'
+        })
+
+        // 도시 + 타입 + 별점
+        const subText = [
+          getCourseItemCity(item),
+          item.source === 'spot' ? (lang==='ko'?'관광지':'Attraction') : item.source === 'hotspot' ? (lang==='ko'?'핫플':'Hot Place') : (lang==='ko'?'맛집':'Restaurant'),
+          item.rating ? `★${item.rating}` : ''
+        ].filter(Boolean).join('  ·  ')
+        slide.addText(subText, {
+          x: 1.15, y: y + 0.3, w: 7, fontSize: 10, color: '94a3b8', fontFace: 'Arial'
+        })
+
+        // 경로 정보
+        if (idx < day.items.length - 1) {
+          const rk = getRouteKey(day.items[idx], day.items[idx + 1], courseTransport)
+          const route = routeCache[rk]
+          if (route && !route.noRoute) {
+            slide.addText(`↓  ${route.duration} · ${route.distance}`, {
+              x: 1.15, y: y + 0.52, w: 5, fontSize: 9, color: 'b0a89e', fontFace: 'Arial'
+            })
+          }
+        }
+      })
+
+      // 하단 요약
+      let totalSec = 0
+      for (let i = 0; i < day.items.length - 1; i++) {
+        const rk = getRouteKey(day.items[i], day.items[i + 1], courseTransport)
+        if (routeCache[rk]?.durationSec) totalSec += routeCache[rk].durationSec
+      }
+      const totalMin = Math.round(totalSec / 60)
+      if (totalMin > 0) {
+        const hr = Math.floor(totalMin / 60)
+        const min = totalMin % 60
+        slide.addText(`${lang==='ko'?'총 이동':'Total'}: ${hr > 0 ? `${hr}h ${min}m` : `${min}m`}  ·  ${day.items.length} ${lang==='ko'?'곳':'places'}`, {
+          x: 0.6, y: 6.8, w: 12, fontSize: 11, color: 'b0a89e', fontFace: 'Arial'
+        })
+      }
+    })
+
+    pptx.writeFile({ fileName: `ATLAS_${cityNames[0]||'Trip'}_${courseDays.length}Days.pptx` })
+  }
+
+  const downloadCourseWord = () => {
+    const cityNames = [...new Set(courseDays.flatMap(d => d.items.map(i => getCourseItemCity(i))))]
+    const dateRange = courseTripStart ? `${formatDate(getDayDate(0))} – ${formatDate(getDayDate(courseDays.length-1))}` : ''
+    const transport = courseTransport === 'transit' ? (lang==='ko'?'대중교통':'Transit') : courseTransport === 'walking' ? (lang==='ko'?'도보':'Walking') : (lang==='ko'?'차량':'Driving')
+
+    let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8"><style>
+  body{font-family:'Malgun Gothic','Segoe UI',Arial,sans-serif;color:#1a1714;margin:40px 50px;line-height:1.7}
+  h1{font-size:28px;color:#c8856a;margin:0 0 4px;letter-spacing:2px}
+  h2{font-size:22px;color:#1a1714;margin:30px 0 8px;border-bottom:2px solid #c8856a;padding-bottom:6px}
+  .meta{font-size:12px;color:#94a3b8;margin-bottom:20px}
+  .summary{background:#faf8f5;border:1px solid #e8e2da;border-radius:8px;padding:14px 18px;margin-bottom:24px;font-size:13px}
+  table{width:100%;border-collapse:collapse;margin:10px 0 20px}
+  th{background:#c8856a;color:white;padding:8px 12px;text-align:left;font-size:12px}
+  td{padding:8px 12px;border-bottom:1px solid #e8e2da;font-size:12px}
+  tr:nth-child(even){background:#faf8f5}
+  .route{color:#64748b;font-size:11px;padding:4px 12px 4px 50px}
+  .footer{margin-top:30px;text-align:center;font-size:10px;color:#b0a89e;border-top:1px solid #e8e2da;padding-top:10px}
+</style></head><body>`
+
+    // 헤더
+    html += `<h1>ATLAS</h1>`
+    html += `<div style="font-size:24px;font-weight:700;margin-bottom:6px">${cityNames.join(', ')}</div>`
+    html += `<div class="meta">${dateRange ? dateRange + '  ·  ' : ''}${courseItems.length} ${lang==='ko'?'곳':'places'} · ${courseDays.length} ${lang==='ko'?'일':'days'} · ${transport}</div>`
+
+    // Day별
+    courseDays.forEach((day, di) => {
+      html += `<h2>Day ${di + 1}${courseTripStart ? `  <span style="font-size:14px;color:#c8856a;font-weight:400">${formatDate(getDayDate(di))}</span>` : ''}</h2>`
+
+      html += `<table><tr><th>#</th><th>${lang==='ko'?'장소':'Place'}</th><th>${lang==='ko'?'도시':'City'}</th><th>${lang==='ko'?'유형':'Type'}</th><th>${lang==='ko'?'별점':'Rating'}</th></tr>`
+
+      day.items.forEach((item, idx) => {
+        const typeName = item.source === 'spot' ? (lang==='ko'?'관광지':'Attraction') : item.source === 'hotspot' ? (lang==='ko'?'핫플':'Hot Place') : (lang==='ko'?'맛집':'Restaurant')
+        html += `<tr>
+          <td style="text-align:center;font-weight:700;color:#c8856a">${idx + 1}</td>
+          <td style="font-weight:600">${getCourseItemName(item)}</td>
+          <td>${getCourseItemCity(item)}</td>
+          <td>${typeName}</td>
+          <td>${item.rating ? '★' + item.rating : '-'}</td>
+        </tr>`
+
+        // 경로
+        if (idx < day.items.length - 1) {
+          const rk = getRouteKey(day.items[idx], day.items[idx + 1], courseTransport)
+          const route = routeCache[rk]
+          if (route && !route.noRoute) {
+            html += `<tr><td colspan="5" class="route">↓ ${route.duration} · ${route.distance}</td></tr>`
+          }
+        }
+      })
+      html += `</table>`
+
+      // Day 요약
+      let totalSec = 0
+      for (let i = 0; i < day.items.length - 1; i++) {
+        const rk = getRouteKey(day.items[i], day.items[i + 1], courseTransport)
+        if (routeCache[rk]?.durationSec) totalSec += routeCache[rk].durationSec
+      }
+      const totalMin = Math.round(totalSec / 60)
+      if (totalMin > 0) {
+        const hr = Math.floor(totalMin / 60)
+        const min = totalMin % 60
+        html += `<div style="font-size:11px;color:#94a3b8;text-align:right">${lang==='ko'?'총 이동시간':'Total travel time'}: ${hr > 0 ? `${hr}h ${min}m` : `${min}m`}</div>`
+      }
+    })
+
+    html += `<div class="footer">Generated by ATLAS World Travel Explorer</div>`
+    html += `</body></html>`
+
+    const blob = new Blob(['\ufeff' + html], { type: 'application/msword' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `ATLAS_${cityNames[0]||'Trip'}_${courseDays.length}Days.doc`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
 
   // Load world GeoJSON (커스텀 간소화 50m 우선 → 110m fallback)
   useEffect(() => {
@@ -7006,6 +7188,16 @@ function App() {
                 </div>
               </div>
               <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                <button onClick={downloadCoursePPT}
+                  style={{padding:'5px 10px',borderRadius:6,border:'1px solid #e0d9d0',background:'#faf8f5',fontSize:11,fontWeight:600,color:'#c8856a',cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',gap:3}}
+                  onMouseEnter={e=>{e.currentTarget.style.background='#c8856a';e.currentTarget.style.color='white';e.currentTarget.style.borderColor='#c8856a'}}
+                  onMouseLeave={e=>{e.currentTarget.style.background='#faf8f5';e.currentTarget.style.color='#c8856a';e.currentTarget.style.borderColor='#e0d9d0'}}
+                >📊 {t('courseDownloadPPT')}</button>
+                <button onClick={downloadCourseWord}
+                  style={{padding:'5px 10px',borderRadius:6,border:'1px solid #e0d9d0',background:'#faf8f5',fontSize:11,fontWeight:600,color:'#3b82f6',cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',gap:3}}
+                  onMouseEnter={e=>{e.currentTarget.style.background='#3b82f6';e.currentTarget.style.color='white';e.currentTarget.style.borderColor='#3b82f6'}}
+                  onMouseLeave={e=>{e.currentTarget.style.background='#faf8f5';e.currentTarget.style.color='#3b82f6';e.currentTarget.style.borderColor='#e0d9d0'}}
+                >📄 {t('courseDownloadWord')}</button>
                 <button
                   onClick={()=>{if(confirm(t('courseDeleteConfirm'))){
                     saveCourse([]);saveCourseDays([]);setRouteCache({});
