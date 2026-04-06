@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
+import * as THREE from 'three'
 import { AUTO_I18N } from './auto-i18n'
 
 // ── 실제 관광지 사진 (Wikipedia + Wikimedia Commons 검색) ─────────────
@@ -4995,7 +4996,11 @@ function App() {
       if (tr?.name) return tr.name
       if (item.wikiTitle && lang !== 'ko') return item.wikiTitle
     }
-    // hotspot/restaurant은 Google Places에서 온 이름 → 원래 언어 유지
+    // hotspot/restaurant → 현재 언어로 로드된 데이터에서 place_id로 매칭
+    if (item.place_id) {
+      const current = [...hotspots, ...restaurants].find(p => p.place_id === item.place_id)
+      if (current?.name) return current.name
+    }
     return item.displayName || item.name
   }
   const getCourseItemCity = (item) => getCityName(item.cityName || item.name)
@@ -5171,6 +5176,31 @@ function App() {
     globe.controls().dampingFactor = 0.12
     globe.controls().rotateSpeed = 1.0
     globeRef.current = globe
+
+    // ── 달 추가 ──
+    const scene = globe.scene()
+    const moonGeo = new THREE.SphereGeometry(14, 32, 32)
+    const moonMat = new THREE.MeshStandardMaterial({ color: 0xddddd8, roughness: 0.85, metalness: 0.0 })
+    const moon = new THREE.Mesh(moonGeo, moonMat)
+    // 달 텍스처 (로드 실패해도 회색 구체로 보임)
+    try {
+      new THREE.TextureLoader().load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/moon_1024.jpg',
+        (tex) => { moonMat.map = tex; moonMat.color.set(0xffffff); moonMat.needsUpdate = true })
+    } catch {}
+    const moonDist = 400
+    scene.add(moon)
+
+    // 달 공전 애니메이션
+    let moonAngle = Math.PI * 0.7
+    const animateMoon = () => {
+      moonAngle += 0.00025
+      moon.position.x = Math.cos(moonAngle) * moonDist
+      moon.position.z = Math.sin(moonAngle) * moonDist * 0.65
+      moon.position.y = Math.sin(moonAngle * 0.4) * 50 + 60
+      moon.rotation.y += 0.0008
+      requestAnimationFrame(animateMoon)
+    }
+    animateMoon()
 
     // 초기 화면: 대한민국 중심
     setTimeout(() => globe.pointOfView({ lat: 36, lng: 127.8, altitude: window.innerWidth <= 768 ? 3.0 : 2.2 }), 300)
