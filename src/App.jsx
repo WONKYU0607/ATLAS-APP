@@ -5003,7 +5003,6 @@ function App() {
 
   // ── 코스 다운로드 (PPT / Word) ──
   const downloadCoursePPT = async () => {
-    // pptxgenjs CDN 로드
     if (!window.PptxGenJS) {
       const script = document.createElement('script')
       script.src = 'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js'
@@ -5013,91 +5012,107 @@ function App() {
     const pptx = new window.PptxGenJS()
     pptx.layout = 'LAYOUT_WIDE'
     pptx.author = 'ATLAS Travel Explorer'
-
-    // 코스 도시 이름 추출
     const cityNames = [...new Set(courseDays.flatMap(d => d.items.map(i => getCourseItemCity(i))))]
     const dateRange = courseTripStart ? `${formatDate(getDayDate(0))} – ${formatDate(getDayDate(courseDays.length-1))}` : ''
+    const transportLabel = courseTransport === 'transit' ? (lang==='ko'?'대중교통':'Transit') : courseTransport === 'walking' ? (lang==='ko'?'도보':'Walking') : (lang==='ko'?'차량':'Driving')
 
-    // ── 표지 슬라이드 ──
+    // ── 표지 ──
     const cover = pptx.addSlide()
-    cover.background = { color: '1a1714' }
-    cover.addText('ATLAS', { x: 0.8, y: 1.2, w: 11, fontSize: 18, color: 'c8856a', fontFace: 'Arial', bold: true, letterSpacing: 8 })
-    cover.addText(cityNames.join(', ') + (dateRange ? `\n${dateRange}` : ''), {
-      x: 0.8, y: 1.8, w: 11, fontSize: 36, color: 'FFFFFF', fontFace: 'Arial', bold: true, lineSpacingMultiple: 1.3
-    })
-    cover.addText(`${courseItems.length} ${lang==='ko'?'곳':'places'} · ${courseDays.length} ${lang==='ko'?'일':'days'}`, {
-      x: 0.8, y: 3.5, w: 11, fontSize: 16, color: 'b0a89e', fontFace: 'Arial'
-    })
+    cover.background = { color: '0f172a' }
+    // 장식 바
+    cover.addShape(pptx.shapes.RECTANGLE, { x: 0, y: 0, w: 0.15, h: 7.5, fill: { color: 'c8856a' } })
+    cover.addShape(pptx.shapes.RECTANGLE, { x: 0, y: 6.6, w: 13.33, h: 0.9, fill: { color: '1e293b' } })
+    cover.addText('ATLAS', { x: 0.7, y: 1.5, w: 10, fontSize: 14, color: 'c8856a', fontFace: 'Arial', bold: true, charSpacing: 12 })
+    cover.addText(cityNames.join('  ·  '), { x: 0.7, y: 2.1, w: 11, fontSize: 40, color: 'FFFFFF', fontFace: 'Arial', bold: true, lineSpacingMultiple: 1.2 })
+    cover.addText(`${lang==='ko'?'여행 일정표':'Travel Itinerary'}`, { x: 0.7, y: 3.4, w: 10, fontSize: 18, color: '94a3b8', fontFace: 'Arial' })
+    const infoLines = []
+    if (dateRange) infoLines.push(`📅  ${dateRange}`)
+    infoLines.push(`📍  ${courseItems.length} ${lang==='ko'?'곳':'places'}  ·  ${courseDays.length} ${lang==='ko'?'일':'days'}`)
+    infoLines.push(`🚗  ${transportLabel}`)
+    cover.addText(infoLines.join('\n'), { x: 0.7, y: 4.2, w: 10, fontSize: 14, color: '64748b', fontFace: 'Arial', lineSpacingMultiple: 1.8 })
+    cover.addText('ATLAS World Travel Explorer', { x: 0.7, y: 6.75, w: 10, fontSize: 10, color: '475569', fontFace: 'Arial' })
 
     // ── Day별 슬라이드 ──
     courseDays.forEach((day, di) => {
-      const slide = pptx.addSlide()
-      slide.background = { color: 'FAFAF8' }
+      // 장소가 6개 초과 시 슬라이드 분할
+      const pageSize = 6
+      const pages = []
+      for (let i = 0; i < day.items.length; i += pageSize) pages.push(day.items.slice(i, i + pageSize))
 
-      // Day 헤더
-      slide.addText(`Day ${di + 1}`, { x: 0.6, y: 0.3, w: 3, fontSize: 28, color: 'c8856a', bold: true, fontFace: 'Arial' })
-      if (courseTripStart) {
-        slide.addText(formatDate(getDayDate(di)), { x: 3.5, y: 0.45, w: 3, fontSize: 14, color: '94a3b8', fontFace: 'Arial' })
-      }
-      slide.addShape(pptx.shapes.LINE, { x: 0.6, y: 0.9, w: 12, line: { color: 'e8e2da', width: 1 } })
-
-      // 장소 목록
-      day.items.forEach((item, idx) => {
-        const y = 1.1 + idx * 0.75
-        if (y > 6.5) return // 슬라이드 넘침 방지
-
-        // 번호 원
-        slide.addShape(pptx.shapes.OVAL, {
-          x: 0.6, y: y, w: 0.35, h: 0.35,
-          fill: { color: idx === 0 ? 'c8856a' : 'e8dfd6' },
-        })
-        slide.addText(`${idx + 1}`, {
-          x: 0.6, y: y, w: 0.35, h: 0.35,
-          fontSize: 10, color: idx === 0 ? 'FFFFFF' : 'a89080',
-          align: 'center', valign: 'middle', fontFace: 'Arial', bold: true
-        })
-
-        // 장소명
-        slide.addText(getCourseItemName(item), {
-          x: 1.15, y: y, w: 7, fontSize: 16, color: '1a1714', bold: true, fontFace: 'Arial'
-        })
-
-        // 도시 + 타입 + 별점
-        const subText = [
-          getCourseItemCity(item),
-          item.source === 'spot' ? (lang==='ko'?'관광지':'Attraction') : item.source === 'hotspot' ? (lang==='ko'?'핫플':'Hot Place') : (lang==='ko'?'맛집':'Restaurant'),
-          item.rating ? `★${item.rating}` : ''
-        ].filter(Boolean).join('  ·  ')
-        slide.addText(subText, {
-          x: 1.15, y: y + 0.3, w: 7, fontSize: 10, color: '94a3b8', fontFace: 'Arial'
-        })
-
-        // 경로 정보
-        if (idx < day.items.length - 1) {
-          const rk = getRouteKey(day.items[idx], day.items[idx + 1], courseTransport)
-          const route = routeCache[rk]
-          if (route && !route.noRoute) {
-            slide.addText(`↓  ${route.duration} · ${route.distance}`, {
-              x: 1.15, y: y + 0.52, w: 5, fontSize: 9, color: 'b0a89e', fontFace: 'Arial'
-            })
-          }
-        }
-      })
-
-      // 하단 요약
+      // Day 총 이동시간 계산
       let totalSec = 0
       for (let i = 0; i < day.items.length - 1; i++) {
         const rk = getRouteKey(day.items[i], day.items[i + 1], courseTransport)
         if (routeCache[rk]?.durationSec) totalSec += routeCache[rk].durationSec
       }
       const totalMin = Math.round(totalSec / 60)
-      if (totalMin > 0) {
-        const hr = Math.floor(totalMin / 60)
-        const min = totalMin % 60
-        slide.addText(`${lang==='ko'?'총 이동':'Total'}: ${hr > 0 ? `${hr}h ${min}m` : `${min}m`}  ·  ${day.items.length} ${lang==='ko'?'곳':'places'}`, {
-          x: 0.6, y: 6.8, w: 12, fontSize: 11, color: 'b0a89e', fontFace: 'Arial'
+      const totalStr = totalMin > 0 ? (Math.floor(totalMin/60) > 0 ? `${Math.floor(totalMin/60)}h ${totalMin%60}m` : `${totalMin}m`) : ''
+
+      pages.forEach((pageItems, pi) => {
+        const slide = pptx.addSlide()
+        slide.background = { color: 'FFFFFF' }
+
+        // 상단 컬러 바
+        slide.addShape(pptx.shapes.RECTANGLE, { x: 0, y: 0, w: 13.33, h: 0.08, fill: { color: 'c8856a' } })
+
+        // Day 헤더
+        slide.addShape(pptx.shapes.RECTANGLE, { x: 0, y: 0.08, w: 13.33, h: 0.85, fill: { color: 'faf8f5' } })
+        slide.addText(`Day ${di + 1}`, { x: 0.6, y: 0.15, w: 2, h: 0.7, fontSize: 26, color: 'c8856a', bold: true, fontFace: 'Arial' })
+        const headerRight = []
+        if (courseTripStart) headerRight.push(formatDate(getDayDate(di)))
+        headerRight.push(`${day.items.length} ${lang==='ko'?'곳':'places'}`)
+        if (totalStr) headerRight.push(totalStr)
+        slide.addText(headerRight.join('   ·   '), { x: 3, y: 0.15, w: 9.5, h: 0.7, fontSize: 12, color: '94a3b8', fontFace: 'Arial', align: 'right' })
+        if (pages.length > 1) slide.addText(`(${pi+1}/${pages.length})`, { x: 2.2, y: 0.15, w: 0.8, h: 0.7, fontSize: 10, color: 'b0a89e', fontFace: 'Arial' })
+
+        // 테이블 헤더 + 장소
+        const rows = []
+        const headerRow = [
+          { text: '#', options: { fill: { color: 'c8856a' }, color: 'FFFFFF', bold: true, fontSize: 10, align: 'center' } },
+          { text: lang==='ko'?'장소':'Place', options: { fill: { color: 'c8856a' }, color: 'FFFFFF', bold: true, fontSize: 10 } },
+          { text: lang==='ko'?'도시':'City', options: { fill: { color: 'c8856a' }, color: 'FFFFFF', bold: true, fontSize: 10 } },
+          { text: lang==='ko'?'유형':'Type', options: { fill: { color: 'c8856a' }, color: 'FFFFFF', bold: true, fontSize: 10, align: 'center' } },
+          { text: lang==='ko'?'별점':'Rating', options: { fill: { color: 'c8856a' }, color: 'FFFFFF', bold: true, fontSize: 10, align: 'center' } },
+          { text: lang==='ko'?'이동':'Route', options: { fill: { color: 'c8856a' }, color: 'FFFFFF', bold: true, fontSize: 10, align: 'center' } },
+        ]
+        rows.push(headerRow)
+
+        const startIdx = pi * pageSize
+        pageItems.forEach((item, localIdx) => {
+          const idx = startIdx + localIdx
+          const typeName = item.source === 'spot' ? (lang==='ko'?'관광지':'Attraction') : item.source === 'hotspot' ? (lang==='ko'?'핫플':'Hot Place') : (lang==='ko'?'맛집':'Restaurant')
+          const bgColor = idx % 2 === 0 ? 'FFFFFF' : 'faf8f5'
+
+          // 경로 정보
+          let routeText = ''
+          if (idx < day.items.length - 1) {
+            const rk = getRouteKey(day.items[idx], day.items[idx + 1], courseTransport)
+            const route = routeCache[rk]
+            if (route && !route.noRoute) routeText = `${route.duration}\n${route.distance}`
+          }
+
+          rows.push([
+            { text: `${idx + 1}`, options: { fill: { color: bgColor }, color: 'c8856a', bold: true, fontSize: 12, align: 'center' } },
+            { text: getCourseItemName(item), options: { fill: { color: bgColor }, color: '1a1714', bold: true, fontSize: 12 } },
+            { text: getCourseItemCity(item), options: { fill: { color: bgColor }, color: '64748b', fontSize: 10 } },
+            { text: typeName, options: { fill: { color: bgColor }, color: '64748b', fontSize: 10, align: 'center' } },
+            { text: item.rating ? `★ ${item.rating}` : '-', options: { fill: { color: bgColor }, color: item.rating ? 'd97706' : 'b0a89e', fontSize: 10, align: 'center', bold: !!item.rating } },
+            { text: routeText, options: { fill: { color: bgColor }, color: '94a3b8', fontSize: 8, align: 'center' } },
+          ])
         })
-      }
+
+        slide.addTable(rows, {
+          x: 0.5, y: 1.15, w: 12.3,
+          border: { type: 'solid', pt: 0.5, color: 'e2e8f0' },
+          colW: [0.6, 4.5, 2.5, 1.5, 1.2, 2],
+          rowH: [0.35, ...pageItems.map(() => 0.7)],
+          fontFace: 'Arial',
+          autoPage: false,
+        })
+
+        // 하단
+        slide.addText('ATLAS World Travel Explorer', { x: 0.5, y: 7.0, w: 12, fontSize: 8, color: 'b0a89e', fontFace: 'Arial' })
+      })
     })
 
     pptx.writeFile({ fileName: `ATLAS_${cityNames[0]||'Trip'}_${courseDays.length}Days.pptx` })
@@ -5109,64 +5124,96 @@ function App() {
     const transport = courseTransport === 'transit' ? (lang==='ko'?'대중교통':'Transit') : courseTransport === 'walking' ? (lang==='ko'?'도보':'Walking') : (lang==='ko'?'차량':'Driving')
 
     let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-<head><meta charset="utf-8"><style>
-  body{font-family:'Malgun Gothic','Segoe UI',Arial,sans-serif;color:#1a1714;margin:40px 50px;line-height:1.7}
-  h1{font-size:28px;color:#c8856a;margin:0 0 4px;letter-spacing:2px}
-  h2{font-size:22px;color:#1a1714;margin:30px 0 8px;border-bottom:2px solid #c8856a;padding-bottom:6px}
-  .meta{font-size:12px;color:#94a3b8;margin-bottom:20px}
-  .summary{background:#faf8f5;border:1px solid #e8e2da;border-radius:8px;padding:14px 18px;margin-bottom:24px;font-size:13px}
-  table{width:100%;border-collapse:collapse;margin:10px 0 20px}
-  th{background:#c8856a;color:white;padding:8px 12px;text-align:left;font-size:12px}
-  td{padding:8px 12px;border-bottom:1px solid #e8e2da;font-size:12px}
-  tr:nth-child(even){background:#faf8f5}
-  .route{color:#64748b;font-size:11px;padding:4px 12px 4px 50px}
-  .footer{margin-top:30px;text-align:center;font-size:10px;color:#b0a89e;border-top:1px solid #e8e2da;padding-top:10px}
+<head><meta charset="utf-8">
+<style>
+  @page { margin: 2cm; }
+  body { font-family: 'Malgun Gothic','Segoe UI',Arial,sans-serif; color: #1a1714; line-height: 1.6; }
+  .cover { text-align: center; padding-top: 120px; page-break-after: always; }
+  .cover h1 { font-size: 14px; color: #c8856a; letter-spacing: 8px; margin: 0 0 20px; }
+  .cover .city { font-size: 36px; font-weight: 800; color: #1a1714; margin: 0 0 8px; }
+  .cover .sub { font-size: 16px; color: #94a3b8; margin: 0 0 40px; }
+  .cover .info { font-size: 13px; color: #64748b; line-height: 2.2; }
+  .cover .line { width: 60px; height: 3px; background: #c8856a; margin: 30px auto; }
+  .day-section { page-break-before: always; }
+  .day-section:first-of-type { page-break-before: avoid; }
+  .day-header { background: #faf8f5; border-left: 4px solid #c8856a; padding: 12px 18px; margin: 0 0 16px; }
+  .day-header h2 { font-size: 22px; color: #1a1714; margin: 0; display: inline; }
+  .day-header .date { font-size: 13px; color: #c8856a; margin-left: 12px; }
+  .day-header .summary { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 0 0 16px; }
+  th { background: #c8856a; color: white; padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 600; }
+  th:first-child { text-align: center; width: 40px; }
+  td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-size: 12px; vertical-align: middle; }
+  tr:nth-child(even) td { background: #fafaf8; }
+  .num { text-align: center; font-weight: 700; color: #c8856a; font-size: 14px; }
+  .place { font-weight: 700; color: #1a1714; }
+  .type-badge { display: inline-block; background: #f5f0ea; color: #8b7355; padding: 2px 10px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+  .rating { color: #d97706; font-weight: 700; }
+  .route-row td { padding: 4px 12px 4px 52px; border-bottom: 1px solid #f8fafc; }
+  .route-text { color: #64748b; font-size: 11px; }
+  .day-total { text-align: right; font-size: 11px; color: #94a3b8; padding: 4px 0 0; margin: 0 0 10px; }
+  .footer { text-align: center; font-size: 9px; color: #b0a89e; border-top: 1px solid #e8e2da; padding-top: 12px; margin-top: 40px; }
 </style></head><body>`
 
-    // 헤더
-    html += `<h1>ATLAS</h1>`
-    html += `<div style="font-size:24px;font-weight:700;margin-bottom:6px">${cityNames.join(', ')}</div>`
-    html += `<div class="meta">${dateRange ? dateRange + '  ·  ' : ''}${courseItems.length} ${lang==='ko'?'곳':'places'} · ${courseDays.length} ${lang==='ko'?'일':'days'} · ${transport}</div>`
+    // ── 표지 페이지 ──
+    html += `<div class="cover">
+      <h1>A T L A S</h1>
+      <div class="line"></div>
+      <div class="city">${cityNames.join('  ·  ')}</div>
+      <div class="sub">${lang==='ko'?'여행 일정표':'Travel Itinerary'}</div>
+      <div class="line"></div>
+      <div class="info">`
+    if (dateRange) html += `📅  ${dateRange}<br>`
+    html += `📍  ${courseItems.length} ${lang==='ko'?'곳':'places'}  ·  ${courseDays.length} ${lang==='ko'?'일':'days'}<br>`
+    html += `🚗  ${transport}`
+    html += `</div></div>`
 
-    // Day별
+    // ── Day별 (각 Day 새 페이지) ──
     courseDays.forEach((day, di) => {
-      html += `<h2>Day ${di + 1}${courseTripStart ? `  <span style="font-size:14px;color:#c8856a;font-weight:400">${formatDate(getDayDate(di))}</span>` : ''}</h2>`
+      html += `<div class="day-section">`
 
-      html += `<table><tr><th>#</th><th>${lang==='ko'?'장소':'Place'}</th><th>${lang==='ko'?'도시':'City'}</th><th>${lang==='ko'?'유형':'Type'}</th><th>${lang==='ko'?'별점':'Rating'}</th></tr>`
-
-      day.items.forEach((item, idx) => {
-        const typeName = item.source === 'spot' ? (lang==='ko'?'관광지':'Attraction') : item.source === 'hotspot' ? (lang==='ko'?'핫플':'Hot Place') : (lang==='ko'?'맛집':'Restaurant')
-        html += `<tr>
-          <td style="text-align:center;font-weight:700;color:#c8856a">${idx + 1}</td>
-          <td style="font-weight:600">${getCourseItemName(item)}</td>
-          <td>${getCourseItemCity(item)}</td>
-          <td>${typeName}</td>
-          <td>${item.rating ? '★' + item.rating : '-'}</td>
-        </tr>`
-
-        // 경로
-        if (idx < day.items.length - 1) {
-          const rk = getRouteKey(day.items[idx], day.items[idx + 1], courseTransport)
-          const route = routeCache[rk]
-          if (route && !route.noRoute) {
-            html += `<tr><td colspan="5" class="route">↓ ${route.duration} · ${route.distance}</td></tr>`
-          }
-        }
-      })
-      html += `</table>`
-
-      // Day 요약
+      // Day 총 이동시간
       let totalSec = 0
       for (let i = 0; i < day.items.length - 1; i++) {
         const rk = getRouteKey(day.items[i], day.items[i + 1], courseTransport)
         if (routeCache[rk]?.durationSec) totalSec += routeCache[rk].durationSec
       }
       const totalMin = Math.round(totalSec / 60)
-      if (totalMin > 0) {
-        const hr = Math.floor(totalMin / 60)
-        const min = totalMin % 60
-        html += `<div style="font-size:11px;color:#94a3b8;text-align:right">${lang==='ko'?'총 이동시간':'Total travel time'}: ${hr > 0 ? `${hr}h ${min}m` : `${min}m`}</div>`
-      }
+      const totalStr = totalMin > 0 ? (Math.floor(totalMin/60) > 0 ? `${Math.floor(totalMin/60)}h ${totalMin%60}m` : `${totalMin}m`) : ''
+
+      html += `<div class="day-header">
+        <h2>Day ${di + 1}</h2>`
+      if (courseTripStart) html += `<span class="date">${formatDate(getDayDate(di))}</span>`
+      html += `<div class="summary">${day.items.length} ${lang==='ko'?'곳':'places'}${totalStr ? `  ·  ${lang==='ko'?'총 이동':'Total'} ${totalStr}` : ''}</div>
+      </div>`
+
+      html += `<table><tr>
+        <th>#</th>
+        <th>${lang==='ko'?'장소':'Place'}</th>
+        <th>${lang==='ko'?'도시':'City'}</th>
+        <th>${lang==='ko'?'유형':'Type'}</th>
+        <th>${lang==='ko'?'별점':'Rating'}</th>
+      </tr>`
+
+      day.items.forEach((item, idx) => {
+        const typeName = item.source === 'spot' ? (lang==='ko'?'관광지':'Attraction') : item.source === 'hotspot' ? (lang==='ko'?'핫플':'Hot Place') : (lang==='ko'?'맛집':'Restaurant')
+        html += `<tr>
+          <td class="num">${idx + 1}</td>
+          <td class="place">${getCourseItemName(item)}</td>
+          <td>${getCourseItemCity(item)}</td>
+          <td><span class="type-badge">${typeName}</span></td>
+          <td class="${item.rating ? 'rating' : ''}">${item.rating ? '★ ' + item.rating : '-'}</td>
+        </tr>`
+
+        if (idx < day.items.length - 1) {
+          const rk = getRouteKey(day.items[idx], day.items[idx + 1], courseTransport)
+          const route = routeCache[rk]
+          if (route && !route.noRoute) {
+            html += `<tr class="route-row"><td colspan="5"><span class="route-text">↓  ${route.duration}  ·  ${route.distance}</span></td></tr>`
+          }
+        }
+      })
+      html += `</table></div>`
     })
 
     html += `<div class="footer">Generated by ATLAS World Travel Explorer</div>`
