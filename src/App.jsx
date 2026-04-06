@@ -4951,8 +4951,9 @@ function App() {
   const totalSpots = Object.values(CITY_DATA).reduce((a, d) => a + (d.spots?.length || 0), 0)
   const visitedCityCount = (visited.cities || []).length
   const visitedSpotCount = Object.values(visited.spots || {}).reduce((a, s) => a + s.length, 0)
-  const [showVisitedPanel, setShowVisitedPanel] = useState(false)
+  const [showMyTravels, setShowMyTravels] = useState(false)
   const [visitedExpandCity, setVisitedExpandCity] = useState(null)
+  const [visitedExpandContinent, setVisitedExpandContinent] = useState(null)
 
   // 다국어 헬퍼
   const t = (key) => {
@@ -6297,62 +6298,21 @@ function App() {
 
                 {/* 내 여행 기록 */}
                 <div style={{padding:'12px 16px 14px',borderTop:'1px solid rgba(255,255,255,.08)'}}>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10,cursor:'pointer'}}
-                    onClick={()=>setShowVisitedPanel(v=>!v)}>
-                    <span style={{fontSize:14,fontWeight:700,color:'white'}}>🌍 {t('visitedTitle')}</span>
-                    <span style={{fontSize:11,color:'#64748b'}}>{showVisitedPanel?'▾':'▸'}</span>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
+                    onClick={()=>{setShowMyTravels(true);setShowHamburger(false)}}
+                    onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
+                    onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <span style={{fontSize:18}}>🌍</span>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('visitedTitle')}</div>
+                        <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>
+                          {visitedCityCount}{t('visitedCityCount')} · {visitedSpotCount}{t('visitedSpotCount')} · {totalCities > 0 ? Math.round(visitedCityCount/totalCities*100) : 0}%
+                        </div>
+                      </div>
+                    </div>
+                    <span style={{fontSize:14,color:'#64748b'}}>→</span>
                   </div>
-                  {/* 진행률 바 */}
-                  <div style={{marginBottom:10}}>
-                    <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'#94a3b8',marginBottom:4}}>
-                      <span>{t('visitedProgress')}</span>
-                      <span>{visitedCityCount} / {totalCities} ({totalCities > 0 ? Math.round(visitedCityCount/totalCities*100) : 0}%)</span>
-                    </div>
-                    <div style={{height:6,background:'rgba(255,255,255,.1)',borderRadius:3,overflow:'hidden'}}>
-                      <div style={{height:'100%',width:`${totalCities > 0 ? (visitedCityCount/totalCities*100) : 0}%`,background:'linear-gradient(90deg,#c8856a,#f59e0b)',borderRadius:3,transition:'width .5s'}}/>
-                    </div>
-                    <div style={{display:'flex',gap:12,marginTop:6,fontSize:10,color:'#94a3b8'}}>
-                      <span>📍 {visitedCityCount}{t('visitedCityCount')}</span>
-                      <span>🏛️ {visitedSpotCount}{t('visitedSpotCount')}</span>
-                    </div>
-                  </div>
-                  {showVisitedPanel && (
-                    <div style={{maxHeight:300,overflowY:'auto'}}>
-                      {visitedCityCount === 0 ? (
-                        <div style={{padding:'14px 0',textAlign:'center',color:'#64748b',fontSize:11}}>{t('visitedEmpty')}</div>
-                      ) : (
-                        (visited.cities || []).map((cityName, i) => {
-                          const citySpots = visited.spots?.[cityName] || []
-                          const isExpanded = visitedExpandCity === cityName
-                          return (
-                            <div key={i} style={{marginBottom:4}}>
-                              <div style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
-                                onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'}
-                                onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-                                onClick={()=>setVisitedExpandCity(isExpanded ? null : cityName)}>
-                                <span style={{fontSize:12,color:'#c8856a'}}>✓</span>
-                                <div style={{flex:1,minWidth:0}}>
-                                  <span style={{fontSize:12,fontWeight:600,color:'white'}}>{getCityName(cityName)}</span>
-                                  {citySpots.length > 0 && <span style={{fontSize:10,color:'#64748b',marginLeft:6}}>({citySpots.length})</span>}
-                                </div>
-                                <span style={{fontSize:9,color:'#64748b'}}>{isExpanded ? '▾' : '▸'}</span>
-                              </div>
-                              {isExpanded && citySpots.length > 0 && (
-                                <div style={{paddingLeft:28}}>
-                                  {citySpots.map((sp, j) => (
-                                    <div key={j} style={{fontSize:11,color:'#94a3b8',padding:'3px 0',display:'flex',alignItems:'center',gap:6}}>
-                                      <span style={{color:'#c8856a',fontSize:9}}>●</span>
-                                      {trSpot(cityName, sp)?.name || sp}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          )
-                        })
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
             )}
@@ -7483,6 +7443,174 @@ function App() {
               onMouseLeave={e=>e.currentTarget.style.background='none'}>✕</button>
           </div>
         </div>
+      )}
+
+      {/* ── 내 여행 기록 (전체 패널) ── */}
+      {showMyTravels && (
+        <>
+          <div onClick={()=>setShowMyTravels(false)} style={{position:'absolute',inset:0,background:'rgba(0,0,0,.5)',zIndex:1400,backdropFilter:'blur(4px)'}}/>
+          <div style={{
+            position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',
+            width:isMobile?'96vw':Math.min(900,typeof window!=='undefined'?window.innerWidth-60:840),
+            maxHeight:isMobile?'90vh':'85vh',
+            background:'#0f172a',borderRadius:20,border:'1px solid rgba(255,255,255,.15)',
+            boxShadow:'0 24px 80px rgba(0,0,0,.5)',zIndex:1401,overflow:'hidden',
+            display:'flex',flexDirection:'column',
+            animation:'aiModalIn .3s cubic-bezier(.16,1,.3,1)'
+          }}>
+            {/* 헤더 */}
+            <div style={{padding:'20px 24px 16px',borderBottom:'1px solid rgba(255,255,255,.1)',flexShrink:0}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                <div style={{display:'flex',alignItems:'center',gap:10}}>
+                  <span style={{fontSize:24}}>🌍</span>
+                  <div>
+                    <div style={{fontSize:20,fontWeight:700,color:'white'}}>{t('visitedTitle')}</div>
+                    <div style={{fontSize:11,color:'#94a3b8',marginTop:2}}>
+                      {visitedCityCount}{t('visitedCityCount')} · {visitedSpotCount}{t('visitedSpotCount')}
+                    </div>
+                  </div>
+                </div>
+                <button onClick={()=>setShowMyTravels(false)}
+                  style={{width:32,height:32,borderRadius:8,border:'1px solid rgba(255,255,255,.2)',background:'none',color:'#94a3b8',cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+              </div>
+            </div>
+
+            {/* 컨텐츠 */}
+            <div style={{flex:1,overflowY:'auto',padding:isMobile?'16px':'24px'}}>
+
+              {/* 퍼센트 + 통계 카드 */}
+              <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:16}}>
+                <div style={{flex:1}}>
+                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
+                    <span style={{fontSize:13,fontWeight:600,color:'white'}}>{t('visitedProgress')}</span>
+                    <span style={{fontSize:22,fontWeight:800,color:'#c8856a'}}>{totalCities > 0 ? Math.round(visitedCityCount/totalCities*100) : 0}%</span>
+                  </div>
+                  <div style={{height:10,background:'rgba(255,255,255,.08)',borderRadius:5,overflow:'hidden'}}>
+                    <div style={{height:'100%',width:`${totalCities > 0 ? (visitedCityCount/totalCities*100) : 0}%`,background:'linear-gradient(90deg,#c8856a,#f59e0b)',borderRadius:5,transition:'width .8s cubic-bezier(.16,1,.3,1)'}}/>
+                  </div>
+                </div>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:20}}>
+                {[
+                  {label:lang==='ko'?'방문 국가':'Countries',value:(()=>{const vc=new Set();(visited.cities||[]).forEach(c=>{const entry=Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===c));if(entry)vc.add(entry[0])});return vc.size})(),total:Object.keys(COUNTRY_CITIES).length,color:'#3b82f6'},
+                  {label:lang==='ko'?'방문 도시':'Cities',value:visitedCityCount,total:totalCities,color:'#c8856a'},
+                  {label:lang==='ko'?'방문 관광지':'Spots',value:visitedSpotCount,total:totalSpots,color:'#22c55e'},
+                ].map((s,i)=>(
+                  <div key={i} style={{background:'rgba(255,255,255,.05)',borderRadius:12,padding:'14px 16px',border:'1px solid rgba(255,255,255,.08)'}}>
+                    <div style={{fontSize:28,fontWeight:800,color:s.color}}>{s.value}</div>
+                    <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{s.label} ({t('visitedOf')} {s.total})</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 도트 세계지도 */}
+              <div style={{background:'rgba(255,255,255,.03)',borderRadius:14,border:'1px solid rgba(255,255,255,.06)',padding:'12px 8px',overflow:'hidden',marginBottom:24}}>
+                <svg viewBox="-180 -90 360 180" style={{width:'100%',height:'auto',display:'block'}} xmlns="http://www.w3.org/2000/svg">
+                  {[-60,-30,0,30,60].map(lat=>(
+                    <line key={`lat${lat}`} x1="-180" y1={-lat} x2="180" y2={-lat} stroke="rgba(255,255,255,.06)" strokeWidth="0.3"/>
+                  ))}
+                  {[-120,-60,0,60,120].map(lng=>(
+                    <line key={`lng${lng}`} x1={lng} y1="-90" x2={lng} y2="90" stroke="rgba(255,255,255,.06)" strokeWidth="0.3"/>
+                  ))}
+                  <line x1="-180" y1="0" x2="180" y2="0" stroke="rgba(239,68,68,.15)" strokeWidth="0.4" strokeDasharray="2,2"/>
+                  {Object.entries(COUNTRY_CITIES).map(([country, cities]) => {
+                    const c = cities[0]
+                    if (!c) return null
+                    const isV = cities.some(ci => (visited.cities||[]).includes(ci.name))
+                    return (
+                      <g key={country}>
+                        <circle cx={c.lng} cy={-c.lat} r={isV ? 2.8 : 1.5}
+                          fill={isV ? '#22c55e' : 'rgba(255,255,255,.15)'}
+                          opacity={isV ? 1 : 0.5}/>
+                        {isV && <circle cx={c.lng} cy={-c.lat} r="5" fill="none" stroke="#22c55e" strokeWidth="0.3" opacity="0.25"/>}
+                      </g>
+                    )
+                  })}
+                </svg>
+              </div>
+
+              {/* 대륙별 목록 */}
+              {(() => {
+                const continents = {}
+                Object.entries(COUNTRY_CITIES).forEach(([country, cities]) => {
+                  const cont = COUNTRY_INFO[country]?.continent || (lang==='ko'?'기타':'Other')
+                  if (!continents[cont]) continents[cont] = []
+                  const vc = cities.filter(c => (visited.cities||[]).includes(c.name))
+                  if (vc.length > 0) continents[cont].push({ country, cities, visitedCities: vc })
+                })
+                const contNameMap = {'아시아':{en:'Asia',ja:'アジア',zh:'亚洲'},'유럽':{en:'Europe',ja:'ヨーロッパ',zh:'欧洲'},'북아메리카':{en:'North America',ja:'北米',zh:'北美'},'남아메리카':{en:'South America',ja:'南米',zh:'南美'},'아프리카':{en:'Africa',ja:'アフリカ',zh:'非洲'},'오세아니아':{en:'Oceania',ja:'オセアニア',zh:'大洋洲'}}
+                const getContName = (k) => lang==='ko' ? k : (contNameMap[k]?.[lang] || k)
+                const order = ['아시아','유럽','북아메리카','남아메리카','아프리카','오세아니아','기타']
+                const active = order.filter(c => continents[c]?.length > 0)
+
+                if (active.length === 0) return (
+                  <div style={{textAlign:'center',padding:'40px 0',color:'#64748b'}}>
+                    <div style={{fontSize:32,marginBottom:12}}>✈️</div>
+                    <div style={{fontSize:14,fontWeight:600}}>{t('visitedEmpty')}</div>
+                    <div style={{fontSize:12,marginTop:6,color:'#475569'}}>{lang==='ko'?'도시 패널에서 방문 체크를 해보세요!':'Mark visited cities in the city panel!'}</div>
+                  </div>
+                )
+                return active.map(cont => {
+                  const items = continents[cont]
+                  const isExp = visitedExpandContinent === cont
+                  const tc = items.reduce((a,x)=>a+x.visitedCities.length,0)
+                  return (
+                    <div key={cont} style={{marginBottom:8}}>
+                      <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:10,cursor:'pointer',background:isExp?'rgba(200,133,106,.1)':'rgba(255,255,255,.03)',border:`1px solid ${isExp?'rgba(200,133,106,.2)':'rgba(255,255,255,.06)'}`,transition:'all .15s'}}
+                        onClick={()=>setVisitedExpandContinent(isExp?null:cont)}>
+                        <span style={{fontSize:12,fontWeight:700,color:'#c8856a',width:20}}>{isExp?'▾':'▸'}</span>
+                        <span style={{fontSize:14,fontWeight:700,color:'white',flex:1}}>{getContName(cont)}</span>
+                        <span style={{fontSize:11,color:'#64748b'}}>{items.length}{lang==='ko'?'개국':' countries'} · {tc}{lang==='ko'?'개 도시':' cities'}</span>
+                      </div>
+                      {isExp && (
+                        <div style={{padding:'8px 0 4px 32px'}}>
+                          {items.map(({country, visitedCities}) => (
+                            <div key={country} style={{marginBottom:6}}>
+                              <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
+                                {getFlagImg(COUNTRY_INFO[country]?.emoji) ? (
+                                  <img src={getFlagImg(COUNTRY_INFO[country]?.emoji)} alt="" style={{width:18,height:13,objectFit:'cover',borderRadius:2,border:'1px solid rgba(255,255,255,.15)'}}/>
+                                ) : <span style={{fontSize:14}}>{COUNTRY_INFO[country]?.emoji||'🏳️'}</span>}
+                                <span style={{fontSize:13,fontWeight:600,color:'#e2e8f0'}}>{getCountryName(country)}</span>
+                                <span style={{fontSize:10,color:'#64748b'}}>({visitedCities.length})</span>
+                              </div>
+                              {visitedCities.map(city => {
+                                const cs = visited.spots?.[city.name] || []
+                                const isO = visitedExpandCity === city.name
+                                return (
+                                  <div key={city.name} style={{paddingLeft:24,marginBottom:2}}>
+                                    <div style={{display:'flex',alignItems:'center',gap:6,padding:'4px 8px',borderRadius:6,cursor:'pointer',transition:'background .1s'}}
+                                      onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}
+                                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+                                      onClick={()=>setVisitedExpandCity(isO?null:city.name)}>
+                                      <span style={{fontSize:10,color:'#22c55e'}}>✓</span>
+                                      <span style={{fontSize:12,fontWeight:500,color:'#cbd5e1'}}>{getCityName(city.name)}</span>
+                                      {cs.length > 0 && <span style={{fontSize:9,color:'#64748b'}}>· {cs.length}{lang==='ko'?'곳':''}</span>}
+                                      {cs.length > 0 && <span style={{fontSize:8,color:'#475569'}}>{isO?'▾':'▸'}</span>}
+                                    </div>
+                                    {isO && cs.length > 0 && (
+                                      <div style={{paddingLeft:26,paddingBottom:4}}>
+                                        {cs.map((sp,j)=>(
+                                          <div key={j} style={{fontSize:11,color:'#94a3b8',padding:'2px 0',display:'flex',alignItems:'center',gap:5}}>
+                                            <span style={{color:'#22c55e',fontSize:8}}>●</span>
+                                            {trSpot(city.name, sp)?.name || sp}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })
+              })()}
+            </div>
+          </div>
+        </>
       )}
 
     </div>
