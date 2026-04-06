@@ -1079,6 +1079,17 @@ const T = {
   courseDay:{ko:'일',en:' days',ja:'日間',zh:'天'},
   courseDeleteAll:{ko:'전체삭제',en:'Clear all',ja:'全削除',zh:'全部删除'},
   courseDownloadPPT:{ko:'PPT',en:'PPT',ja:'PPT',zh:'PPT'},
+  // 방문 기록
+  visitedTitle:{ko:'내 여행 기록',en:'My Travels',ja:'旅行記録',zh:'我的旅行'},
+  visitedCities:{ko:'방문한 도시',en:'Visited Cities',ja:'訪問した都市',zh:'到访城市'},
+  visitedSpots:{ko:'방문한 관광지',en:'Visited Spots',ja:'訪問した観光地',zh:'到访景点'},
+  visitedMark:{ko:'방문 완료',en:'Visited',ja:'訪問済み',zh:'已到访'},
+  visitedUnmark:{ko:'방문 취소',en:'Unmark',ja:'取消',zh:'取消'},
+  visitedOf:{ko:'중',en:'of',ja:'中',zh:'中'},
+  visitedProgress:{ko:'세계 탐험도',en:'World Explored',ja:'世界探検度',zh:'世界探索度'},
+  visitedEmpty:{ko:'아직 방문 기록이 없어요',en:'No visits yet',ja:'まだ訪問記録がありません',zh:'暂无到访记录'},
+  visitedCityCount:{ko:'개 도시',en:' cities',ja:'都市',zh:'个城市'},
+  visitedSpotCount:{ko:'개 관광지',en:' spots',ja:'観光地',zh:'个景点'},
   courseDeleteConfirm:{ko:'코스를 모두 비울까요?',en:'Clear all course items?',ja:'コースを全て削除しますか？',zh:'清空所有路线？'},
   courseComplete:{ko:'✓ 완료',en:'✓ Done',ja:'✓ 完了',zh:'✓ 完成'},
   courseEmptyTitle:{ko:'이 날에 장소가 없습니다',en:'No places for this day',ja:'この日の予定はありません',zh:'这一天没有安排'},
@@ -4906,6 +4917,43 @@ function App() {
     else { saveFavorites([...favorites, { ...item, addedAt: Date.now() }]) }
   }
 
+  // 방문 기록 (localStorage 저장)
+  const [visited, setVisited] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('atlas_visited') || '{}') } catch { return {} }
+  })
+  // visited = { cities: ['서울','도쿄',...], spots: { '서울': ['경복궁','N서울타워'], '도쿄': ['센소지(아사쿠사)'] } }
+  const saveVisited = (v) => { setVisited(v); localStorage.setItem('atlas_visited', JSON.stringify(v)) }
+  const isVisitedCity = (cityName) => (visited.cities || []).includes(cityName)
+  const isVisitedSpot = (cityName, spotName) => (visited.spots?.[cityName] || []).includes(spotName)
+  const toggleVisitedCity = (cityName) => {
+    const v = { ...visited, cities: [...(visited.cities || [])], spots: { ...(visited.spots || {}) } }
+    if (isVisitedCity(cityName)) {
+      v.cities = v.cities.filter(c => c !== cityName)
+      delete v.spots[cityName]
+    } else {
+      v.cities.push(cityName)
+    }
+    saveVisited(v)
+  }
+  const toggleVisitedSpot = (cityName, spotName) => {
+    const v = { ...visited, cities: [...(visited.cities || [])], spots: { ...(visited.spots || {}) } }
+    const citySpots = [...(v.spots[cityName] || [])]
+    if (citySpots.includes(spotName)) {
+      v.spots[cityName] = citySpots.filter(s => s !== spotName)
+      if (v.spots[cityName].length === 0) delete v.spots[cityName]
+    } else {
+      v.spots[cityName] = [...citySpots, spotName]
+      if (!v.cities.includes(cityName)) v.cities.push(cityName)
+    }
+    saveVisited(v)
+  }
+  const totalCities = Object.values(COUNTRY_CITIES).flat().length
+  const totalSpots = Object.values(CITY_DATA).reduce((a, d) => a + (d.spots?.length || 0), 0)
+  const visitedCityCount = (visited.cities || []).length
+  const visitedSpotCount = Object.values(visited.spots || {}).reduce((a, s) => a + s.length, 0)
+  const [showVisitedPanel, setShowVisitedPanel] = useState(false)
+  const [visitedExpandCity, setVisitedExpandCity] = useState(null)
+
   // 다국어 헬퍼
   const t = (key) => {
     const val = T[key]?.[lang]
@@ -6246,6 +6294,66 @@ function App() {
                     </div>
                   )}
                 </div>
+
+                {/* 내 여행 기록 */}
+                <div style={{padding:'12px 16px 14px',borderTop:'1px solid rgba(255,255,255,.08)'}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10,cursor:'pointer'}}
+                    onClick={()=>setShowVisitedPanel(v=>!v)}>
+                    <span style={{fontSize:14,fontWeight:700,color:'white'}}>🌍 {t('visitedTitle')}</span>
+                    <span style={{fontSize:11,color:'#64748b'}}>{showVisitedPanel?'▾':'▸'}</span>
+                  </div>
+                  {/* 진행률 바 */}
+                  <div style={{marginBottom:10}}>
+                    <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'#94a3b8',marginBottom:4}}>
+                      <span>{t('visitedProgress')}</span>
+                      <span>{visitedCityCount} / {totalCities} ({totalCities > 0 ? Math.round(visitedCityCount/totalCities*100) : 0}%)</span>
+                    </div>
+                    <div style={{height:6,background:'rgba(255,255,255,.1)',borderRadius:3,overflow:'hidden'}}>
+                      <div style={{height:'100%',width:`${totalCities > 0 ? (visitedCityCount/totalCities*100) : 0}%`,background:'linear-gradient(90deg,#c8856a,#f59e0b)',borderRadius:3,transition:'width .5s'}}/>
+                    </div>
+                    <div style={{display:'flex',gap:12,marginTop:6,fontSize:10,color:'#94a3b8'}}>
+                      <span>📍 {visitedCityCount}{t('visitedCityCount')}</span>
+                      <span>🏛️ {visitedSpotCount}{t('visitedSpotCount')}</span>
+                    </div>
+                  </div>
+                  {showVisitedPanel && (
+                    <div style={{maxHeight:300,overflowY:'auto'}}>
+                      {visitedCityCount === 0 ? (
+                        <div style={{padding:'14px 0',textAlign:'center',color:'#64748b',fontSize:11}}>{t('visitedEmpty')}</div>
+                      ) : (
+                        (visited.cities || []).map((cityName, i) => {
+                          const citySpots = visited.spots?.[cityName] || []
+                          const isExpanded = visitedExpandCity === cityName
+                          return (
+                            <div key={i} style={{marginBottom:4}}>
+                              <div style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
+                                onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'}
+                                onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+                                onClick={()=>setVisitedExpandCity(isExpanded ? null : cityName)}>
+                                <span style={{fontSize:12,color:'#c8856a'}}>✓</span>
+                                <div style={{flex:1,minWidth:0}}>
+                                  <span style={{fontSize:12,fontWeight:600,color:'white'}}>{getCityName(cityName)}</span>
+                                  {citySpots.length > 0 && <span style={{fontSize:10,color:'#64748b',marginLeft:6}}>({citySpots.length})</span>}
+                                </div>
+                                <span style={{fontSize:9,color:'#64748b'}}>{isExpanded ? '▾' : '▸'}</span>
+                              </div>
+                              {isExpanded && citySpots.length > 0 && (
+                                <div style={{paddingLeft:28}}>
+                                  {citySpots.map((sp, j) => (
+                                    <div key={j} style={{fontSize:11,color:'#94a3b8',padding:'3px 0',display:'flex',alignItems:'center',gap:6}}>
+                                      <span style={{color:'#c8856a',fontSize:9}}>●</span>
+                                      {trSpot(cityName, sp)?.name || sp}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -6643,6 +6751,9 @@ function App() {
                 <button onClick={()=>toggleFav({type:'city',name:selectedCity?._koName||selectedCity?.name,_koName:selectedCity?._koName||selectedCity?.name,displayName:getCityName(selectedCity?._koName||selectedCity?.name),emoji:selectedCity?.emoji,color:selectedCity?.color,countryEn:selectedCity?.countryEn,countryName:countryKo,lat:selectedCity?.lat,lng:selectedCity?.lng})}
                   style={{background:isFav('city',selectedCity?._koName||selectedCity?.name)?'#fef3c7':'#f5f0ea',border:isFav('city',selectedCity?._koName||selectedCity?.name)?'1px solid #f0c040':'1px solid #e0d9d0',color:isFav('city',selectedCity?._koName||selectedCity?.name)?'#c8a020':'#b0a89e',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
                   title={t("favToggle")}>{isFav('city',selectedCity?._koName||selectedCity?.name)?'★':'☆'}</button>
+                <button onClick={()=>toggleVisitedCity(selectedCity?._koName||selectedCity?.name)}
+                  style={{background:isVisitedCity(selectedCity?._koName||selectedCity?.name)?'#22c55e':'#f5f0ea',border:isVisitedCity(selectedCity?._koName||selectedCity?.name)?'none':'1px solid #e0d9d0',color:isVisitedCity(selectedCity?._koName||selectedCity?.name)?'white':'#b0a89e',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
+                  title={isVisitedCity(selectedCity?._koName||selectedCity?.name)?t("visitedUnmark"):t("visitedMark")}>{isVisitedCity(selectedCity?._koName||selectedCity?.name)?'✓':'⊘'}</button>
                 <button onClick={closePanel}
                   style={{background:'#f5f0ea',border:'1px solid #e0d9d0',color:'#b0a89e',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all .2s'}}
                   onMouseEnter={e=>e.currentTarget.style.background='#e8e0d6'}
@@ -6863,6 +6974,9 @@ function App() {
                                 <button onClick={e=>{e.stopPropagation();addToCourse({source:'spot',name:spot.name,displayName:trSpot(selectedCity?._koName||selectedCity?.name,spot.name)?.name||spot.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),type:spot.type,rating:spot.rating,wikiTitle:spot.wikiTitle,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:spot.type==='자연'?'🌿':spot.type==='역사'?'🏛️':spot.type==='음식'?'🍽️':spot.type==='문화'?'🎭':'📍'})}}
                                   style={{position:'absolute',top:8,right:44,width:30,height:30,borderRadius:8,background:isInCourse(spot.name,'spot')?'rgba(59,130,246,.9)':'rgba(0,0,0,.4)',border:'none',color:'white',fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',transition:'all .2s',zIndex:2,animation:isInCourse(spot.name,'spot')?'coursePop .3s':'none'}}
                                   title={t("courseAddToTrip")}>{isInCourse(spot.name,'spot')?'✓':'＋'}</button>
+                                <button onClick={e=>{e.stopPropagation();toggleVisitedSpot(selectedCity?._koName||selectedCity?.name,spot.name)}}
+                                  style={{position:'absolute',top:8,right:80,width:30,height:30,borderRadius:8,background:isVisitedSpot(selectedCity?._koName||selectedCity?.name,spot.name)?'rgba(34,197,94,.9)':'rgba(0,0,0,.4)',border:'none',color:'white',fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',transition:'all .2s',zIndex:2}}
+                                  title={isVisitedSpot(selectedCity?._koName||selectedCity?.name,spot.name)?t("visitedUnmark"):t("visitedMark")}>{isVisitedSpot(selectedCity?._koName||selectedCity?.name,spot.name)?'✓':'⊘'}</button>
 
                                 <div style={{position:'absolute',bottom:10,left:12,right:12,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
                                   <div>
