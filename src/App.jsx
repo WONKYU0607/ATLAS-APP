@@ -7503,26 +7503,48 @@ function App() {
                 ))}
               </div>
 
-              {/* 도트 세계지도 */}
-              <div style={{background:'rgba(255,255,255,.03)',borderRadius:14,border:'1px solid rgba(255,255,255,.06)',padding:'12px 8px',overflow:'hidden',marginBottom:24}}>
-                <svg viewBox="-180 -90 360 180" style={{width:'100%',height:'auto',display:'block'}} xmlns="http://www.w3.org/2000/svg">
+              {/* 세계지도 (실제 국가 모양) */}
+              <div style={{background:'rgba(6,12,30,.8)',borderRadius:14,border:'1px solid rgba(255,255,255,.08)',padding:'8px 4px',overflow:'hidden',marginBottom:24}}>
+                <svg viewBox="-180 -90 360 180" preserveAspectRatio="xMidYMid meet" style={{width:'100%',height:'auto',display:'block'}} xmlns="http://www.w3.org/2000/svg">
+                  {/* 바다 배경 */}
+                  <rect x="-180" y="-90" width="360" height="180" fill="#0a1628"/>
+                  {/* 그리드 */}
                   {[-60,-30,0,30,60].map(lat=>(
-                    <line key={`lat${lat}`} x1="-180" y1={-lat} x2="180" y2={-lat} stroke="rgba(255,255,255,.06)" strokeWidth="0.3"/>
+                    <line key={`lat${lat}`} x1="-180" y1={-lat} x2="180" y2={-lat} stroke="rgba(255,255,255,.04)" strokeWidth="0.2"/>
                   ))}
-                  {[-120,-60,0,60,120].map(lng=>(
-                    <line key={`lng${lng}`} x1={lng} y1="-90" x2={lng} y2="90" stroke="rgba(255,255,255,.06)" strokeWidth="0.3"/>
-                  ))}
-                  <line x1="-180" y1="0" x2="180" y2="0" stroke="rgba(239,68,68,.15)" strokeWidth="0.4" strokeDasharray="2,2"/>
-                  {Object.entries(COUNTRY_CITIES).map(([country, cities]) => {
-                    const c = cities[0]
-                    if (!c) return null
-                    const isV = cities.some(ci => (visited.cities||[]).includes(ci.name))
+                  {/* 국가 폴리곤 */}
+                  {countries.map((feat, fi) => {
+                    const name = feat.properties?.NAME
+                    if (!name) return null
+                    const cities = COUNTRY_CITIES[name] || []
+                    const isVisited = cities.some(c => (visited.cities||[]).includes(c.name))
+                    const vCount = cities.filter(c => (visited.cities||[]).includes(c.name)).length
+                    const geom = feat.geometry
+                    const toPath = (ring) => ring.map((c,i) => `${i===0?'M':'L'}${c[0]},${-c[1]}`).join('') + 'Z'
+                    let paths = []
+                    if (geom.type === 'Polygon') {
+                      paths = [toPath(geom.coordinates[0])]
+                    } else if (geom.type === 'MultiPolygon') {
+                      paths = geom.coordinates.map(poly => toPath(poly[0]))
+                    }
+                    return paths.map((d, pi) => (
+                      <path key={`${fi}-${pi}`} d={d}
+                        fill={isVisited ? (vCount === cities.length ? '#22c55e' : '#4ade80') : 'rgba(255,255,255,.08)'}
+                        stroke={isVisited ? '#16a34a' : 'rgba(255,255,255,.12)'}
+                        strokeWidth={isVisited ? '0.4' : '0.15'}
+                        opacity={isVisited ? 0.85 : 0.6}
+                      />
+                    ))
+                  })}
+                  {/* 방문 도시 핀 */}
+                  {(visited.cities||[]).map((cityName, i) => {
+                    const entry = Object.entries(COUNTRY_CITIES).find(([_,cs]) => cs.some(c => c.name === cityName))
+                    if (!entry) return null
+                    const city = entry[1].find(c => c.name === cityName)
+                    if (!city) return null
                     return (
-                      <g key={country}>
-                        <circle cx={c.lng} cy={-c.lat} r={isV ? 2.8 : 1.5}
-                          fill={isV ? '#22c55e' : 'rgba(255,255,255,.15)'}
-                          opacity={isV ? 1 : 0.5}/>
-                        {isV && <circle cx={c.lng} cy={-c.lat} r="5" fill="none" stroke="#22c55e" strokeWidth="0.3" opacity="0.25"/>}
+                      <g key={i}>
+                        <circle cx={city.lng} cy={-city.lat} r="1.2" fill="#fbbf24" stroke="#f59e0b" strokeWidth="0.3"/>
                       </g>
                     )
                   })}
