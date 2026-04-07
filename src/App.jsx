@@ -5310,10 +5310,7 @@ function App() {
     }
     
     // 커스텀 파일 우선 시도, 없으면 110m fallback
-    fetch('/countries.json')
-      .then(r => { if (!r.ok) throw new Error('no local'); return r.json() })
-      .then(data => setCountries(data.features))
-      .catch(() => load110m().then(processGeo).catch(() => {}))
+    load110m().then(processGeo).catch(() => {})
   }, [])
 
   // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
