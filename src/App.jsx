@@ -1822,7 +1822,6 @@ const COUNTRY_I18N = {
 "Venezuela":{en:["Caracas","Home of Angel Falls, world's tallest waterfall"]},
 "Yemen":{en:["Sana'a","Ancient kingdom of the Arabian Peninsula"]},
 "Zambia":{en:["Lusaka","Another gateway to Victoria Falls"]},
-}
 "Andorra":{en:["Andorra la Vella","Tiny Pyrenean principality"],ja:["アンドラ・ラ・ベリャ","ピレネーの小さな公国"],zh:["安道尔城","比利牛斯山小公国"]},
 "Antigua and Barbuda":{en:["St. John's","365 beaches in the Caribbean"],ja:["セントジョンズ","365のビーチのカリブの楽園"],zh:["圣约翰","加勒比365处海滩的天堂"]},
 "Bahamas":{en:["Nassau","700 islands of Caribbean jewels"],ja:["ナッソー","700島のカリブの宝石"],zh:["拿骚","加勒比700岛屿的宝石"]},
@@ -1850,6 +1849,7 @@ const COUNTRY_I18N = {
 "Tuvalu":{en:["Funafuti","Climate frontline tiny nation"],ja:["フナフティ","気候変動最前線の小国"],zh:["富纳富提","气候变化前线的小国"]},
 "Vanuatu":{en:["Port Vila","Volcanic South Pacific adventure"],ja:["ポートビラ","南太平洋火山島の冒険"],zh:["维拉港","南太平洋火山岛冒险"]},
 "Vatican":{en:["Vatican City","Center of world Catholicism"],ja:["バチカン市国","世界カトリックの中心"],zh:["梵蒂冈城","世界天主教中心"]},
+}
 
 const translateCountryInfo = (info, cName, lang) => {
   if (!info || lang === 'ko') return info
