@@ -4955,6 +4955,26 @@ function App() {
   const [visitedExpandCity, setVisitedExpandCity] = useState(null)
   const [visitedExpandContinent, setVisitedExpandContinent] = useState(null)
 
+  // 모바일 뒤로가기 = 닫기 (refs for latest state in event handler)
+  const backStateRef = useRef({})
+  backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry }
+  useEffect(() => {
+    window.history.replaceState({ atlas: true }, '')
+    window.history.pushState({ atlas: true }, '', window.location.href)
+    const handlePop = () => {
+      const s = backStateRef.current
+      window.history.pushState({ atlas: true }, '', window.location.href)
+      if (s.showMyTravels) { setShowMyTravels(false); return }
+      if (s.showHamburger) { setShowHamburger(false); return }
+      if (s.selectedSpot) { setSelectedSpot(null); return }
+      if (s.sidePanel) { setSidePanel(null); return }
+      if (s.selectedCity) { setSelectedCity(null); setCityData(null); setSelectedSpot(null); setSidePanel(null); return }
+      if (s.selectedCountry) { setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null); setShowCountryInfo(false); return }
+    }
+    window.addEventListener('popstate', handlePop)
+    return () => window.removeEventListener('popstate', handlePop)
+  }, [])
+
   // 다국어 헬퍼
   const t = (key) => {
     const val = T[key]?.[lang]
@@ -5617,7 +5637,7 @@ function App() {
     // 아시아
     "South Korea": { alt: 0.22, lat: 36.0, lng: 127.8 },
     "Japan": { alt: 0.35, lat: 36.5, lng: 138.0 },
-    "China": { alt: 0.8, lat: 35.0, lng: 105.0 },
+    "China": { alt: 1.0, lat: 35.0, lng: 105.0 },
     "India": { alt: 0.6, lat: 22.0, lng: 79.0 },
     "Thailand": { alt: 0.35, lat: 14.0, lng: 100.5 },
     "Vietnam": { alt: 0.4, lat: 16.0, lng: 107.5 },
@@ -6307,7 +6327,7 @@ function App() {
                       <div>
                         <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('visitedTitle')}</div>
                         <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>
-                          {visitedCityCount}{t('visitedCityCount')} · {visitedSpotCount}{t('visitedSpotCount')} · {totalCities > 0 ? Math.round(visitedCityCount/totalCities*100) : 0}%
+                          {visitedCityCount}{t('visitedCityCount')} · {(()=>{const vc=new Set();(visited.cities||[]).forEach(c=>{const entry=Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===c));if(entry)vc.add(entry[0])});return vc.size})()}{lang==='ko'?'개국':' countries'}
                         </div>
                       </div>
                     </div>
@@ -6934,9 +6954,7 @@ function App() {
                                 <button onClick={e=>{e.stopPropagation();addToCourse({source:'spot',name:spot.name,displayName:trSpot(selectedCity?._koName||selectedCity?.name,spot.name)?.name||spot.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),type:spot.type,rating:spot.rating,wikiTitle:spot.wikiTitle,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:spot.type==='자연'?'🌿':spot.type==='역사'?'🏛️':spot.type==='음식'?'🍽️':spot.type==='문화'?'🎭':'📍'})}}
                                   style={{position:'absolute',top:8,right:44,width:30,height:30,borderRadius:8,background:isInCourse(spot.name,'spot')?'rgba(59,130,246,.9)':'rgba(0,0,0,.4)',border:'none',color:'white',fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',transition:'all .2s',zIndex:2,animation:isInCourse(spot.name,'spot')?'coursePop .3s':'none'}}
                                   title={t("courseAddToTrip")}>{isInCourse(spot.name,'spot')?'✓':'＋'}</button>
-                                <button onClick={e=>{e.stopPropagation();toggleVisitedSpot(selectedCity?._koName||selectedCity?.name,spot.name)}}
-                                  style={{position:'absolute',top:8,right:80,width:30,height:30,borderRadius:8,background:isVisitedSpot(selectedCity?._koName||selectedCity?.name,spot.name)?'rgba(34,197,94,.9)':'rgba(0,0,0,.4)',border:'none',color:'white',fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',transition:'all .2s',zIndex:2}}
-                                  title={isVisitedSpot(selectedCity?._koName||selectedCity?.name,spot.name)?t("visitedUnmark"):t("visitedMark")}>{isVisitedSpot(selectedCity?._koName||selectedCity?.name,spot.name)?'✓':'⊘'}</button>
+
 
                                 <div style={{position:'absolute',bottom:10,left:12,right:12,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
                                   <div>
@@ -7466,7 +7484,7 @@ function App() {
                   <div>
                     <div style={{fontSize:20,fontWeight:700,color:'white'}}>{t('visitedTitle')}</div>
                     <div style={{fontSize:11,color:'#94a3b8',marginTop:2}}>
-                      {visitedCityCount}{t('visitedCityCount')} · {visitedSpotCount}{t('visitedSpotCount')}
+                      {(()=>{const vc=new Set();(visited.cities||[]).forEach(c=>{const entry=Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===c));if(entry)vc.add(entry[0])});return vc.size})()}{lang==='ko'?'개국':' countries'} · {visitedCityCount}{t('visitedCityCount')}
                     </div>
                   </div>
                 </div>
@@ -7479,28 +7497,47 @@ function App() {
             <div style={{flex:1,overflowY:'auto',padding:isMobile?'16px':'24px'}}>
 
               {/* 퍼센트 + 통계 카드 */}
+              {(()=>{
+                const _vcSet=new Set();(visited.cities||[]).forEach(c=>{const entry=Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===c));if(entry)_vcSet.add(entry[0])});
+                const _vcc=_vcSet.size, _tcc=Object.keys(COUNTRY_CITIES).length
+                const _cpct=_tcc>0?Math.round(_vcc/_tcc*100):0
+                const _cipct=totalCities>0?Math.round(visitedCityCount/totalCities*100):0
+                const _combo=Math.round((_cpct+_cipct)/2)
+                return (<>
               <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:16}}>
                 <div style={{flex:1}}>
                   <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
                     <span style={{fontSize:13,fontWeight:600,color:'white'}}>{t('visitedProgress')}</span>
-                    <span style={{fontSize:22,fontWeight:800,color:'#c8856a'}}>{totalCities > 0 ? Math.round(visitedCityCount/totalCities*100) : 0}%</span>
+                    <span style={{fontSize:22,fontWeight:800,color:'#c8856a'}}>{_combo}%</span>
                   </div>
                   <div style={{height:10,background:'rgba(255,255,255,.08)',borderRadius:5,overflow:'hidden'}}>
-                    <div style={{height:'100%',width:`${totalCities > 0 ? (visitedCityCount/totalCities*100) : 0}%`,background:'linear-gradient(90deg,#c8856a,#f59e0b)',borderRadius:5,transition:'width .8s cubic-bezier(.16,1,.3,1)'}}/>
+                    <div style={{height:'100%',width:`${_combo}%`,background:'linear-gradient(90deg,#c8856a,#f59e0b)',borderRadius:5,transition:'width .8s cubic-bezier(.16,1,.3,1)'}}/>
                   </div>
                 </div>
               </div>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:20}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8,marginBottom:20}}>
                 {[
-                  {label:lang==='ko'?'방문 국가':'Countries',value:(()=>{const vc=new Set();(visited.cities||[]).forEach(c=>{const entry=Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===c));if(entry)vc.add(entry[0])});return vc.size})(),total:Object.keys(COUNTRY_CITIES).length,color:'#3b82f6'},
-                  {label:lang==='ko'?'방문 도시':'Cities',value:visitedCityCount,total:totalCities,color:'#c8856a'},
-                  {label:lang==='ko'?'방문 관광지':'Spots',value:visitedSpotCount,total:totalSpots,color:'#22c55e'},
+                  {label:lang==='ko'?'방문 국가':'Countries',value:_vcc,total:_tcc,pct:_cpct,color:'#3b82f6'},
+                  {label:lang==='ko'?'방문 도시':'Cities',value:visitedCityCount,total:totalCities,pct:_cipct,color:'#c8856a'},
                 ].map((s,i)=>(
                   <div key={i} style={{background:'rgba(255,255,255,.05)',borderRadius:12,padding:'14px 16px',border:'1px solid rgba(255,255,255,.08)'}}>
-                    <div style={{fontSize:28,fontWeight:800,color:s.color}}>{s.value}</div>
+                    <div style={{display:'flex',alignItems:'baseline',gap:6}}>
+                      <span style={{fontSize:28,fontWeight:800,color:s.color}}>{s.value}</span>
+                      <span style={{fontSize:14,fontWeight:700,color:s.color,opacity:.7}}>{s.pct}%</span>
+                    </div>
                     <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{s.label} ({t('visitedOf')} {s.total})</div>
                   </div>
                 ))}
+              </div>
+              </>)})()}
+
+              {/* 초기화 버튼 */}
+              <div style={{display:'flex',justifyContent:'flex-end',marginBottom:8}}>
+                <button onClick={()=>{if(window.confirm(lang==='ko'?'모든 방문 기록을 초기화할까요?':'Reset all travel records?')){saveVisited({});setVisitedExpandContinent(null);setVisitedExpandCity(null)}}}
+                  style={{padding:'5px 14px',borderRadius:8,border:'1px solid rgba(239,68,68,.4)',background:'rgba(239,68,68,.1)',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',transition:'all .15s'}}
+                  onMouseEnter={e=>{e.currentTarget.style.background='rgba(239,68,68,.25)'}}
+                  onMouseLeave={e=>{e.currentTarget.style.background='rgba(239,68,68,.1)'}}
+                >{lang==='ko'?'🗑 초기화':'🗑 Reset'}</button>
               </div>
 
               {/* 세계지도 (실제 국가 모양) */}
@@ -7536,18 +7573,7 @@ function App() {
                       />
                     ))
                   })}
-                  {/* 방문 도시 핀 */}
-                  {(visited.cities||[]).map((cityName, i) => {
-                    const entry = Object.entries(COUNTRY_CITIES).find(([_,cs]) => cs.some(c => c.name === cityName))
-                    if (!entry) return null
-                    const city = entry[1].find(c => c.name === cityName)
-                    if (!city) return null
-                    return (
-                      <g key={i}>
-                        <circle cx={city.lng} cy={-city.lat} r="1.2" fill="#fbbf24" stroke="#f59e0b" strokeWidth="0.3"/>
-                      </g>
-                    )
-                  })}
+
                 </svg>
               </div>
 
