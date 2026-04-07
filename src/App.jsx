@@ -1538,6 +1538,8 @@ const LANG_CODE = {
 '크레올어':'ht','코모로어':'zdj','상고어':'sg','소토어':'st','츠와나어':'tn',
 '쇼나어':'sn','은데벨레어':'nd','스와티어':'ss','체와어':'ny','베르베르어':'ber',
 '말라가시어':'mg',
+'슬로베니아어':'sl','카탈루냐어':'ca','키리바시어':'gil','몰타어':'mt','마셜어':'mh',
+'나우루어':'na','팔라우어':'pau','통가어':'to','투발루어':'tvl','비슬라마':'bi','라틴어':'la','크레올':'ht',
 }
 const CONTINENT_I18N = {
   '아시아':{en:'Asia',ja:'アジア',zh:'亚洲'},
@@ -1632,7 +1634,7 @@ const translateLangNames = (koLangStr, targetLang) => {
   // "영어 외 11개 공용어" 같은 특수 케이스
   if (koLangStr.includes('외')) {
     const m = koLangStr.match(/(.+?) 외 (.+)/)
-    if (m) { const first = translateLangNames(m[1], targetLang); const rest = m[2].replace('공용어',targetLang==='en'?'official languages':targetLang==='ja'?'公用語':'官方语言'); return targetLang==='en'?`${first} + ${rest}`:targetLang==='ja'?`${first} 他${rest}`:`${first} 等${rest}` }
+    if (m) { const first = translateLangNames(m[1], targetLang); const rest = m[2].replace(/(\d+)개\s*공용어/,(_,n)=>targetLang==='en'?`${n} official languages`:targetLang==='ja'?`${n}公用語`:`${n}官方语言`).replace('공용어',targetLang==='en'?'official languages':targetLang==='ja'?'公用語':'官方语言'); return targetLang==='en'?`${first} + ${rest}`:targetLang==='ja'?`${first} 他${rest}`:`${first} 等${rest}` }
   }
   return koLangStr.split('·').map(l => {
     const code = LANG_CODE[l.trim()]
@@ -5041,7 +5043,7 @@ function App() {
 
   // 모바일 뒤로가기 = 닫기 (refs for latest state in event handler)
   const backStateRef = useRef({})
-  backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry }
+  backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo }
   useEffect(() => {
     window.history.replaceState({ atlas: true }, '')
     window.history.pushState({ atlas: true }, '', window.location.href)
@@ -5066,13 +5068,22 @@ function App() {
         }
         return
       }
+      // 국가 3단계: ① 국가정보 닫기 → ② 국가선택 해제(줌 유지) → ③ 현위치에서 줌아웃
+      if (s.selectedCountry && s.showCountryInfo) {
+        setShowCountryInfo(false);
+        return
+      }
       if (s.selectedCountry) {
         setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null); setShowCountryInfo(false);
-        // 국가에서 뒤로가면 줌아웃
-        if (globeRef.current) {
-          globeRef.current.pointOfView({ lat: 36, lng: 127.8, altitude: window.innerWidth <= 768 ? 3.0 : 2.2 }, 1000)
-        }
+        // 줌 유지 — 이동 없음, 그 자리에서 다른 국가 선택 가능
         return
+      }
+      // 아무것도 열려있지 않으면 현 위치에서 줌아웃
+      if (globeRef.current) {
+        const pov = globeRef.current.pointOfView()
+        if (pov.altitude < 2.0) {
+          globeRef.current.pointOfView({ lat: pov.lat, lng: pov.lng, altitude: Math.min(pov.altitude * 2.5, 2.5) }, 800)
+        }
       }
     }
     window.addEventListener('popstate', handlePop)
@@ -7654,15 +7665,6 @@ function App() {
               <div style={{display:'flex',justifyContent:'flex-end',marginBottom:8}}>
                 <button onClick={()=>{if(window.confirm(lang==='ko'?'모든 방문 기록을 초기화할까요?':'Reset all travel records?')){saveVisited({});setVisitedExpandContinent(null);setVisitedExpandCity(null)}}}
                   style={{padding:'5px 14px',borderRadius:8,border:'1px solid rgba(239,68,68,.4)',background:'rgba(239,68,68,.1)',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',transition:'all .15s'}}
-                  onMouseEnter={e=>{e.currentTarget.style.background='rgba(239,68,68,.25)'}}
-                  onMouseLeave={e=>{e.currentTarget.style.background='rgba(239,68,68,.1)'}}
-                >{lang==='ko'?'🗑 초기화':'🗑 Reset'}</button>
-              </div>
-
-              {/* 초기화 버튼 */}
-              <div style={{display:'flex',justifyContent:'flex-end',marginBottom:8}}>
-                <button onClick={()=>{if(window.confirm(lang==='ko'?'모든 방문 기록을 초기화하시겠습니까?':'Reset all visit records?')){saveVisited({});setVisitedExpandCity(null);setVisitedExpandContinent(null)}}}
-                  style={{padding:'5px 14px',borderRadius:8,border:'1px solid rgba(239,68,68,.3)',background:'rgba(239,68,68,.1)',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',transition:'all .15s'}}
                   onMouseEnter={e=>{e.currentTarget.style.background='rgba(239,68,68,.25)'}}
                   onMouseLeave={e=>{e.currentTarget.style.background='rgba(239,68,68,.1)'}}
                 >{lang==='ko'?'🗑 초기화':'🗑 Reset'}</button>
