@@ -966,6 +966,34 @@ const COUNTRY_CITIES = {
   "Venezuela": [{ name:"카라카스", lat:10.49, lng:-66.88, emoji:"🏙️", color:"#e74c3c" }],
   "Yemen": [{ name:"사나", lat:15.35, lng:44.21, emoji:"🕌", color:"#e67e22" }],
   "Zambia": [{ name:"루사카", lat:-15.39, lng:28.32, emoji:"🌍", color:"#2ecc71" }],
+  // ── 추가 소규모 국가 (197개국 완성) ──
+  "Andorra": [{ name:"안도라라벨랴", lat:42.51, lng:1.52, emoji:"🏔️", color:"#3498db" }],
+  "Antigua and Barbuda": [{ name:"세인트존스", lat:17.12, lng:-61.85, emoji:"🏝️", color:"#e74c3c" }],
+  "Bahamas": [{ name:"나소", lat:25.05, lng:-77.34, emoji:"🏝️", color:"#1abc9c" }],
+  "Barbados": [{ name:"브리지타운", lat:13.10, lng:-59.62, emoji:"🏝️", color:"#3498db" }],
+  "Dominica": [{ name:"로조", lat:15.30, lng:-61.39, emoji:"🏝️", color:"#2ecc71" }],
+  "Grenada": [{ name:"세인트조지스", lat:12.06, lng:-61.75, emoji:"🏝️", color:"#e74c3c" }],
+  "Kiribati": [{ name:"타라와", lat:1.45, lng:173.00, emoji:"🏝️", color:"#f39c12" }],
+  "Liechtenstein": [{ name:"파두츠", lat:47.14, lng:9.52, emoji:"🏔️", color:"#3498db" }],
+  "Malta": [{ name:"발레타", lat:35.90, lng:14.51, emoji:"🏛️", color:"#e67e22" }],
+  "Marshall Islands": [{ name:"마주로", lat:7.09, lng:171.38, emoji:"🏝️", color:"#1abc9c" }],
+  "Micronesia": [{ name:"팔리키르", lat:6.91, lng:158.16, emoji:"🏝️", color:"#3498db" }],
+  "Monaco": [{ name:"모나코", lat:43.73, lng:7.42, emoji:"🏙️", color:"#e74c3c" }],
+  "Nauru": [{ name:"야렌", lat:-0.55, lng:166.92, emoji:"🏝️", color:"#f39c12" }],
+  "Palau": [{ name:"응에룰무드", lat:7.50, lng:134.62, emoji:"🏝️", color:"#1abc9c" }],
+  "Palestine": [{ name:"라말라", lat:31.90, lng:35.20, emoji:"🕌", color:"#2ecc71" }],
+  "Saint Kitts and Nevis": [{ name:"바스테르", lat:17.30, lng:-62.72, emoji:"🏝️", color:"#9b59b6" }],
+  "Saint Lucia": [{ name:"캐스트리스", lat:14.01, lng:-60.99, emoji:"🏝️", color:"#e74c3c" }],
+  "Saint Vincent and the Grenadines": [{ name:"킹스타운", lat:13.16, lng:-61.23, emoji:"🏝️", color:"#3498db" }],
+  "Samoa": [{ name:"아피아", lat:-13.83, lng:-171.76, emoji:"🏝️", color:"#2ecc71" }],
+  "San Marino": [{ name:"산마리노", lat:43.94, lng:12.45, emoji:"🏰", color:"#3498db" }],
+  "Sao Tome and Principe": [{ name:"상투메", lat:0.34, lng:6.73, emoji:"🏝️", color:"#f39c12" }],
+  "Seychelles": [{ name:"빅토리아", lat:-4.62, lng:55.45, emoji:"🏝️", color:"#1abc9c" }],
+  "Solomon Islands": [{ name:"호니아라", lat:-9.43, lng:159.95, emoji:"🏝️", color:"#2ecc71" }],
+  "Tonga": [{ name:"누쿠알로파", lat:-21.21, lng:-175.15, emoji:"🏝️", color:"#e74c3c" }],
+  "Tuvalu": [{ name:"푸나푸티", lat:-8.52, lng:179.20, emoji:"🏝️", color:"#f39c12" }],
+  "Vanuatu": [{ name:"포트빌라", lat:-17.73, lng:168.32, emoji:"🏝️", color:"#2ecc71" }],
+  "Vatican": [{ name:"바티칸시티", lat:41.90, lng:12.45, emoji:"⛪", color:"#f1c40f" }],
 }
 
 
@@ -1007,7 +1035,7 @@ const COUNTRY_ISO = {
 "Papua New Guinea":"PG","Paraguay":"PY","Republic of the Congo":"CG",
 "Sierra Leone":"SL","Somalia":"SO","South Sudan":"SS","Sudan":"SD",
 "Suriname":"SR","Syria":"SY","Tajikistan":"TJ","Timor-Leste":"TL","Togo":"TG",
-"Trinidad and Tobago":"TT","Turkmenistan":"TM","Uganda":"UG","Uruguay":"UY",
+"Trinidad and Tobago":"TT","Turkmenistan":"TM","Andorra":"AD","Antigua and Barbuda":"AG","Bahamas":"BS","Barbados":"BB","Dominica":"DM","Grenada":"GD","Kiribati":"KI","Liechtenstein":"LI","Malta":"MT","Marshall Islands":"MH","Micronesia":"FM","Monaco":"MC","Nauru":"NR","Palau":"PW","Palestine":"PS","Saint Kitts and Nevis":"KN","Saint Lucia":"LC","Saint Vincent and the Grenadines":"VC","Samoa":"WS","San Marino":"SM","Sao Tome and Principe":"ST","Seychelles":"SC","Solomon Islands":"SB","Tonga":"TO","Tuvalu":"TV","Vanuatu":"VU","Vatican":"VA","Uganda":"UG","Uruguay":"UY",
 "Venezuela":"VE","Yemen":"YE","Zambia":"ZM",
 }
 // Intl이 반환하는 공식명 대신 관용명을 쓰는 경우 (선택적 오버라이드)
@@ -1067,6 +1095,7 @@ const T = {
   lTimezone:{ko:'시간대',en:'Timezone',ja:'時間帯',zh:'时区'},
   lBestSeason:{ko:'추천 여행 시기',en:'Best Season',ja:'おすすめ季節',zh:'最佳旅游季节'},
   lVisa:{ko:'비자(한국)',en:'Visa (Korea)',ja:'ビザ(韓国)',zh:'签证(韩国)'},
+  lContinent:{ko:'대륙',en:'Continent',ja:'大陸',zh:'大洲'},
   lVoltage:{ko:'전압',en:'Voltage',ja:'電圧',zh:'电压'},
   lCallCode:{ko:'국가번호',en:'Dial code',ja:'国番号',zh:'国际区号'},
   lDrive:{ko:'운전방향',en:'Driving side',ja:'走行方向',zh:'行驶方向'},
@@ -1457,6 +1486,33 @@ const COUNTRY_INFO = {
   "Uruguay": { capital:"몬테비데오", population:"350만", area:"176,215 km²", lang:"스페인어", currency:"페소 (UYU)", timezone:"UTC-3", bestSeason:"Nov–Mar", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+598", drive:"우측", tagline:"남미의 스위스, 진보의 나라", continent:"남아메리카", emoji:"🇺🇾" },
   "Venezuela": { capital:"카라카스", population:"2,850만", area:"916,445 km²", lang:"스페인어", currency:"볼리바르 (VES)", timezone:"UTC-4", bestSeason:"Dec–Apr", visa:"90일 무비자", voltage:"120V / 60Hz", callCode:"+58", drive:"우측", tagline:"앙헬 폭포와 카리브 해변의 나라", continent:"남아메리카", emoji:"🇻🇪" },
   "Yemen": { capital:"사나", population:"3,400만", area:"527,968 km²", lang:"아랍어", currency:"리얄 (YER)", timezone:"UTC+3", bestSeason:"Oct–Mar", visa:"비자 필요", voltage:"230V / 50Hz", callCode:"+967", drive:"우측", tagline:"아라비아 반도의 고대 왕국", continent:"아시아(중동)", emoji:"🇾🇪" },
+  "Andorra": { capital:"안도라라벨랴", population:"8만", area:"468 km²", lang:"카탈루냐어", currency:"유로 (EUR)", timezone:"UTC+1", bestSeason:"Jun–Sep, Dec–Mar", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+376", drive:"우측", tagline:"피레네 산맥의 작은 공국", continent:"유럽", emoji:"🇦🇩" },
+  "Antigua and Barbuda": { capital:"세인트존스", population:"10만", area:"442 km²", lang:"영어", currency:"동카리브달러 (XCD)", timezone:"UTC-4", bestSeason:"Dec–Apr", visa:"90일 무비자", voltage:"230V / 60Hz", callCode:"+1-268", drive:"좌측", tagline:"365개 해변의 카리브해 낙원", continent:"북아메리카", emoji:"🇦🇬" },
+  "Bahamas": { capital:"나소", population:"40만", area:"13,943 km²", lang:"영어", currency:"바하마달러 (BSD)", timezone:"UTC-5", bestSeason:"Dec–Apr", visa:"90일 무비자", voltage:"120V / 60Hz", callCode:"+1-242", drive:"좌측", tagline:"700개 섬의 카리브해 보석", continent:"북아메리카", emoji:"🇧🇸" },
+  "Barbados": { capital:"브리지타운", population:"28만", area:"430 km²", lang:"영어", currency:"바베이도스달러 (BBD)", timezone:"UTC-4", bestSeason:"Dec–May", visa:"90일 무비자", voltage:"115V / 50Hz", callCode:"+1-246", drive:"좌측", tagline:"카리브해의 영국식 보석", continent:"북아메리카", emoji:"🇧🇧" },
+  "Dominica": { capital:"로조", population:"7만", area:"751 km²", lang:"영어", currency:"동카리브달러 (XCD)", timezone:"UTC-4", bestSeason:"Dec–May", visa:"무비자", voltage:"230V / 50Hz", callCode:"+1-767", drive:"좌측", tagline:"카리브해의 자연섬", continent:"북아메리카", emoji:"🇩🇲" },
+  "Grenada": { capital:"세인트조지스", population:"12만", area:"344 km²", lang:"영어", currency:"동카리브달러 (XCD)", timezone:"UTC-4", bestSeason:"Dec–May", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+1-473", drive:"좌측", tagline:"향신료의 섬", continent:"북아메리카", emoji:"🇬🇩" },
+  "Kiribati": { capital:"타라와", population:"13만", area:"811 km²", lang:"키리바시어·영어", currency:"호주달러 (AUD)", timezone:"UTC+12", bestSeason:"Apr–Oct", visa:"30일 무비자", voltage:"240V / 50Hz", callCode:"+686", drive:"좌측", tagline:"태평양 한가운데 산호초 나라", continent:"오세아니아", emoji:"🇰🇮" },
+  "Liechtenstein": { capital:"파두츠", population:"4만", area:"160 km²", lang:"독일어", currency:"스위스프랑 (CHF)", timezone:"UTC+1", bestSeason:"May–Sep", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+423", drive:"우측", tagline:"알프스의 작은 부국", continent:"유럽", emoji:"🇱🇮" },
+  "Malta": { capital:"발레타", population:"52만", area:"316 km²", lang:"몰타어·영어", currency:"유로 (EUR)", timezone:"UTC+1", bestSeason:"Apr–Oct", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+356", drive:"좌측", tagline:"지중해의 역사적 보석", continent:"유럽", emoji:"🇲🇹" },
+  "Marshall Islands": { capital:"마주로", population:"4만", area:"181 km²", lang:"마셜어·영어", currency:"달러 (USD)", timezone:"UTC+12", bestSeason:"Dec–Apr", visa:"30일 무비자", voltage:"120V / 60Hz", callCode:"+692", drive:"우측", tagline:"태평양의 산호초 공화국", continent:"오세아니아", emoji:"🇲🇭" },
+  "Micronesia": { capital:"팔리키르", population:"11만", area:"702 km²", lang:"영어", currency:"달러 (USD)", timezone:"UTC+10~11", bestSeason:"Dec–Apr", visa:"무비자", voltage:"120V / 60Hz", callCode:"+691", drive:"우측", tagline:"태평양 섬나라 연방", continent:"오세아니아", emoji:"🇫🇲" },
+  "Monaco": { capital:"모나코", population:"4만", area:"2.02 km²", lang:"프랑스어", currency:"유로 (EUR)", timezone:"UTC+1", bestSeason:"May–Sep", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+377", drive:"우측", tagline:"지중해의 럭셔리 도시국가", continent:"유럽", emoji:"🇲🇨" },
+  "Nauru": { capital:"야렌", population:"1만", area:"21 km²", lang:"나우루어·영어", currency:"호주달러 (AUD)", timezone:"UTC+12", bestSeason:"Apr–Oct", visa:"비자 필요", voltage:"240V / 50Hz", callCode:"+674", drive:"좌측", tagline:"세계에서 가장 작은 섬나라", continent:"오세아니아", emoji:"🇳🇷" },
+  "Palau": { capital:"응에룰무드", population:"2만", area:"459 km²", lang:"팔라우어·영어", currency:"달러 (USD)", timezone:"UTC+9", bestSeason:"Nov–May", visa:"30일 무비자", voltage:"120V / 60Hz", callCode:"+680", drive:"우측", tagline:"다이버들의 낙원", continent:"오세아니아", emoji:"🇵🇼" },
+  "Palestine": { capital:"라말라", population:"540만", area:"6,020 km²", lang:"아랍어", currency:"셰켈 (ILS)", timezone:"UTC+2", bestSeason:"Mar–May, Sep–Nov", visa:"이스라엘 입국 필요", voltage:"230V / 50Hz", callCode:"+970", drive:"우측", tagline:"고대 성지의 땅", continent:"아시아(중동)", emoji:"🇵🇸" },
+  "Saint Kitts and Nevis": { capital:"바스테르", population:"5만", area:"261 km²", lang:"영어", currency:"동카리브달러 (XCD)", timezone:"UTC-4", bestSeason:"Dec–Apr", visa:"90일 무비자", voltage:"230V / 60Hz", callCode:"+1-869", drive:"좌측", tagline:"카리브해 최소 국가", continent:"북아메리카", emoji:"🇰🇳" },
+  "Saint Lucia": { capital:"캐스트리스", population:"18만", area:"616 km²", lang:"영어", currency:"동카리브달러 (XCD)", timezone:"UTC-4", bestSeason:"Dec–May", visa:"42일 무비자", voltage:"240V / 50Hz", callCode:"+1-758", drive:"좌측", tagline:"피톤스 쌍봉우리의 섬", continent:"북아메리카", emoji:"🇱🇨" },
+  "Saint Vincent and the Grenadines": { capital:"킹스타운", population:"11만", area:"389 km²", lang:"영어", currency:"동카리브달러 (XCD)", timezone:"UTC-4", bestSeason:"Dec–May", visa:"30일 무비자", voltage:"230V / 50Hz", callCode:"+1-784", drive:"좌측", tagline:"카리브해의 숨은 보석", continent:"북아메리카", emoji:"🇻🇨" },
+  "Samoa": { capital:"아피아", population:"20만", area:"2,842 km²", lang:"사모아어·영어", currency:"탈라 (WST)", timezone:"UTC+13", bestSeason:"May–Oct", visa:"60일 무비자", voltage:"230V / 50Hz", callCode:"+685", drive:"좌측", tagline:"폴리네시아 문화의 심장", continent:"오세아니아", emoji:"🇼🇸" },
+  "San Marino": { capital:"산마리노", population:"3만", area:"61 km²", lang:"이탈리아어", currency:"유로 (EUR)", timezone:"UTC+1", bestSeason:"Apr–Oct", visa:"90일 무비자", voltage:"230V / 50Hz", callCode:"+378", drive:"우측", tagline:"세계에서 가장 오래된 공화국", continent:"유럽", emoji:"🇸🇲" },
+  "Sao Tome and Principe": { capital:"상투메", population:"22만", area:"964 km²", lang:"포르투갈어", currency:"도브라 (STN)", timezone:"UTC+0", bestSeason:"Jun–Sep", visa:"15일 무비자", voltage:"220V / 50Hz", callCode:"+239", drive:"우측", tagline:"기니만의 초콜릿 섬", continent:"아프리카", emoji:"🇸🇹" },
+  "Seychelles": { capital:"빅토리아", population:"10만", area:"459 km²", lang:"영어·프랑스어·크레올", currency:"루피 (SCR)", timezone:"UTC+4", bestSeason:"Apr–May, Oct–Nov", visa:"무비자", voltage:"240V / 50Hz", callCode:"+248", drive:"좌측", tagline:"인도양의 에덴동산", continent:"아프리카", emoji:"🇸🇨" },
+  "Solomon Islands": { capital:"호니아라", population:"72만", area:"28,896 km²", lang:"영어", currency:"솔로몬달러 (SBD)", timezone:"UTC+11", bestSeason:"Apr–Nov", visa:"무비자", voltage:"240V / 50Hz", callCode:"+677", drive:"좌측", tagline:"태평양 전쟁의 기억이 남은 섬", continent:"오세아니아", emoji:"🇸🇧" },
+  "Tonga": { capital:"누쿠알로파", population:"10만", area:"747 km²", lang:"통가어·영어", currency:"팡아 (TOP)", timezone:"UTC+13", bestSeason:"May–Nov", visa:"31일 무비자", voltage:"240V / 50Hz", callCode:"+676", drive:"좌측", tagline:"태평양 왕국", continent:"오세아니아", emoji:"🇹🇴" },
+  "Tuvalu": { capital:"푸나푸티", population:"1만", area:"26 km²", lang:"투발루어·영어", currency:"호주달러 (AUD)", timezone:"UTC+12", bestSeason:"Apr–Oct", visa:"30일 무비자", voltage:"230V / 50Hz", callCode:"+688", drive:"좌측", tagline:"기후변화 최전선의 작은 나라", continent:"오세아니아", emoji:"🇹🇻" },
+  "Vanuatu": { capital:"포트빌라", population:"31만", area:"12,189 km²", lang:"비슬라마·영어·프랑스어", currency:"바투 (VUV)", timezone:"UTC+11", bestSeason:"Apr–Oct", visa:"30일 무비자", voltage:"220V / 50Hz", callCode:"+678", drive:"우측", tagline:"남태평양 화산 섬의 모험", continent:"오세아니아", emoji:"🇻🇺" },
+  "Vatican": { capital:"바티칸시티", population:"800", area:"0.44 km²", lang:"이탈리아어·라틴어", currency:"유로 (EUR)", timezone:"UTC+1", bestSeason:"Apr–Jun, Sep–Nov", visa:"무비자", voltage:"230V / 50Hz", callCode:"+39-06", drive:"우측", tagline:"세계 가톨릭의 중심", continent:"유럽", emoji:"🇻🇦" },
   "Zambia": { capital:"루사카", population:"2,000만", area:"752,618 km²", lang:"영어", currency:"콰차 (ZMW)", timezone:"UTC+2", bestSeason:"May–Oct", visa:"e-비자", voltage:"230V / 50Hz", callCode:"+260", drive:"좌측", tagline:"빅토리아 폭포의 또 다른 관문", continent:"아프리카", emoji:"🇿🇲" },
 }
 
@@ -1576,7 +1632,7 @@ const translateLangNames = (koLangStr, targetLang) => {
   // "영어 외 11개 공용어" 같은 특수 케이스
   if (koLangStr.includes('외')) {
     const m = koLangStr.match(/(.+?) 외 (.+)/)
-    if (m) { const first = translateLangNames(m[1], targetLang); return targetLang==='en'?`${first} + ${m[2]}`:targetLang==='ja'?`${first} 他${m[2]}`:`${first} 等${m[2]}` }
+    if (m) { const first = translateLangNames(m[1], targetLang); const rest = m[2].replace('공용어',targetLang==='en'?'official languages':targetLang==='ja'?'公用語':'官方语言'); return targetLang==='en'?`${first} + ${rest}`:targetLang==='ja'?`${first} 他${rest}`:`${first} 等${rest}` }
   }
   return koLangStr.split('·').map(l => {
     const code = LANG_CODE[l.trim()]
@@ -1767,6 +1823,34 @@ const COUNTRY_I18N = {
 "Yemen":{en:["Sana'a","Ancient kingdom of the Arabian Peninsula"]},
 "Zambia":{en:["Lusaka","Another gateway to Victoria Falls"]},
 }
+"Andorra":{en:["Andorra la Vella","Tiny Pyrenean principality"],ja:["アンドラ・ラ・ベリャ","ピレネーの小さな公国"],zh:["安道尔城","比利牛斯山小公国"]},
+"Antigua and Barbuda":{en:["St. John's","365 beaches in the Caribbean"],ja:["セントジョンズ","365のビーチのカリブの楽園"],zh:["圣约翰","加勒比365处海滩的天堂"]},
+"Bahamas":{en:["Nassau","700 islands of Caribbean jewels"],ja:["ナッソー","700島のカリブの宝石"],zh:["拿骚","加勒比700岛屿的宝石"]},
+"Barbados":{en:["Bridgetown","British gem in the Caribbean"],ja:["ブリッジタウン","カリブの英国風宝石"],zh:["布里奇敦","加勒比的英式宝石"]},
+"Dominica":{en:["Roseau","Nature island of the Caribbean"],ja:["ロゾー","カリブの自然島"],zh:["罗索","加勒比的自然之岛"]},
+"Grenada":{en:["St. George's","Island of spice"],ja:["セントジョージズ","スパイスの島"],zh:["圣乔治","香料之岛"]},
+"Kiribati":{en:["Tarawa","Coral nation in the Pacific"],ja:["タラワ","太平洋のサンゴの国"],zh:["塔拉瓦","太平洋珊瑚之国"]},
+"Liechtenstein":{en:["Vaduz","Tiny Alpine wealth"],ja:["ファドゥーツ","アルプスの小さな富国"],zh:["瓦杜兹","阿尔卑斯的小富国"]},
+"Malta":{en:["Valletta","Mediterranean historic gem"],ja:["バレッタ","地中海の歴史的宝石"],zh:["瓦莱塔","地中海的历史宝石"]},
+"Marshall Islands":{en:["Majuro","Coral republic in the Pacific"],ja:["マジュロ","太平洋の環礁共和国"],zh:["马朱罗","太平洋的环礁共和国"]},
+"Micronesia":{en:["Palikir","Pacific island federation"],ja:["パリキール","太平洋島嶼連邦"],zh:["帕利基尔","太平洋岛屿联邦"]},
+"Monaco":{en:["Monaco","Mediterranean luxury city-state"],ja:["モナコ","地中海の豪華な都市国家"],zh:["摩纳哥","地中海的奢华城邦"]},
+"Nauru":{en:["Yaren","World's smallest island nation"],ja:["ヤレン","世界最小の島国"],zh:["亚伦","世界最小的岛国"]},
+"Palau":{en:["Ngerulmud","Diver's paradise"],ja:["マルキョク","ダイバーの楽園"],zh:["恩吉鲁穆德","潜水者的天堂"]},
+"Palestine":{en:["Ramallah","Land of ancient holy sites"],ja:["ラマッラー","古代聖地の地"],zh:["拉姆安拉","古老圣地之地"]},
+"Saint Kitts and Nevis":{en:["Basseterre","Smallest Caribbean nation"],ja:["バセテール","カリブ最小の国"],zh:["巴斯特尔","加勒比最小国家"]},
+"Saint Lucia":{en:["Castries","Island of twin Pitons"],ja:["カストリーズ","双子のピトンの島"],zh:["卡斯特里","双峰皮通山之岛"]},
+"Saint Vincent and the Grenadines":{en:["Kingstown","Hidden Caribbean gem"],ja:["キングスタウン","カリブの隠れた宝石"],zh:["金斯敦","加勒比的隐秘宝石"]},
+"Samoa":{en:["Apia","Heart of Polynesian culture"],ja:["アピア","ポリネシア文化の心臓"],zh:["阿皮亚","波利尼西亚文化之心"]},
+"San Marino":{en:["San Marino","World's oldest republic"],ja:["サンマリノ","世界最古の共和国"],zh:["圣马力诺","世界最古老的共和国"]},
+"Sao Tome and Principe":{en:["São Tomé","Chocolate islands in the Gulf"],ja:["サントメ","ギニア湾のチョコレート島"],zh:["圣多美","几内亚湾的巧克力岛"]},
+"Seychelles":{en:["Victoria","Garden of Eden in the Indian Ocean"],ja:["ヴィクトリア","インド洋のエデンの園"],zh:["维多利亚","印度洋的伊甸园"]},
+"Solomon Islands":{en:["Honiara","Pacific war history islands"],ja:["ホニアラ","太平洋戦争の記憶の島"],zh:["霍尼亚拉","太平洋战争记忆之岛"]},
+"Tonga":{en:["Nuku'alofa","Pacific kingdom"],ja:["ヌクアロファ","太平洋の王国"],zh:["努库阿洛法","太平洋王国"]},
+"Tuvalu":{en:["Funafuti","Climate frontline tiny nation"],ja:["フナフティ","気候変動最前線の小国"],zh:["富纳富提","气候变化前线的小国"]},
+"Vanuatu":{en:["Port Vila","Volcanic South Pacific adventure"],ja:["ポートビラ","南太平洋火山島の冒険"],zh:["维拉港","南太平洋火山岛冒险"]},
+"Vatican":{en:["Vatican City","Center of world Catholicism"],ja:["バチカン市国","世界カトリックの中心"],zh:["梵蒂冈城","世界天主教中心"]},
+
 const translateCountryInfo = (info, cName, lang) => {
   if (!info || lang === 'ko') return info
   const i18n = COUNTRY_I18N[cName]
@@ -4968,8 +5052,28 @@ function App() {
       if (s.showHamburger) { setShowHamburger(false); return }
       if (s.selectedSpot) { setSelectedSpot(null); return }
       if (s.sidePanel) { setSidePanel(null); return }
-      if (s.selectedCity) { setSelectedCity(null); setCityData(null); setSelectedSpot(null); setSidePanel(null); return }
-      if (s.selectedCountry) { setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null); setShowCountryInfo(false); return }
+      if (s.selectedCity) {
+        setSelectedCity(null); setCityData(null); setSelectedSpot(null); setSidePanel(null);
+        // 도시에서 뒤로가면 국가 줌레벨로 복귀
+        if (s.selectedCountry && globeRef.current) {
+          const g = globeRef.current
+          const cName = s.selectedCountry.properties?.NAME
+          const cz = cName && typeof COUNTRY_ZOOM !== 'undefined' && COUNTRY_ZOOM[cName]
+          if (cz) {
+            const alt = window.innerWidth <= 768 ? cz.alt * 1.5 : cz.alt
+            g.pointOfView({ lat: cz.lat, lng: cz.lng, altitude: alt }, 800)
+          }
+        }
+        return
+      }
+      if (s.selectedCountry) {
+        setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null); setShowCountryInfo(false);
+        // 국가에서 뒤로가면 줌아웃
+        if (globeRef.current) {
+          globeRef.current.pointOfView({ lat: 36, lng: 127.8, altitude: window.innerWidth <= 768 ? 3.0 : 2.2 }, 1000)
+        }
+        return
+      }
     }
     window.addEventListener('popstate', handlePop)
     return () => window.removeEventListener('popstate', handlePop)
@@ -5245,6 +5349,24 @@ function App() {
     globe.controls().dampingFactor = 0.12
     globe.controls().rotateSpeed = 1.0
     globeRef.current = globe
+
+    // ── 모바일 더블탭 줌인 ──
+    if (window.innerWidth <= 768) {
+      let lastTap = 0
+      globeContainerRef.current.addEventListener('touchend', (e) => {
+        const now = Date.now()
+        if (now - lastTap < 300) {
+          e.preventDefault()
+          const g = globeRef.current
+          if (g) {
+            const pov = g.pointOfView()
+            const newAlt = Math.max(pov.altitude * 0.55, 0.05)
+            g.pointOfView({ lat: pov.lat, lng: pov.lng, altitude: newAlt }, 600)
+          }
+        }
+        lastTap = now
+      }, { passive: false })
+    }
 
     // ── 달 추가 ──
     const scene = globe.scene()
@@ -5637,7 +5759,7 @@ function App() {
     // 아시아
     "South Korea": { alt: 0.22, lat: 36.0, lng: 127.8 },
     "Japan": { alt: 0.35, lat: 36.5, lng: 138.0 },
-    "China": { alt: 1.0, lat: 35.0, lng: 105.0 },
+    "China": { alt: 1.2, lat: 35.0, lng: 105.0 },
     "India": { alt: 0.6, lat: 22.0, lng: 79.0 },
     "Thailand": { alt: 0.35, lat: 14.0, lng: 100.5 },
     "Vietnam": { alt: 0.4, lat: 16.0, lng: 107.5 },
@@ -6504,7 +6626,7 @@ function App() {
                     { icon:'💰', label:t('lCurrency'), value:info.currency },
                     { icon:'🕐', label:t('lTimezone'), value:info.timezone },
                     { icon:'🌤️', label:t('lBestSeason'), value:info.bestSeason },
-                    { icon:'🛂', label:t('lVisa'), value:info.visa },
+                    { icon:'🌍', label:t('lContinent'), value:info.continent },
                     { icon:'🔌', label:t('lVoltage'), value:info.voltage },
                     { icon:'📞', label:t('lCallCode'), value:info.callCode },
                     { icon:'🚗', label:t('lDrive'), value:info.drive },
@@ -7535,6 +7657,15 @@ function App() {
               <div style={{display:'flex',justifyContent:'flex-end',marginBottom:8}}>
                 <button onClick={()=>{if(window.confirm(lang==='ko'?'모든 방문 기록을 초기화할까요?':'Reset all travel records?')){saveVisited({});setVisitedExpandContinent(null);setVisitedExpandCity(null)}}}
                   style={{padding:'5px 14px',borderRadius:8,border:'1px solid rgba(239,68,68,.4)',background:'rgba(239,68,68,.1)',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',transition:'all .15s'}}
+                  onMouseEnter={e=>{e.currentTarget.style.background='rgba(239,68,68,.25)'}}
+                  onMouseLeave={e=>{e.currentTarget.style.background='rgba(239,68,68,.1)'}}
+                >{lang==='ko'?'🗑 초기화':'🗑 Reset'}</button>
+              </div>
+
+              {/* 초기화 버튼 */}
+              <div style={{display:'flex',justifyContent:'flex-end',marginBottom:8}}>
+                <button onClick={()=>{if(window.confirm(lang==='ko'?'모든 방문 기록을 초기화하시겠습니까?':'Reset all visit records?')){saveVisited({});setVisitedExpandCity(null);setVisitedExpandContinent(null)}}}
+                  style={{padding:'5px 14px',borderRadius:8,border:'1px solid rgba(239,68,68,.3)',background:'rgba(239,68,68,.1)',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',transition:'all .15s'}}
                   onMouseEnter={e=>{e.currentTarget.style.background='rgba(239,68,68,.25)'}}
                   onMouseLeave={e=>{e.currentTarget.style.background='rgba(239,68,68,.1)'}}
                 >{lang==='ko'?'🗑 초기화':'🗑 Reset'}</button>
