@@ -9,6 +9,251 @@ import Globe from 'globe.gl'
 import * as THREE from 'three'
 import { AUTO_I18N } from './auto-i18n'
 
+// ── 실제 관광지 사진 (Wikipedia + Wikimedia Commons 검색) ─────────────
+function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, alt }) {
+  const [src, setSrc] = useState(null)
+
+  useEffect(() => {
+    setSrc(null)
+    let cancelled = false
+    const keyword = wikiTitle || spotName || ''
+    if (!keyword) { setSrc(fallback); return }
+
+    const tryWiki = async (title) => {
+      try {
+        const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=600&origin=*`)
+        const data = await res.json()
+        const page = Object.values(data?.query?.pages || {})[0]
+        return page?.thumbnail?.source || null
+      } catch { return null }
+    }
+
+    const searchWiki = async (query) => {
+      try {
+        const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=5&prop=pageimages&format=json&pithumbsize=600&origin=*`)
+        const data = await res.json()
+        const pages = Object.values(data?.query?.pages || {})
+        for (const page of pages) {
+          if (page?.thumbnail?.source) return page.thumbnail.source
+        }
+        return null
+      } catch { return null }
+    }
+
+    // Wikimedia Commons에서 실사진 검색
+    const searchCommons = async (query) => {
+      try {
+        const res = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&gsrlimit=5&prop=imageinfo&iiprop=url|mime&iiurlwidth=600&format=json&origin=*`)
+        const data = await res.json()
+        const pages = Object.values(data?.query?.pages || {})
+        for (const p of pages) {
+          const info = p?.imageinfo?.[0]
+          if (info?.thumburl && info.mime?.startsWith('image/jpeg')) return info.thumburl
+        }
+        return null
+      } catch { return null }
+    }
+
+    const loadImage = async () => {
+      // 1차: wikiTitle 정확 매칭
+      let img = await tryWiki(keyword)
+      if (!cancelled && img) { setSrc(img); return }
+
+      // 2차: 영어만 추출
+      const enKeyword = keyword.replace(/[가-힣]+/g, '').trim()
+      if (enKeyword && enKeyword !== keyword) {
+        img = await tryWiki(enKeyword)
+        if (!cancelled && img) { setSrc(img); return }
+      }
+
+      // 3차: spotName
+      if (spotName && spotName !== keyword) {
+        const enSpot = spotName.replace(/[가-힣]+/g, '').trim()
+        if (enSpot) {
+          img = await tryWiki(enSpot)
+          if (!cancelled && img) { setSrc(img); return }
+        }
+      }
+
+      // 4차: Wikipedia 검색 (도시명 포함)
+      const searchQuery = keyword + (cityName ? ' ' + cityName : '')
+      img = await searchWiki(searchQuery)
+      if (!cancelled && img) { setSrc(img); return }
+
+      // 5차: Wikimedia Commons 실사진 검색
+      img = await searchCommons(keyword + ' photo')
+      if (!cancelled && img) { setSrc(img); return }
+
+      // 6차: 도시명 + spotName으로 Commons 재검색
+      if (cityName) {
+        img = await searchCommons(spotName + ' ' + cityName)
+        if (!cancelled && img) { setSrc(img); return }
+      }
+
+      // 최종 fallback
+      if (!cancelled) setSrc(fallback)
+    }
+
+    loadImage()
+    return () => { cancelled = true }
+  }, [wikiTitle, spotName, cityName, fallback])
+
+  return (
+    <img
+      className={className}
+      src={src || fallback}
+      alt={alt || ''}
+      style={style}
+      onError={e => { e.target.src = fallback; e.target.onerror = null }}
+    />
+  )
+}
+
+// ── 관광지 사진 갤러리 (Wikimedia Commons 실사진 + 필터링 강화) ──────────
+function SpotGallery({ wikiTitle, spotName, cityName, fallback, style }) {
+  const [images, setImages] = useState([])
+  const [idx, setIdx] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setImages([]); setIdx(0); setLoading(true)
+    let cancelled = false
+    const keyword = wikiTitle || spotName || ''
+    if (!keyword) { setLoading(false); return }
+
+    // 그림/아이콘/지도 필터
+    const badPattern = /\b(icon|logo|flag|map|symbol|coat|seal|crest|commons|wiki|button|arrow|edit|stub|diagram|drawing|plan|layout|svg|sign|medal|badge|emblem|silhouette|panorama_from|location|locator|position)\b/i
+
+    const fetchImages = async () => {
+      const results = []
+
+      try {
+        // 1단계: Wikimedia Commons에서 실사진 검색 (가장 좋은 소스)
+        const commonsRes = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(keyword + (cityName ? ' ' + cityName : '') + ' photo')}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=800&format=json&origin=*`)
+        const commonsData = await commonsRes.json()
+        const commonsPages = Object.values(commonsData?.query?.pages || {})
+        for (const p of commonsPages) {
+          const info = p?.imageinfo?.[0]
+          if (!info) continue
+          // 실사진만: JPEG, 최소 400px, 아이콘/지도 제외
+          if (info.mime?.startsWith('image/jpeg') && info.width > 400 && info.height > 300) {
+            const title = p.title || ''
+            if (!badPattern.test(title)) {
+              results.push(info.thumburl || info.url)
+            }
+          }
+        }
+      } catch {}
+
+      // 2단계: 부족하면 Wikipedia 문서 이미지 추가
+      if (results.length < 4) {
+        try {
+          const wikiRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(keyword)}&prop=images&imlimit=15&format=json&origin=*`)
+          const wikiData = await wikiRes.json()
+          const page = Object.values(wikiData?.query?.pages || {})[0]
+          const files = (page?.images || [])
+            .map(img => img.title)
+            .filter(t => /\.jpe?g$/i.test(t))  // JPEG만 (PNG는 보통 아이콘/다이어그램)
+            .filter(t => !badPattern.test(t))
+            .slice(0, 6)
+
+          if (files.length > 0) {
+            const infoRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${files.map(t => encodeURIComponent(t)).join('|')}&prop=imageinfo&iiprop=url|size&iiurlwidth=800&format=json&origin=*`)
+            const infoData = await infoRes.json()
+            const infoPages = Object.values(infoData?.query?.pages || {})
+            for (const tp of infoPages) {
+              const info = tp?.imageinfo?.[0]
+              // 실사진 필터: 최소 크기 + 가로세로 비율 체크 (너무 좁으면 배너/로고)
+              if (info?.thumburl && info.width > 400 && info.height > 250 && info.width / info.height < 4) {
+                if (!results.includes(info.thumburl)) results.push(info.thumburl)
+              }
+            }
+          }
+        } catch {}
+      }
+
+      if (!cancelled) {
+        setImages(results.length > 0 ? results.slice(0, 8) : (fallback ? [fallback] : []))
+        setLoading(false)
+      }
+    }
+
+    fetchImages()
+    return () => { cancelled = true }
+  }, [wikiTitle, spotName, fallback])
+
+  const goNext = (e) => { e.stopPropagation(); setIdx(i => (i + 1) % images.length) }
+  const goPrev = (e) => { e.stopPropagation(); setIdx(i => (i - 1 + images.length) % images.length) }
+
+  if (loading) return (
+    <div style={{...style, display:'flex',alignItems:'center',justifyContent:'center',background:'#1e293b'}}>
+      <div style={{width:20,height:20,borderRadius:'50%',border:'2px solid #475569',borderTopColor:'#94a3b8',animation:'spin .7s linear infinite'}}/>
+    </div>
+  )
+  if (images.length === 0) return <div style={{...style, background:'#1e293b'}}/>
+
+  return (
+    <div style={{...style, position:'relative', overflow:'hidden'}}>
+      <img
+        src={images[idx]}
+        alt=""
+        style={{width:'100%',height:'100%',objectFit:'cover',display:'block',transition:'opacity 0.3s'}}
+        onError={e => { e.target.src = fallback; e.target.onerror = null }}
+      />
+      {images.length > 1 && (
+        <>
+          {/* 좌우 화살표 */}
+          <button onClick={goPrev} style={{
+            position:'absolute',left:6,top:'50%',transform:'translateY(-50%)',
+            width:28,height:28,borderRadius:'50%',border:'none',
+            background:'rgba(0,0,0,0.5)',color:'white',fontSize:14,
+            cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',
+            opacity:0.7,transition:'opacity .2s',
+          }} onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0.7'}>‹</button>
+          <button onClick={goNext} style={{
+            position:'absolute',right:6,top:'50%',transform:'translateY(-50%)',
+            width:28,height:28,borderRadius:'50%',border:'none',
+            background:'rgba(0,0,0,0.5)',color:'white',fontSize:14,
+            cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',
+            opacity:0.7,transition:'opacity .2s',
+          }} onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0.7'}>›</button>
+          {/* 하단 도트 인디케이터 */}
+          <div style={{position:'absolute',bottom:6,left:'50%',transform:'translateX(-50%)',display:'flex',gap:4}}>
+            {images.map((_, i) => (
+              <div key={i} onClick={e => { e.stopPropagation(); setIdx(i) }} style={{
+                width: i === idx ? 16 : 6, height:6, borderRadius:3,
+                background: i === idx ? 'white' : 'rgba(255,255,255,0.5)',
+                cursor:'pointer', transition:'all .2s',
+              }}/>
+            ))}
+          </div>
+          {/* 사진 카운터 */}
+          <div style={{position:'absolute',top:8,left:8,background:'rgba(0,0,0,0.6)',borderRadius:10,padding:'2px 8px',fontSize:10,color:'white',fontWeight:600}}>
+            {idx+1} / {images.length}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── 에러 바운더리 (흰 화면 방지) ─────────────────────────────────────────
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { hasError: false } }
+  static getDerivedStateFromError() { return { hasError: true } }
+  componentDidCatch(e) { console.error('App error caught:', e) }
+  render() {
+    if (this.state.hasError) return (
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100vh',background:'#0f172a',color:'white',fontFamily:'Inter,sans-serif',gap:16}}>
+        <div style={{fontSize:32}}>⚠️</div>
+        <div style={{fontSize:18,fontWeight:700}}>잠시 오류가 발생했어요</div>
+        <button onClick={()=>window.location.reload()} style={{background:'#3b82f6',color:'white',border:'none',borderRadius:10,padding:'10px 24px',cursor:'pointer',fontSize:14,fontWeight:600}}>새로고침</button>
+      </div>
+    )
+    return this.props.children
+  }
+}
+
 function App() {
   const globeContainerRef = useRef(null)
   const globeRef = useRef(null)
