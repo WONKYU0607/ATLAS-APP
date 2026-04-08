@@ -1,5 +1,5 @@
 // 전 세계 도시 사전 관광 데이터
-const export CITY_DATA = {
+export const CITY_DATA = {
 // ────────────────────────── 대한민국 ──────────────────────────
 "서울": { description:"서울은 600년 조선왕조의 역사와 K-팝 문화, 첨단 기술이 공존하는 아시아 최고의 도시입니다. 고궁과 현대 빌딩이 어우러진 독특한 매력으로 매년 수천만 명의 여행자를 끌어들입니다.", spots:[
   {name:"경복궁", wikiTitle:"Gyeongbokgung", type:"역사", desc:"조선 5대 궁궐 중 가장 웅장하며 매시간 수문장 교대식이 열립니다. 근정전과 경회루는 조선 건축의 정수를 보여줍니다.", rating:4.8, openTime:"09:00~18:00", price:"성인 3,000원", website:"https://royal.khs.go.kr/ROYAL/contents/menuInfo-gbg.do?grpCode=gbg"},
@@ -2390,8 +2390,8 @@ const export DEFAULT_CITY_DATA = (cityName) => ({
 })
 
 // 카테고리별 폴백 플레이스홀더 (실사진 못 찾을 때만 사용)
-const export TYPE_EMOJI = { "문화":"🎭","자연":"🌿","랜드마크":"⭐","도시":"🏙️","역사":"🏛️","음식":"🍽️" }
-const getImg = (type) => {
+export const TYPE_EMOJI = { "문화":"🎭","자연":"🌿","랜드마크":"⭐","도시":"🏙️","역사":"🏛️","음식":"🍽️" }
+export const getImg = (type) => {
   const colors = { "문화":"8b5cf6","자연":"10b981","랜드마크":"f59e0b","도시":"3b82f6","역사":"f97316","음식":"ec4899" }
   const c = colors[type] || '64748b'
   const emoji = TYPE_EMOJI[type] || '📍'
@@ -2399,7 +2399,7 @@ const getImg = (type) => {
   return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#${c}" stop-opacity="0.8"/><stop offset="100%" stop-color="#0f172a" stop-opacity="0.9"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><text x="200" y="140" text-anchor="middle" font-size="48">${emoji}</text><text x="200" y="185" text-anchor="middle" font-family="sans-serif" font-size="13" fill="rgba(255,255,255,0.5)">사진을 불러오는 중...</text></svg>`)}`
 }
 
-const export TYPE_COLORS = {
+export const TYPE_COLORS = {
   "문화":"#8b5cf6","자연":"#10b981","랜드마크":"#f59e0b",
   "도시":"#3b82f6","역사":"#f97316","음식":"#ec4899",
   Culture:"#8b5cf6",Nature:"#10b981",Landmark:"#f59e0b",
