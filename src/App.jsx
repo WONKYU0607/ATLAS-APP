@@ -1,3 +1,4 @@
+import { COUNTRY_I18N, translateCountryInfo } from './data/countryI18n'
 import { T, SPOT_TYPE_I18N, CITY_I18N, LANG_CODE, CONTINENT_I18N, DRIVE_I18N, translateVisa, translateTimeDiff, translatePopulation, KO_WORD_MAP, translateSpotField, intlLangMap, translateLangNames, translateCurrency } from './data/translations'
 import { CITY_DATA, DEFAULT_CITY_DATA, TYPE_EMOJI, getImg, TYPE_COLORS } from './data/cityData'
 import { COUNTRY_ISO, COUNTRY_NAME_OVERRIDE, getCountryDisplayName, LANG_OPTIONS, getFlagImg, COUNTRY_INFO } from './data/countryInfo'
