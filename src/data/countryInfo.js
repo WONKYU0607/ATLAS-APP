@@ -45,7 +45,7 @@ export const COUNTRY_NAME_OVERRIDE = {
   AE:{ko:"아랍에미리트"},ZA:{ko:"남아공",ja:"南アフリカ"},NZ:{ko:"뉴질랜드"},
 }
 
-const intlRegionMap = lang => lang === 'zh' ? 'zh-Hans' : lang
+export const intlRegionMap = lang => lang === 'zh' ? 'zh-Hans' : lang
 export const getCountryDisplayName = (enName, targetLang) => {
   if (targetLang === 'en') return enName
   const iso = COUNTRY_ISO[enName]
@@ -64,7 +64,7 @@ export const LANG_OPTIONS = [
 ]
 
 // ── 국기 이모지 → 이미지 URL 변환 ──────────────────────────────────
-const flagEmojiToCode = (emoji) => {
+export const flagEmojiToCode = (emoji) => {
   if (!emoji) return null
   const codePoints = [...emoji].map(c => c.codePointAt(0))
   if (codePoints.length < 2) return null
