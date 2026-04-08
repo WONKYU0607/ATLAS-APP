@@ -1,3 +1,4 @@
+import { CITY_DATA, DEFAULT_CITY_DATA, TYPE_EMOJI, getImg, TYPE_COLORS } from './data/cityData'
 import { COUNTRY_ISO, COUNTRY_NAME_OVERRIDE, getCountryDisplayName, LANG_OPTIONS, getFlagImg, COUNTRY_INFO } from './data/countryInfo'
 import { COUNTRY_CITIES } from './data/countryCities'
 import { useState, useEffect, useRef, Component } from 'react'
