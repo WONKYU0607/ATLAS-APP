@@ -1,5 +1,5 @@
 // UI 번역 문자열
-const export T = {
+export const T = {
   appSub:{ko:'세계 여행 탐험가',en:'World Travel Explorer',ja:'世界旅行エクスプローラー',zh:'世界旅行探索家'},
   search:{ko:'도시, 국가, 관광지 검색…',en:'Search city, country, attraction…',ja:'都市・国・観光地を検索…',zh:'搜索城市、国家、景点…'},
   nCities:{ko:'개 도시',en:' cities',ja:'都市',zh:'个城市'},
@@ -147,7 +147,7 @@ const export T = {
 }
 
 // 관광지 유형 번역
-const export SPOT_TYPE_I18N = {
+export const SPOT_TYPE_I18N = {
   "역사":{en:"History",ja:"歴史",zh:"历史"},
   "문화":{en:"Culture",ja:"文化",zh:"文化"},
   "자연":{en:"Nature",ja:"自然",zh:"自然"},
@@ -157,7 +157,7 @@ const export SPOT_TYPE_I18N = {
 }
 
 // 도시명 다국어 [en, ja, zh]
-const export CITY_I18N = {
+export const CITY_I18N = {
 // 한국
 "서울":["Seoul","ソウル","首尔"],"부산":["Busan","釜山","釜山"],"제주":["Jeju","済州","济州"],"경주":["Gyeongju","慶州","庆州"],"인천":["Incheon","仁川","仁川"],"대구":["Daegu","大邱","大邱"],"전주":["Jeonju","全州","全州"],"강릉":["Gangneung","江陵","江陵"],"수원":["Suwon","水原","水原"],"광주":["Gwangju","光州","光州"],"여수":["Yeosu","麗水","丽水"],"속초":["Sokcho","束草","束草"],"통영":["Tongyeong","統営","统营"],
 // 일본
@@ -235,7 +235,7 @@ const export CITY_I18N = {
 }
 
 // ── 국가 정보 다국어 번역 시스템 (Intl API 기반) ──────────────────
-const export LANG_CODE = {
+export const LANG_CODE = {
 '한국어':'ko','일본어':'ja','영어':'en','중국어':'zh','중국어(보통화)':'zh','중국어(정체)':'zh-Hant',
 '프랑스어':'fr','스페인어':'es','독일어':'de','이탈리아어':'it','포르투갈어':'pt','러시아어':'ru',
 '아랍어':'ar','힌디어':'hi','태국어':'th','베트남어':'vi','인도네시아어':'id','말레이어':'ms',
@@ -259,7 +259,7 @@ const export LANG_CODE = {
 '슬로베니아어':'sl','카탈루냐어':'ca','키리바시어':'gil','몰타어':'mt','마셜어':'mh',
 '나우루어':'na','팔라우어':'pau','통가어':'to','투발루어':'tvl','비슬라마':'bi','라틴어':'la','크레올':'ht',
 }
-const export CONTINENT_I18N = {
+export const CONTINENT_I18N = {
   '아시아':{en:'Asia',ja:'アジア',zh:'亚洲'},
   '아시아(중동)':{en:'Asia (Middle East)',ja:'アジア（中東）',zh:'亚洲（中东）'},
   '아시아/유럽':{en:'Asia / Europe',ja:'アジア/ヨーロッパ',zh:'亚洲/欧洲'},
@@ -270,8 +270,8 @@ const export CONTINENT_I18N = {
   '아프리카':{en:'Africa',ja:'アフリカ',zh:'非洲'},
   '오세아니아':{en:'Oceania',ja:'オセアニア',zh:'大洋洲'},
 }
-const export DRIVE_I18N = {'우측':{en:'Right',ja:'右側通行',zh:'靠右行驶'},'좌측':{en:'Left',ja:'左側通行',zh:'靠左行驶'}}
-const export translateVisa = (v, lang) => {
+export const DRIVE_I18N = {'우측':{en:'Right',ja:'右側通行',zh:'靠右行驶'},'좌측':{en:'Left',ja:'左側通行',zh:'靠左行驶'}}
+export const translateVisa = (v, lang) => {
   if (lang==='ko') return v
   const m = v.match(/^(\d+)(일|개월) 무비자$/)
   if (m) { const n=m[1],u=m[2]==='일'?{en:'day',ja:'日',zh:'天'}:{en:'month',ja:'ヶ月',zh:'个月'}; return lang==='en'?`${n}-${u[lang]} visa-free`:lang==='ja'?`${n}${u[lang]}ビザ免除`:`${n}${u[lang]}免签` }
@@ -288,7 +288,7 @@ const export translateVisa = (v, lang) => {
   if (v==='—') return '—'
   return v
 }
-const export translateTimeDiff = (v, lang) => {
+export const translateTimeDiff = (v, lang) => {
   if (lang==='ko'||v==='—') return v
   if (v==='시차 없음') return lang==='en'?'No time diff.':lang==='ja'?'時差なし':'无时差'
   const m = v.match(/^([+-]?[\d.]+)(시간)$/)
@@ -298,7 +298,7 @@ const export translateTimeDiff = (v, lang) => {
   return v
 }
 // 관광지 openTime/price 한국어 패턴 번역
-const export translatePopulation = (v, lang) => {
+export const translatePopulation = (v, lang) => {
   if (lang === 'ko' || !v) return v
   // Parse Korean number: "14억 2,600만" → number
   let total = 0
@@ -322,7 +322,7 @@ const export translatePopulation = (v, lang) => {
   if (total >= 1000) return `${Math.round(total/1000)}K`
   return total.toLocaleString()
 }
-const export KO_WORD_MAP = {
+export const KO_WORD_MAP = {
   en:{무료:'Free',시간:'Hours',일몰:'sunset',일출:'sunrise',성인:'Adult',어린이:'Child',학생:'Student',
   '계절별':'seasonal','시즌별 상이':'varies','야외':'outdoor','입산':'hiking','투어':'tour',
   '외국인':'foreign','케이블카':'cable car','페리 포함':'incl. ferry','통합권':'combo',
@@ -336,7 +336,7 @@ const export KO_WORD_MAP = {
   '계절별':'按季节','시즌별 상이':'因季节而异','야외':'户外','투어':'旅游团','외국인':'外国人',
   '케이블카':'缆车','통합권':'套票','보트투어':'游船','1일권':'一日票',원:'韩元'},
 }
-const export translateSpotField = (str, lang) => {
+export const translateSpotField = (str, lang) => {
   if (!str || lang === 'ko') return str
   const map = KO_WORD_MAP[lang] || KO_WORD_MAP.en
   let result = str
@@ -346,8 +346,8 @@ const export translateSpotField = (str, lang) => {
   return result
 }
 // Intl API 기반 자동 번역
-const export intlLangMap = lang => lang === 'zh' ? 'zh-Hans' : lang
-const export translateLangNames = (koLangStr, targetLang) => {
+export const intlLangMap = lang => lang === 'zh' ? 'zh-Hans' : lang
+export const translateLangNames = (koLangStr, targetLang) => {
   if (!koLangStr) return koLangStr
   // "영어 외 11개 공용어" 같은 특수 케이스
   if (koLangStr.includes('외')) {
@@ -360,7 +360,7 @@ const export translateLangNames = (koLangStr, targetLang) => {
     try { return new Intl.DisplayNames([intlLangMap(targetLang)], {type:'language'}).of(code) } catch { return l.trim() }
   }).join(' · ')
 }
-const export translateCurrency = (koCurrStr, targetLang) => {
+export const translateCurrency = (koCurrStr, targetLang) => {
   if (!koCurrStr) return koCurrStr
   const m = koCurrStr.match(/\((\w+)\)/)
   if (!m) return koCurrStr
