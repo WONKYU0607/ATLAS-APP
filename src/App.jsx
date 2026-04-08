@@ -6731,7 +6731,7 @@ function App() {
                                       onMouseLeave={e=>e.currentTarget.style.background='transparent'}
                                       onClick={()=>setVisitedExpandCity(isO?null:city.name)}>
                                       <span style={{fontSize:10,color:'#22c55e'}}>✓</span>
-                                      <span style={{fontSize:12,fontWeight:500,color:'#cbd5e1'}}>{getCityName(city.name)}</span>
+                                      <span style={{fontSize:12,fontWeight:500,color:'#cbd5e1'}}>{getCityName(c.name)}</span>
                                       {cs.length > 0 && <span style={{fontSize:9,color:'#64748b'}}>· {cs.length}{lang==='ko'?'곳':''}</span>}
                                       {cs.length > 0 && <span style={{fontSize:8,color:'#475569'}}>{isO?'▾':'▸'}</span>}
                                     </div>
