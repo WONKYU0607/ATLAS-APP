@@ -2973,7 +2973,7 @@ function App() {
                             ) : (
                               <span style={{fontSize:16}}>{c.emoji||'📍'}</span>
                             )}
-                            <span style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{c.name}</span>
+                            <span style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{getCityName(c.name)}</span>
                             <span style={{fontSize:11,color:'#94a3b8'}}>{c.countryKo}</span>
                           </div>
                         ))}
