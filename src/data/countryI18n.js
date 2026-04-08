@@ -1,5 +1,5 @@
 // 수도 + 태그라인만 수동 번역 (Intl로 처리 불가한 부분)
-const export COUNTRY_I18N = {
+export const COUNTRY_I18N = {
 "South Korea":{en:["Seoul","Dynamic Korea — where tradition meets K-wave"],ja:["ソウル","韓流と伝統が共存するダイナミックコリア"],zh:["首尔","韩流与传统共存的活力韩国"]},
 "Japan":{en:["Tokyo","Land of tradition and cutting-edge innovation"],ja:["東京","伝統と先端が調和する侍の国"],zh:["东京","传统与尖端并存的武士之国"]},
 "China":{en:["Beijing","5,000 years of civilization"],ja:["北京","5千年文明の大陸"],zh:["北京","五千年文明的大陆"]},
@@ -199,7 +199,7 @@ const export COUNTRY_I18N = {
 "Vatican":{en:["Vatican City","Center of world Catholicism"],ja:["バチカン市国","世界カトリックの中心"],zh:["梵蒂冈城","世界天主教中心"]},
 }
 
-const export translateCountryInfo = (info, cName, lang) => {
+export const translateCountryInfo = (info, cName, lang) => {
   if (!info || lang === 'ko') return info
   const i18n = COUNTRY_I18N[cName]
   const getField = (idx) => {
