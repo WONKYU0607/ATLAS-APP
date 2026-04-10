@@ -1,3 +1,4 @@
+import { translatePopulation, translateVisa, translateLangNames, translateCurrency, CONTINENT_I18N, DRIVE_I18N } from './translations'
 // 수도 + 태그라인만 수동 번역 (Intl로 처리 불가한 부분)
 export const COUNTRY_I18N = {
 "South Korea":{en:["Seoul","Dynamic Korea — where tradition meets K-wave"],ja:["ソウル","韓流と伝統が共存するダイナミックコリア"],zh:["首尔","韩流与传统共存的活力韩国"]},

@@ -354,6 +354,9 @@ export const translateLangNames = (koLangStr, targetLang) => {
     const m = koLangStr.match(/(.+?) 외 (.+)/)
     if (m) { const first = translateLangNames(m[1], targetLang); const rest = m[2].replace(/(\d+)개\s*공용어/,(_,n)=>targetLang==='en'?`${n} official languages`:targetLang==='ja'?`${n}公用語`:`${n}官方语言`).replace('공용어',targetLang==='en'?'official languages':targetLang==='ja'?'公用語':'官方语言'); return targetLang==='en'?`${first} + ${rest}`:targetLang==='ja'?`${first} 他${rest}`:`${first} 等${rest}` }
   }
+  // "11개 공식언어" 같은 패턴
+  const mOff = koLangStr.match(/^(\d+)개\s*공식언어$/)
+  if (mOff) { const n = mOff[1]; return targetLang==='en'?`${n} official languages`:targetLang==='ja'?`${n}公用語`:`${n}种官方语言` }
   return koLangStr.split('·').map(l => {
     const code = LANG_CODE[l.trim()]
     if (!code) return l.trim()

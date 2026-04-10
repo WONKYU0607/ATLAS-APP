@@ -2,12 +2,13 @@ import { CITY_DATA_I18N } from './data/cityDataI18n'
 import { COUNTRY_I18N, translateCountryInfo } from './data/countryI18n'
 import { T, SPOT_TYPE_I18N, CITY_I18N, LANG_CODE, CONTINENT_I18N, DRIVE_I18N, translateVisa, translateTimeDiff, translatePopulation, KO_WORD_MAP, translateSpotField, intlLangMap, translateLangNames, translateCurrency } from './data/translations'
 import { CITY_DATA, DEFAULT_CITY_DATA, TYPE_EMOJI, getImg, TYPE_COLORS } from './data/cityData'
-import { COUNTRY_ISO, COUNTRY_NAME_OVERRIDE, getCountryDisplayName, LANG_OPTIONS, getFlagImg, COUNTRY_INFO } from './data/countryInfo'
+import { COUNTRY_ISO, COUNTRY_NAME_OVERRIDE, getCountryDisplayName, LANG_OPTIONS, getFlagImg, COUNTRY_INFO, EMERGENCY_CONTACTS, extractCurrencyCode } from './data/countryInfo'
 import { COUNTRY_CITIES } from './data/countryCities'
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
 import { AUTO_I18N } from './auto-i18n'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile } from './firebase'
 
 // ── 실제 관광지 사진 (Wikipedia + Wikimedia Commons 검색) ─────────────
 function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, alt }) {
@@ -255,6 +256,18 @@ class ErrorBoundary extends Component {
 }
 
 function App() {
+  // ── Auth 상태 ──
+  const [currentUser, setCurrentUser] = useState(null)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [authMode, setAuthMode] = useState('login') // 'login' | 'signup'
+  const [authEmail, setAuthEmail] = useState('')
+  const [authPw, setAuthPw] = useState('')
+  const [authName, setAuthName] = useState('')
+  const [authError, setAuthError] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+  const [homeCountry, setHomeCountry] = useState(() => localStorage.getItem('atlas_home_country') || '')
+  const userSyncRef = useRef(false) // Firestore → localStorage 초기 로드 중복 방지
+
   const globeContainerRef = useRef(null)
   const globeRef = useRef(null)
   const handleCityClickRef = useRef(null)  // ref to always-fresh click handler
@@ -768,22 +781,159 @@ function App() {
   const [visitedExpandCity, setVisitedExpandCity] = useState(null)
   const [visitedExpandContinent, setVisitedExpandContinent] = useState(null)
 
+  // ── 환율 계산기 ──
+  const [showCurrencyCalc, setShowCurrencyCalc] = useState(false)
+  const [currFrom, setCurrFrom] = useState('KRW')
+  const [currTo, setCurrTo] = useState('USD')
+  const [currAmount, setCurrAmount] = useState('10000')
+  const [currResult, setCurrResult] = useState(null)
+  const [currLoading, setCurrLoading] = useState(false)
+  const [currRates, setCurrRates] = useState(null)
+
+  const fetchCurrencyRate = async (from, to, amount) => {
+    setCurrLoading(true); setCurrResult(null)
+    try {
+      const res = await fetch(`https://open.er-api.com/v6/latest/${from}`)
+      const data = await res.json()
+      if (data.result === 'success' && data.rates?.[to]) {
+        setCurrResult(data.rates[to] * Number(amount || 1))
+        setCurrRates(data.rates)
+      } else {
+        setCurrResult('error')
+      }
+    } catch { setCurrResult('error') }
+    setCurrLoading(false)
+  }
+
+  // ── Firebase Auth 리스너 ──
+  useEffect(() => {
+    const unsub = onAuth(async (user) => {
+      setCurrentUser(user)
+      if (user) {
+        // Firestore에서 유저 데이터 로드
+        const data = await loadUserData(user.uid)
+        if (data) {
+          userSyncRef.current = true
+          if (data.favorites?.length) { setFavorites(data.favorites); localStorage.setItem('atlas_favorites', JSON.stringify(data.favorites)) }
+          if (data.savedCourses?.length) { setSavedCourses(data.savedCourses); localStorage.setItem('atlas_saved_courses', JSON.stringify(data.savedCourses)) }
+          if (data.visited && Object.keys(data.visited).length) { setVisited(data.visited); localStorage.setItem('atlas_visited', JSON.stringify(data.visited)) }
+          if (data.homeCountry) { setHomeCountry(data.homeCountry); localStorage.setItem('atlas_home_country', data.homeCountry) }
+          if (data.lang) { setLang(data.lang); localStorage.setItem('atlas_lang', data.lang) }
+          setTimeout(() => { userSyncRef.current = false }, 500)
+        } else {
+          // 첫 로그인: localStorage → Firestore 마이그레이션
+          await saveUserData(user.uid, {
+            favorites, savedCourses, visited, homeCountry,
+            lang, displayName: user.displayName || '', email: user.email
+          })
+        }
+      }
+    })
+    return () => unsub()
+  }, [])
+
+  // Firestore 자동 동기화 (로그인 중 데이터 변경 시)
+  useEffect(() => {
+    if (!currentUser || userSyncRef.current) return
+    const timer = setTimeout(() => {
+      saveUserData(currentUser.uid, { favorites, savedCourses, visited, homeCountry, lang })
+    }, 1000) // 1초 디바운스
+    return () => clearTimeout(timer)
+  }, [favorites, savedCourses, visited, homeCountry, lang, currentUser])
+
+  // Auth 핸들러
+  const handleAuth = async () => {
+    setAuthError(''); setAuthLoading(true)
+    try {
+      if (authMode === 'login') {
+        await loginEmail(authEmail, authPw)
+      } else {
+        const cred = await signupEmail(authEmail, authPw)
+        if (authName) await updateUserProfile(cred.user, { displayName: authName })
+      }
+      setShowLoginModal(false); setAuthEmail(''); setAuthPw(''); setAuthName('')
+    } catch (e) {
+      const msgs = {
+        'auth/invalid-email': lang==='ko'?'올바른 이메일을 입력하세요':'Invalid email',
+        'auth/wrong-password': lang==='ko'?'비밀번호가 틀렸습니다':'Wrong password',
+        'auth/invalid-credential': lang==='ko'?'이메일 또는 비밀번호가 틀렸습니다':'Invalid credentials',
+        'auth/email-already-in-use': lang==='ko'?'이미 사용 중인 이메일입니다':'Email already in use',
+        'auth/weak-password': lang==='ko'?'비밀번호가 너무 짧습니다 (6자 이상)':'Password too short (min 6)',
+      }
+      setAuthError(msgs[e.code] || e.message)
+    }
+    setAuthLoading(false)
+  }
+  const handleGoogleLogin = async () => {
+    setAuthError(''); setAuthLoading(true)
+    try { await loginGoogle(); setShowLoginModal(false) }
+    catch (e) { setAuthError(e.message) }
+    setAuthLoading(false)
+  }
+  const handleLogout = async () => {
+    await logout()
+    setCurrentUser(null)
+  }
+
   // 모바일 뒤로가기 = 닫기 (refs for latest state in event handler)
   const backStateRef = useRef({})
-  backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo }
+  backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo, lang, showAiModal, showCoursePlanner, showCourseBasket, showCurrencyCalc, showLoginModal }
   useEffect(() => {
+    // 충분한 history 스택 확보 (모바일 브라우저 호환)
     window.history.replaceState({ atlas: true }, '')
-    window.history.pushState({ atlas: true }, '', window.location.href)
-    const handlePop = () => {
+    for (let i = 0; i < 50; i++) window.history.pushState({ atlas: true }, '', window.location.href)
+    const handlePop = (e) => {
       const s = backStateRef.current
-      window.history.pushState({ atlas: true }, '', window.location.href)
-      if (s.showMyTravels) { setShowMyTravels(false); return }
-      if (s.showHamburger) { setShowHamburger(false); return }
-      if (s.selectedSpot) { setSelectedSpot(null); return }
-      if (s.sidePanel) { setSidePanel(null); return }
+      // 모달/오버레이 먼저 닫기
+      if (s.showLoginModal) {
+        setShowLoginModal(false)
+        backStateRef.current = { ...s, showLoginModal: false }
+        return
+      }
+      if (s.showCurrencyCalc) {
+        setShowCurrencyCalc(false)
+        backStateRef.current = { ...s, showCurrencyCalc: false }
+        return
+      }
+      if (s.showAiModal) {
+        setShowAiModal(false)
+        backStateRef.current = { ...s, showAiModal: false }
+        return
+      }
+      if (s.showCoursePlanner) {
+        setShowCoursePlanner(false)
+        backStateRef.current = { ...s, showCoursePlanner: false }
+        return
+      }
+      if (s.showCourseBasket) {
+        setShowCourseBasket(false)
+        backStateRef.current = { ...s, showCourseBasket: false }
+        return
+      }
+      if (s.showMyTravels) {
+        setShowMyTravels(false)
+        backStateRef.current = { ...s, showMyTravels: false }
+        return
+      }
+      if (s.showHamburger) {
+        setShowHamburger(false)
+        backStateRef.current = { ...s, showHamburger: false }
+        return
+      }
+      if (s.selectedSpot) {
+        setSelectedSpot(null)
+        backStateRef.current = { ...s, selectedSpot: null }
+        return
+      }
+      if (s.sidePanel) {
+        setSidePanel(null)
+        backStateRef.current = { ...s, sidePanel: null }
+        return
+      }
       if (s.selectedCity) {
-        setSelectedCity(null); setCityData(null); setSelectedSpot(null); setSidePanel(null);
-        // 도시에서 뒤로가면 국가 줌레벨로 복귀
+        setSelectedCity(null); setCityData(null); setSelectedSpot(null); setSidePanel(null)
+        setShowCountryInfo(false)
+        backStateRef.current = { ...s, selectedCity: null, selectedSpot: null, sidePanel: null, showCountryInfo: false }
         if (s.selectedCountry && globeRef.current) {
           const g = globeRef.current
           const cName = s.selectedCountry.properties?.NAME
@@ -795,22 +945,21 @@ function App() {
         }
         return
       }
-      // 국가 3단계: ① 국가정보 닫기 → ② 국가선택 해제(줌 유지) → ③ 현위치에서 줌아웃
       if (s.selectedCountry && s.showCountryInfo) {
-        setShowCountryInfo(false);
+        setShowCountryInfo(false)
+        backStateRef.current = { ...s, showCountryInfo: false }
         return
       }
       if (s.selectedCountry) {
-        setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null); setShowCountryInfo(false);
-        // 줌 유지 — 이동 없음, 그 자리에서 다른 국가 선택 가능
+        setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null); setShowCountryInfo(false)
+        backStateRef.current = { ...s, selectedCountry: null, selectedCity: null, selectedSpot: null, showCountryInfo: false }
         return
       }
-      // 아무것도 열려있지 않으면 현 위치에서 줌아웃
-      if (globeRef.current) {
-        const pov = globeRef.current.pointOfView()
-        if (pov.altitude < 2.0) {
-          globeRef.current.pointOfView({ lat: pov.lat, lng: pov.lng, altitude: Math.min(pov.altitude * 2.5, 2.5) }, 800)
-        }
+      // 아무것도 열려있지 않으면 종료 확인
+      const msg = s.lang === 'ko' ? '앱을 종료하시겠습니까?' : 'Exit the app?'
+      if (window.confirm(msg)) {
+        window.removeEventListener('popstate', handlePop)
+        window.location.href = 'about:blank'
       }
     }
     window.addEventListener('popstate', handlePop)
@@ -818,10 +967,30 @@ function App() {
   }, [])
 
   // 다국어 헬퍼
+  const TOOL_I18N = {
+    toolTitle:{ko:'여행 도구',en:'Travel Tools',ja:'旅行ツール',zh:'旅行工具'},
+    currCalc:{ko:'환율 계산기',en:'Currency Calculator',ja:'為替計算機',zh:'汇率计算器'},
+    currFrom:{ko:'보내는 통화',en:'From',ja:'変換元',zh:'从'},
+    currTo:{ko:'받는 통화',en:'To',ja:'変換先',zh:'到'},
+    currAmount:{ko:'금액',en:'Amount',ja:'金額',zh:'金额'},
+    currConvert:{ko:'환산',en:'Convert',ja:'変換',zh:'换算'},
+    currSwap:{ko:'통화 바꾸기',en:'Swap',ja:'入替',zh:'交换'},
+    currLoading:{ko:'계산 중...',en:'Calculating...',ja:'計算中...',zh:'计算中...'},
+    currError:{ko:'환율 조회 실패',en:'Rate fetch failed',ja:'レート取得失敗',zh:'汇率获取失败'},
+    emergTitle:{ko:'긴급 연락처',en:'Emergency',ja:'緊急連絡先',zh:'紧急联系'},
+    emergPolice:{ko:'경찰',en:'Police',ja:'警察',zh:'警察'},
+    emergAmbulance:{ko:'구급',en:'Ambulance',ja:'救急',zh:'急救'},
+    emergFire:{ko:'소방',en:'Fire',ja:'消防',zh:'消防'},
+    emergTourist:{ko:'관광안내',en:'Tourist',ja:'観光案内',zh:'旅游咨询'},
+    emergGeneral:{ko:'통합신고',en:'General',ja:'総合',zh:'综合'},
+    emergCall:{ko:'전화하기',en:'Call',ja:'電話する',zh:'拨打'},
+  }
   const t = (key) => {
+    const tv = TOOL_I18N[key]?.[lang]
+    if (tv !== undefined) return tv
     const val = T[key]?.[lang]
     if (val !== undefined && val !== null) return val
-    const ko = T[key]?.['ko']
+    const ko = T[key]?.['ko'] ?? TOOL_I18N[key]?.['ko']
     return ko !== undefined ? ko : key
   }
   const getCountryName = (enName) => getCountryDisplayName(enName, lang)
@@ -1088,7 +1257,13 @@ function App() {
     // ── 모바일 더블탭 줌인 ──
     if (window.innerWidth <= 768) {
       let lastTap = 0
+      let wasMultiTouch = false
+      globeContainerRef.current.addEventListener('touchstart', (e) => {
+        if (e.touches.length >= 2) wasMultiTouch = true
+      }, { passive: true })
       globeContainerRef.current.addEventListener('touchend', (e) => {
+        if (e.touches.length === 0 && wasMultiTouch) { wasMultiTouch = false; return }
+        if (wasMultiTouch) return
         const now = Date.now()
         if (now - lastTap < 300) {
           e.preventDefault()
@@ -2191,6 +2366,72 @@ function App() {
                     <span style={{fontSize:14,color:'#64748b'}}>→</span>
                   </div>
                 </div>
+
+                {/* 환율 계산기 */}
+                <div style={{padding:'0 16px 14px'}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
+                    onClick={()=>{
+                      setShowCurrencyCalc(true);setShowHamburger(false)
+                      if(selectedCountry){
+                        const cn=selectedCountry.properties?.NAME
+                        const ci=COUNTRY_INFO[cn]
+                        if(ci){const code=extractCurrencyCode(ci.currency);if(code&&code!=='KRW'){setCurrTo(code)}}
+                      }
+                    }}
+                    onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
+                    onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <div style={{width:24,height:24,borderRadius:6,background:'rgba(5,150,105,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:'#10b981'}}>¤</div>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('currCalc')}</div>
+                        <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{currFrom} → {currTo}</div>
+                      </div>
+                    </div>
+                    <span style={{fontSize:14,color:'#64748b'}}>→</span>
+                  </div>
+                </div>
+
+                {/* 로그인/계정 */}
+                <div style={{padding:'0 16px 14px'}}>
+                  {currentUser ? (
+                    <div style={{padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)'}}>
+                      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                        <div style={{width:28,height:28,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:800,color:'white'}}>{(currentUser.displayName || currentUser.email)?.[0]?.toUpperCase() || '?'}</div>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:12,fontWeight:700,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{currentUser.displayName || currentUser.email}</div>
+                          {currentUser.displayName && <div style={{fontSize:10,color:'#64748b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{currentUser.email}</div>}
+                        </div>
+                      </div>
+                      {/* 홈 국가 설정 */}
+                      <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
+                        <span style={{fontSize:10,color:'#94a3b8',whiteSpace:'nowrap'}}>{lang==='ko'?'홈 국가':'Home'}</span>
+                        <select value={homeCountry} onChange={e=>{setHomeCountry(e.target.value);localStorage.setItem('atlas_home_country',e.target.value);const code=extractCurrencyCode(COUNTRY_INFO[e.target.value]?.currency);if(code)setCurrFrom(code)}}
+                          style={{flex:1,padding:'4px 6px',borderRadius:6,border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.08)',color:'white',fontSize:11,cursor:'pointer'}}>
+                          <option value="" style={{background:'#1e293b'}}>—</option>
+                          {Object.keys(COUNTRY_INFO).sort().map(c=><option key={c} value={c} style={{background:'#1e293b'}}>{COUNTRY_INFO[c].emoji} {lang==='ko'?c:c}</option>)}
+                        </select>
+                      </div>
+                      <button onClick={()=>{handleLogout();setShowHamburger(false)}}
+                        style={{width:'100%',padding:'6px',borderRadius:8,border:'1px solid rgba(239,68,68,.3)',background:'rgba(239,68,68,.1)',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer'}}>
+                        {lang==='ko'?'로그아웃':'Logout'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
+                      onClick={()=>{setShowLoginModal(true);setShowHamburger(false)}}
+                      onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
+                      onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
+                      <div style={{display:'flex',alignItems:'center',gap:8}}>
+                        <div style={{width:24,height:24,borderRadius:6,background:'rgba(59,130,246,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:'#60a5fa'}}>👤</div>
+                        <div>
+                          <div style={{fontSize:13,fontWeight:700,color:'white'}}>{lang==='ko'?'로그인 / 회원가입':'Login / Sign up'}</div>
+                          <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{lang==='ko'?'데이터 클라우드 동기화':'Sync your data'}</div>
+                        </div>
+                      </div>
+                      <span style={{fontSize:14,color:'#64748b'}}>→</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -2380,6 +2621,35 @@ function App() {
                     </div>
                   ))}
                 </div>
+
+                {/* Emergency Contacts */}
+                {(() => {
+                  const em = EMERGENCY_CONTACTS[cName]
+                  if (!em) return null
+                  const items = [
+                    em.police && {icon:'🚔',label:t('emergPolice'),num:em.police},
+                    em.ambulance && {icon:'🚑',label:t('emergAmbulance'),num:em.ambulance},
+                    em.fire && {icon:'🚒',label:t('emergFire'),num:em.fire},
+                    em.tourist && {icon:'ℹ️',label:t('emergTourist'),num:em.tourist},
+                    em.general && {icon:'📞',label:t('emergGeneral'),num:em.general},
+                  ].filter(Boolean)
+                  return (
+                    <div style={{padding:'10px 20px 14px',borderTop:'1px solid #f1f5f9'}}>
+                      <div style={{fontSize:11,fontWeight:700,color:'#ef4444',letterSpacing:'.5px',marginBottom:8}}>🆘 {t('emergTitle')}</div>
+                      <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'repeat(3,1fr)',gap:5}}>
+                        {items.map((it,i)=>(
+                          <a key={i} href={`tel:${it.num}`} style={{display:'flex',alignItems:'center',gap:4,padding:'6px 8px',borderRadius:8,background:'#fef2f2',border:'1px solid #fecaca',textDecoration:'none',fontSize:11,color:'#dc2626',fontWeight:600,minWidth:0,overflow:'hidden'}}>
+                            <span style={{flexShrink:0,fontSize:12}}>{it.icon}</span>
+                            <div style={{minWidth:0,overflow:'hidden'}}>
+                              <div style={{fontSize:9,color:'#94a3b8',fontWeight:500,lineHeight:1}}>{it.label}</div>
+                              <div style={{fontSize:12,fontWeight:700,color:'#dc2626',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{it.num}</div>
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
 
                 {/* Footer hint */}
                 <div style={{borderTop:'1px solid #f1f5f9',padding:'10px 20px',textAlign:'center'}}>
@@ -2973,7 +3243,7 @@ function App() {
                             ) : (
                               <span style={{fontSize:16}}>{c.emoji||'📍'}</span>
                             )}
-                            <span style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{c.name}</span>
+                            <span style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{getCityName(c.name)}</span>
                             <span style={{fontSize:11,color:'#94a3b8'}}>{c.countryKo}</span>
                           </div>
                         ))}
@@ -3488,7 +3758,7 @@ function App() {
                                       onMouseLeave={e=>e.currentTarget.style.background='transparent'}
                                       onClick={()=>setVisitedExpandCity(isO?null:city.name)}>
                                       <span style={{fontSize:10,color:'#22c55e'}}>✓</span>
-                                      <span style={{fontSize:12,fontWeight:500,color:'#cbd5e1'}}>{getCityName(c.name)}</span>
+                                      <span style={{fontSize:12,fontWeight:500,color:'#cbd5e1'}}>{getCityName(city.name)}</span>
                                       {cs.length > 0 && <span style={{fontSize:9,color:'#64748b'}}>· {cs.length}{lang==='ko'?'곳':''}</span>}
                                       {cs.length > 0 && <span style={{fontSize:8,color:'#475569'}}>{isO?'▾':'▸'}</span>}
                                     </div>
@@ -3513,6 +3783,126 @@ function App() {
                   )
                 })
               })()}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Login Modal */}
+      {showLoginModal && (
+        <>
+          <div onClick={()=>setShowLoginModal(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
+          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'92vw':380,background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden'}}>
+            <div style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <span style={{fontSize:17,fontWeight:800,color:'white'}}>{authMode==='login'?(lang==='ko'?'로그인':'Login'):(lang==='ko'?'회원가입':'Sign Up')}</span>
+              <button onClick={()=>setShowLoginModal(false)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:30,height:30,borderRadius:8,fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+            </div>
+            <div style={{padding:'20px 22px 24px'}}>
+              {/* Google 로그인 */}
+              <button onClick={handleGoogleLogin} disabled={authLoading}
+                style={{width:'100%',padding:'11px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontSize:14,fontWeight:600,color:'#374151',marginBottom:16,transition:'all .15s'}}
+                onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background='white'}>
+                <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#34A853" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#FBBC05" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                Google {lang==='ko'?'로그인':'Login'}
+              </button>
+              <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
+                <div style={{flex:1,height:1,background:'#e2e8f0'}} />
+                <span style={{fontSize:11,color:'#94a3b8'}}>or</span>
+                <div style={{flex:1,height:1,background:'#e2e8f0'}} />
+              </div>
+              {/* 이메일 폼 */}
+              {authMode==='signup' && (
+                <div style={{marginBottom:10}}>
+                  <input placeholder={lang==='ko'?'이름 (선택)':'Name (optional)'} value={authName} onChange={e=>setAuthName(e.target.value)}
+                    style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,color:'#0f172a',outline:'none',boxSizing:'border-box'}}
+                    onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'} />
+                </div>
+              )}
+              <div style={{marginBottom:10}}>
+                <input type="email" placeholder={lang==='ko'?'이메일':'Email'} value={authEmail} onChange={e=>setAuthEmail(e.target.value)}
+                  style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,color:'#0f172a',outline:'none',boxSizing:'border-box'}}
+                  onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'} />
+              </div>
+              <div style={{marginBottom:14}}>
+                <input type="password" placeholder={lang==='ko'?'비밀번호':'Password'} value={authPw} onChange={e=>setAuthPw(e.target.value)}
+                  onKeyDown={e=>{if(e.key==='Enter')handleAuth()}}
+                  style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,color:'#0f172a',outline:'none',boxSizing:'border-box'}}
+                  onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'} />
+              </div>
+              {authError && <div style={{marginBottom:12,padding:'8px 12px',borderRadius:8,background:'#fef2f2',border:'1px solid #fecaca',fontSize:12,color:'#dc2626'}}>{authError}</div>}
+              <button onClick={handleAuth} disabled={authLoading}
+                style={{width:'100%',padding:'12px',background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',borderRadius:12,color:'white',fontSize:15,fontWeight:700,cursor:'pointer',opacity:authLoading?.6:1}}>
+                {authLoading ? '...' : authMode==='login'?(lang==='ko'?'로그인':'Login'):(lang==='ko'?'가입하기':'Sign Up')}
+              </button>
+              <div style={{marginTop:14,textAlign:'center'}}>
+                <span style={{fontSize:12,color:'#64748b'}}>{authMode==='login'?(lang==='ko'?'계정이 없으신가요?':'No account?'):(lang==='ko'?'이미 계정이 있으신가요?':'Have an account?')} </span>
+                <span onClick={()=>{setAuthMode(authMode==='login'?'signup':'login');setAuthError('')}}
+                  style={{fontSize:12,color:'#3b82f6',fontWeight:600,cursor:'pointer'}}>{authMode==='login'?(lang==='ko'?'회원가입':'Sign Up'):(lang==='ko'?'로그인':'Login')}</span>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Currency Calculator Modal */}
+      {showCurrencyCalc && (
+        <>
+          <div onClick={()=>setShowCurrencyCalc(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
+          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'92vw':380,background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden'}}>
+            <div style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <span style={{fontSize:17,fontWeight:800,color:'white'}}>{t('currCalc')}</span>
+              </div>
+              <button onClick={()=>setShowCurrencyCalc(false)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:30,height:30,borderRadius:8,fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+            </div>
+            <div style={{padding:'20px 22px 24px'}}>
+              <div style={{marginBottom:14}}>
+                <label style={{fontSize:11,fontWeight:600,color:'#64748b',display:'block',marginBottom:4}}>{t('currAmount')}</label>
+                <input type="number" value={currAmount} onChange={e=>setCurrAmount(e.target.value)}
+                  style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:18,fontWeight:700,color:'#0f172a',outline:'none',boxSizing:'border-box'}}
+                  onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'} />
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16}}>
+                <div style={{flex:1}}>
+                  <label style={{fontSize:11,fontWeight:600,color:'#64748b',display:'block',marginBottom:4}}>{t('currFrom')}</label>
+                  <select value={currFrom} onChange={e=>setCurrFrom(e.target.value)}
+                    style={{width:'100%',padding:'9px 10px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,fontWeight:600,color:'#0f172a',background:'white',cursor:'pointer'}}>
+                    {['KRW','USD','EUR','JPY','GBP','CNY','THB','VND','AUD','CAD','CHF','SGD','HKD','TWD','MYR','PHP','IDR','INR','AED','TRY','BRL','MXN','SEK','NOK','DKK','NZD','CZK','PLN','HUF','ZAR','EGP','SAR','RUB','ILS'].map(c=>(
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <button onClick={()=>{const tmp=currFrom;setCurrFrom(currTo);setCurrTo(tmp);setCurrResult(null)}}
+                  style={{marginTop:16,background:'#f1f5f9',border:'none',width:36,height:36,borderRadius:10,cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
+                  onMouseEnter={e=>e.currentTarget.style.background='#e2e8f0'} onMouseLeave={e=>e.currentTarget.style.background='#f1f5f9'}>⇄</button>
+                <div style={{flex:1}}>
+                  <label style={{fontSize:11,fontWeight:600,color:'#64748b',display:'block',marginBottom:4}}>{t('currTo')}</label>
+                  <select value={currTo} onChange={e=>setCurrTo(e.target.value)}
+                    style={{width:'100%',padding:'9px 10px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,fontWeight:600,color:'#0f172a',background:'white',cursor:'pointer'}}>
+                    {['USD','KRW','EUR','JPY','GBP','CNY','THB','VND','AUD','CAD','CHF','SGD','HKD','TWD','MYR','PHP','IDR','INR','AED','TRY','BRL','MXN','SEK','NOK','DKK','NZD','CZK','PLN','HUF','ZAR','EGP','SAR','RUB','ILS'].map(c=>(
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <button onClick={()=>fetchCurrencyRate(currFrom,currTo,currAmount||1)}
+                style={{width:'100%',padding:'12px',background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',borderRadius:12,color:'white',fontSize:15,fontWeight:700,cursor:'pointer',transition:'opacity .15s'}}
+                onMouseEnter={e=>e.currentTarget.style.opacity='0.9'} onMouseLeave={e=>e.currentTarget.style.opacity='1'}>
+                {currLoading ? t('currLoading') : t('currConvert')}
+              </button>
+              {currResult !== null && (
+                <div style={{marginTop:16,padding:'16px',background:'linear-gradient(135deg,#f0fdf4,#ecfdf5)',border:'1.5px solid #bbf7d0',borderRadius:14,textAlign:'center'}}>
+                  {currResult === 'error' ? (
+                    <span style={{color:'#ef4444',fontSize:13,fontWeight:600}}>{t('currError')}</span>
+                  ) : (
+                    <>
+                      <div style={{fontSize:13,color:'#64748b',marginBottom:4}}>{Number(currAmount||0).toLocaleString()} {currFrom} =</div>
+                      <div style={{fontSize:26,fontWeight:800,color:'#059669'}}>{Number(currResult).toLocaleString(undefined,{maximumFractionDigits:2})} <span style={{fontSize:16,fontWeight:600}}>{currTo}</span></div>
+                      <div style={{fontSize:10,color:'#94a3b8',marginTop:6}}>1 {currFrom} ≈ {currRates?.[currTo] ? currRates[currTo].toFixed(4) : '—'} {currTo}</div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </>

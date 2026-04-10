@@ -2378,7 +2378,7 @@ export const CITY_DATA = {
 ]},
 }
 
-const export DEFAULT_CITY_DATA = (cityName) => ({
+export const DEFAULT_CITY_DATA = (cityName) => ({
   weather:{temp:Math.floor(Math.random()*20)+10,condition:"구름 조금",icon:"⛅",humidity:Math.floor(Math.random()*40)+45},
   description:`${cityName}은(는) 독특한 문화적 경험과 아름다운 자연 풍경, 잊을 수 없는 추억을 선사하는 매력적인 여행지입니다.`,
   spots:[
