@@ -773,17 +773,18 @@ function App() {
   backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo, lang }
   useEffect(() => {
     window.history.replaceState({ atlas: true }, '')
-    window.history.pushState({ atlas: true }, '', window.location.href)
+    for (let i = 0; i < 5; i++) window.history.pushState({ atlas: true }, '', window.location.href)
     const handlePop = () => {
       const s = backStateRef.current
       window.history.pushState({ atlas: true }, '', window.location.href)
-      if (s.showMyTravels) { setShowMyTravels(false); return }
-      if (s.showHamburger) { setShowHamburger(false); return }
-      if (s.selectedSpot) { setSelectedSpot(null); return }
-      if (s.sidePanel) { setSidePanel(null); return }
+      if (s.showMyTravels) { setShowMyTravels(false); backStateRef.current = { ...s, showMyTravels: false }; return }
+      if (s.showHamburger) { setShowHamburger(false); backStateRef.current = { ...s, showHamburger: false }; return }
+      if (s.selectedSpot) { setSelectedSpot(null); backStateRef.current = { ...s, selectedSpot: null }; return }
+      if (s.sidePanel) { setSidePanel(null); backStateRef.current = { ...s, sidePanel: null }; return }
       if (s.selectedCity) {
         setSelectedCity(null); setCityData(null); setSelectedSpot(null); setSidePanel(null);
         setShowCountryInfo(false);
+        backStateRef.current = { ...s, selectedCity: null, selectedSpot: null, sidePanel: null, showCountryInfo: false };
         // 도시에서 뒤로가면 국가 줌레벨로 복귀
         if (s.selectedCountry && globeRef.current) {
           const g = globeRef.current
@@ -796,14 +797,15 @@ function App() {
         }
         return
       }
-      // 국가 3단계: ① 국가정보 닫기 → ② 국가선택 해제(줌 유지) → ③ 현위치에서 줌아웃
+      // 국가 3단계: ① 국가정보 닫기 → ② 국가선택 해제(줌 유지)
       if (s.selectedCountry && s.showCountryInfo) {
         setShowCountryInfo(false);
+        backStateRef.current = { ...s, showCountryInfo: false };
         return
       }
       if (s.selectedCountry) {
         setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null); setShowCountryInfo(false);
-        // 줌 유지 — 이동 없음, 그 자리에서 다른 국가 선택 가능
+        backStateRef.current = { ...s, selectedCountry: null, selectedCity: null, selectedSpot: null, showCountryInfo: false };
         return
       }
       // 아무것도 열려있지 않으면 앱 종료 확인
