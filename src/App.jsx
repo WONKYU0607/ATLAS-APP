@@ -772,20 +772,35 @@ function App() {
   const backStateRef = useRef({})
   backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo, lang }
   useEffect(() => {
+    // 충분한 history 스택 확보 (모바일 브라우저 호환)
     window.history.replaceState({ atlas: true }, '')
-    for (let i = 0; i < 5; i++) window.history.pushState({ atlas: true }, '', window.location.href)
-    const handlePop = () => {
+    for (let i = 0; i < 50; i++) window.history.pushState({ atlas: true }, '', window.location.href)
+    const handlePop = (e) => {
       const s = backStateRef.current
-      window.history.pushState({ atlas: true }, '', window.location.href)
-      if (s.showMyTravels) { setShowMyTravels(false); backStateRef.current = { ...s, showMyTravels: false }; return }
-      if (s.showHamburger) { setShowHamburger(false); backStateRef.current = { ...s, showHamburger: false }; return }
-      if (s.selectedSpot) { setSelectedSpot(null); backStateRef.current = { ...s, selectedSpot: null }; return }
-      if (s.sidePanel) { setSidePanel(null); backStateRef.current = { ...s, sidePanel: null }; return }
+      if (s.showMyTravels) {
+        setShowMyTravels(false)
+        backStateRef.current = { ...s, showMyTravels: false }
+        return
+      }
+      if (s.showHamburger) {
+        setShowHamburger(false)
+        backStateRef.current = { ...s, showHamburger: false }
+        return
+      }
+      if (s.selectedSpot) {
+        setSelectedSpot(null)
+        backStateRef.current = { ...s, selectedSpot: null }
+        return
+      }
+      if (s.sidePanel) {
+        setSidePanel(null)
+        backStateRef.current = { ...s, sidePanel: null }
+        return
+      }
       if (s.selectedCity) {
-        setSelectedCity(null); setCityData(null); setSelectedSpot(null); setSidePanel(null);
-        setShowCountryInfo(false);
-        backStateRef.current = { ...s, selectedCity: null, selectedSpot: null, sidePanel: null, showCountryInfo: false };
-        // 도시에서 뒤로가면 국가 줌레벨로 복귀
+        setSelectedCity(null); setCityData(null); setSelectedSpot(null); setSidePanel(null)
+        setShowCountryInfo(false)
+        backStateRef.current = { ...s, selectedCity: null, selectedSpot: null, sidePanel: null, showCountryInfo: false }
         if (s.selectedCountry && globeRef.current) {
           const g = globeRef.current
           const cName = s.selectedCountry.properties?.NAME
@@ -797,21 +812,21 @@ function App() {
         }
         return
       }
-      // 국가 3단계: ① 국가정보 닫기 → ② 국가선택 해제(줌 유지)
       if (s.selectedCountry && s.showCountryInfo) {
-        setShowCountryInfo(false);
-        backStateRef.current = { ...s, showCountryInfo: false };
+        setShowCountryInfo(false)
+        backStateRef.current = { ...s, showCountryInfo: false }
         return
       }
       if (s.selectedCountry) {
-        setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null); setShowCountryInfo(false);
-        backStateRef.current = { ...s, selectedCountry: null, selectedCity: null, selectedSpot: null, showCountryInfo: false };
+        setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null); setShowCountryInfo(false)
+        backStateRef.current = { ...s, selectedCountry: null, selectedCity: null, selectedSpot: null, showCountryInfo: false }
         return
       }
-      // 아무것도 열려있지 않으면 앱 종료 확인
-      if (window.confirm(s.lang === 'ko' ? '앱을 종료하시겠습니까?' : 'Exit the app?')) {
+      // 아무것도 열려있지 않으면 종료 확인
+      const msg = s.lang === 'ko' ? '앱을 종료하시겠습니까?' : 'Exit the app?'
+      if (window.confirm(msg)) {
         window.removeEventListener('popstate', handlePop)
-        window.history.back()
+        window.location.href = 'about:blank'
       }
     }
     window.addEventListener('popstate', handlePop)
