@@ -774,6 +774,7 @@ function App() {
   useEffect(() => {
     window.history.replaceState({ atlas: true }, '')
     window.history.pushState({ atlas: true }, '', window.location.href)
+    window.history.pushState({ atlas: true }, '', window.location.href)
     const handlePop = () => {
       const s = backStateRef.current
       window.history.pushState({ atlas: true }, '', window.location.href)
@@ -1088,7 +1089,13 @@ function App() {
     // ── 모바일 더블탭 줌인 ──
     if (window.innerWidth <= 768) {
       let lastTap = 0
+      let wasMultiTouch = false
+      globeContainerRef.current.addEventListener('touchstart', (e) => {
+        if (e.touches.length >= 2) wasMultiTouch = true
+      }, { passive: true })
       globeContainerRef.current.addEventListener('touchend', (e) => {
+        if (e.touches.length === 0 && wasMultiTouch) { wasMultiTouch = false; return }
+        if (wasMultiTouch) return
         const now = Date.now()
         if (now - lastTap < 300) {
           e.preventDefault()
@@ -3488,7 +3495,7 @@ function App() {
                                       onMouseLeave={e=>e.currentTarget.style.background='transparent'}
                                       onClick={()=>setVisitedExpandCity(isO?null:city.name)}>
                                       <span style={{fontSize:10,color:'#22c55e'}}>✓</span>
-                                      <span style={{fontSize:12,fontWeight:500,color:'#cbd5e1'}}>{getCityName(c.name)}</span>
+                                      <span style={{fontSize:12,fontWeight:500,color:'#cbd5e1'}}>{getCityName(city.name)}</span>
                                       {cs.length > 0 && <span style={{fontSize:9,color:'#64748b'}}>· {cs.length}{lang==='ko'?'곳':''}</span>}
                                       {cs.length > 0 && <span style={{fontSize:8,color:'#475569'}}>{isO?'▾':'▸'}</span>}
                                     </div>
