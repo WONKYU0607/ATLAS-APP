@@ -774,21 +774,17 @@ function App() {
   useEffect(() => {
     window.history.replaceState({ atlas: true }, '')
     window.history.pushState({ atlas: true }, '', window.location.href)
-    window.history.pushState({ atlas: true }, '', window.location.href)
     const handlePop = () => {
       const s = backStateRef.current
       window.history.pushState({ atlas: true }, '', window.location.href)
-      // 1) 모달/메뉴 닫기
       if (s.showMyTravels) { setShowMyTravels(false); return }
       if (s.showHamburger) { setShowHamburger(false); return }
-      // 2) 관광지 상세 닫기
       if (s.selectedSpot) { setSelectedSpot(null); return }
-      // 3) 사이드패널 닫기
       if (s.sidePanel) { setSidePanel(null); return }
-      // 4) 도시 패널 닫기 → 국가 줌으로 복귀 (작은 하단 박스만 표시)
       if (s.selectedCity) {
         setSelectedCity(null); setCityData(null); setSelectedSpot(null); setSidePanel(null);
         setShowCountryInfo(false);
+        // 도시에서 뒤로가면 국가 줌레벨로 복귀
         if (s.selectedCountry && globeRef.current) {
           const g = globeRef.current
           const cName = s.selectedCountry.properties?.NAME
@@ -800,18 +796,19 @@ function App() {
         }
         return
       }
-      // 5) 국가정보 패널 닫기
+      // 국가 3단계: ① 국가정보 닫기 → ② 국가선택 해제(줌 유지) → ③ 현위치에서 줌아웃
       if (s.selectedCountry && s.showCountryInfo) {
         setShowCountryInfo(false);
         return
       }
-      // 6) 국가 선택 해제 (줌 유지, 다른 국가 선택 가능)
       if (s.selectedCountry) {
         setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null); setShowCountryInfo(false);
+        // 줌 유지 — 이동 없음, 그 자리에서 다른 국가 선택 가능
         return
       }
-      // 7) 아무것도 안 열려있으면 → 앱 종료 확인
+      // 아무것도 열려있지 않으면 앱 종료 확인
       if (window.confirm(s.lang === 'ko' ? '앱을 종료하시겠습니까?' : 'Exit the app?')) {
+        window.removeEventListener('popstate', handlePop)
         window.history.back()
       }
     }
