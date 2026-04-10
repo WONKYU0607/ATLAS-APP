@@ -1,7 +1,7 @@
 // ── Firebase 초기화 + Auth/Firestore 헬퍼 ──
 import { initializeApp } from 'firebase/app'
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from 'firebase/auth'
-import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, orderBy, limit, deleteDoc } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: "AIzaSyACm8gKlsLdho0YIU-M0CKOwG1RWaXS4EU",
@@ -40,3 +40,23 @@ export const saveUserData = async (uid, data) => {
 
 // 유저 프로필 업데이트 (displayName 등)
 export const updateUserProfile = (user, data) => updateProfile(user, data)
+
+// ── 공유 코스 (소셜) ──
+export const shareCourse = async (uid, course, userName) => {
+  const id = `${uid}_${Date.now()}`
+  await setDoc(doc(db, 'shared_courses', id), {
+    ...course, id, uid, userName: userName || 'Anonymous',
+    sharedAt: Date.now(), likes: 0
+  })
+  return id
+}
+
+export const loadSharedCourses = async () => {
+  const q = query(collection(db, 'shared_courses'), orderBy('sharedAt', 'desc'), limit(50))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => d.data())
+}
+
+export const deleteSharedCourse = async (id) => {
+  await deleteDoc(doc(db, 'shared_courses', id))
+}
