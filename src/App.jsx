@@ -2,7 +2,7 @@ import { CITY_DATA_I18N } from './data/cityDataI18n'
 import { COUNTRY_I18N, translateCountryInfo } from './data/countryI18n'
 import { T, SPOT_TYPE_I18N, CITY_I18N, LANG_CODE, CONTINENT_I18N, DRIVE_I18N, translateVisa, translateTimeDiff, translatePopulation, KO_WORD_MAP, translateSpotField, intlLangMap, translateLangNames, translateCurrency } from './data/translations'
 import { CITY_DATA, DEFAULT_CITY_DATA, TYPE_EMOJI, getImg, TYPE_COLORS } from './data/cityData'
-import { COUNTRY_ISO, COUNTRY_NAME_OVERRIDE, getCountryDisplayName, LANG_OPTIONS, getFlagImg, COUNTRY_INFO } from './data/countryInfo'
+import { COUNTRY_ISO, COUNTRY_NAME_OVERRIDE, getCountryDisplayName, LANG_OPTIONS, getFlagImg, COUNTRY_INFO, EMERGENCY_CONTACTS, extractCurrencyCode } from './data/countryInfo'
 import { COUNTRY_CITIES } from './data/countryCities'
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
@@ -768,6 +768,26 @@ function App() {
   const [visitedExpandCity, setVisitedExpandCity] = useState(null)
   const [visitedExpandContinent, setVisitedExpandContinent] = useState(null)
 
+  // ── 환율 계산기 ──
+  const [showCurrencyCalc, setShowCurrencyCalc] = useState(false)
+  const [currFrom, setCurrFrom] = useState('KRW')
+  const [currTo, setCurrTo] = useState('USD')
+  const [currAmount, setCurrAmount] = useState('10000')
+  const [currResult, setCurrResult] = useState(null)
+  const [currLoading, setCurrLoading] = useState(false)
+  const [currRates, setCurrRates] = useState(null)
+
+  const fetchCurrencyRate = async (from, to, amount) => {
+    setCurrLoading(true); setCurrResult(null)
+    try {
+      const res = await fetch(`https://api.frankfurter.app/latest?amount=${amount}&from=${from}&to=${to}`)
+      const data = await res.json()
+      setCurrResult(data.rates?.[to] ?? null)
+      setCurrRates(data.rates)
+    } catch { setCurrResult('error') }
+    setCurrLoading(false)
+  }
+
   // 모바일 뒤로가기 = 닫기 (refs for latest state in event handler)
   const backStateRef = useRef({})
   backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo, lang }
@@ -834,10 +854,30 @@ function App() {
   }, [])
 
   // 다국어 헬퍼
+  const TOOL_I18N = {
+    toolTitle:{ko:'여행 도구',en:'Travel Tools',ja:'旅行ツール',zh:'旅行工具'},
+    currCalc:{ko:'환율 계산기',en:'Currency Calculator',ja:'為替計算機',zh:'汇率计算器'},
+    currFrom:{ko:'보내는 통화',en:'From',ja:'変換元',zh:'从'},
+    currTo:{ko:'받는 통화',en:'To',ja:'変換先',zh:'到'},
+    currAmount:{ko:'금액',en:'Amount',ja:'金額',zh:'金额'},
+    currConvert:{ko:'환산',en:'Convert',ja:'変換',zh:'换算'},
+    currSwap:{ko:'통화 바꾸기',en:'Swap',ja:'入替',zh:'交换'},
+    currLoading:{ko:'계산 중...',en:'Calculating...',ja:'計算中...',zh:'计算中...'},
+    currError:{ko:'환율 조회 실패',en:'Rate fetch failed',ja:'レート取得失敗',zh:'汇率获取失败'},
+    emergTitle:{ko:'긴급 연락처',en:'Emergency',ja:'緊急連絡先',zh:'紧急联系'},
+    emergPolice:{ko:'경찰',en:'Police',ja:'警察',zh:'警察'},
+    emergAmbulance:{ko:'구급',en:'Ambulance',ja:'救急',zh:'急救'},
+    emergFire:{ko:'소방',en:'Fire',ja:'消防',zh:'消防'},
+    emergTourist:{ko:'관광안내',en:'Tourist',ja:'観光案内',zh:'旅游咨询'},
+    emergGeneral:{ko:'통합신고',en:'General',ja:'総合',zh:'综合'},
+    emergCall:{ko:'전화하기',en:'Call',ja:'電話する',zh:'拨打'},
+  }
   const t = (key) => {
+    const tv = TOOL_I18N[key]?.[lang]
+    if (tv !== undefined) return tv
     const val = T[key]?.[lang]
     if (val !== undefined && val !== null) return val
-    const ko = T[key]?.['ko']
+    const ko = T[key]?.['ko'] ?? TOOL_I18N[key]?.['ko']
     return ko !== undefined ? ko : key
   }
   const getCountryName = (enName) => getCountryDisplayName(enName, lang)
@@ -2242,6 +2282,24 @@ function App() {
               </div>
             )}
           </div>
+          {/* Currency Calculator Button */}
+          <div style={{marginLeft:isMobile?0:4}}>
+            <button onClick={()=>{
+              setShowCurrencyCalc(true);setShowLangMenu(false);setShowHamburger(false)
+              // 국가 선택 시 해당 통화 자동 설정
+              if(selectedCountry){
+                const cn=selectedCountry.properties?.NAME
+                const ci=COUNTRY_INFO[cn]
+                if(ci){const code=extractCurrencyCode(ci.currency);if(code&&code!=='KRW'){setCurrTo(code)}}
+              }
+            }}
+              style={{display:'flex',alignItems:'center',gap:isMobile?3:6,background:showCurrencyCalc?'rgba(5,150,105,.35)':'rgba(255,255,255,.13)',border:showCurrencyCalc?'1px solid rgba(5,150,105,.6)':'1px solid rgba(255,255,255,.22)',borderRadius:isMobile?14:20,padding:isMobile?'3px 7px':'6px 14px',cursor:'pointer',color:'white',fontSize:isMobile?9:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s',letterSpacing:'.1px'}}
+              onMouseEnter={e=>e.currentTarget.style.background=showCurrencyCalc?'rgba(5,150,105,.45)':'rgba(255,255,255,.22)'}
+              onMouseLeave={e=>e.currentTarget.style.background=showCurrencyCalc?'rgba(5,150,105,.35)':'rgba(255,255,255,.13)'}>
+              <span style={{fontSize:isMobile?12:15}}>💱</span>
+              {!isMobile && <span>{t('currCalc')}</span>}
+            </button>
+          </div>
           {/* AI Course Button */}
           <div style={{marginLeft:isMobile?0:4}}>
             <button onClick={()=>{setShowAiModal(true);setShowLangMenu(false);setShowFavorites(false);setShowHamburger(false)}}
@@ -2402,6 +2460,34 @@ function App() {
                     </div>
                   ))}
                 </div>
+
+                {/* Emergency Contacts */}
+                {(() => {
+                  const em = EMERGENCY_CONTACTS[cName]
+                  if (!em) return null
+                  const items = [
+                    em.police && {icon:'🚔',label:t('emergPolice'),num:em.police},
+                    em.ambulance && {icon:'🚑',label:t('emergAmbulance'),num:em.ambulance},
+                    em.fire && {icon:'🚒',label:t('emergFire'),num:em.fire},
+                    em.tourist && {icon:'ℹ️',label:t('emergTourist'),num:em.tourist},
+                    em.general && {icon:'📞',label:t('emergGeneral'),num:em.general},
+                  ].filter(Boolean)
+                  return (
+                    <div style={{padding:'10px 20px 14px',borderTop:'1px solid #f1f5f9'}}>
+                      <div style={{fontSize:11,fontWeight:700,color:'#ef4444',letterSpacing:'.5px',marginBottom:8}}>🆘 {t('emergTitle')}</div>
+                      <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                        {items.map((it,i)=>(
+                          <a key={i} href={`tel:${it.num}`} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',borderRadius:8,background:'#fef2f2',border:'1px solid #fecaca',textDecoration:'none',fontSize:11.5,color:'#dc2626',fontWeight:600,transition:'all .15s'}}
+                            onMouseEnter={e=>e.currentTarget.style.background='#fee2e2'} onMouseLeave={e=>e.currentTarget.style.background='#fef2f2'}>
+                            <span>{it.icon}</span>
+                            <span style={{color:'#64748b',fontWeight:500,fontSize:10}}>{it.label}</span>
+                            <span>{it.num}</span>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
 
                 {/* Footer hint */}
                 <div style={{borderTop:'1px solid #f1f5f9',padding:'10px 20px',textAlign:'center'}}>
@@ -3535,6 +3621,71 @@ function App() {
                   )
                 })
               })()}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Currency Calculator Modal */}
+      {showCurrencyCalc && (
+        <>
+          <div onClick={()=>setShowCurrencyCalc(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
+          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'92vw':380,background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden'}}>
+            <div style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <span style={{fontSize:22}}>💱</span>
+                <span style={{fontSize:17,fontWeight:800,color:'white'}}>{t('currCalc')}</span>
+              </div>
+              <button onClick={()=>setShowCurrencyCalc(false)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:30,height:30,borderRadius:8,fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+            </div>
+            <div style={{padding:'20px 22px 24px'}}>
+              <div style={{marginBottom:14}}>
+                <label style={{fontSize:11,fontWeight:600,color:'#64748b',display:'block',marginBottom:4}}>{t('currAmount')}</label>
+                <input type="number" value={currAmount} onChange={e=>setCurrAmount(e.target.value)}
+                  style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:18,fontWeight:700,color:'#0f172a',outline:'none',boxSizing:'border-box'}}
+                  onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'} />
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16}}>
+                <div style={{flex:1}}>
+                  <label style={{fontSize:11,fontWeight:600,color:'#64748b',display:'block',marginBottom:4}}>{t('currFrom')}</label>
+                  <select value={currFrom} onChange={e=>setCurrFrom(e.target.value)}
+                    style={{width:'100%',padding:'9px 10px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,fontWeight:600,color:'#0f172a',background:'white',cursor:'pointer'}}>
+                    {['KRW','USD','EUR','JPY','GBP','CNY','THB','VND','AUD','CAD','CHF','SGD','HKD','TWD','MYR','PHP','IDR','INR','AED','TRY','BRL','MXN','SEK','NOK','DKK','NZD','CZK','PLN','HUF','ZAR','EGP','SAR','RUB','ILS'].map(c=>(
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <button onClick={()=>{const tmp=currFrom;setCurrFrom(currTo);setCurrTo(tmp);setCurrResult(null)}}
+                  style={{marginTop:16,background:'#f1f5f9',border:'none',width:36,height:36,borderRadius:10,cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
+                  onMouseEnter={e=>e.currentTarget.style.background='#e2e8f0'} onMouseLeave={e=>e.currentTarget.style.background='#f1f5f9'}>⇄</button>
+                <div style={{flex:1}}>
+                  <label style={{fontSize:11,fontWeight:600,color:'#64748b',display:'block',marginBottom:4}}>{t('currTo')}</label>
+                  <select value={currTo} onChange={e=>setCurrTo(e.target.value)}
+                    style={{width:'100%',padding:'9px 10px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,fontWeight:600,color:'#0f172a',background:'white',cursor:'pointer'}}>
+                    {['USD','KRW','EUR','JPY','GBP','CNY','THB','VND','AUD','CAD','CHF','SGD','HKD','TWD','MYR','PHP','IDR','INR','AED','TRY','BRL','MXN','SEK','NOK','DKK','NZD','CZK','PLN','HUF','ZAR','EGP','SAR','RUB','ILS'].map(c=>(
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <button onClick={()=>fetchCurrencyRate(currFrom,currTo,currAmount||1)}
+                style={{width:'100%',padding:'12px',background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',borderRadius:12,color:'white',fontSize:15,fontWeight:700,cursor:'pointer',transition:'opacity .15s'}}
+                onMouseEnter={e=>e.currentTarget.style.opacity='0.9'} onMouseLeave={e=>e.currentTarget.style.opacity='1'}>
+                {currLoading ? t('currLoading') : t('currConvert')}
+              </button>
+              {currResult !== null && (
+                <div style={{marginTop:16,padding:'16px',background:'linear-gradient(135deg,#f0fdf4,#ecfdf5)',border:'1.5px solid #bbf7d0',borderRadius:14,textAlign:'center'}}>
+                  {currResult === 'error' ? (
+                    <span style={{color:'#ef4444',fontSize:13,fontWeight:600}}>{t('currError')}</span>
+                  ) : (
+                    <>
+                      <div style={{fontSize:13,color:'#64748b',marginBottom:4}}>{Number(currAmount||0).toLocaleString()} {currFrom} =</div>
+                      <div style={{fontSize:26,fontWeight:800,color:'#059669'}}>{Number(currResult).toLocaleString(undefined,{maximumFractionDigits:2})} <span style={{fontSize:16,fontWeight:600}}>{currTo}</span></div>
+                      <div style={{fontSize:10,color:'#94a3b8',marginTop:6}}>1 {currFrom} ≈ {(currResult / (currAmount || 1)).toFixed(6)} {currTo} · frankfurter.app</div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </>
