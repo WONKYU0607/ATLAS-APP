@@ -785,10 +785,10 @@ function App() {
       if (s.selectedSpot) { setSelectedSpot(null); return }
       // 3) 사이드패널 닫기
       if (s.sidePanel) { setSidePanel(null); return }
-      // 4) 도시 패널 닫기 → 국가 도시목록으로 (국가정보 보이게)
+      // 4) 도시 패널 닫기 → 국가 줌으로 복귀 (작은 하단 박스만 표시)
       if (s.selectedCity) {
         setSelectedCity(null); setCityData(null); setSelectedSpot(null); setSidePanel(null);
-        if (s.selectedCountry) setShowCountryInfo(true);
+        setShowCountryInfo(false);
         if (s.selectedCountry && globeRef.current) {
           const g = globeRef.current
           const cName = s.selectedCountry.properties?.NAME
