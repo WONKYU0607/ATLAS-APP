@@ -780,10 +780,14 @@ function App() {
   const fetchCurrencyRate = async (from, to, amount) => {
     setCurrLoading(true); setCurrResult(null)
     try {
-      const res = await fetch(`https://api.frankfurter.app/latest?amount=${amount}&from=${from}&to=${to}`)
+      const res = await fetch(`https://open.er-api.com/v6/latest/${from}`)
       const data = await res.json()
-      setCurrResult(data.rates?.[to] ?? null)
-      setCurrRates(data.rates)
+      if (data.result === 'success' && data.rates?.[to]) {
+        setCurrResult(data.rates[to] * Number(amount || 1))
+        setCurrRates(data.rates)
+      } else {
+        setCurrResult('error')
+      }
     } catch { setCurrResult('error') }
     setCurrLoading(false)
   }
@@ -2253,6 +2257,30 @@ function App() {
                     <span style={{fontSize:14,color:'#64748b'}}>→</span>
                   </div>
                 </div>
+
+                {/* 환율 계산기 */}
+                <div style={{padding:'0 16px 14px'}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
+                    onClick={()=>{
+                      setShowCurrencyCalc(true);setShowHamburger(false)
+                      if(selectedCountry){
+                        const cn=selectedCountry.properties?.NAME
+                        const ci=COUNTRY_INFO[cn]
+                        if(ci){const code=extractCurrencyCode(ci.currency);if(code&&code!=='KRW'){setCurrTo(code)}}
+                      }
+                    }}
+                    onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
+                    onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <div style={{width:24,height:24,borderRadius:6,background:'rgba(5,150,105,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:'#10b981'}}>¤</div>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('currCalc')}</div>
+                        <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{currFrom} → {currTo}</div>
+                      </div>
+                    </div>
+                    <span style={{fontSize:14,color:'#64748b'}}>→</span>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -2281,24 +2309,6 @@ function App() {
                 ))}
               </div>
             )}
-          </div>
-          {/* Currency Calculator Button */}
-          <div style={{marginLeft:isMobile?0:4}}>
-            <button onClick={()=>{
-              setShowCurrencyCalc(true);setShowLangMenu(false);setShowHamburger(false)
-              // 국가 선택 시 해당 통화 자동 설정
-              if(selectedCountry){
-                const cn=selectedCountry.properties?.NAME
-                const ci=COUNTRY_INFO[cn]
-                if(ci){const code=extractCurrencyCode(ci.currency);if(code&&code!=='KRW'){setCurrTo(code)}}
-              }
-            }}
-              style={{display:'flex',alignItems:'center',gap:isMobile?3:6,background:showCurrencyCalc?'rgba(5,150,105,.35)':'rgba(255,255,255,.13)',border:showCurrencyCalc?'1px solid rgba(5,150,105,.6)':'1px solid rgba(255,255,255,.22)',borderRadius:isMobile?14:20,padding:isMobile?'3px 7px':'6px 14px',cursor:'pointer',color:'white',fontSize:isMobile?9:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s',letterSpacing:'.1px'}}
-              onMouseEnter={e=>e.currentTarget.style.background=showCurrencyCalc?'rgba(5,150,105,.45)':'rgba(255,255,255,.22)'}
-              onMouseLeave={e=>e.currentTarget.style.background=showCurrencyCalc?'rgba(5,150,105,.35)':'rgba(255,255,255,.13)'}>
-              <span style={{fontSize:isMobile?12:15}}>💱</span>
-              {!isMobile && <span>{t('currCalc')}</span>}
-            </button>
           </div>
           {/* AI Course Button */}
           <div style={{marginLeft:isMobile?0:4}}>
@@ -3633,7 +3643,6 @@ function App() {
           <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'92vw':380,background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden'}}>
             <div style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
               <div style={{display:'flex',alignItems:'center',gap:8}}>
-                <span style={{fontSize:22}}>💱</span>
                 <span style={{fontSize:17,fontWeight:800,color:'white'}}>{t('currCalc')}</span>
               </div>
               <button onClick={()=>setShowCurrencyCalc(false)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:30,height:30,borderRadius:8,fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
@@ -3681,7 +3690,7 @@ function App() {
                     <>
                       <div style={{fontSize:13,color:'#64748b',marginBottom:4}}>{Number(currAmount||0).toLocaleString()} {currFrom} =</div>
                       <div style={{fontSize:26,fontWeight:800,color:'#059669'}}>{Number(currResult).toLocaleString(undefined,{maximumFractionDigits:2})} <span style={{fontSize:16,fontWeight:600}}>{currTo}</span></div>
-                      <div style={{fontSize:10,color:'#94a3b8',marginTop:6}}>1 {currFrom} ≈ {(currResult / (currAmount || 1)).toFixed(6)} {currTo} · frankfurter.app</div>
+                      <div style={{fontSize:10,color:'#94a3b8',marginTop:6}}>1 {currFrom} ≈ {currRates?.[currTo] ? currRates[currTo].toFixed(4) : '—'} {currTo}</div>
                     </>
                   )}
                 </div>
