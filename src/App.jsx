@@ -397,16 +397,6 @@ function App() {
     return `${d.getMonth()+1}/${d.getDate()} (${days[d.getDay()]})`
   }
 
-  // ── 오프라인 감지 ──
-  const [isOffline, setIsOffline] = useState(!navigator.onLine)
-  useEffect(() => {
-    const goOff = () => setIsOffline(true)
-    const goOn = () => setIsOffline(false)
-    window.addEventListener('offline', goOff)
-    window.addEventListener('online', goOn)
-    return () => { window.removeEventListener('offline', goOff); window.removeEventListener('online', goOn) }
-  }, [])
-
   // ── AI 코스 자동 생성 (알고리즘 기반, 비용 없음) ──────────────
   const [showAiModal, setShowAiModal] = useState(false)
   const [aiCity, setAiCity] = useState(null)
@@ -804,13 +794,34 @@ function App() {
 
   // 모바일 뒤로가기 = 닫기 (refs for latest state in event handler)
   const backStateRef = useRef({})
-  backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo, lang }
+  backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo, lang, showAiModal, showCoursePlanner, showCourseBasket, showCurrencyCalc }
   useEffect(() => {
     // 충분한 history 스택 확보 (모바일 브라우저 호환)
     window.history.replaceState({ atlas: true }, '')
     for (let i = 0; i < 50; i++) window.history.pushState({ atlas: true }, '', window.location.href)
     const handlePop = (e) => {
       const s = backStateRef.current
+      // 모달/오버레이 먼저 닫기
+      if (s.showCurrencyCalc) {
+        setShowCurrencyCalc(false)
+        backStateRef.current = { ...s, showCurrencyCalc: false }
+        return
+      }
+      if (s.showAiModal) {
+        setShowAiModal(false)
+        backStateRef.current = { ...s, showAiModal: false }
+        return
+      }
+      if (s.showCoursePlanner) {
+        setShowCoursePlanner(false)
+        backStateRef.current = { ...s, showCoursePlanner: false }
+        return
+      }
+      if (s.showCourseBasket) {
+        setShowCourseBasket(false)
+        backStateRef.current = { ...s, showCourseBasket: false }
+        return
+      }
       if (s.showMyTravels) {
         setShowMyTravels(false)
         backStateRef.current = { ...s, showMyTravels: false }
@@ -2495,13 +2506,14 @@ function App() {
                   return (
                     <div style={{padding:'10px 20px 14px',borderTop:'1px solid #f1f5f9'}}>
                       <div style={{fontSize:11,fontWeight:700,color:'#ef4444',letterSpacing:'.5px',marginBottom:8}}>🆘 {t('emergTitle')}</div>
-                      <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                      <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'repeat(3,1fr)',gap:5}}>
                         {items.map((it,i)=>(
-                          <a key={i} href={`tel:${it.num}`} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',borderRadius:8,background:'#fef2f2',border:'1px solid #fecaca',textDecoration:'none',fontSize:11.5,color:'#dc2626',fontWeight:600,transition:'all .15s'}}
-                            onMouseEnter={e=>e.currentTarget.style.background='#fee2e2'} onMouseLeave={e=>e.currentTarget.style.background='#fef2f2'}>
-                            <span>{it.icon}</span>
-                            <span style={{color:'#64748b',fontWeight:500,fontSize:10}}>{it.label}</span>
-                            <span>{it.num}</span>
+                          <a key={i} href={`tel:${it.num}`} style={{display:'flex',alignItems:'center',gap:4,padding:'6px 8px',borderRadius:8,background:'#fef2f2',border:'1px solid #fecaca',textDecoration:'none',fontSize:11,color:'#dc2626',fontWeight:600,minWidth:0,overflow:'hidden'}}>
+                            <span style={{flexShrink:0,fontSize:12}}>{it.icon}</span>
+                            <div style={{minWidth:0,overflow:'hidden'}}>
+                              <div style={{fontSize:9,color:'#94a3b8',fontWeight:500,lineHeight:1}}>{it.label}</div>
+                              <div style={{fontSize:12,fontWeight:700,color:'#dc2626',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{it.num}</div>
+                            </div>
                           </a>
                         ))}
                       </div>
@@ -3644,14 +3656,6 @@ function App() {
             </div>
           </div>
         </>
-      )}
-
-      {/* Offline Banner */}
-      {isOffline && (
-        <div style={{position:'fixed',top:0,left:0,right:0,zIndex:9999,background:'linear-gradient(135deg,#f59e0b,#d97706)',padding:'6px 16px',display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 2px 12px rgba(0,0,0,.2)'}}>
-          <span style={{fontSize:14}}>⚡</span>
-          <span style={{fontSize:12,fontWeight:700,color:'white'}}>{lang==='ko'?'오프라인 모드 — 캐시된 데이터만 표시됩니다':lang==='ja'?'オフラインモード — キャッシュデータのみ表示':lang==='zh'?'离线模式 — 仅显示缓存数据':'Offline Mode — Showing cached data only'}</span>
-        </div>
       )}
 
       {/* Currency Calculator Modal */}
