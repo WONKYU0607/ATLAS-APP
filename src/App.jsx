@@ -397,6 +397,16 @@ function App() {
     return `${d.getMonth()+1}/${d.getDate()} (${days[d.getDay()]})`
   }
 
+  // ── 오프라인 감지 ──
+  const [isOffline, setIsOffline] = useState(!navigator.onLine)
+  useEffect(() => {
+    const goOff = () => setIsOffline(true)
+    const goOn = () => setIsOffline(false)
+    window.addEventListener('offline', goOff)
+    window.addEventListener('online', goOn)
+    return () => { window.removeEventListener('offline', goOff); window.removeEventListener('online', goOn) }
+  }, [])
+
   // ── AI 코스 자동 생성 (알고리즘 기반, 비용 없음) ──────────────
   const [showAiModal, setShowAiModal] = useState(false)
   const [aiCity, setAiCity] = useState(null)
@@ -3634,6 +3644,14 @@ function App() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Offline Banner */}
+      {isOffline && (
+        <div style={{position:'fixed',top:0,left:0,right:0,zIndex:9999,background:'linear-gradient(135deg,#f59e0b,#d97706)',padding:'6px 16px',display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 2px 12px rgba(0,0,0,.2)'}}>
+          <span style={{fontSize:14}}>⚡</span>
+          <span style={{fontSize:12,fontWeight:700,color:'white'}}>{lang==='ko'?'오프라인 모드 — 캐시된 데이터만 표시됩니다':lang==='ja'?'オフラインモード — キャッシュデータのみ表示':lang==='zh'?'离线模式 — 仅显示缓存数据':'Offline Mode — Showing cached data only'}</span>
+        </div>
       )}
 
       {/* Currency Calculator Modal */}
