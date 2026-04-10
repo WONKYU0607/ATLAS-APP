@@ -8,7 +8,7 @@ import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
 import { AUTO_I18N } from './auto-i18n'
-import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile } from './firebase'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse } from './firebase'
 
 // ── 실제 관광지 사진 (Wikipedia + Wikimedia Commons 검색) ─────────────
 function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, alt }) {
@@ -266,6 +266,11 @@ function App() {
   const [authError, setAuthError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
   const [homeCountry, setHomeCountry] = useState(() => localStorage.getItem('atlas_home_country') || '')
+  const [showHomeCountryPicker, setShowHomeCountryPicker] = useState(false)
+  const [homeCountryQuery, setHomeCountryQuery] = useState('')
+  const [showCommunity, setShowCommunity] = useState(false)
+  const [communityCoursesData, setCommunityCoursesData] = useState([])
+  const [communityLoading, setCommunityLoading] = useState(false)
   const userSyncRef = useRef(false) // Firestore → localStorage 초기 로드 중복 방지
 
   const globeContainerRef = useRef(null)
@@ -877,7 +882,7 @@ function App() {
 
   // 모바일 뒤로가기 = 닫기 (refs for latest state in event handler)
   const backStateRef = useRef({})
-  backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo, lang, showAiModal, showCoursePlanner, showCourseBasket, showCurrencyCalc, showLoginModal }
+  backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo, lang, showAiModal, showCoursePlanner, showCourseBasket, showCurrencyCalc, showLoginModal, showCommunity }
   useEffect(() => {
     // 충분한 history 스택 확보 (모바일 브라우저 호환)
     window.history.replaceState({ atlas: true }, '')
@@ -885,6 +890,11 @@ function App() {
     const handlePop = (e) => {
       const s = backStateRef.current
       // 모달/오버레이 먼저 닫기
+      if (s.showCommunity) {
+        setShowCommunity(false)
+        backStateRef.current = { ...s, showCommunity: false }
+        return
+      }
       if (s.showLoginModal) {
         setShowLoginModal(false)
         backStateRef.current = { ...s, showLoginModal: false }
@@ -955,12 +965,9 @@ function App() {
         backStateRef.current = { ...s, selectedCountry: null, selectedCity: null, selectedSpot: null, showCountryInfo: false }
         return
       }
-      // 아무것도 열려있지 않으면 종료 확인
-      const msg = s.lang === 'ko' ? '앱을 종료하시겠습니까?' : 'Exit the app?'
-      if (window.confirm(msg)) {
-        window.removeEventListener('popstate', handlePop)
-        window.location.href = 'about:blank'
-      }
+      // 아무것도 열려있지 않으면 그냥 뒤로가기 (브라우저 기본 동작)
+      window.removeEventListener('popstate', handlePop)
+      window.history.back()
     }
     window.addEventListener('popstate', handlePop)
     return () => window.removeEventListener('popstate', handlePop)
@@ -2245,6 +2252,7 @@ function App() {
                             <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
                           <button onClick={()=>loadSavedCourse(sc)} style={{background:'#7c3aed',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
+                          {currentUser && <button onClick={async()=>{await shareCourse(currentUser.uid,sc,currentUser.displayName||currentUser.email);alert(lang==='ko'?'코스가 공유되었습니다!':'Course shared!')}} style={{background:'none',border:'1px solid rgba(59,130,246,.4)',color:'#60a5fa',padding:'3px 7px',borderRadius:6,fontSize:10,fontWeight:600,cursor:'pointer'}}>📤</button>}
                           <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
                         </div>
                       ))}
@@ -2270,6 +2278,7 @@ function App() {
                             <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
                           <button onClick={()=>loadSavedCourse(sc)} style={{background:'#3b82f6',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
+                          {currentUser && <button onClick={async()=>{await shareCourse(currentUser.uid,sc,currentUser.displayName||currentUser.email);alert(lang==='ko'?'코스가 공유되었습니다!':'Course shared!')}} style={{background:'none',border:'1px solid rgba(59,130,246,.4)',color:'#60a5fa',padding:'3px 7px',borderRadius:6,fontSize:10,fontWeight:600,cursor:'pointer'}}>📤</button>}
                           <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
                         </div>
                       ))}
@@ -2391,6 +2400,27 @@ function App() {
                   </div>
                 </div>
 
+                {/* 커뮤니티 코스 */}
+                <div style={{padding:'0 16px 14px'}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
+                    onClick={async()=>{
+                      setShowCommunity(true);setShowHamburger(false);setCommunityLoading(true)
+                      try{const data=await loadSharedCourses();setCommunityCoursesData(data)}catch(e){console.error(e)}
+                      setCommunityLoading(false)
+                    }}
+                    onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
+                    onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <div style={{width:24,height:24,borderRadius:6,background:'rgba(251,191,36,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13}}>🌐</div>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:700,color:'white'}}>{lang==='ko'?'커뮤니티 코스':'Community Courses'}</div>
+                        <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{lang==='ko'?'다른 여행자의 코스 보기':'Browse shared courses'}</div>
+                      </div>
+                    </div>
+                    <span style={{fontSize:14,color:'#64748b'}}>→</span>
+                  </div>
+                </div>
+
                 {/* 로그인/계정 */}
                 <div style={{padding:'0 16px 14px'}}>
                   {currentUser ? (
@@ -2403,13 +2433,40 @@ function App() {
                         </div>
                       </div>
                       {/* 홈 국가 설정 */}
-                      <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
-                        <span style={{fontSize:10,color:'#94a3b8',whiteSpace:'nowrap'}}>{lang==='ko'?'홈 국가':'Home'}</span>
-                        <select value={homeCountry} onChange={e=>{setHomeCountry(e.target.value);localStorage.setItem('atlas_home_country',e.target.value);const code=extractCurrencyCode(COUNTRY_INFO[e.target.value]?.currency);if(code)setCurrFrom(code)}}
-                          style={{flex:1,padding:'4px 6px',borderRadius:6,border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.08)',color:'white',fontSize:11,cursor:'pointer'}}>
-                          <option value="" style={{background:'#1e293b'}}>—</option>
-                          {Object.keys(COUNTRY_INFO).sort().map(c=><option key={c} value={c} style={{background:'#1e293b'}}>{COUNTRY_INFO[c].emoji} {lang==='ko'?c:c}</option>)}
-                        </select>
+                      <div style={{position:'relative',marginBottom:8}}>
+                        <div style={{display:'flex',alignItems:'center',gap:6,cursor:'pointer',padding:'5px 8px',borderRadius:8,border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.08)'}}
+                          onClick={()=>setShowHomeCountryPicker(v=>!v)}>
+                          <span style={{fontSize:10,color:'#94a3b8',whiteSpace:'nowrap'}}>{lang==='ko'?'홈 국가':'Home'}</span>
+                          {homeCountry ? (
+                            <span style={{fontSize:12,color:'white',flex:1}}>{COUNTRY_INFO[homeCountry]?.emoji} {homeCountry}</span>
+                          ) : (
+                            <span style={{fontSize:11,color:'#64748b',flex:1}}>—</span>
+                          )}
+                          <span style={{fontSize:8,color:'#64748b'}}>{showHomeCountryPicker?'▲':'▼'}</span>
+                        </div>
+                        {showHomeCountryPicker && (
+                          <div style={{position:'absolute',bottom:'calc(100% + 4px)',left:0,right:0,background:'rgba(15,23,42,.98)',border:'1px solid rgba(255,255,255,.15)',borderRadius:10,overflow:'hidden',zIndex:3000,boxShadow:'0 8px 24px rgba(0,0,0,.5)',maxHeight:200}}>
+                            <div style={{padding:'6px 8px',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
+                              <input placeholder={lang==='ko'?'국가 검색...':'Search country...'} value={homeCountryQuery} onChange={e=>setHomeCountryQuery(e.target.value)} autoFocus
+                                style={{width:'100%',padding:'5px 8px',borderRadius:6,border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.08)',color:'white',fontSize:11,outline:'none',boxSizing:'border-box'}} />
+                            </div>
+                            <div style={{maxHeight:160,overflowY:'auto'}}>
+                              {Object.keys(COUNTRY_INFO).filter(c=>{
+                                if(!homeCountryQuery)return true
+                                const q=homeCountryQuery.toLowerCase()
+                                return c.toLowerCase().includes(q) || (COUNTRY_INFO[c].emoji||'').includes(q) || (getCountryName(c)||'').toLowerCase().includes(q)
+                              }).sort().map(c=>(
+                                <div key={c} onClick={()=>{setHomeCountry(c);localStorage.setItem('atlas_home_country',c);const code=extractCurrencyCode(COUNTRY_INFO[c]?.currency);if(code)setCurrFrom(code);setShowHomeCountryPicker(false);setHomeCountryQuery('')}}
+                                  style={{display:'flex',alignItems:'center',gap:8,padding:'7px 12px',cursor:'pointer',background:homeCountry===c?'rgba(59,130,246,.2)':'transparent',transition:'background .1s'}}
+                                  onMouseEnter={e=>{if(homeCountry!==c)e.currentTarget.style.background='rgba(255,255,255,.08)'}} onMouseLeave={e=>{if(homeCountry!==c)e.currentTarget.style.background='transparent'}}>
+                                  <span style={{fontSize:16}}>{COUNTRY_INFO[c].emoji}</span>
+                                  <span style={{fontSize:11,color:'white',fontWeight:homeCountry===c?700:400}}>{getCountryName(c)}</span>
+                                  {homeCountry===c && <span style={{marginLeft:'auto',fontSize:10,color:'#60a5fa'}}>✓</span>}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <button onClick={()=>{handleLogout();setShowHamburger(false)}}
                         style={{width:'100%',padding:'6px',borderRadius:8,border:'1px solid rgba(239,68,68,.3)',background:'rgba(239,68,68,.1)',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer'}}>
@@ -3783,6 +3840,78 @@ function App() {
                   )
                 })
               })()}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Community Courses Modal */}
+      {showCommunity && (
+        <>
+          <div onClick={()=>setShowCommunity(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
+          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'95vw':460,maxHeight:'80vh',background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden',display:'flex',flexDirection:'column'}}>
+            <div style={{background:'linear-gradient(135deg,#f59e0b,#ef4444)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
+              <div>
+                <div style={{fontSize:17,fontWeight:800,color:'white'}}>🌐 {lang==='ko'?'커뮤니티 코스':'Community Courses'}</div>
+                <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:2}}>{lang==='ko'?'다른 여행자들이 공유한 코스':'Courses shared by travelers'}</div>
+              </div>
+              <button onClick={()=>setShowCommunity(false)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:30,height:30,borderRadius:8,fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+            </div>
+            <div style={{flex:1,overflowY:'auto',padding:'16px 20px'}}>
+              {communityLoading ? (
+                <div style={{textAlign:'center',padding:'40px 0',color:'#94a3b8',fontSize:14}}>{lang==='ko'?'불러오는 중...':'Loading...'}</div>
+              ) : communityCoursesData.length === 0 ? (
+                <div style={{textAlign:'center',padding:'40px 0'}}>
+                  <div style={{fontSize:40,marginBottom:12}}>📭</div>
+                  <div style={{color:'#94a3b8',fontSize:13}}>{lang==='ko'?'아직 공유된 코스가 없습니다':'No shared courses yet'}</div>
+                  <div style={{color:'#cbd5e1',fontSize:11,marginTop:4}}>{lang==='ko'?'코스를 저장하고 📤 버튼으로 공유해보세요!':'Save a course and share it with 📤!'}</div>
+                </div>
+              ) : (
+                <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                  {communityCoursesData.map((sc,idx)=>{
+                    const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))]
+                    const totalPlaces = (sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)
+                    const dayCount = (sc.days||[]).length
+                    const dateStr = sc.sharedAt ? new Date(sc.sharedAt).toLocaleDateString() : ''
+                    return (
+                      <div key={sc.id||idx} style={{padding:'14px 16px',borderRadius:14,border:'1.5px solid #e2e8f0',background:'#fafbfc',transition:'all .15s'}}
+                        onMouseEnter={e=>e.currentTarget.style.borderColor='#3b82f6'} onMouseLeave={e=>e.currentTarget.style.borderColor='#e2e8f0'}>
+                        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:8}}>
+                          <div>
+                            <div style={{fontSize:15,fontWeight:700,color:'#0f172a'}}>{cities.join(' · ') || 'Course'}</div>
+                            <div style={{fontSize:11,color:'#64748b',marginTop:3}}>
+                              {totalPlaces}{lang==='ko'?'곳':' places'} · {dayCount}{lang==='ko'?'일':' days'}
+                              {sc.type==='ai' && <span style={{marginLeft:6,padding:'1px 5px',borderRadius:4,background:'#f3e8ff',color:'#7c3aed',fontSize:9,fontWeight:700}}>AI</span>}
+                            </div>
+                          </div>
+                        </div>
+                        {/* 코스 내 장소 미리보기 */}
+                        <div style={{display:'flex',flexWrap:'wrap',gap:4,marginBottom:10}}>
+                          {(sc.days||[]).flatMap(d=>d.items||[]).slice(0,6).map((it,i)=>(
+                            <span key={i} style={{padding:'2px 8px',borderRadius:20,background:'#f1f5f9',fontSize:10,color:'#475569',fontWeight:500}}>{it.name}</span>
+                          ))}
+                          {(sc.days||[]).flatMap(d=>d.items||[]).length > 6 && <span style={{padding:'2px 8px',borderRadius:20,background:'#f1f5f9',fontSize:10,color:'#94a3b8'}}>+{(sc.days||[]).flatMap(d=>d.items||[]).length-6}</span>}
+                        </div>
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                          <div style={{fontSize:10,color:'#94a3b8'}}>
+                            {sc.userName || 'Anonymous'} · {dateStr}
+                          </div>
+                          <button onClick={()=>{
+                            const days = sc.days || []
+                            setCourseDays(days);localStorage.setItem('atlas_course_days',JSON.stringify(days))
+                            const flat = days.flatMap(d=>d.items||[]);saveCourse(flat)
+                            setCourseTransport(sc.transport||'transit')
+                            setActiveDayTab(0);setShowCoursePlanner(true);setShowCommunity(false)
+                            setCourseSource(sc.type||'manual')
+                          }} style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',color:'white',padding:'6px 16px',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                            {lang==='ko'?'코스 불러오기':'Load Course'}
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </>
