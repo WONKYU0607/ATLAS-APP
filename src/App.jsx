@@ -8,6 +8,7 @@ import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
 import { AUTO_I18N } from './auto-i18n'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile } from './firebase'
 
 // ── 실제 관광지 사진 (Wikipedia + Wikimedia Commons 검색) ─────────────
 function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, alt }) {
@@ -255,6 +256,18 @@ class ErrorBoundary extends Component {
 }
 
 function App() {
+  // ── Auth 상태 ──
+  const [currentUser, setCurrentUser] = useState(null)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [authMode, setAuthMode] = useState('login') // 'login' | 'signup'
+  const [authEmail, setAuthEmail] = useState('')
+  const [authPw, setAuthPw] = useState('')
+  const [authName, setAuthName] = useState('')
+  const [authError, setAuthError] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+  const [homeCountry, setHomeCountry] = useState(() => localStorage.getItem('atlas_home_country') || '')
+  const userSyncRef = useRef(false) // Firestore → localStorage 초기 로드 중복 방지
+
   const globeContainerRef = useRef(null)
   const globeRef = useRef(null)
   const handleCityClickRef = useRef(null)  // ref to always-fresh click handler
@@ -792,9 +805,79 @@ function App() {
     setCurrLoading(false)
   }
 
+  // ── Firebase Auth 리스너 ──
+  useEffect(() => {
+    const unsub = onAuth(async (user) => {
+      setCurrentUser(user)
+      if (user) {
+        // Firestore에서 유저 데이터 로드
+        const data = await loadUserData(user.uid)
+        if (data) {
+          userSyncRef.current = true
+          if (data.favorites?.length) { setFavorites(data.favorites); localStorage.setItem('atlas_favorites', JSON.stringify(data.favorites)) }
+          if (data.savedCourses?.length) { setSavedCourses(data.savedCourses); localStorage.setItem('atlas_saved_courses', JSON.stringify(data.savedCourses)) }
+          if (data.visited && Object.keys(data.visited).length) { setVisited(data.visited); localStorage.setItem('atlas_visited', JSON.stringify(data.visited)) }
+          if (data.homeCountry) { setHomeCountry(data.homeCountry); localStorage.setItem('atlas_home_country', data.homeCountry) }
+          if (data.lang) { setLang(data.lang); localStorage.setItem('atlas_lang', data.lang) }
+          setTimeout(() => { userSyncRef.current = false }, 500)
+        } else {
+          // 첫 로그인: localStorage → Firestore 마이그레이션
+          await saveUserData(user.uid, {
+            favorites, savedCourses, visited, homeCountry,
+            lang, displayName: user.displayName || '', email: user.email
+          })
+        }
+      }
+    })
+    return () => unsub()
+  }, [])
+
+  // Firestore 자동 동기화 (로그인 중 데이터 변경 시)
+  useEffect(() => {
+    if (!currentUser || userSyncRef.current) return
+    const timer = setTimeout(() => {
+      saveUserData(currentUser.uid, { favorites, savedCourses, visited, homeCountry, lang })
+    }, 1000) // 1초 디바운스
+    return () => clearTimeout(timer)
+  }, [favorites, savedCourses, visited, homeCountry, lang, currentUser])
+
+  // Auth 핸들러
+  const handleAuth = async () => {
+    setAuthError(''); setAuthLoading(true)
+    try {
+      if (authMode === 'login') {
+        await loginEmail(authEmail, authPw)
+      } else {
+        const cred = await signupEmail(authEmail, authPw)
+        if (authName) await updateUserProfile(cred.user, { displayName: authName })
+      }
+      setShowLoginModal(false); setAuthEmail(''); setAuthPw(''); setAuthName('')
+    } catch (e) {
+      const msgs = {
+        'auth/invalid-email': lang==='ko'?'올바른 이메일을 입력하세요':'Invalid email',
+        'auth/wrong-password': lang==='ko'?'비밀번호가 틀렸습니다':'Wrong password',
+        'auth/invalid-credential': lang==='ko'?'이메일 또는 비밀번호가 틀렸습니다':'Invalid credentials',
+        'auth/email-already-in-use': lang==='ko'?'이미 사용 중인 이메일입니다':'Email already in use',
+        'auth/weak-password': lang==='ko'?'비밀번호가 너무 짧습니다 (6자 이상)':'Password too short (min 6)',
+      }
+      setAuthError(msgs[e.code] || e.message)
+    }
+    setAuthLoading(false)
+  }
+  const handleGoogleLogin = async () => {
+    setAuthError(''); setAuthLoading(true)
+    try { await loginGoogle(); setShowLoginModal(false) }
+    catch (e) { setAuthError(e.message) }
+    setAuthLoading(false)
+  }
+  const handleLogout = async () => {
+    await logout()
+    setCurrentUser(null)
+  }
+
   // 모바일 뒤로가기 = 닫기 (refs for latest state in event handler)
   const backStateRef = useRef({})
-  backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo, lang, showAiModal, showCoursePlanner, showCourseBasket, showCurrencyCalc }
+  backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo, lang, showAiModal, showCoursePlanner, showCourseBasket, showCurrencyCalc, showLoginModal }
   useEffect(() => {
     // 충분한 history 스택 확보 (모바일 브라우저 호환)
     window.history.replaceState({ atlas: true }, '')
@@ -802,6 +885,11 @@ function App() {
     const handlePop = (e) => {
       const s = backStateRef.current
       // 모달/오버레이 먼저 닫기
+      if (s.showLoginModal) {
+        setShowLoginModal(false)
+        backStateRef.current = { ...s, showLoginModal: false }
+        return
+      }
       if (s.showCurrencyCalc) {
         setShowCurrencyCalc(false)
         backStateRef.current = { ...s, showCurrencyCalc: false }
@@ -2302,6 +2390,48 @@ function App() {
                     <span style={{fontSize:14,color:'#64748b'}}>→</span>
                   </div>
                 </div>
+
+                {/* 로그인/계정 */}
+                <div style={{padding:'0 16px 14px'}}>
+                  {currentUser ? (
+                    <div style={{padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)'}}>
+                      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                        <div style={{width:28,height:28,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:800,color:'white'}}>{(currentUser.displayName || currentUser.email)?.[0]?.toUpperCase() || '?'}</div>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:12,fontWeight:700,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{currentUser.displayName || currentUser.email}</div>
+                          {currentUser.displayName && <div style={{fontSize:10,color:'#64748b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{currentUser.email}</div>}
+                        </div>
+                      </div>
+                      {/* 홈 국가 설정 */}
+                      <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
+                        <span style={{fontSize:10,color:'#94a3b8',whiteSpace:'nowrap'}}>{lang==='ko'?'홈 국가':'Home'}</span>
+                        <select value={homeCountry} onChange={e=>{setHomeCountry(e.target.value);localStorage.setItem('atlas_home_country',e.target.value);const code=extractCurrencyCode(COUNTRY_INFO[e.target.value]?.currency);if(code)setCurrFrom(code)}}
+                          style={{flex:1,padding:'4px 6px',borderRadius:6,border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.08)',color:'white',fontSize:11,cursor:'pointer'}}>
+                          <option value="" style={{background:'#1e293b'}}>—</option>
+                          {Object.keys(COUNTRY_INFO).sort().map(c=><option key={c} value={c} style={{background:'#1e293b'}}>{COUNTRY_INFO[c].emoji} {lang==='ko'?c:c}</option>)}
+                        </select>
+                      </div>
+                      <button onClick={()=>{handleLogout();setShowHamburger(false)}}
+                        style={{width:'100%',padding:'6px',borderRadius:8,border:'1px solid rgba(239,68,68,.3)',background:'rgba(239,68,68,.1)',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer'}}>
+                        {lang==='ko'?'로그아웃':'Logout'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
+                      onClick={()=>{setShowLoginModal(true);setShowHamburger(false)}}
+                      onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
+                      onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
+                      <div style={{display:'flex',alignItems:'center',gap:8}}>
+                        <div style={{width:24,height:24,borderRadius:6,background:'rgba(59,130,246,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:'#60a5fa'}}>👤</div>
+                        <div>
+                          <div style={{fontSize:13,fontWeight:700,color:'white'}}>{lang==='ko'?'로그인 / 회원가입':'Login / Sign up'}</div>
+                          <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{lang==='ko'?'데이터 클라우드 동기화':'Sync your data'}</div>
+                        </div>
+                      </div>
+                      <span style={{fontSize:14,color:'#64748b'}}>→</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -3653,6 +3783,62 @@ function App() {
                   )
                 })
               })()}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Login Modal */}
+      {showLoginModal && (
+        <>
+          <div onClick={()=>setShowLoginModal(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
+          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'92vw':380,background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden'}}>
+            <div style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <span style={{fontSize:17,fontWeight:800,color:'white'}}>{authMode==='login'?(lang==='ko'?'로그인':'Login'):(lang==='ko'?'회원가입':'Sign Up')}</span>
+              <button onClick={()=>setShowLoginModal(false)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:30,height:30,borderRadius:8,fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+            </div>
+            <div style={{padding:'20px 22px 24px'}}>
+              {/* Google 로그인 */}
+              <button onClick={handleGoogleLogin} disabled={authLoading}
+                style={{width:'100%',padding:'11px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontSize:14,fontWeight:600,color:'#374151',marginBottom:16,transition:'all .15s'}}
+                onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background='white'}>
+                <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#34A853" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#FBBC05" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                Google {lang==='ko'?'로그인':'Login'}
+              </button>
+              <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
+                <div style={{flex:1,height:1,background:'#e2e8f0'}} />
+                <span style={{fontSize:11,color:'#94a3b8'}}>or</span>
+                <div style={{flex:1,height:1,background:'#e2e8f0'}} />
+              </div>
+              {/* 이메일 폼 */}
+              {authMode==='signup' && (
+                <div style={{marginBottom:10}}>
+                  <input placeholder={lang==='ko'?'이름 (선택)':'Name (optional)'} value={authName} onChange={e=>setAuthName(e.target.value)}
+                    style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,color:'#0f172a',outline:'none',boxSizing:'border-box'}}
+                    onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'} />
+                </div>
+              )}
+              <div style={{marginBottom:10}}>
+                <input type="email" placeholder={lang==='ko'?'이메일':'Email'} value={authEmail} onChange={e=>setAuthEmail(e.target.value)}
+                  style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,color:'#0f172a',outline:'none',boxSizing:'border-box'}}
+                  onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'} />
+              </div>
+              <div style={{marginBottom:14}}>
+                <input type="password" placeholder={lang==='ko'?'비밀번호':'Password'} value={authPw} onChange={e=>setAuthPw(e.target.value)}
+                  onKeyDown={e=>{if(e.key==='Enter')handleAuth()}}
+                  style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,color:'#0f172a',outline:'none',boxSizing:'border-box'}}
+                  onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'} />
+              </div>
+              {authError && <div style={{marginBottom:12,padding:'8px 12px',borderRadius:8,background:'#fef2f2',border:'1px solid #fecaca',fontSize:12,color:'#dc2626'}}>{authError}</div>}
+              <button onClick={handleAuth} disabled={authLoading}
+                style={{width:'100%',padding:'12px',background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',borderRadius:12,color:'white',fontSize:15,fontWeight:700,cursor:'pointer',opacity:authLoading?.6:1}}>
+                {authLoading ? '...' : authMode==='login'?(lang==='ko'?'로그인':'Login'):(lang==='ko'?'가입하기':'Sign Up')}
+              </button>
+              <div style={{marginTop:14,textAlign:'center'}}>
+                <span style={{fontSize:12,color:'#64748b'}}>{authMode==='login'?(lang==='ko'?'계정이 없으신가요?':'No account?'):(lang==='ko'?'이미 계정이 있으신가요?':'Have an account?')} </span>
+                <span onClick={()=>{setAuthMode(authMode==='login'?'signup':'login');setAuthError('')}}
+                  style={{fontSize:12,color:'#3b82f6',fontWeight:600,cursor:'pointer'}}>{authMode==='login'?(lang==='ko'?'회원가입':'Sign Up'):(lang==='ko'?'로그인':'Login')}</span>
+              </div>
             </div>
           </div>
         </>
