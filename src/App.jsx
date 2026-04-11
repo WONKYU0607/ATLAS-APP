@@ -349,6 +349,7 @@ function App() {
   const [showFavorites, setShowFavorites] = useState(false)
   const [showHamburger, setShowHamburger] = useState(false)
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768)
+  const [vpHeight, setVpHeight] = useState(() => typeof window !== 'undefined' ? window.innerHeight : 800)
   const [savedCourses, setSavedCourses] = useState(() => {
     try { return JSON.parse(localStorage.getItem('atlas_saved_courses') || '[]') } catch { return [] }
   })
@@ -739,9 +740,15 @@ function App() {
 
   // 모바일 감지
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    const handleResize = () => { setIsMobile(window.innerWidth <= 768); setVpHeight(window.innerHeight) }
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    // Chrome 모바일 주소창 크기 변경 대응
+    const vv = window.visualViewport
+    if (vv) { vv.addEventListener('resize', handleResize); vv.addEventListener('scroll', handleResize) }
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      if (vv) { vv.removeEventListener('resize', handleResize); vv.removeEventListener('scroll', handleResize) }
+    }
   }, [])
 
   // 즐겨찾기 (localStorage 저장)
@@ -2262,10 +2269,11 @@ function App() {
   const countryKo = selectedCountry ? getCountryName(selectedCountry.properties.NAME) : ''
 
   return (
-    <div style={{width:'100vw',height:'100vh',overflow:'hidden',position:'relative',fontFamily:"'Pretendard','Inter',system-ui,sans-serif",background:'#000'}}>
+    <div style={{width:'100vw',height:vpHeight,overflow:'hidden',position:'relative',fontFamily:"'Pretendard','Inter',system-ui,sans-serif",background:'#000'}}>
       <style>{`
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+        html,body,#root{height:100%;overflow:hidden}
         ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px}
         .panel{animation:sIn .42s cubic-bezier(.16,1,.3,1)}
         .countryInfoPanel{animation:cInfoIn .35s cubic-bezier(.16,1,.3,1)}
