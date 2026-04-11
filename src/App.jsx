@@ -3888,162 +3888,204 @@ function App() {
       {showCommunity && (
         <>
           <div onClick={()=>setShowCommunity(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
-          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'95vw':480,maxHeight:'85vh',background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden',display:'flex',flexDirection:'column'}}>
-            <div style={{background:'linear-gradient(135deg,#f59e0b,#ef4444)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
+          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'96vw':560,maxHeight:'88vh',background:'white',borderRadius:22,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden',display:'flex',flexDirection:'column'}}>
+            <div style={{background:'linear-gradient(135deg,#f59e0b,#ef4444)',padding:'20px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
               <div>
-                <div style={{fontSize:17,fontWeight:800,color:'white'}}>🌐 {t('community')}</div>
-                <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:2}}>{t('communityDesc')}</div>
+                <div style={{fontSize:19,fontWeight:800,color:'white'}}>🌐 {t('community')}</div>
+                <div style={{fontSize:12,color:'rgba(255,255,255,.7)',marginTop:3}}>{t('communityDesc')}</div>
               </div>
-              <button onClick={()=>setShowCommunity(false)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:30,height:30,borderRadius:8,fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+              <button onClick={()=>setShowCommunity(false)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:32,height:32,borderRadius:10,fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
             </div>
-            <div style={{flex:1,overflowY:'auto',padding:'16px 20px'}}>
+            <div style={{flex:1,overflowY:'auto',padding:'18px 22px'}}>
               {communityLoading ? (
-                <div style={{textAlign:'center',padding:'40px 0',color:'#94a3b8',fontSize:14}}>{t('uploading')}</div>
+                <div style={{textAlign:'center',padding:'50px 0',color:'#94a3b8',fontSize:15}}>{t('uploading')}</div>
               ) : communityCoursesData.length === 0 ? (
-                <div style={{textAlign:'center',padding:'40px 0'}}>
-                  <div style={{fontSize:40,marginBottom:12}}>📭</div>
-                  <div style={{color:'#94a3b8',fontSize:13}}>{t('communityEmpty')}</div>
-                  <div style={{color:'#cbd5e1',fontSize:11,marginTop:4}}>{t('communityEmptyHint')}</div>
+                <div style={{textAlign:'center',padding:'50px 0'}}>
+                  <div style={{fontSize:48,marginBottom:14}}>📭</div>
+                  <div style={{color:'#94a3b8',fontSize:14,fontWeight:600}}>{t('communityEmpty')}</div>
+                  <div style={{color:'#cbd5e1',fontSize:12,marginTop:6}}>{t('communityEmptyHint')}</div>
                 </div>
-              ) : (
-                <div style={{display:'flex',flexDirection:'column',gap:12}}>
-                  {communityCoursesData.map((sc,idx)=>{
-                    const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))]
-                    const totalPlaces = (sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)
-                    const dayCount = (sc.days||[]).length
-                    const dateStr = sc.sharedAt ? new Date(sc.sharedAt).toLocaleDateString() : ''
-                    const isExpanded = communityExpanded === (sc.id||idx)
-                    const comments = sc.comments || []
-                    const photos = sc.photos || []
-                    return (
-                      <div key={sc.id||idx} style={{borderRadius:14,border:'1.5px solid #e2e8f0',background:'#fafbfc',overflow:'hidden',transition:'all .15s'}}
-                        onMouseEnter={e=>e.currentTarget.style.borderColor='#3b82f6'} onMouseLeave={e=>e.currentTarget.style.borderColor='#e2e8f0'}>
-                        <div style={{padding:'14px 16px'}}>
-                          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:8}}>
-                            <div>
-                              <div style={{fontSize:15,fontWeight:700,color:'#0f172a'}}>{cities.join(' · ') || 'Course'}</div>
-                              <div style={{fontSize:11,color:'#64748b',marginTop:3}}>
-                                {totalPlaces}{t('communityPlaces')} · {dayCount}{t('communityDays')}
-                                {sc.type==='ai' && <span style={{marginLeft:6,padding:'1px 5px',borderRadius:4,background:'#f3e8ff',color:'#7c3aed',fontSize:9,fontWeight:700}}>AI</span>}
-                              </div>
-                            </div>
-                            {currentUser && sc.uid === currentUser.uid && (
-                              <button onClick={async()=>{if(confirm('Delete?')){await deleteSharedCourse(sc.id);setCommunityCoursesData(prev=>prev.filter(c=>c.id!==sc.id))}}}
-                                style={{background:'none',border:'none',color:'#ef4444',fontSize:13,cursor:'pointer'}}>✕</button>
-                            )}
-                          </div>
-                          {/* 사진 */}
-                          {photos.length > 0 && (
-                            <div style={{display:'flex',gap:6,marginBottom:10,overflowX:'auto',paddingBottom:4}}>
-                              {photos.map((url,i)=>(
-                                <img key={i} src={url} style={{width:80,height:60,borderRadius:8,objectFit:'cover',flexShrink:0,cursor:'pointer'}} onClick={()=>window.open(url,'_blank')} />
-                              ))}
-                            </div>
-                          )}
-                          {/* 장소 태그 */}
-                          <div style={{display:'flex',flexWrap:'wrap',gap:4,marginBottom:10}}>
-                            {(sc.days||[]).flatMap(d=>d.items||[]).slice(0,6).map((it,i)=>(
-                              <span key={i} style={{padding:'2px 8px',borderRadius:20,background:'#f1f5f9',fontSize:10,color:'#475569',fontWeight:500}}>{it.name}</span>
-                            ))}
-                            {(sc.days||[]).flatMap(d=>d.items||[]).length > 6 && <span style={{padding:'2px 8px',borderRadius:20,background:'#f1f5f9',fontSize:10,color:'#94a3b8'}}>+{(sc.days||[]).flatMap(d=>d.items||[]).length-6}</span>}
-                          </div>
-                          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                            <div style={{display:'flex',alignItems:'center',gap:8}}>
-                              <span style={{fontSize:10,color:'#94a3b8'}}>{sc.userName || 'Anonymous'} · {dateStr}</span>
-                              <button onClick={()=>setCommunityExpanded(isExpanded?null:(sc.id||idx))}
-                                style={{background:'none',border:'none',color:'#3b82f6',fontSize:10,cursor:'pointer',fontWeight:600}}>
-                                💬 {comments.length} {isExpanded?'▲':'▼'}
-                              </button>
-                            </div>
-                            <button onClick={()=>{
-                              const days = sc.days || []
-                              setCourseDays(days);localStorage.setItem('atlas_course_days',JSON.stringify(days))
-                              const flat = days.flatMap(d=>d.items||[]);saveCourse(flat)
-                              setCourseTransport(sc.transport||'transit')
-                              setActiveDayTab(0);setShowCoursePlanner(true);setShowCommunity(false)
-                              setCourseSource(sc.type||'manual')
-                            }} style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',color:'white',padding:'6px 14px',borderRadius:8,fontSize:11,fontWeight:700,cursor:'pointer'}}>
-                              {t('communityLoad')}
-                            </button>
-                          </div>
+              ) : (() => {
+                // 대륙별 > 국가별 > 도시별 그룹핑
+                const grouped = {}
+                communityCoursesData.forEach(sc => {
+                  const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))]
+                  const firstCity = cities[0]
+                  let country = '', continent = ''
+                  if (firstCity) {
+                    const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(c=>c.name===firstCity))
+                    if (entry) {
+                      country = entry[0]
+                      continent = COUNTRY_INFO[country]?.continent || ''
+                    }
+                  }
+                  if (!continent) continent = '기타'
+                  if (!country) country = '기타'
+                  // 대륙명 번역
+                  const contKey = continent
+                  const contDisplay = lang==='ko' ? continent : (CONTINENT_I18N[continent]?.[lang] || continent)
+                  if (!grouped[contDisplay]) grouped[contDisplay] = {_key:contKey}
+                  if (!grouped[contDisplay][country]) grouped[contDisplay][country] = []
+                  grouped[contDisplay][country].push(sc)
+                })
+                return (
+                  <div style={{display:'flex',flexDirection:'column',gap:16}}>
+                    {Object.entries(grouped).map(([cont, countriesObj]) => {
+                      const contKey = countriesObj._key || cont
+                      const {_key, ...countries} = countriesObj
+                      return (
+                      <div key={cont}>
+                        <div style={{fontSize:14,fontWeight:800,color:'#1e293b',padding:'6px 0',borderBottom:'2px solid #e2e8f0',marginBottom:10,display:'flex',alignItems:'center',gap:6}}>
+                          <span>{contKey.includes('아시아')?'🌏':contKey.includes('유럽')?'🌍':contKey.includes('아프리카')?'🌍':contKey.includes('북아메리카')?'🌎':contKey.includes('남아메리카')?'🌎':contKey.includes('오세아니아')?'🌏':'🌐'}</span>
+                          {cont}
                         </div>
-                        {/* 댓글 섹션 */}
-                        {isExpanded && (
-                          <div style={{borderTop:'1px solid #e2e8f0',padding:'12px 16px',background:'#f8fafc'}}>
-                            {comments.length === 0 && <div style={{fontSize:11,color:'#94a3b8',textAlign:'center',padding:'8px 0'}}>{t('communityEmpty')}</div>}
-                            {comments.map((cm,ci)=>(
-                              <div key={cm.id||ci} style={{display:'flex',gap:8,marginBottom:8}}>
-                                <div style={{width:22,height:22,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:800,color:'white',flexShrink:0}}>{(cm.userName||'?')[0]?.toUpperCase()}</div>
-                                <div style={{flex:1,minWidth:0}}>
-                                  <div style={{display:'flex',alignItems:'center',gap:6}}>
-                                    <span style={{fontSize:11,fontWeight:600,color:'#1e293b'}}>{cm.userName}</span>
-                                    <span style={{fontSize:9,color:'#94a3b8'}}>{cm.createdAt ? new Date(cm.createdAt).toLocaleDateString() : ''}</span>
-                                    {currentUser && cm.uid === currentUser.uid && (
-                                      <button onClick={async()=>{const updated=await deleteComment(sc.id,cm.id);setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c))}}
-                                        style={{background:'none',border:'none',color:'#ef4444',fontSize:9,cursor:'pointer',marginLeft:'auto'}}>{t('commentDelete')}</button>
+                        {Object.entries(countries).map(([countryName, courses]) => (
+                          <div key={countryName} style={{marginBottom:12,marginLeft:8}}>
+                            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
+                              {getFlagImg(COUNTRY_INFO[countryName]?.emoji,20) ? <img src={getFlagImg(COUNTRY_INFO[countryName]?.emoji,20)} width={18} height={13} style={{borderRadius:2}} /> : <span>{COUNTRY_INFO[countryName]?.emoji||''}</span>}
+                              <span style={{fontSize:13,fontWeight:700,color:'#334155'}}>{getCountryName(countryName)}</span>
+                              <span style={{fontSize:10,color:'#94a3b8'}}>({courses.length})</span>
+                            </div>
+                            <div style={{display:'flex',flexDirection:'column',gap:10,marginLeft:8}}>
+                              {courses.map((sc,idx) => {
+                                const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))]
+                                const totalPlaces = (sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)
+                                const dayCount = (sc.days||[]).length
+                                const dateStr = sc.sharedAt ? new Date(sc.sharedAt).toLocaleDateString() : ''
+                                const isExpanded = communityExpanded === (sc.id||idx)
+                                const comments = sc.comments || []
+                                const photos = sc.photos || []
+                                return (
+                                  <div key={sc.id||idx} style={{borderRadius:16,border:'1.5px solid #e2e8f0',background:'white',overflow:'hidden',transition:'all .15s',boxShadow:'0 2px 8px rgba(0,0,0,.04)'}}
+                                    onMouseEnter={e=>{e.currentTarget.style.borderColor='#3b82f6';e.currentTarget.style.boxShadow='0 4px 16px rgba(59,130,246,.15)'}}
+                                    onMouseLeave={e=>{e.currentTarget.style.borderColor='#e2e8f0';e.currentTarget.style.boxShadow='0 2px 8px rgba(0,0,0,.04)'}}>
+                                    <div style={{padding:'16px 18px'}}>
+                                      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:10}}>
+                                        <div>
+                                          <div style={{fontSize:17,fontWeight:800,color:'#0f172a',letterSpacing:'-.3px'}}>{cities.map(c=>getCityName(c)).join(' · ') || 'Course'}</div>
+                                          <div style={{fontSize:12,color:'#64748b',marginTop:4,display:'flex',alignItems:'center',gap:6}}>
+                                            <span>{totalPlaces}{t('communityPlaces')}</span>
+                                            <span>·</span>
+                                            <span>{dayCount}{t('communityDays')}</span>
+                                            {sc.type==='ai' && <span style={{padding:'1px 6px',borderRadius:4,background:'#f3e8ff',color:'#7c3aed',fontSize:10,fontWeight:700}}>AI</span>}
+                                          </div>
+                                        </div>
+                                        {currentUser && sc.uid === currentUser.uid && (
+                                          <button onClick={async()=>{if(confirm('Delete?')){await deleteSharedCourse(sc.id);setCommunityCoursesData(prev=>prev.filter(c=>c.id!==sc.id))}}}
+                                            style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:4}}>✕</button>
+                                        )}
+                                      </div>
+                                      {photos.length > 0 && (
+                                        <div style={{display:'flex',gap:8,marginBottom:12,overflowX:'auto',paddingBottom:4}}>
+                                          {photos.map((url,i)=>(
+                                            <img key={i} src={url} style={{width:100,height:75,borderRadius:10,objectFit:'cover',flexShrink:0,cursor:'pointer',border:'1px solid #e2e8f0'}} onClick={()=>window.open(url,'_blank')} />
+                                          ))}
+                                        </div>
+                                      )}
+                                      <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:12}}>
+                                        {(sc.days||[]).flatMap(d=>d.items||[]).slice(0,8).map((it,i)=>(
+                                          <span key={i} style={{padding:'3px 10px',borderRadius:20,background:'#f1f5f9',fontSize:11,color:'#475569',fontWeight:500}}>{getCityName(it.name) || it.name}</span>
+                                        ))}
+                                        {(sc.days||[]).flatMap(d=>d.items||[]).length > 8 && <span style={{padding:'3px 10px',borderRadius:20,background:'#f1f5f9',fontSize:11,color:'#94a3b8'}}>+{(sc.days||[]).flatMap(d=>d.items||[]).length-8}</span>}
+                                      </div>
+                                      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                                        <div style={{display:'flex',alignItems:'center',gap:10}}>
+                                          <span style={{fontSize:11,color:'#94a3b8'}}>{sc.userName || 'Anonymous'} · {dateStr}</span>
+                                          <button onClick={()=>setCommunityExpanded(isExpanded?null:(sc.id||idx))}
+                                            style={{background:'#f1f5f9',border:'none',color:'#3b82f6',fontSize:11,cursor:'pointer',fontWeight:600,padding:'3px 8px',borderRadius:6}}>                                            💬 {comments.length} {isExpanded?'▲':'▼'}
+                                          </button>
+                                        </div>
+                                        <button onClick={()=>{
+                                          const days = sc.days || []
+                                          setCourseDays(days);localStorage.setItem('atlas_course_days',JSON.stringify(days))
+                                          const flat = days.flatMap(d=>d.items||[]);saveCourse(flat)
+                                          setCourseTransport(sc.transport||'transit')
+                                          setActiveDayTab(0);setShowCoursePlanner(true);setShowCommunity(false)
+                                          setCourseSource(sc.type||'manual')
+                                        }} style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',color:'white',padding:'8px 20px',borderRadius:10,fontSize:13,fontWeight:700,cursor:'pointer',letterSpacing:'-.2px'}}>
+                                          {t('communityLoad')}
+                                        </button>
+                                      </div>
+                                    </div>
+                                    {isExpanded && (
+                                      <div style={{borderTop:'1px solid #e2e8f0',padding:'14px 18px',background:'#f8fafc'}}>
+                                        {comments.length === 0 && <div style={{fontSize:12,color:'#94a3b8',textAlign:'center',padding:'10px 0'}}>{t('communityEmpty')}</div>}
+                                        {comments.map((cm,ci)=>(
+                                          <div key={cm.id||ci} style={{display:'flex',gap:10,marginBottom:10}}>
+                                            <div style={{width:26,height:26,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'white',flexShrink:0}}>{(cm.userName||'?')[0]?.toUpperCase()}</div>
+                                            <div style={{flex:1,minWidth:0}}>
+                                              <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                                <span style={{fontSize:12,fontWeight:600,color:'#1e293b'}}>{cm.userName}</span>
+                                                <span style={{fontSize:10,color:'#94a3b8'}}>{cm.createdAt ? new Date(cm.createdAt).toLocaleDateString() : ''}</span>
+                                                {currentUser && cm.uid === currentUser.uid && (
+                                                  <button onClick={async()=>{const updated=await deleteComment(sc.id,cm.id);setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c))}}
+                                                    style={{background:'none',border:'none',color:'#ef4444',fontSize:10,cursor:'pointer',marginLeft:'auto'}}>{t('commentDelete')}</button>
+                                                )}
+                                              </div>
+                                              <div style={{fontSize:13,color:'#475569',marginTop:3,lineHeight:1.5}}>{cm.text}</div>
+                                            </div>
+                                          </div>
+                                        ))}
+                                        {currentUser ? (
+                                          <div style={{display:'flex',gap:8,marginTop:10}}>
+                                            <input value={commentText} onChange={e=>setCommentText(e.target.value)} placeholder={t('commentPlaceholder')}
+                                              onKeyDown={e=>{if(e.key==='Enter'&&commentText.trim()){addComment(sc.id,{text:commentText.trim(),uid:currentUser.uid,userName:currentUser.displayName||currentUser.email}).then(updated=>{setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c));setCommentText('')})}}}
+                                              style={{flex:1,padding:'8px 12px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box'}} />
+                                            <button onClick={()=>{if(commentText.trim()){addComment(sc.id,{text:commentText.trim(),uid:currentUser.uid,userName:currentUser.displayName||currentUser.email}).then(updated=>{setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c));setCommentText('')})}}}
+                                              style={{background:'#3b82f6',border:'none',color:'white',padding:'8px 16px',borderRadius:10,fontSize:12,fontWeight:600,cursor:'pointer'}}>{t('commentPost')}</button>
+                                          </div>
+                                        ) : (
+                                          <div style={{fontSize:12,color:'#94a3b8',textAlign:'center',marginTop:10}}>{t('commentLogin')}</div>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
-                                  <div style={{fontSize:12,color:'#475569',marginTop:2,lineHeight:1.4}}>{cm.text}</div>
-                                </div>
-                              </div>
-                            ))}
-                            {/* 댓글 입력 */}
-                            {currentUser ? (
-                              <div style={{display:'flex',gap:6,marginTop:8}}>
-                                <input value={commentText} onChange={e=>setCommentText(e.target.value)} placeholder={t('commentPlaceholder')}
-                                  onKeyDown={e=>{if(e.key==='Enter'&&commentText.trim()){addComment(sc.id,{text:commentText.trim(),uid:currentUser.uid,userName:currentUser.displayName||currentUser.email}).then(updated=>{setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c));setCommentText('')})}}}
-                                  style={{flex:1,padding:'7px 10px',border:'1.5px solid #e2e8f0',borderRadius:8,fontSize:12,outline:'none',boxSizing:'border-box'}} />
-                                <button onClick={()=>{if(commentText.trim()){addComment(sc.id,{text:commentText.trim(),uid:currentUser.uid,userName:currentUser.displayName||currentUser.email}).then(updated=>{setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c));setCommentText('')})}}}
-                                  style={{background:'#3b82f6',border:'none',color:'white',padding:'7px 12px',borderRadius:8,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('commentPost')}</button>
-                              </div>
-                            ) : (
-                              <div style={{fontSize:11,color:'#94a3b8',textAlign:'center',marginTop:8}}>{t('commentLogin')}</div>
-                            )}
+                                )
+                              })}
+                            </div>
                           </div>
-                        )}
+                        ))}
                       </div>
-                    )
-                  })}
-                </div>
-              )}
+                      )
+                    })}
+                  </div>
+                )
+              })()}
             </div>
           </div>
         </>
       )}
 
-      {/* Share Modal (사진 첨부 + 공유) */}
+      {/* Share Modal */}
       {shareModalCourse && (
         <>
           <div onClick={()=>setShareModalCourse(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3100}} />
-          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3101,width:isMobile?'92vw':380,background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden'}}>
-            <div style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',padding:'16px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <span style={{fontSize:16,fontWeight:800,color:'white'}}>📤 {t('shareBtn')}</span>
-              <button onClick={()=>setShareModalCourse(null)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:28,height:28,borderRadius:8,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3101,width:isMobile?'92vw':400,background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden'}}>
+            <div style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <span style={{fontSize:17,fontWeight:800,color:'white'}}>📤 {t('shareBtn')}</span>
+              <button onClick={()=>setShareModalCourse(null)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:30,height:30,borderRadius:8,fontSize:15,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
             </div>
-            <div style={{padding:'16px 22px 20px'}}>
-              {/* 코스 미리보기 */}
-              <div style={{padding:'10px 14px',borderRadius:10,background:'#f8fafc',border:'1px solid #e2e8f0',marginBottom:14}}>
-                <div style={{fontSize:14,fontWeight:700,color:'#0f172a'}}>{[...new Set((shareModalCourse.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))].join(' · ')}</div>
-                <div style={{fontSize:11,color:'#64748b',marginTop:3}}>{(shareModalCourse.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('communityPlaces')} · {(shareModalCourse.days||[]).length}{t('communityDays')}</div>
+            <div style={{padding:'18px 22px 22px'}}>
+              <div style={{padding:'12px 16px',borderRadius:12,background:'#f8fafc',border:'1px solid #e2e8f0',marginBottom:16}}>
+                <div style={{fontSize:15,fontWeight:700,color:'#0f172a'}}>{[...new Set((shareModalCourse.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))].map(c=>getCityName(c)).join(' · ')}</div>
+                <div style={{fontSize:12,color:'#64748b',marginTop:4}}>{(shareModalCourse.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('communityPlaces')} · {(shareModalCourse.days||[]).length}{t('communityDays')}</div>
               </div>
-              {/* 사진 첨부 */}
-              <div style={{marginBottom:14}}>
+              <div style={{marginBottom:16}}>
                 <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:6}}>{t('sharePhotos')}</label>
                 <input type="file" accept="image/*" multiple onChange={e=>setSharePhotos([...e.target.files].slice(0,5))}
                   style={{fontSize:12,color:'#64748b'}} />
                 {sharePhotos.length > 0 && (
-                  <div style={{display:'flex',gap:6,marginTop:8,flexWrap:'wrap'}}>
+                  <div style={{display:'flex',gap:8,marginTop:8,flexWrap:'wrap'}}>
                     {[...sharePhotos].map((f,i)=>(
-                      <div key={i} style={{width:56,height:42,borderRadius:6,overflow:'hidden',border:'1px solid #e2e8f0'}}>
+                      <div key={i} style={{width:64,height:48,borderRadius:8,overflow:'hidden',border:'1px solid #e2e8f0'}}>
                         <img src={URL.createObjectURL(f)} style={{width:'100%',height:'100%',objectFit:'cover'}} />
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-              {/* 버튼 */}
-              <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>setShareModalCourse(null)} style={{flex:1,padding:'10px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'white',color:'#64748b',fontSize:13,fontWeight:600,cursor:'pointer'}}>{t('shareCancel')}</button>
+              <div style={{display:'flex',gap:10}}>
+                <button onClick={()=>setShareModalCourse(null)} style={{flex:1,padding:'11px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'white',color:'#64748b',fontSize:13,fontWeight:600,cursor:'pointer'}}>{t('shareCancel')}</button>
                 <button disabled={shareUploading} onClick={async()=>{
                   setShareUploading(true)
                   try {
@@ -4058,7 +4100,7 @@ function App() {
                     setShareModalCourse(null);setSharePhotos([])
                   } catch(e) { alert(e.message) }
                   setShareUploading(false)
-                }} style={{flex:1,padding:'10px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#2563eb,#7c3aed)',color:'white',fontSize:13,fontWeight:700,cursor:'pointer',opacity:shareUploading?.6:1}}>
+                }} style={{flex:1,padding:'11px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#2563eb,#7c3aed)',color:'white',fontSize:13,fontWeight:700,cursor:'pointer',opacity:shareUploading?.6:1}}>
                   {shareUploading ? t('uploading') : t('shareBtn')}
                 </button>
               </div>
