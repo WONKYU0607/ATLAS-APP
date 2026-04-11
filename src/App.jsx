@@ -8,7 +8,7 @@ import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
 import { AUTO_I18N } from './auto-i18n'
-import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse } from './firebase'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment } from './firebase'
 
 // ── 실제 관광지 사진 (Wikipedia + Wikimedia Commons 검색) ─────────────
 function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, alt }) {
@@ -271,6 +271,11 @@ function App() {
   const [showCommunity, setShowCommunity] = useState(false)
   const [communityCoursesData, setCommunityCoursesData] = useState([])
   const [communityLoading, setCommunityLoading] = useState(false)
+  const [shareModalCourse, setShareModalCourse] = useState(null) // 공유 모달용
+  const [sharePhotos, setSharePhotos] = useState([])
+  const [shareUploading, setShareUploading] = useState(false)
+  const [communityExpanded, setCommunityExpanded] = useState(null) // 펼쳐진 코스 ID
+  const [commentText, setCommentText] = useState('')
   const userSyncRef = useRef(false) // Firestore → localStorage 초기 로드 중복 방지
 
   const globeContainerRef = useRef(null)
@@ -991,6 +996,37 @@ function App() {
     emergTourist:{ko:'관광안내',en:'Tourist',ja:'観光案内',zh:'旅游咨询'},
     emergGeneral:{ko:'통합신고',en:'General',ja:'総合',zh:'综合'},
     emergCall:{ko:'전화하기',en:'Call',ja:'電話する',zh:'拨打'},
+    community:{ko:'커뮤니티 코스',en:'Community Courses',ja:'コミュニティコース',zh:'社区路线'},
+    communityDesc:{ko:'다른 여행자의 코스 보기',en:'Browse shared courses',ja:'他の旅行者のコースを見る',zh:'浏览共享路线'},
+    communityEmpty:{ko:'아직 공유된 코스가 없습니다',en:'No shared courses yet',ja:'共有コースがまだありません',zh:'还没有共享路线'},
+    communityEmptyHint:{ko:'코스를 저장하고 📤 버튼으로 공유해보세요!',en:'Save a course and share it with 📤!',ja:'コースを保存して📤で共有しましょう!',zh:'保存路线并用📤分享！'},
+    communityLoad:{ko:'코스 불러오기',en:'Load Course',ja:'コースを読込',zh:'加载路线'},
+    communityShared:{ko:'코스가 공유되었습니다!',en:'Course shared!',ja:'コースを共有しました!',zh:'路线已共享！'},
+    communityPlaces:{ko:'곳',en:' places',ja:'箇所',zh:'个地点'},
+    communityDays:{ko:'일',en:' days',ja:'日',zh:'天'},
+    sharePhotos:{ko:'사진 첨부 (선택)',en:'Attach photos (optional)',ja:'写真を添付（任意）',zh:'附加照片（可选）'},
+    shareBtn:{ko:'공유하기',en:'Share',ja:'共有する',zh:'分享'},
+    shareCancel:{ko:'취소',en:'Cancel',ja:'キャンセル',zh:'取消'},
+    commentPlaceholder:{ko:'댓글을 입력하세요...',en:'Write a comment...',ja:'コメントを入力...',zh:'写评论...'},
+    commentPost:{ko:'등록',en:'Post',ja:'投稿',zh:'发布'},
+    commentDelete:{ko:'삭제',en:'Delete',ja:'削除',zh:'删除'},
+    commentLogin:{ko:'댓글을 작성하려면 로그인하세요',en:'Login to comment',ja:'コメントするにはログインしてください',zh:'登录后评论'},
+    uploading:{ko:'업로드 중...',en:'Uploading...',ja:'アップロード中...',zh:'上传中...'},
+    loginRequired:{ko:'로그인이 필요합니다',en:'Login required',ja:'ログインが必要です',zh:'需要登录'},
+    login:{ko:'로그인',en:'Login',ja:'ログイン',zh:'登录'},
+    signup:{ko:'회원가입',en:'Sign Up',ja:'新規登録',zh:'注册'},
+    loginTitle:{ko:'로그인',en:'Login',ja:'ログイン',zh:'登录'},
+    signupTitle:{ko:'회원가입',en:'Sign Up',ja:'新規登録',zh:'注册'},
+    noAccount:{ko:'계정이 없으신가요?',en:'No account?',ja:'アカウントがない？',zh:'没有账号？'},
+    hasAccount:{ko:'이미 계정이 있으신가요?',en:'Have an account?',ja:'アカウントをお持ち？',zh:'已有账号？'},
+    loginLogout:{ko:'로그아웃',en:'Logout',ja:'ログアウト',zh:'退出'},
+    loginSync:{ko:'데이터 클라우드 동기화',en:'Sync your data',ja:'データをクラウド同期',zh:'云同步数据'},
+    loginSignup:{ko:'로그인 / 회원가입',en:'Login / Sign up',ja:'ログイン / 新規登録',zh:'登录 / 注册'},
+    homeCountry:{ko:'홈 국가',en:'Home',ja:'ホーム国',zh:'本国'},
+    homeSearch:{ko:'국가 검색...',en:'Search country...',ja:'国を検索...',zh:'搜索国家...'},
+    nameOptional:{ko:'이름 (선택)',en:'Name (optional)',ja:'名前（任意）',zh:'姓名（可选）'},
+    email:{ko:'이메일',en:'Email',ja:'メール',zh:'邮箱'},
+    password:{ko:'비밀번호',en:'Password',ja:'パスワード',zh:'密码'},
   }
   const t = (key) => {
     const tv = TOOL_I18N[key]?.[lang]
@@ -2252,7 +2288,7 @@ function App() {
                             <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
                           <button onClick={()=>loadSavedCourse(sc)} style={{background:'#7c3aed',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
-                          {currentUser && <button onClick={async()=>{await shareCourse(currentUser.uid,sc,currentUser.displayName||currentUser.email);alert(lang==='ko'?'코스가 공유되었습니다!':'Course shared!')}} style={{background:'none',border:'1px solid rgba(59,130,246,.4)',color:'#60a5fa',padding:'3px 7px',borderRadius:6,fontSize:10,fontWeight:600,cursor:'pointer'}}>📤</button>}
+                          {currentUser && <button onClick={()=>{setShareModalCourse(sc);setSharePhotos([])}} style={{background:'none',border:'1px solid rgba(59,130,246,.4)',color:'#60a5fa',padding:'3px 7px',borderRadius:6,fontSize:10,fontWeight:600,cursor:'pointer'}}>📤</button>}
                           <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
                         </div>
                       ))}
@@ -2278,7 +2314,7 @@ function App() {
                             <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
                           <button onClick={()=>loadSavedCourse(sc)} style={{background:'#3b82f6',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
-                          {currentUser && <button onClick={async()=>{await shareCourse(currentUser.uid,sc,currentUser.displayName||currentUser.email);alert(lang==='ko'?'코스가 공유되었습니다!':'Course shared!')}} style={{background:'none',border:'1px solid rgba(59,130,246,.4)',color:'#60a5fa',padding:'3px 7px',borderRadius:6,fontSize:10,fontWeight:600,cursor:'pointer'}}>📤</button>}
+                          {currentUser && <button onClick={()=>{setShareModalCourse(sc);setSharePhotos([])}} style={{background:'none',border:'1px solid rgba(59,130,246,.4)',color:'#60a5fa',padding:'3px 7px',borderRadius:6,fontSize:10,fontWeight:600,cursor:'pointer'}}>📤</button>}
                           <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
                         </div>
                       ))}
@@ -2413,8 +2449,8 @@ function App() {
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       <div style={{width:24,height:24,borderRadius:6,background:'rgba(251,191,36,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13}}>🌐</div>
                       <div>
-                        <div style={{fontSize:13,fontWeight:700,color:'white'}}>{lang==='ko'?'커뮤니티 코스':'Community Courses'}</div>
-                        <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{lang==='ko'?'다른 여행자의 코스 보기':'Browse shared courses'}</div>
+                        <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('community')}</div>
+                        <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{t('communityDesc')}</div>
                       </div>
                     </div>
                     <span style={{fontSize:14,color:'#64748b'}}>→</span>
@@ -2436,9 +2472,12 @@ function App() {
                       <div style={{position:'relative',marginBottom:8}}>
                         <div style={{display:'flex',alignItems:'center',gap:6,cursor:'pointer',padding:'5px 8px',borderRadius:8,border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.08)'}}
                           onClick={()=>setShowHomeCountryPicker(v=>!v)}>
-                          <span style={{fontSize:10,color:'#94a3b8',whiteSpace:'nowrap'}}>{lang==='ko'?'홈 국가':'Home'}</span>
+                          <span style={{fontSize:10,color:'#94a3b8',whiteSpace:'nowrap'}}>{t('homeCountry')}</span>
                           {homeCountry ? (
-                            <span style={{fontSize:12,color:'white',flex:1}}>{COUNTRY_INFO[homeCountry]?.emoji} {homeCountry}</span>
+                            <span style={{display:'flex',alignItems:'center',gap:5,flex:1}}>
+                              {getFlagImg(COUNTRY_INFO[homeCountry]?.emoji,20) ? <img src={getFlagImg(COUNTRY_INFO[homeCountry]?.emoji,20)} width={18} height={13} style={{borderRadius:2,objectFit:'cover'}} /> : <span>{COUNTRY_INFO[homeCountry]?.emoji}</span>}
+                              <span style={{fontSize:12,color:'white'}}>{getCountryName(homeCountry)}</span>
+                            </span>
                           ) : (
                             <span style={{fontSize:11,color:'#64748b',flex:1}}>—</span>
                           )}
@@ -2447,19 +2486,19 @@ function App() {
                         {showHomeCountryPicker && (
                           <div style={{position:'absolute',bottom:'calc(100% + 4px)',left:0,right:0,background:'rgba(15,23,42,.98)',border:'1px solid rgba(255,255,255,.15)',borderRadius:10,overflow:'hidden',zIndex:3000,boxShadow:'0 8px 24px rgba(0,0,0,.5)',maxHeight:200}}>
                             <div style={{padding:'6px 8px',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
-                              <input placeholder={lang==='ko'?'국가 검색...':'Search country...'} value={homeCountryQuery} onChange={e=>setHomeCountryQuery(e.target.value)} autoFocus
+                              <input placeholder={t('homeSearch')} value={homeCountryQuery} onChange={e=>setHomeCountryQuery(e.target.value)} autoFocus
                                 style={{width:'100%',padding:'5px 8px',borderRadius:6,border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.08)',color:'white',fontSize:11,outline:'none',boxSizing:'border-box'}} />
                             </div>
                             <div style={{maxHeight:160,overflowY:'auto'}}>
                               {Object.keys(COUNTRY_INFO).filter(c=>{
                                 if(!homeCountryQuery)return true
                                 const q=homeCountryQuery.toLowerCase()
-                                return c.toLowerCase().includes(q) || (COUNTRY_INFO[c].emoji||'').includes(q) || (getCountryName(c)||'').toLowerCase().includes(q)
+                                return c.toLowerCase().includes(q) || (getCountryName(c)||'').toLowerCase().includes(q)
                               }).sort().map(c=>(
                                 <div key={c} onClick={()=>{setHomeCountry(c);localStorage.setItem('atlas_home_country',c);const code=extractCurrencyCode(COUNTRY_INFO[c]?.currency);if(code)setCurrFrom(code);setShowHomeCountryPicker(false);setHomeCountryQuery('')}}
                                   style={{display:'flex',alignItems:'center',gap:8,padding:'7px 12px',cursor:'pointer',background:homeCountry===c?'rgba(59,130,246,.2)':'transparent',transition:'background .1s'}}
                                   onMouseEnter={e=>{if(homeCountry!==c)e.currentTarget.style.background='rgba(255,255,255,.08)'}} onMouseLeave={e=>{if(homeCountry!==c)e.currentTarget.style.background='transparent'}}>
-                                  <span style={{fontSize:16}}>{COUNTRY_INFO[c].emoji}</span>
+                                  {getFlagImg(COUNTRY_INFO[c]?.emoji,20) ? <img src={getFlagImg(COUNTRY_INFO[c]?.emoji,20)} width={20} height={15} style={{borderRadius:2,objectFit:'cover'}} /> : <span style={{fontSize:16}}>{COUNTRY_INFO[c].emoji}</span>}
                                   <span style={{fontSize:11,color:'white',fontWeight:homeCountry===c?700:400}}>{getCountryName(c)}</span>
                                   {homeCountry===c && <span style={{marginLeft:'auto',fontSize:10,color:'#60a5fa'}}>✓</span>}
                                 </div>
@@ -2470,7 +2509,7 @@ function App() {
                       </div>
                       <button onClick={()=>{handleLogout();setShowHamburger(false)}}
                         style={{width:'100%',padding:'6px',borderRadius:8,border:'1px solid rgba(239,68,68,.3)',background:'rgba(239,68,68,.1)',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer'}}>
-                        {lang==='ko'?'로그아웃':'Logout'}
+                        {t('loginLogout')}
                       </button>
                     </div>
                   ) : (
@@ -2481,8 +2520,8 @@ function App() {
                       <div style={{display:'flex',alignItems:'center',gap:8}}>
                         <div style={{width:24,height:24,borderRadius:6,background:'rgba(59,130,246,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:'#60a5fa'}}>👤</div>
                         <div>
-                          <div style={{fontSize:13,fontWeight:700,color:'white'}}>{lang==='ko'?'로그인 / 회원가입':'Login / Sign up'}</div>
-                          <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{lang==='ko'?'데이터 클라우드 동기화':'Sync your data'}</div>
+                          <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('loginSignup')}</div>
+                          <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{t('loginSync')}</div>
                         </div>
                       </div>
                       <span style={{fontSize:14,color:'#64748b'}}>→</span>
@@ -3849,69 +3888,180 @@ function App() {
       {showCommunity && (
         <>
           <div onClick={()=>setShowCommunity(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
-          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'95vw':460,maxHeight:'80vh',background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden',display:'flex',flexDirection:'column'}}>
+          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'95vw':480,maxHeight:'85vh',background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden',display:'flex',flexDirection:'column'}}>
             <div style={{background:'linear-gradient(135deg,#f59e0b,#ef4444)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
               <div>
-                <div style={{fontSize:17,fontWeight:800,color:'white'}}>🌐 {lang==='ko'?'커뮤니티 코스':'Community Courses'}</div>
-                <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:2}}>{lang==='ko'?'다른 여행자들이 공유한 코스':'Courses shared by travelers'}</div>
+                <div style={{fontSize:17,fontWeight:800,color:'white'}}>🌐 {t('community')}</div>
+                <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:2}}>{t('communityDesc')}</div>
               </div>
               <button onClick={()=>setShowCommunity(false)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:30,height:30,borderRadius:8,fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
             </div>
             <div style={{flex:1,overflowY:'auto',padding:'16px 20px'}}>
               {communityLoading ? (
-                <div style={{textAlign:'center',padding:'40px 0',color:'#94a3b8',fontSize:14}}>{lang==='ko'?'불러오는 중...':'Loading...'}</div>
+                <div style={{textAlign:'center',padding:'40px 0',color:'#94a3b8',fontSize:14}}>{t('uploading')}</div>
               ) : communityCoursesData.length === 0 ? (
                 <div style={{textAlign:'center',padding:'40px 0'}}>
                   <div style={{fontSize:40,marginBottom:12}}>📭</div>
-                  <div style={{color:'#94a3b8',fontSize:13}}>{lang==='ko'?'아직 공유된 코스가 없습니다':'No shared courses yet'}</div>
-                  <div style={{color:'#cbd5e1',fontSize:11,marginTop:4}}>{lang==='ko'?'코스를 저장하고 📤 버튼으로 공유해보세요!':'Save a course and share it with 📤!'}</div>
+                  <div style={{color:'#94a3b8',fontSize:13}}>{t('communityEmpty')}</div>
+                  <div style={{color:'#cbd5e1',fontSize:11,marginTop:4}}>{t('communityEmptyHint')}</div>
                 </div>
               ) : (
-                <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                <div style={{display:'flex',flexDirection:'column',gap:12}}>
                   {communityCoursesData.map((sc,idx)=>{
                     const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))]
                     const totalPlaces = (sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)
                     const dayCount = (sc.days||[]).length
                     const dateStr = sc.sharedAt ? new Date(sc.sharedAt).toLocaleDateString() : ''
+                    const isExpanded = communityExpanded === (sc.id||idx)
+                    const comments = sc.comments || []
+                    const photos = sc.photos || []
                     return (
-                      <div key={sc.id||idx} style={{padding:'14px 16px',borderRadius:14,border:'1.5px solid #e2e8f0',background:'#fafbfc',transition:'all .15s'}}
+                      <div key={sc.id||idx} style={{borderRadius:14,border:'1.5px solid #e2e8f0',background:'#fafbfc',overflow:'hidden',transition:'all .15s'}}
                         onMouseEnter={e=>e.currentTarget.style.borderColor='#3b82f6'} onMouseLeave={e=>e.currentTarget.style.borderColor='#e2e8f0'}>
-                        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:8}}>
-                          <div>
-                            <div style={{fontSize:15,fontWeight:700,color:'#0f172a'}}>{cities.join(' · ') || 'Course'}</div>
-                            <div style={{fontSize:11,color:'#64748b',marginTop:3}}>
-                              {totalPlaces}{lang==='ko'?'곳':' places'} · {dayCount}{lang==='ko'?'일':' days'}
-                              {sc.type==='ai' && <span style={{marginLeft:6,padding:'1px 5px',borderRadius:4,background:'#f3e8ff',color:'#7c3aed',fontSize:9,fontWeight:700}}>AI</span>}
+                        <div style={{padding:'14px 16px'}}>
+                          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:8}}>
+                            <div>
+                              <div style={{fontSize:15,fontWeight:700,color:'#0f172a'}}>{cities.join(' · ') || 'Course'}</div>
+                              <div style={{fontSize:11,color:'#64748b',marginTop:3}}>
+                                {totalPlaces}{t('communityPlaces')} · {dayCount}{t('communityDays')}
+                                {sc.type==='ai' && <span style={{marginLeft:6,padding:'1px 5px',borderRadius:4,background:'#f3e8ff',color:'#7c3aed',fontSize:9,fontWeight:700}}>AI</span>}
+                              </div>
                             </div>
+                            {currentUser && sc.uid === currentUser.uid && (
+                              <button onClick={async()=>{if(confirm('Delete?')){await deleteSharedCourse(sc.id);setCommunityCoursesData(prev=>prev.filter(c=>c.id!==sc.id))}}}
+                                style={{background:'none',border:'none',color:'#ef4444',fontSize:13,cursor:'pointer'}}>✕</button>
+                            )}
+                          </div>
+                          {/* 사진 */}
+                          {photos.length > 0 && (
+                            <div style={{display:'flex',gap:6,marginBottom:10,overflowX:'auto',paddingBottom:4}}>
+                              {photos.map((url,i)=>(
+                                <img key={i} src={url} style={{width:80,height:60,borderRadius:8,objectFit:'cover',flexShrink:0,cursor:'pointer'}} onClick={()=>window.open(url,'_blank')} />
+                              ))}
+                            </div>
+                          )}
+                          {/* 장소 태그 */}
+                          <div style={{display:'flex',flexWrap:'wrap',gap:4,marginBottom:10}}>
+                            {(sc.days||[]).flatMap(d=>d.items||[]).slice(0,6).map((it,i)=>(
+                              <span key={i} style={{padding:'2px 8px',borderRadius:20,background:'#f1f5f9',fontSize:10,color:'#475569',fontWeight:500}}>{it.name}</span>
+                            ))}
+                            {(sc.days||[]).flatMap(d=>d.items||[]).length > 6 && <span style={{padding:'2px 8px',borderRadius:20,background:'#f1f5f9',fontSize:10,color:'#94a3b8'}}>+{(sc.days||[]).flatMap(d=>d.items||[]).length-6}</span>}
+                          </div>
+                          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                            <div style={{display:'flex',alignItems:'center',gap:8}}>
+                              <span style={{fontSize:10,color:'#94a3b8'}}>{sc.userName || 'Anonymous'} · {dateStr}</span>
+                              <button onClick={()=>setCommunityExpanded(isExpanded?null:(sc.id||idx))}
+                                style={{background:'none',border:'none',color:'#3b82f6',fontSize:10,cursor:'pointer',fontWeight:600}}>
+                                💬 {comments.length} {isExpanded?'▲':'▼'}
+                              </button>
+                            </div>
+                            <button onClick={()=>{
+                              const days = sc.days || []
+                              setCourseDays(days);localStorage.setItem('atlas_course_days',JSON.stringify(days))
+                              const flat = days.flatMap(d=>d.items||[]);saveCourse(flat)
+                              setCourseTransport(sc.transport||'transit')
+                              setActiveDayTab(0);setShowCoursePlanner(true);setShowCommunity(false)
+                              setCourseSource(sc.type||'manual')
+                            }} style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',color:'white',padding:'6px 14px',borderRadius:8,fontSize:11,fontWeight:700,cursor:'pointer'}}>
+                              {t('communityLoad')}
+                            </button>
                           </div>
                         </div>
-                        {/* 코스 내 장소 미리보기 */}
-                        <div style={{display:'flex',flexWrap:'wrap',gap:4,marginBottom:10}}>
-                          {(sc.days||[]).flatMap(d=>d.items||[]).slice(0,6).map((it,i)=>(
-                            <span key={i} style={{padding:'2px 8px',borderRadius:20,background:'#f1f5f9',fontSize:10,color:'#475569',fontWeight:500}}>{it.name}</span>
-                          ))}
-                          {(sc.days||[]).flatMap(d=>d.items||[]).length > 6 && <span style={{padding:'2px 8px',borderRadius:20,background:'#f1f5f9',fontSize:10,color:'#94a3b8'}}>+{(sc.days||[]).flatMap(d=>d.items||[]).length-6}</span>}
-                        </div>
-                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                          <div style={{fontSize:10,color:'#94a3b8'}}>
-                            {sc.userName || 'Anonymous'} · {dateStr}
+                        {/* 댓글 섹션 */}
+                        {isExpanded && (
+                          <div style={{borderTop:'1px solid #e2e8f0',padding:'12px 16px',background:'#f8fafc'}}>
+                            {comments.length === 0 && <div style={{fontSize:11,color:'#94a3b8',textAlign:'center',padding:'8px 0'}}>{t('communityEmpty')}</div>}
+                            {comments.map((cm,ci)=>(
+                              <div key={cm.id||ci} style={{display:'flex',gap:8,marginBottom:8}}>
+                                <div style={{width:22,height:22,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:800,color:'white',flexShrink:0}}>{(cm.userName||'?')[0]?.toUpperCase()}</div>
+                                <div style={{flex:1,minWidth:0}}>
+                                  <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                    <span style={{fontSize:11,fontWeight:600,color:'#1e293b'}}>{cm.userName}</span>
+                                    <span style={{fontSize:9,color:'#94a3b8'}}>{cm.createdAt ? new Date(cm.createdAt).toLocaleDateString() : ''}</span>
+                                    {currentUser && cm.uid === currentUser.uid && (
+                                      <button onClick={async()=>{const updated=await deleteComment(sc.id,cm.id);setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c))}}
+                                        style={{background:'none',border:'none',color:'#ef4444',fontSize:9,cursor:'pointer',marginLeft:'auto'}}>{t('commentDelete')}</button>
+                                    )}
+                                  </div>
+                                  <div style={{fontSize:12,color:'#475569',marginTop:2,lineHeight:1.4}}>{cm.text}</div>
+                                </div>
+                              </div>
+                            ))}
+                            {/* 댓글 입력 */}
+                            {currentUser ? (
+                              <div style={{display:'flex',gap:6,marginTop:8}}>
+                                <input value={commentText} onChange={e=>setCommentText(e.target.value)} placeholder={t('commentPlaceholder')}
+                                  onKeyDown={e=>{if(e.key==='Enter'&&commentText.trim()){addComment(sc.id,{text:commentText.trim(),uid:currentUser.uid,userName:currentUser.displayName||currentUser.email}).then(updated=>{setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c));setCommentText('')})}}}
+                                  style={{flex:1,padding:'7px 10px',border:'1.5px solid #e2e8f0',borderRadius:8,fontSize:12,outline:'none',boxSizing:'border-box'}} />
+                                <button onClick={()=>{if(commentText.trim()){addComment(sc.id,{text:commentText.trim(),uid:currentUser.uid,userName:currentUser.displayName||currentUser.email}).then(updated=>{setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c));setCommentText('')})}}}
+                                  style={{background:'#3b82f6',border:'none',color:'white',padding:'7px 12px',borderRadius:8,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('commentPost')}</button>
+                              </div>
+                            ) : (
+                              <div style={{fontSize:11,color:'#94a3b8',textAlign:'center',marginTop:8}}>{t('commentLogin')}</div>
+                            )}
                           </div>
-                          <button onClick={()=>{
-                            const days = sc.days || []
-                            setCourseDays(days);localStorage.setItem('atlas_course_days',JSON.stringify(days))
-                            const flat = days.flatMap(d=>d.items||[]);saveCourse(flat)
-                            setCourseTransport(sc.transport||'transit')
-                            setActiveDayTab(0);setShowCoursePlanner(true);setShowCommunity(false)
-                            setCourseSource(sc.type||'manual')
-                          }} style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',color:'white',padding:'6px 16px',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                            {lang==='ko'?'코스 불러오기':'Load Course'}
-                          </button>
-                        </div>
+                        )}
                       </div>
                     )
                   })}
                 </div>
               )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Share Modal (사진 첨부 + 공유) */}
+      {shareModalCourse && (
+        <>
+          <div onClick={()=>setShareModalCourse(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3100}} />
+          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3101,width:isMobile?'92vw':380,background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden'}}>
+            <div style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',padding:'16px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <span style={{fontSize:16,fontWeight:800,color:'white'}}>📤 {t('shareBtn')}</span>
+              <button onClick={()=>setShareModalCourse(null)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:28,height:28,borderRadius:8,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+            </div>
+            <div style={{padding:'16px 22px 20px'}}>
+              {/* 코스 미리보기 */}
+              <div style={{padding:'10px 14px',borderRadius:10,background:'#f8fafc',border:'1px solid #e2e8f0',marginBottom:14}}>
+                <div style={{fontSize:14,fontWeight:700,color:'#0f172a'}}>{[...new Set((shareModalCourse.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))].join(' · ')}</div>
+                <div style={{fontSize:11,color:'#64748b',marginTop:3}}>{(shareModalCourse.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('communityPlaces')} · {(shareModalCourse.days||[]).length}{t('communityDays')}</div>
+              </div>
+              {/* 사진 첨부 */}
+              <div style={{marginBottom:14}}>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:6}}>{t('sharePhotos')}</label>
+                <input type="file" accept="image/*" multiple onChange={e=>setSharePhotos([...e.target.files].slice(0,5))}
+                  style={{fontSize:12,color:'#64748b'}} />
+                {sharePhotos.length > 0 && (
+                  <div style={{display:'flex',gap:6,marginTop:8,flexWrap:'wrap'}}>
+                    {[...sharePhotos].map((f,i)=>(
+                      <div key={i} style={{width:56,height:42,borderRadius:6,overflow:'hidden',border:'1px solid #e2e8f0'}}>
+                        <img src={URL.createObjectURL(f)} style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* 버튼 */}
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={()=>setShareModalCourse(null)} style={{flex:1,padding:'10px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'white',color:'#64748b',fontSize:13,fontWeight:600,cursor:'pointer'}}>{t('shareCancel')}</button>
+                <button disabled={shareUploading} onClick={async()=>{
+                  setShareUploading(true)
+                  try {
+                    let photoUrls = []
+                    for (const f of sharePhotos) {
+                      const path = `courses/${currentUser.uid}/${Date.now()}_${f.name}`
+                      const url = await uploadPhoto(f, path)
+                      photoUrls.push(url)
+                    }
+                    await shareCourse(currentUser.uid, shareModalCourse, currentUser.displayName||currentUser.email, photoUrls)
+                    alert(t('communityShared'))
+                    setShareModalCourse(null);setSharePhotos([])
+                  } catch(e) { alert(e.message) }
+                  setShareUploading(false)
+                }} style={{flex:1,padding:'10px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#2563eb,#7c3aed)',color:'white',fontSize:13,fontWeight:700,cursor:'pointer',opacity:shareUploading?.6:1}}>
+                  {shareUploading ? t('uploading') : t('shareBtn')}
+                </button>
+              </div>
             </div>
           </div>
         </>
@@ -3923,7 +4073,7 @@ function App() {
           <div onClick={()=>setShowLoginModal(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
           <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'92vw':380,background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden'}}>
             <div style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <span style={{fontSize:17,fontWeight:800,color:'white'}}>{authMode==='login'?(lang==='ko'?'로그인':'Login'):(lang==='ko'?'회원가입':'Sign Up')}</span>
+              <span style={{fontSize:17,fontWeight:800,color:'white'}}>{authMode==='login'?t('loginTitle'):t('signupTitle')}</span>
               <button onClick={()=>setShowLoginModal(false)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:30,height:30,borderRadius:8,fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
             </div>
             <div style={{padding:'20px 22px 24px'}}>
@@ -3932,7 +4082,7 @@ function App() {
                 style={{width:'100%',padding:'11px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontSize:14,fontWeight:600,color:'#374151',marginBottom:16,transition:'all .15s'}}
                 onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background='white'}>
                 <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#34A853" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#FBBC05" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-                Google {lang==='ko'?'로그인':'Login'}
+                Google {t('login')}
               </button>
               <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
                 <div style={{flex:1,height:1,background:'#e2e8f0'}} />
@@ -3942,18 +4092,18 @@ function App() {
               {/* 이메일 폼 */}
               {authMode==='signup' && (
                 <div style={{marginBottom:10}}>
-                  <input placeholder={lang==='ko'?'이름 (선택)':'Name (optional)'} value={authName} onChange={e=>setAuthName(e.target.value)}
+                  <input placeholder={t('nameOptional')} value={authName} onChange={e=>setAuthName(e.target.value)}
                     style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,color:'#0f172a',outline:'none',boxSizing:'border-box'}}
                     onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'} />
                 </div>
               )}
               <div style={{marginBottom:10}}>
-                <input type="email" placeholder={lang==='ko'?'이메일':'Email'} value={authEmail} onChange={e=>setAuthEmail(e.target.value)}
+                <input type="email" placeholder={t('email')} value={authEmail} onChange={e=>setAuthEmail(e.target.value)}
                   style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,color:'#0f172a',outline:'none',boxSizing:'border-box'}}
                   onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'} />
               </div>
               <div style={{marginBottom:14}}>
-                <input type="password" placeholder={lang==='ko'?'비밀번호':'Password'} value={authPw} onChange={e=>setAuthPw(e.target.value)}
+                <input type="password" placeholder={t('password')} value={authPw} onChange={e=>setAuthPw(e.target.value)}
                   onKeyDown={e=>{if(e.key==='Enter')handleAuth()}}
                   style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,color:'#0f172a',outline:'none',boxSizing:'border-box'}}
                   onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'} />
@@ -3961,12 +4111,12 @@ function App() {
               {authError && <div style={{marginBottom:12,padding:'8px 12px',borderRadius:8,background:'#fef2f2',border:'1px solid #fecaca',fontSize:12,color:'#dc2626'}}>{authError}</div>}
               <button onClick={handleAuth} disabled={authLoading}
                 style={{width:'100%',padding:'12px',background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',borderRadius:12,color:'white',fontSize:15,fontWeight:700,cursor:'pointer',opacity:authLoading?.6:1}}>
-                {authLoading ? '...' : authMode==='login'?(lang==='ko'?'로그인':'Login'):(lang==='ko'?'가입하기':'Sign Up')}
+                {authLoading ? '...' : authMode==='login'?t('login'):t('signup')}
               </button>
               <div style={{marginTop:14,textAlign:'center'}}>
-                <span style={{fontSize:12,color:'#64748b'}}>{authMode==='login'?(lang==='ko'?'계정이 없으신가요?':'No account?'):(lang==='ko'?'이미 계정이 있으신가요?':'Have an account?')} </span>
+                <span style={{fontSize:12,color:'#64748b'}}>{authMode==='login'?t('noAccount'):t('hasAccount')} </span>
                 <span onClick={()=>{setAuthMode(authMode==='login'?'signup':'login');setAuthError('')}}
-                  style={{fontSize:12,color:'#3b82f6',fontWeight:600,cursor:'pointer'}}>{authMode==='login'?(lang==='ko'?'회원가입':'Sign Up'):(lang==='ko'?'로그인':'Login')}</span>
+                  style={{fontSize:12,color:'#3b82f6',fontWeight:600,cursor:'pointer'}}>{authMode==='login'?t('signup'):t('login')}</span>
               </div>
             </div>
           </div>
