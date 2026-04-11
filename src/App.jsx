@@ -274,7 +274,9 @@ function App() {
   const [shareModalCourse, setShareModalCourse] = useState(null) // 공유 모달용
   const [sharePhotos, setSharePhotos] = useState([])
   const [shareUploading, setShareUploading] = useState(false)
-  const [communityExpanded, setCommunityExpanded] = useState(null) // 펼쳐진 코스 ID
+  const [communityExpanded, setCommunityExpanded] = useState(null)
+  const [communityContinent, setCommunityContinent] = useState(null)
+  const [communityCountry, setCommunityCountry] = useState(null)
   const [commentText, setCommentText] = useState('')
   const userSyncRef = useRef(false) // Firestore → localStorage 초기 로드 중복 방지
 
@@ -896,7 +898,7 @@ function App() {
       const s = backStateRef.current
       // 모달/오버레이 먼저 닫기
       if (s.showCommunity) {
-        setShowCommunity(false)
+        setShowCommunity(false);setCommunityContinent(null);setCommunityCountry(null)
         backStateRef.current = { ...s, showCommunity: false }
         return
       }
@@ -2440,7 +2442,7 @@ function App() {
                 <div style={{padding:'0 16px 14px'}}>
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
                     onClick={async()=>{
-                      setShowCommunity(true);setShowHamburger(false);setCommunityLoading(true)
+                      setShowCommunity(true);setShowHamburger(false);setCommunityLoading(true);setCommunityContinent(null);setCommunityCountry(null);setCommunityExpanded(null)
                       try{const data=await loadSharedCourses();setCommunityCoursesData(data)}catch(e){console.error(e)}
                       setCommunityLoading(false)
                     }}
@@ -3885,176 +3887,193 @@ function App() {
       )}
 
       {/* Community Courses Modal */}
-      {showCommunity && (
+      {showCommunity && (() => {
+        // 데이터 그룹핑
+        const grouped = {}
+        communityCoursesData.forEach(sc => {
+          const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))]
+          const firstCity = cities[0]
+          let country = '', continent = ''
+          if (firstCity) {
+            const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(c=>c.name===firstCity))
+            if (entry) { country = entry[0]; continent = COUNTRY_INFO[country]?.continent || '' }
+          }
+          if (!continent) continent = lang==='ko'?'기타':'Other'
+          if (!country) country = lang==='ko'?'기타':'Other'
+          const contDisplay = lang==='ko' ? continent : (CONTINENT_I18N[continent]?.[lang] || continent)
+          if (!grouped[contDisplay]) grouped[contDisplay] = {_rawContinent:continent}
+          if (!grouped[contDisplay][country]) grouped[contDisplay][country] = []
+          grouped[contDisplay][country].push(sc)
+        })
+        const continentEmoji = (raw) => raw.includes('아시아')?'🌏':raw.includes('유럽')?'🌍':raw.includes('아프리카')?'🌍':raw.includes('북아메리카')?'🌎':raw.includes('남아메리카')?'🌎':raw.includes('오세아니아')?'🌏':'🌐'
+        return (
         <>
-          <div onClick={()=>setShowCommunity(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
+          <div onClick={()=>{setShowCommunity(false);setCommunityContinent(null);setCommunityCountry(null)}} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
           <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'96vw':560,maxHeight:'88vh',background:'white',borderRadius:22,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden',display:'flex',flexDirection:'column'}}>
             <div style={{background:'linear-gradient(135deg,#f59e0b,#ef4444)',padding:'20px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
-              <div>
-                <div style={{fontSize:19,fontWeight:800,color:'white'}}>🌐 {t('community')}</div>
-                <div style={{fontSize:12,color:'rgba(255,255,255,.7)',marginTop:3}}>{t('communityDesc')}</div>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                {(communityContinent || communityCountry) && (
+                  <button onClick={()=>{if(communityCountry)setCommunityCountry(null);else setCommunityContinent(null)}}
+                    style={{background:'rgba(255,255,255,.25)',border:'none',color:'white',width:28,height:28,borderRadius:8,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>←</button>
+                )}
+                <div>
+                  <div style={{fontSize:19,fontWeight:800,color:'white'}}>
+                    {communityCountry ? getCountryName(communityCountry) : communityContinent ? communityContinent : ('🌐 '+t('community'))}
+                  </div>
+                  <div style={{fontSize:12,color:'rgba(255,255,255,.7)',marginTop:2}}>
+                    {communityCountry ? communityContinent : communityContinent ? (lang==='ko'?'국가를 선택하세요':'Select a country') : t('communityDesc')}
+                  </div>
+                </div>
               </div>
-              <button onClick={()=>setShowCommunity(false)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:32,height:32,borderRadius:10,fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+              <button onClick={()=>{setShowCommunity(false);setCommunityContinent(null);setCommunityCountry(null)}} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:32,height:32,borderRadius:10,fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
             </div>
             <div style={{flex:1,overflowY:'auto',padding:'18px 22px'}}>
               {communityLoading ? (
-                <div style={{textAlign:'center',padding:'50px 0',color:'#94a3b8',fontSize:15}}>{t('uploading')}</div>
+                <div style={{textAlign:'center',padding:'50px 0',color:'#94a3b8',fontSize:15}}>{lang==='ko'?'불러오는 중...':'Loading...'}</div>
               ) : communityCoursesData.length === 0 ? (
                 <div style={{textAlign:'center',padding:'50px 0'}}>
                   <div style={{fontSize:48,marginBottom:14}}>📭</div>
                   <div style={{color:'#94a3b8',fontSize:14,fontWeight:600}}>{t('communityEmpty')}</div>
                   <div style={{color:'#cbd5e1',fontSize:12,marginTop:6}}>{t('communityEmptyHint')}</div>
                 </div>
-              ) : (() => {
-                // 대륙별 > 국가별 > 도시별 그룹핑
-                const grouped = {}
-                communityCoursesData.forEach(sc => {
-                  const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))]
-                  const firstCity = cities[0]
-                  let country = '', continent = ''
-                  if (firstCity) {
-                    const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(c=>c.name===firstCity))
-                    if (entry) {
-                      country = entry[0]
-                      continent = COUNTRY_INFO[country]?.continent || ''
-                    }
-                  }
-                  if (!continent) continent = '기타'
-                  if (!country) country = '기타'
-                  // 대륙명 번역
-                  const contKey = continent
-                  const contDisplay = lang==='ko' ? continent : (CONTINENT_I18N[continent]?.[lang] || continent)
-                  if (!grouped[contDisplay]) grouped[contDisplay] = {_key:contKey}
-                  if (!grouped[contDisplay][country]) grouped[contDisplay][country] = []
-                  grouped[contDisplay][country].push(sc)
-                })
-                return (
-                  <div style={{display:'flex',flexDirection:'column',gap:16}}>
-                    {Object.entries(grouped).map(([cont, countriesObj]) => {
-                      const contKey = countriesObj._key || cont
-                      const {_key, ...countries} = countriesObj
-                      return (
-                      <div key={cont}>
-                        <div style={{fontSize:14,fontWeight:800,color:'#1e293b',padding:'6px 0',borderBottom:'2px solid #e2e8f0',marginBottom:10,display:'flex',alignItems:'center',gap:6}}>
-                          <span>{contKey.includes('아시아')?'🌏':contKey.includes('유럽')?'🌍':contKey.includes('아프리카')?'🌍':contKey.includes('북아메리카')?'🌎':contKey.includes('남아메리카')?'🌎':contKey.includes('오세아니아')?'🌏':'🌐'}</span>
-                          {cont}
-                        </div>
-                        {Object.entries(countries).map(([countryName, courses]) => (
-                          <div key={countryName} style={{marginBottom:12,marginLeft:8}}>
-                            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
-                              {getFlagImg(COUNTRY_INFO[countryName]?.emoji,20) ? <img src={getFlagImg(COUNTRY_INFO[countryName]?.emoji,20)} width={18} height={13} style={{borderRadius:2}} /> : <span>{COUNTRY_INFO[countryName]?.emoji||''}</span>}
-                              <span style={{fontSize:13,fontWeight:700,color:'#334155'}}>{getCountryName(countryName)}</span>
-                              <span style={{fontSize:10,color:'#94a3b8'}}>({courses.length})</span>
+              ) : !communityContinent ? (
+                /* Level 0: 대륙 박스 그리드 */
+                <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'1fr 1fr 1fr',gap:12}}>
+                  {Object.entries(grouped).map(([cont, obj]) => {
+                    const raw = obj._rawContinent || cont
+                    const countryCount = Object.keys(obj).filter(k=>k!=='_rawContinent').length
+                    const courseCount = Object.values(obj).filter(v=>Array.isArray(v)).reduce((a,arr)=>a+arr.length,0)
+                    return (
+                      <div key={cont} onClick={()=>setCommunityContinent(cont)}
+                        style={{padding:'20px 16px',borderRadius:16,background:'linear-gradient(135deg,#f8fafc,#f1f5f9)',border:'2px solid #e2e8f0',cursor:'pointer',textAlign:'center',transition:'all .2s'}}
+                        onMouseEnter={e=>{e.currentTarget.style.borderColor='#3b82f6';e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 8px 24px rgba(59,130,246,.15)'}}
+                        onMouseLeave={e=>{e.currentTarget.style.borderColor='#e2e8f0';e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='none'}}>
+                        <div style={{fontSize:32,marginBottom:8}}>{continentEmoji(raw)}</div>
+                        <div style={{fontSize:14,fontWeight:700,color:'#0f172a'}}>{cont}</div>
+                        <div style={{fontSize:11,color:'#64748b',marginTop:4}}>{countryCount} {lang==='ko'?'개국':'countries'} · {courseCount} {lang==='ko'?'개 코스':'courses'}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : !communityCountry ? (
+                /* Level 1: 선택된 대륙 내 국가 리스트 */
+                <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                  {Object.entries(grouped[communityContinent]||{}).filter(([k])=>k!=='_rawContinent').map(([countryName, courses]) => (
+                    <div key={countryName} onClick={()=>setCommunityCountry(countryName)}
+                      style={{display:'flex',alignItems:'center',gap:12,padding:'14px 18px',borderRadius:14,border:'1.5px solid #e2e8f0',background:'white',cursor:'pointer',transition:'all .15s'}}
+                      onMouseEnter={e=>{e.currentTarget.style.borderColor='#3b82f6';e.currentTarget.style.boxShadow='0 4px 12px rgba(59,130,246,.1)'}}
+                      onMouseLeave={e=>{e.currentTarget.style.borderColor='#e2e8f0';e.currentTarget.style.boxShadow='none'}}>
+                      {getFlagImg(COUNTRY_INFO[countryName]?.emoji,20) ? <img src={getFlagImg(COUNTRY_INFO[countryName]?.emoji,20)} width={24} height={18} style={{borderRadius:3}} /> : <span style={{fontSize:20}}>{COUNTRY_INFO[countryName]?.emoji||''}</span>}
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:15,fontWeight:700,color:'#0f172a'}}>{getCountryName(countryName)}</div>
+                        <div style={{fontSize:11,color:'#64748b',marginTop:2}}>{courses.length} {lang==='ko'?'개 코스':'courses'}</div>
+                      </div>
+                      <span style={{fontSize:16,color:'#94a3b8'}}>›</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Level 2: 선택된 국가 내 코스 목록 */
+                <div style={{display:'flex',flexDirection:'column',gap:14}}>
+                  {(grouped[communityContinent]?.[communityCountry]||[]).map((sc,idx) => {
+                    const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))]
+                    const totalPlaces = (sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)
+                    const dayCount = (sc.days||[]).length
+                    const dateStr = sc.sharedAt ? new Date(sc.sharedAt).toLocaleDateString() : ''
+                    const isExpanded = communityExpanded === (sc.id||idx)
+                    const comments = sc.comments || []
+                    const photos = sc.photos || []
+                    return (
+                      <div key={sc.id||idx} style={{borderRadius:16,border:'1.5px solid #e2e8f0',background:'white',overflow:'hidden',boxShadow:'0 2px 8px rgba(0,0,0,.04)'}}>
+                        <div style={{padding:'18px 20px'}}>
+                          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
+                            <div>
+                              <div style={{fontSize:18,fontWeight:800,color:'#0f172a'}}>{cities.map(c=>getCityName(c)).join(' · ') || 'Course'}</div>
+                              <div style={{fontSize:12,color:'#64748b',marginTop:4}}>
+                                {totalPlaces}{t('communityPlaces')} · {dayCount}{t('communityDays')}
+                                {sc.type==='ai' && <span style={{marginLeft:6,padding:'1px 6px',borderRadius:4,background:'#f3e8ff',color:'#7c3aed',fontSize:10,fontWeight:700}}>AI</span>}
+                              </div>
                             </div>
-                            <div style={{display:'flex',flexDirection:'column',gap:10,marginLeft:8}}>
-                              {courses.map((sc,idx) => {
-                                const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))]
-                                const totalPlaces = (sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)
-                                const dayCount = (sc.days||[]).length
-                                const dateStr = sc.sharedAt ? new Date(sc.sharedAt).toLocaleDateString() : ''
-                                const isExpanded = communityExpanded === (sc.id||idx)
-                                const comments = sc.comments || []
-                                const photos = sc.photos || []
-                                return (
-                                  <div key={sc.id||idx} style={{borderRadius:16,border:'1.5px solid #e2e8f0',background:'white',overflow:'hidden',transition:'all .15s',boxShadow:'0 2px 8px rgba(0,0,0,.04)'}}
-                                    onMouseEnter={e=>{e.currentTarget.style.borderColor='#3b82f6';e.currentTarget.style.boxShadow='0 4px 16px rgba(59,130,246,.15)'}}
-                                    onMouseLeave={e=>{e.currentTarget.style.borderColor='#e2e8f0';e.currentTarget.style.boxShadow='0 2px 8px rgba(0,0,0,.04)'}}>
-                                    <div style={{padding:'16px 18px'}}>
-                                      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:10}}>
-                                        <div>
-                                          <div style={{fontSize:17,fontWeight:800,color:'#0f172a',letterSpacing:'-.3px'}}>{cities.map(c=>getCityName(c)).join(' · ') || 'Course'}</div>
-                                          <div style={{fontSize:12,color:'#64748b',marginTop:4,display:'flex',alignItems:'center',gap:6}}>
-                                            <span>{totalPlaces}{t('communityPlaces')}</span>
-                                            <span>·</span>
-                                            <span>{dayCount}{t('communityDays')}</span>
-                                            {sc.type==='ai' && <span style={{padding:'1px 6px',borderRadius:4,background:'#f3e8ff',color:'#7c3aed',fontSize:10,fontWeight:700}}>AI</span>}
-                                          </div>
-                                        </div>
-                                        {currentUser && sc.uid === currentUser.uid && (
-                                          <button onClick={async()=>{if(confirm('Delete?')){await deleteSharedCourse(sc.id);setCommunityCoursesData(prev=>prev.filter(c=>c.id!==sc.id))}}}
-                                            style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:4}}>✕</button>
-                                        )}
-                                      </div>
-                                      {photos.length > 0 && (
-                                        <div style={{display:'flex',gap:8,marginBottom:12,overflowX:'auto',paddingBottom:4}}>
-                                          {photos.map((url,i)=>(
-                                            <img key={i} src={url} style={{width:100,height:75,borderRadius:10,objectFit:'cover',flexShrink:0,cursor:'pointer',border:'1px solid #e2e8f0'}} onClick={()=>window.open(url,'_blank')} />
-                                          ))}
-                                        </div>
-                                      )}
-                                      <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:12}}>
-                                        {(sc.days||[]).flatMap(d=>d.items||[]).slice(0,8).map((it,i)=>(
-                                          <span key={i} style={{padding:'3px 10px',borderRadius:20,background:'#f1f5f9',fontSize:11,color:'#475569',fontWeight:500}}>{getCityName(it.name) || it.name}</span>
-                                        ))}
-                                        {(sc.days||[]).flatMap(d=>d.items||[]).length > 8 && <span style={{padding:'3px 10px',borderRadius:20,background:'#f1f5f9',fontSize:11,color:'#94a3b8'}}>+{(sc.days||[]).flatMap(d=>d.items||[]).length-8}</span>}
-                                      </div>
-                                      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                                        <div style={{display:'flex',alignItems:'center',gap:10}}>
-                                          <span style={{fontSize:11,color:'#94a3b8'}}>{sc.userName || 'Anonymous'} · {dateStr}</span>
-                                          <button onClick={()=>setCommunityExpanded(isExpanded?null:(sc.id||idx))}
-                                            style={{background:'#f1f5f9',border:'none',color:'#3b82f6',fontSize:11,cursor:'pointer',fontWeight:600,padding:'3px 8px',borderRadius:6}}>                                            💬 {comments.length} {isExpanded?'▲':'▼'}
-                                          </button>
-                                        </div>
-                                        <button onClick={()=>{
-                                          const days = sc.days || []
-                                          setCourseDays(days);localStorage.setItem('atlas_course_days',JSON.stringify(days))
-                                          const flat = days.flatMap(d=>d.items||[]);saveCourse(flat)
-                                          setCourseTransport(sc.transport||'transit')
-                                          setActiveDayTab(0);setShowCoursePlanner(true);setShowCommunity(false)
-                                          setCourseSource(sc.type||'manual')
-                                        }} style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',color:'white',padding:'8px 20px',borderRadius:10,fontSize:13,fontWeight:700,cursor:'pointer',letterSpacing:'-.2px'}}>
-                                          {t('communityLoad')}
-                                        </button>
-                                      </div>
-                                    </div>
-                                    {isExpanded && (
-                                      <div style={{borderTop:'1px solid #e2e8f0',padding:'14px 18px',background:'#f8fafc'}}>
-                                        {comments.length === 0 && <div style={{fontSize:12,color:'#94a3b8',textAlign:'center',padding:'10px 0'}}>{t('communityEmpty')}</div>}
-                                        {comments.map((cm,ci)=>(
-                                          <div key={cm.id||ci} style={{display:'flex',gap:10,marginBottom:10}}>
-                                            <div style={{width:26,height:26,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'white',flexShrink:0}}>{(cm.userName||'?')[0]?.toUpperCase()}</div>
-                                            <div style={{flex:1,minWidth:0}}>
-                                              <div style={{display:'flex',alignItems:'center',gap:6}}>
-                                                <span style={{fontSize:12,fontWeight:600,color:'#1e293b'}}>{cm.userName}</span>
-                                                <span style={{fontSize:10,color:'#94a3b8'}}>{cm.createdAt ? new Date(cm.createdAt).toLocaleDateString() : ''}</span>
-                                                {currentUser && cm.uid === currentUser.uid && (
-                                                  <button onClick={async()=>{const updated=await deleteComment(sc.id,cm.id);setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c))}}
-                                                    style={{background:'none',border:'none',color:'#ef4444',fontSize:10,cursor:'pointer',marginLeft:'auto'}}>{t('commentDelete')}</button>
-                                                )}
-                                              </div>
-                                              <div style={{fontSize:13,color:'#475569',marginTop:3,lineHeight:1.5}}>{cm.text}</div>
-                                            </div>
-                                          </div>
-                                        ))}
-                                        {currentUser ? (
-                                          <div style={{display:'flex',gap:8,marginTop:10}}>
-                                            <input value={commentText} onChange={e=>setCommentText(e.target.value)} placeholder={t('commentPlaceholder')}
-                                              onKeyDown={e=>{if(e.key==='Enter'&&commentText.trim()){addComment(sc.id,{text:commentText.trim(),uid:currentUser.uid,userName:currentUser.displayName||currentUser.email}).then(updated=>{setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c));setCommentText('')})}}}
-                                              style={{flex:1,padding:'8px 12px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box'}} />
-                                            <button onClick={()=>{if(commentText.trim()){addComment(sc.id,{text:commentText.trim(),uid:currentUser.uid,userName:currentUser.displayName||currentUser.email}).then(updated=>{setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c));setCommentText('')})}}}
-                                              style={{background:'#3b82f6',border:'none',color:'white',padding:'8px 16px',borderRadius:10,fontSize:12,fontWeight:600,cursor:'pointer'}}>{t('commentPost')}</button>
-                                          </div>
-                                        ) : (
-                                          <div style={{fontSize:12,color:'#94a3b8',textAlign:'center',marginTop:10}}>{t('commentLogin')}</div>
-                                        )}
-                                      </div>
+                            {currentUser && sc.uid === currentUser.uid && (
+                              <button onClick={async()=>{if(confirm('Delete?')){await deleteSharedCourse(sc.id);setCommunityCoursesData(prev=>prev.filter(c=>c.id!==sc.id))}}}
+                                style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer'}}>✕</button>
+                            )}
+                          </div>
+                          {photos.length > 0 && (
+                            <div style={{display:'flex',gap:8,marginBottom:12,overflowX:'auto',paddingBottom:4}}>
+                              {photos.map((url,i)=>(
+                                <img key={i} src={url} style={{width:110,height:80,borderRadius:10,objectFit:'cover',flexShrink:0,cursor:'pointer',border:'1px solid #e2e8f0'}} onClick={()=>window.open(url,'_blank')} />
+                              ))}
+                            </div>
+                          )}
+                          <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:14}}>
+                            {(sc.days||[]).flatMap(d=>d.items||[]).slice(0,8).map((it,i)=>(
+                              <span key={i} style={{padding:'4px 10px',borderRadius:20,background:'#f1f5f9',fontSize:11,color:'#475569',fontWeight:500}}>{it.name}</span>
+                            ))}
+                            {(sc.days||[]).flatMap(d=>d.items||[]).length > 8 && <span style={{padding:'4px 10px',borderRadius:20,background:'#f1f5f9',fontSize:11,color:'#94a3b8'}}>+{(sc.days||[]).flatMap(d=>d.items||[]).length-8}</span>}
+                          </div>
+                          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                            <div style={{display:'flex',alignItems:'center',gap:10}}>
+                              <span style={{fontSize:11,color:'#94a3b8'}}>{sc.userName || 'Anonymous'} · {dateStr}</span>
+                              <button onClick={()=>setCommunityExpanded(isExpanded?null:(sc.id||idx))}
+                                style={{background:'#f1f5f9',border:'none',color:'#3b82f6',fontSize:11,cursor:'pointer',fontWeight:600,padding:'3px 8px',borderRadius:6}}>
+                                💬 {comments.length} {isExpanded?'▲':'▼'}
+                              </button>
+                            </div>
+                            <button onClick={()=>{
+                              const days = sc.days || []
+                              setCourseDays(days);localStorage.setItem('atlas_course_days',JSON.stringify(days))
+                              const flat = days.flatMap(d=>d.items||[]);saveCourse(flat)
+                              setCourseTransport(sc.transport||'transit')
+                              setActiveDayTab(0);setShowCoursePlanner(true);setShowCommunity(false)
+                              setCourseSource(sc.type||'manual')
+                            }} style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',color:'white',padding:'8px 20px',borderRadius:10,fontSize:13,fontWeight:700,cursor:'pointer'}}>
+                              {t('communityLoad')}
+                            </button>
+                          </div>
+                        </div>
+                        {isExpanded && (
+                          <div style={{borderTop:'1px solid #e2e8f0',padding:'14px 20px',background:'#f8fafc'}}>
+                            {comments.length === 0 && <div style={{fontSize:12,color:'#94a3b8',textAlign:'center',padding:'10px 0'}}>{lang==='ko'?'아직 댓글이 없습니다':'No comments yet'}</div>}
+                            {comments.map((cm,ci)=>(
+                              <div key={cm.id||ci} style={{display:'flex',gap:10,marginBottom:10}}>
+                                <div style={{width:26,height:26,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'white',flexShrink:0}}>{(cm.userName||'?')[0]?.toUpperCase()}</div>
+                                <div style={{flex:1}}>
+                                  <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                    <span style={{fontSize:12,fontWeight:600,color:'#1e293b'}}>{cm.userName}</span>
+                                    <span style={{fontSize:10,color:'#94a3b8'}}>{cm.createdAt ? new Date(cm.createdAt).toLocaleDateString() : ''}</span>
+                                    {currentUser && cm.uid === currentUser.uid && (
+                                      <button onClick={async()=>{const updated=await deleteComment(sc.id,cm.id);setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c))}}
+                                        style={{background:'none',border:'none',color:'#ef4444',fontSize:10,cursor:'pointer',marginLeft:'auto'}}>{t('commentDelete')}</button>
                                     )}
                                   </div>
-                                )
-                              })}
-                            </div>
+                                  <div style={{fontSize:13,color:'#475569',marginTop:3,lineHeight:1.5}}>{cm.text}</div>
+                                </div>
+                              </div>
+                            ))}
+                            {currentUser ? (
+                              <div style={{display:'flex',gap:8,marginTop:10}}>
+                                <input value={commentText} onChange={e=>setCommentText(e.target.value)} placeholder={t('commentPlaceholder')}
+                                  onKeyDown={e=>{if(e.key==='Enter'&&commentText.trim()){addComment(sc.id,{text:commentText.trim(),uid:currentUser.uid,userName:currentUser.displayName||currentUser.email}).then(updated=>{setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c));setCommentText('')})}}}
+                                  style={{flex:1,padding:'8px 12px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box'}} />
+                                <button onClick={()=>{if(commentText.trim()){addComment(sc.id,{text:commentText.trim(),uid:currentUser.uid,userName:currentUser.displayName||currentUser.email}).then(updated=>{setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c));setCommentText('')})}}}
+                                  style={{background:'#3b82f6',border:'none',color:'white',padding:'8px 16px',borderRadius:10,fontSize:12,fontWeight:600,cursor:'pointer'}}>{t('commentPost')}</button>
+                              </div>
+                            ) : (
+                              <div style={{fontSize:12,color:'#94a3b8',textAlign:'center',marginTop:10}}>{t('commentLogin')}</div>
+                            )}
                           </div>
-                        ))}
+                        )}
                       </div>
-                      )
-                    })}
-                  </div>
-                )
-              })()}
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </>
-      )}
+        )
+      })()}
 
       {/* Share Modal */}
       {shareModalCourse && (
@@ -4062,7 +4081,7 @@ function App() {
           <div onClick={()=>setShareModalCourse(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3100}} />
           <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3101,width:isMobile?'92vw':400,background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden'}}>
             <div style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <span style={{fontSize:17,fontWeight:800,color:'white'}}>📤 {t('shareBtn')}</span>
+              <span style={{fontSize:17,fontWeight:800,color:'white'}}>{t('shareBtn')}</span>
               <button onClick={()=>setShareModalCourse(null)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:30,height:30,borderRadius:8,fontSize:15,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
             </div>
             <div style={{padding:'18px 22px 22px'}}>
@@ -4091,7 +4110,7 @@ function App() {
                   try {
                     let photoUrls = []
                     for (const f of sharePhotos) {
-                      const path = `courses/${currentUser.uid}/${Date.now()}_${f.name}`
+                      const path = 'courses/'+currentUser.uid+'/'+Date.now()+'_'+f.name
                       const url = await uploadPhoto(f, path)
                       photoUrls.push(url)
                     }
