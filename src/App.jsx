@@ -822,23 +822,23 @@ function App() {
     const unsub = onAuth(async (user) => {
       setCurrentUser(user)
       if (user) {
-        // Firestore에서 유저 데이터 로드
-        const data = await loadUserData(user.uid)
-        if (data) {
-          userSyncRef.current = true
-          if (data.favorites?.length) { setFavorites(data.favorites); localStorage.setItem('atlas_favorites', JSON.stringify(data.favorites)) }
-          if (data.savedCourses?.length) { setSavedCourses(data.savedCourses); localStorage.setItem('atlas_saved_courses', JSON.stringify(data.savedCourses)) }
-          if (data.visited && Object.keys(data.visited).length) { setVisited(data.visited); localStorage.setItem('atlas_visited', JSON.stringify(data.visited)) }
-          if (data.homeCountry) { setHomeCountry(data.homeCountry); localStorage.setItem('atlas_home_country', data.homeCountry) }
-          if (data.lang) { setLang(data.lang); localStorage.setItem('atlas_lang', data.lang) }
-          setTimeout(() => { userSyncRef.current = false }, 500)
-        } else {
-          // 첫 로그인: localStorage → Firestore 마이그레이션
-          await saveUserData(user.uid, {
-            favorites, savedCourses, visited, homeCountry,
-            lang, displayName: user.displayName || '', email: user.email
-          })
-        }
+        try {
+          const data = await loadUserData(user.uid)
+          if (data) {
+            userSyncRef.current = true
+            if (data.favorites?.length) { setFavorites(data.favorites); localStorage.setItem('atlas_favorites', JSON.stringify(data.favorites)) }
+            if (data.savedCourses?.length) { setSavedCourses(data.savedCourses); localStorage.setItem('atlas_saved_courses', JSON.stringify(data.savedCourses)) }
+            if (data.visited && Object.keys(data.visited).length) { setVisited(data.visited); localStorage.setItem('atlas_visited', JSON.stringify(data.visited)) }
+            if (data.homeCountry) { setHomeCountry(data.homeCountry); localStorage.setItem('atlas_home_country', data.homeCountry) }
+            if (data.lang) { setLang(data.lang); localStorage.setItem('atlas_lang', data.lang) }
+            setTimeout(() => { userSyncRef.current = false }, 500)
+          } else {
+            await saveUserData(user.uid, {
+              favorites, savedCourses, visited, homeCountry,
+              lang, displayName: user.displayName || '', email: user.email
+            })
+          }
+        } catch(e) { console.error('[Auth] Firestore sync error:', e) }
       }
     })
     return () => unsub()
@@ -848,8 +848,8 @@ function App() {
   useEffect(() => {
     if (!currentUser || userSyncRef.current) return
     const timer = setTimeout(() => {
-      saveUserData(currentUser.uid, { favorites, savedCourses, visited, homeCountry, lang })
-    }, 1000) // 1초 디바운스
+      saveUserData(currentUser.uid, { favorites, savedCourses, visited, homeCountry, lang }).catch(e => console.error('[Sync]', e))
+    }, 2000)
     return () => clearTimeout(timer)
   }, [favorites, savedCourses, visited, homeCountry, lang, currentUser])
 
@@ -1129,6 +1129,51 @@ function App() {
     return item.displayName || item.name
   }
   const getCourseItemCity = (item) => getCityName(item.cityName || item.name)
+
+  // 코스 아이템 다국어 이름 생성 (공유 시 사용)
+  const buildItemI18n = (item) => {
+    const names = { ko: item.name }
+    const cityKey = item.cityName
+    // 도시명 번역
+    const cityI18n = { ko: cityKey }
+    if (cityKey && CITY_I18N[cityKey]) {
+      const tr = CITY_I18N[cityKey]
+      cityI18n.en = tr[0] || cityKey; cityI18n.ja = tr[1] || tr[0] || cityKey; cityI18n.zh = tr[2] || tr[0] || cityKey
+    }
+    // 관광지 번역
+    if (item.source === 'spot' && cityKey) {
+      for (const lg of ['en','ja','zh']) {
+        const manual = CITY_DATA_I18N[cityKey]?.[lg]
+        const autoD = AUTO_I18N?.[cityKey]?.[lg] || AUTO_I18N?.[cityKey]?.['en']
+        const trData = manual || autoD
+        if (trData?.spots) {
+          const exact = trData.spots[item.name]
+          if (exact?.name) { names[lg] = exact.name; continue }
+          const fuzzy = Object.keys(trData.spots).find(k => k.startsWith(item.name) || item.name.startsWith(k))
+          if (fuzzy && trData.spots[fuzzy]?.name) { names[lg] = trData.spots[fuzzy].name; continue }
+        }
+        // wikiTitle fallback
+        if (item.wikiTitle) { names[lg] = names[lg] || item.wikiTitle }
+        else { names[lg] = names[lg] || item.name }
+      }
+    } else {
+      // hotspot/restaurant → 원본 이름 유지 (Google Places는 이미 해당 언어)
+      for (const lg of ['en','ja','zh']) names[lg] = names[lg] || item.displayName || item.name
+    }
+    return { names, cityNames: cityI18n }
+  }
+
+  // 코스 전체 다국어 처리 (공유 전)
+  const buildCourseI18n = (course) => {
+    const newDays = (course.days || []).map(d => ({
+      ...d,
+      items: (d.items || []).map(it => {
+        const i18n = buildItemI18n(it)
+        return { ...it, i18n: i18n.names, cityI18n: i18n.cityNames }
+      })
+    }))
+    return { ...course, days: newDays }
+  }
 
   // ── 코스 다운로드 (PPT / Word) ──
   const downloadCoursePPT = async () => {
@@ -2290,7 +2335,7 @@ function App() {
                             <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
                           <button onClick={()=>loadSavedCourse(sc)} style={{background:'#7c3aed',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
-                          {currentUser && <button onClick={()=>{setShareModalCourse(sc);setSharePhotos([])}} style={{background:'none',border:'1px solid rgba(59,130,246,.4)',color:'#60a5fa',padding:'3px 7px',borderRadius:6,fontSize:10,fontWeight:600,cursor:'pointer'}}>📤</button>}
+                          <button onClick={()=>{if(!currentUser){setShowLoginModal(true);setShowHamburger(false);return};setShareModalCourse(sc);setSharePhotos([])}} style={{background:'none',border:'1px solid rgba(59,130,246,.4)',color:'#60a5fa',padding:'3px 7px',borderRadius:6,fontSize:10,fontWeight:600,cursor:'pointer'}}>📤</button>
                           <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
                         </div>
                       ))}
@@ -2316,7 +2361,7 @@ function App() {
                             <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
                           <button onClick={()=>loadSavedCourse(sc)} style={{background:'#3b82f6',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
-                          {currentUser && <button onClick={()=>{setShareModalCourse(sc);setSharePhotos([])}} style={{background:'none',border:'1px solid rgba(59,130,246,.4)',color:'#60a5fa',padding:'3px 7px',borderRadius:6,fontSize:10,fontWeight:600,cursor:'pointer'}}>📤</button>}
+                          <button onClick={()=>{if(!currentUser){setShowLoginModal(true);setShowHamburger(false);return};setShareModalCourse(sc);setSharePhotos([])}} style={{background:'none',border:'1px solid rgba(59,130,246,.4)',color:'#60a5fa',padding:'3px 7px',borderRadius:6,fontSize:10,fontWeight:600,cursor:'pointer'}}>📤</button>
                           <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
                         </div>
                       ))}
@@ -3976,7 +4021,7 @@ function App() {
                 /* Level 2: 선택된 국가 내 코스 목록 */
                 <div style={{display:'flex',flexDirection:'column',gap:14}}>
                   {(grouped[communityContinent]?.[communityCountry]||[]).map((sc,idx) => {
-                    const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))]
+                    const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityI18n?.[lang] || getCityName(it.cityName||it.name))).filter(Boolean))]
                     const totalPlaces = (sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)
                     const dayCount = (sc.days||[]).length
                     const dateStr = sc.sharedAt ? new Date(sc.sharedAt).toLocaleDateString() : ''
@@ -3988,7 +4033,7 @@ function App() {
                         <div style={{padding:'18px 20px'}}>
                           <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
                             <div>
-                              <div style={{fontSize:18,fontWeight:800,color:'#0f172a'}}>{cities.map(c=>getCityName(c)).join(' · ') || 'Course'}</div>
+                              <div style={{fontSize:18,fontWeight:800,color:'#0f172a'}}>{cities.join(' · ') || 'Course'}</div>
                               <div style={{fontSize:12,color:'#64748b',marginTop:4}}>
                                 {totalPlaces}{t('communityPlaces')} · {dayCount}{t('communityDays')}
                                 {sc.type==='ai' && <span style={{marginLeft:6,padding:'1px 6px',borderRadius:4,background:'#f3e8ff',color:'#7c3aed',fontSize:10,fontWeight:700}}>AI</span>}
@@ -4008,7 +4053,7 @@ function App() {
                           )}
                           <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:14}}>
                             {(sc.days||[]).flatMap(d=>d.items||[]).slice(0,8).map((it,i)=>(
-                              <span key={i} style={{padding:'4px 10px',borderRadius:20,background:'#f1f5f9',fontSize:11,color:'#475569',fontWeight:500}}>{it.name}</span>
+                              <span key={i} style={{padding:'4px 10px',borderRadius:20,background:'#f1f5f9',fontSize:11,color:'#475569',fontWeight:500}}>{it.i18n?.[lang] || getCourseItemName(it)}</span>
                             ))}
                             {(sc.days||[]).flatMap(d=>d.items||[]).length > 8 && <span style={{padding:'4px 10px',borderRadius:20,background:'#f1f5f9',fontSize:11,color:'#94a3b8'}}>+{(sc.days||[]).flatMap(d=>d.items||[]).length-8}</span>}
                           </div>
@@ -4114,7 +4159,7 @@ function App() {
                       const url = await uploadPhoto(f, path)
                       photoUrls.push(url)
                     }
-                    await shareCourse(currentUser.uid, shareModalCourse, currentUser.displayName||currentUser.email, photoUrls)
+                    await shareCourse(currentUser.uid, buildCourseI18n(shareModalCourse), currentUser.displayName||currentUser.email, photoUrls)
                     alert(t('communityShared'))
                     setShareModalCourse(null);setSharePhotos([])
                   } catch(e) { alert(e.message) }
