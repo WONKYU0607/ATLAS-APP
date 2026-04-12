@@ -336,6 +336,9 @@ function App() {
 
 
   const [cityData, setCityData] = useState(null)
+  const [wikiSpots, setWikiSpots] = useState({}) // 도시별 위키 관광지 캐시
+  const [dynamicCities, setDynamicCities] = useState({}) // 국가별 OSM 도시 캐시
+  const [cityBoundary, setCityBoundary] = useState(null) // 선택된 도시 경계 GeoJSON
   const [loading, setLoading] = useState(false)
   const [selectedSpot, setSelectedSpot] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -483,21 +486,27 @@ function App() {
       const staticData = CITY_DATA[cityKey]
       const cityLat = aiCity.lat, cityLng = aiCity.lng
 
-      // 1) 장소 수집
+      // 1) 장소 수집 (CITY_DATA + Wikipedia 보강 데이터)
       let attractions = []; let foodPlaces = []
-      if (staticData?.spots) {
-        staticData.spots.forEach(s => {
+      const allSpots = [...(staticData?.spots || [])]
+      // Wikipedia 보강 데이터 추가
+      const wikiExtra = wikiSpots[cityKey] || []
+      wikiExtra.forEach(ws => {
+        if (!allSpots.some(s => (s.wikiTitle || s.name || '').toLowerCase() === ws.name.toLowerCase())) {
+          allSpots.push(ws)
+        }
+      })
+      allSpots.forEach(s => {
           const item = {
-            source: 'spot', name: s.name, displayName: s.name,
+            source: s._fromWiki ? 'wiki' : 'spot', name: s.name, displayName: s.name,
             cityName: cityKey, cityDisplayName: getCityName(cityKey),
-            type: s.type, rating: s.rating || 4.0, wikiTitle: s.wikiTitle,
-            lat: cityLat, lng: cityLng, _lat: cityLat, _lng: cityLng,
+            type: s.type, rating: s.rating || 4.0, wikiTitle: s.wikiTitle || s.name,
+            lat: s.lat || cityLat, lng: s.lng || cityLng, _lat: s.lat || cityLat, _lng: s.lng || cityLng,
             emoji: s.type==='자연'?'🌿':s.type==='역사'?'🏛️':s.type==='음식'?'🍽️':s.type==='문화'?'🎭':s.type==='랜드마크'?'🏙️':'📍'
           }
           if (s.type === '음식') foodPlaces.push(item)
           else attractions.push(item)
         })
-      }
       // Google Places 데이터도 활용 (현재 로드된 것)
       if (hotspots.length > 0) {
         hotspots.forEach(p => {
@@ -1005,7 +1014,7 @@ function App() {
     emergTourist:{ko:'관광안내',en:'Tourist',ja:'観光案内',zh:'旅游咨询'},
     emergGeneral:{ko:'통합신고',en:'General',ja:'総合',zh:'综合'},
     emergCall:{ko:'전화하기',en:'Call',ja:'電話する',zh:'拨打'},
-    community:{ko:'커뮤니티 코스',en:'Community Courses',ja:'コミュニティコース',zh:'社区路线'},
+    community:{ko:'커뮤니티',en:'Community',ja:'コミュニティ',zh:'社区'},
     communityDesc:{ko:'다른 여행자의 코스 보기',en:'Browse shared courses',ja:'他の旅行者のコースを見る',zh:'浏览共享路线'},
     communityEmpty:{ko:'아직 공유된 코스가 없습니다',en:'No shared courses yet',ja:'共有コースがまだありません',zh:'还没有共享路线'},
     communityEmptyHint:{ko:'코스를 저장하고 📤 버튼으로 공유해보세요!',en:'Save a course and share it with 📤!',ja:'コースを保存して📤で共有しましょう!',zh:'保存路线并用📤分享！'},
@@ -1509,7 +1518,15 @@ function App() {
     }
 
     const countryEn = selectedCountry.properties.NAME
-    const cities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city' }))
+    // 기존 도시 (COUNTRY_CITIES)
+    const staticCities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city' }))
+    // OSM 동적 도시
+    const osmCities = (dynamicCities[countryEn] || []).map(c => ({
+      ...c, name: lang === 'ko' ? c.name : (c.nameEn || c.nameLocal || c.name),
+      _koName: c.name, countryEn, _type: 'city', _isDynamic: true
+    }))
+    const allCities = [...staticCities, ...osmCities]
+
     const countryLabels = countries.map(feat => ({
       lat: feat.properties.LABEL_Y || 0,
       lng: feat.properties.LABEL_X || 0,
@@ -1518,8 +1535,13 @@ function App() {
       _type: 'country',
     })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn)
 
-    globe.htmlElementsData([...countryLabels, ...cities, ...OCEAN_LABELS])
-  }, [selectedCountry, selectedCity, countries, lang])
+    globe.htmlElementsData([...countryLabels, ...allCities, ...OCEAN_LABELS])
+
+    // OSM 도시 백그라운드 로드
+    if (!dynamicCities[countryEn]) {
+      fetchOsmCities(countryEn).catch(() => {})
+    }
+  }, [selectedCountry, selectedCity, countries, lang, dynamicCities])
 
 
 
@@ -1541,6 +1563,7 @@ function App() {
       setHotspots([])
       setRestaurants([])
       setActiveTab('hotspots')
+      setCityBoundary(null)
     }
   }, [selectedCity, lang])
 
@@ -1717,21 +1740,26 @@ function App() {
     const globe = globeRef.current
     const hasSelection = !!selectedCountry
 
+    // 국가 폴리곤 + 도시 경계 폴리곤
+    const allPolygons = cityBoundary ? [...countries, cityBoundary] : countries
+
     globe
-      .polygonsData(countries)
+      .polygonsData(allPolygons)
       .polygonCapColor(feat => {
         const name = feat.properties.NAME
+        if (feat.properties._isCityBoundary) return 'rgba(59,130,246,0.18)'
         if (hasSelection) {
           if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.22)'
           if (hoveredCountry === name) return 'rgba(255,220,50,0.35)'
           return 'rgba(0,0,0,0)'
         }
         if (hoveredCountry === name) return 'rgba(255,220,50,0.35)'
-        return COUNTRY_CITIES[name] ? 'rgba(34,197,94,0.08)' : 'rgba(200,220,180,0.04)'
+        return COUNTRY_CITIES[name] || dynamicCities[name] ? 'rgba(34,197,94,0.08)' : 'rgba(200,220,180,0.04)'
       })
       .polygonSideColor(() => 'rgba(0,0,0,0)')
       .polygonStrokeColor(feat => {
         const name = feat.properties.NAME
+        if (feat.properties._isCityBoundary) return 'rgba(59,130,246,0.9)'
         if (hasSelection) {
           if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.7)'
           if (hoveredCountry === name) return 'rgba(255,220,50,0.7)'
@@ -1742,23 +1770,23 @@ function App() {
       })
       .polygonAltitude(feat => {
         const name = feat.properties.NAME
+        if (feat.properties._isCityBoundary) return 0.008
         if (hasSelection && selectedCountry?.properties.NAME === name) return 0.006
         if (hoveredCountry === name) return 0.005
         return 0.003
       })
       .polygonLabel(() => '')
       .onPolygonHover(feat => {
-        // 국가 선택 중에는 다른 나라 호버 완전 차단
         if (hasSelection) return
         setHoveredCountry(feat ? feat.properties.NAME : null)
       })
       .onPolygonClick(feat => {
-        // 국가 선택 중에는 다른 나라 클릭 완전 차단 (국경 근처 도시 오클릭 방지)
         if (hasSelection) return
         if (justClickedCityRef.current) return
+        if (feat?.properties?._isCityBoundary) return
         handleCountryClick(feat)
       })
-  }, [countries, hoveredCountry, selectedCountry, lang])
+  }, [countries, hoveredCountry, selectedCountry, lang, cityBoundary])
 
 
   // 국가별 최적 줌 레벨 (수동 튜닝)
@@ -1954,10 +1982,16 @@ function App() {
       setSelectedCity(city)
       setSelectedSpot(null)
       setCityData(null)
+      setCityBoundary(null)
       setShowCountryInfo(false)
       fetchCityData(city)
-      // 국가 줌보다 더 가까이 줌인
+      // 도시 경계 로드 (백그라운드)
       const countryName = city.countryEn || selectedCountry?.properties?.NAME
+      const searchName = city.nameEn || city.nameLocal || city._koName || city.name
+      if (countryName && searchName) {
+        fetchCityBoundary(searchName, countryName).catch(() => {})
+      }
+      // 국가 줌보다 더 가까이 줌인
       const cz = countryName && COUNTRY_ZOOM[countryName]
       const baseAlt = cz ? cz.alt : 0.3
       const cityAlt = Math.max(Math.min(baseAlt * 0.45, 0.15), 0.06)
@@ -2161,6 +2195,149 @@ function App() {
     }
   }
 
+  // ── Wikipedia 관광지 자동 수집 ──
+  const fetchWikiSpots = async (lat, lng, cityKey) => {
+    // 캐시 확인
+    if (wikiSpots[cityKey]) return wikiSpots[cityKey]
+    try {
+      // 1) 주변 위키피디아 문서 검색 (반경 10km)
+      const geoRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius=10000&gscoord=${lat}|${lng}&gslimit=50&format=json&origin=*`)
+      const geoData = await geoRes.json()
+      const pages = geoData?.query?.geosearch || []
+      if (pages.length === 0) return []
+
+      // 2) 페이지 상세 정보 (카테고리 + 설명)
+      const pageIds = pages.map(p => p.pageid).join('|')
+      const detailRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&pageids=${pageIds}&prop=categories|extracts|pageimages&exintro&explaintext&exsentences=2&pithumbsize=300&cllimit=10&format=json&origin=*`)
+      const detailData = await detailRes.json()
+      const pageDetails = detailData?.query?.pages || {}
+
+      // 3) 관광 관련 필터
+      const tourismKeywords = ['landmark','monument','museum','temple','church','cathedral','mosque','palace','castle','park','garden','tower','bridge','square','plaza','district','beach','mountain','lake','waterfall','heritage','historic','memorial','statue','shrine','fort','ruins','archaeological','zoo','aquarium','gallery','theater','theatre','stadium','market','bazaar','island','cave','gorge','canyon','lighthouse','observatory','unesco','attraction','tourism']
+      const excludeKeywords = ['football','soccer','baseball','basketball','rugby','cricket','league','season','election','university student','municipality','census','administrative','railway station','metro station','bus','airline','company','corporation','school','hospital','prison','military','regiment','battle of','war of','birth','death','politician','actor','singer','band','album','film','novel','newspaper']
+
+      const existingNames = new Set((CITY_DATA[cityKey]?.spots || []).map(s => (s.wikiTitle || s.name || '').toLowerCase()))
+
+      const results = []
+      for (const p of pages) {
+        const detail = pageDetails[p.pageid]
+        if (!detail) continue
+        const title = detail.title || ''
+        const extract = (detail.extract || '').toLowerCase()
+        const cats = (detail.categories || []).map(c => c.title?.toLowerCase() || '')
+        const allText = (title + ' ' + cats.join(' ') + ' ' + extract).toLowerCase()
+
+        // 제외: 사람, 스포츠, 행정, 회사 등
+        if (excludeKeywords.some(k => allText.includes(k))) continue
+        // 제외: 너무 짧은 설명 (의미 없는 문서)
+        if (!detail.extract || detail.extract.length < 30) continue
+        // 중복 제외
+        if (existingNames.has(title.toLowerCase())) continue
+        // 도시 자체 문서 제외
+        if (title.toLowerCase() === cityKey.toLowerCase()) continue
+
+        // 관광 관련성 점수
+        let score = 0
+        tourismKeywords.forEach(k => { if (allText.includes(k)) score++ })
+        // 카테고리에 관광 키워드 있으면 가산
+        cats.forEach(c => { tourismKeywords.forEach(k => { if (c.includes(k)) score += 2 }) })
+
+        if (score >= 1) {
+          // 유형 추정
+          let type = '관광지'
+          if (['museum','gallery'].some(k => allText.includes(k))) type = '문화'
+          else if (['temple','church','cathedral','mosque','shrine','palace','castle','fort','ruins','heritage','historic','memorial'].some(k => allText.includes(k))) type = '역사'
+          else if (['park','garden','beach','mountain','lake','waterfall','cave','island','gorge','canyon'].some(k => allText.includes(k))) type = '자연'
+          else if (['tower','bridge','square','plaza','statue','landmark','monument'].some(k => allText.includes(k))) type = '랜드마크'
+
+          results.push({
+            name: title,
+            wikiTitle: title,
+            type,
+            rating: Math.min(4.0 + score * 0.1, 4.8),
+            desc: detail.extract?.slice(0, 100) || '',
+            lat: p.lat,
+            lng: p.lon,
+            _fromWiki: true,
+            _score: score,
+            thumbnail: detail.thumbnail?.source || null
+          })
+        }
+      }
+
+      // 점수순 정렬, 상위 20개
+      results.sort((a, b) => b._score - a._score)
+      const top = results.slice(0, 20)
+
+      // 캐시 저장
+      setWikiSpots(prev => ({ ...prev, [cityKey]: top }))
+      return top
+    } catch (e) {
+      console.error('[Wiki] fetch error:', e)
+      return []
+    }
+  }
+
+  // ── OSM 도시 자동 로드 (Overpass API) ──
+  const fetchOsmCities = async (countryName) => {
+    if (dynamicCities[countryName]) return dynamicCities[countryName]
+    const iso = COUNTRY_ISO[countryName]
+    if (!iso) return []
+    try {
+      const query = `[out:json][timeout:30];area["ISO3166-1"="${iso}"]->.a;(node["place"~"city|town"]["population"](area.a););out body;`
+      const res = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST', body: 'data=' + encodeURIComponent(query),
+        headers: {'Content-Type':'application/x-www-form-urlencoded'}
+      })
+      const data = await res.json()
+      const existing = (COUNTRY_CITIES[countryName] || []).map(c => c.name.toLowerCase())
+      const cities = (data.elements || [])
+        .filter(el => el.tags?.name && el.tags?.population && parseInt(el.tags.population) >= 50000)
+        .map(el => ({
+          name: el.tags['name:ko'] || el.tags['name:ja'] || el.tags.name,
+          nameEn: el.tags['name:en'] || el.tags.name,
+          nameLocal: el.tags.name,
+          lat: el.lat, lng: el.lon,
+          population: parseInt(el.tags.population) || 0,
+          _fromOsm: true,
+          color: '#64748b'
+        }))
+        .filter(c => !existing.includes(c.name.toLowerCase()) && !existing.includes((c.nameEn||'').toLowerCase()))
+        .sort((a, b) => b.population - a.population)
+        .slice(0, 40)
+      setDynamicCities(prev => ({ ...prev, [countryName]: cities }))
+      return cities
+    } catch (e) {
+      console.error('[OSM] cities fetch error:', e)
+      return []
+    }
+  }
+
+  // ── 도시 경계 로드 (Nominatim) ──
+  const fetchCityBoundary = async (cityName, countryName) => {
+    try {
+      const q = encodeURIComponent(`${cityName}, ${countryName}`)
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=jsonv2&polygon_geojson=1&limit=1`, {
+        headers: { 'Accept-Language': 'en', 'User-Agent': 'ATLAS-Travel-App' }
+      })
+      const data = await res.json()
+      if (data.length > 0 && data[0].geojson) {
+        const geo = data[0].geojson
+        if (geo.type !== 'Polygon' && geo.type !== 'MultiPolygon') return null
+        const feature = {
+          type: 'Feature',
+          properties: { NAME: cityName, _isCityBoundary: true },
+          geometry: geo
+        }
+        setCityBoundary(feature)
+        return feature
+      }
+    } catch (e) {
+      console.error('[Nominatim] boundary error:', e)
+    }
+    return null
+  }
+
   const fetchCityData = async (city) => {
     try {
       // 1. 사전 데이터 (240개 도시 전체 포함)
@@ -2173,6 +2350,18 @@ function App() {
         setLoading(false)
         fetchWeather(city.lat, city.lng).then(w => {
           if (w) setCityData(prev => prev ? { ...prev, weather: w } : prev)
+        }).catch(() => {})
+        // Wikipedia 관광지 보강 (백그라운드)
+        fetchWikiSpots(city.lat, city.lng, cityKey).then(wiki => {
+          if (wiki?.length > 0) {
+            setCityData(prev => {
+              if (!prev) return prev
+              const existingNames = new Set((prev.spots || []).map(s => (s.wikiTitle || s.name || '').toLowerCase()))
+              const newSpots = wiki.filter(w => !existingNames.has(w.name.toLowerCase()))
+              if (newSpots.length === 0) return prev
+              return { ...prev, spots: [...(prev.spots || []), ...newSpots] }
+            })
+          }
         }).catch(() => {})
         return
       }
@@ -2193,6 +2382,15 @@ function App() {
         spots: DEFAULT_CITY_DATA(cityKey2).spots,
       })
       setLoading(false)
+      // Wikipedia 관광지 보강
+      fetchWikiSpots(city.lat, city.lng, cityKey).then(wiki => {
+        if (wiki?.length > 0) {
+          setCityData(prev => {
+            if (!prev) return prev
+            return { ...prev, spots: [...(prev.spots || []), ...wiki] }
+          })
+        }
+      }).catch(() => {})
     }
   }
 
@@ -2455,7 +2653,7 @@ function App() {
                     onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
                     onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <span style={{fontSize:18}}>🌍</span>
+                      <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,rgba(200,133,106,.2),rgba(200,133,106,.1))',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c8856a" strokeWidth="2" strokeLinecap="round"><path d="M3 7l6-4 6 4 6-4v14l-6 4-6-4-6 4z"/><path d="M9 3v14"/><path d="M15 7v14"/></svg></div>
                       <div>
                         <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('visitedTitle')}</div>
                         <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>
@@ -2481,7 +2679,7 @@ function App() {
                     onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
                     onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <div style={{width:24,height:24,borderRadius:6,background:'rgba(5,150,105,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:'#10b981'}}>¤</div>
+                      <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,rgba(16,185,129,.2),rgba(16,185,129,.1))',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
                       <div>
                         <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('currCalc')}</div>
                         <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{currFrom} → {currTo}</div>
@@ -2502,7 +2700,7 @@ function App() {
                     onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
                     onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <div style={{width:24,height:24,borderRadius:6,background:'rgba(251,191,36,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13}}>🌐</div>
+                      <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,191,36,.1))',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
                       <div>
                         <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('community')}</div>
                         <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{t('communityDesc')}</div>
@@ -2573,7 +2771,7 @@ function App() {
                       onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
                       onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
                       <div style={{display:'flex',alignItems:'center',gap:8}}>
-                        <div style={{width:24,height:24,borderRadius:6,background:'rgba(59,130,246,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:'#60a5fa'}}>👤</div>
+                        <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,rgba(99,102,241,.2),rgba(99,102,241,.1))',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg></div>
                         <div>
                           <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('loginSignup')}</div>
                           <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{t('loginSync')}</div>
@@ -3958,7 +4156,6 @@ function App() {
           if (!grouped[contDisplay][country]) grouped[contDisplay][country] = []
           grouped[contDisplay][country].push(sc)
         })
-        const continentEmoji = (raw) => raw.includes('아시아')?'🌏':raw.includes('유럽')?'🌍':raw.includes('아프리카')?'🌍':raw.includes('북아메리카')?'🌎':raw.includes('남아메리카')?'🌎':raw.includes('오세아니아')?'🌏':'🌐'
         return (
         <>
           <div onClick={()=>{setShowCommunity(false);setCommunityContinent(null);setCommunityCountry(null)}} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
@@ -3971,7 +4168,7 @@ function App() {
                 )}
                 <div>
                   <div style={{fontSize:19,fontWeight:800,color:'white'}}>
-                    {communityCountry ? getCountryName(communityCountry) : communityContinent ? communityContinent : ('🌐 '+t('community'))}
+                    {communityCountry ? getCountryName(communityCountry) : communityContinent ? communityContinent : t('community')}
                   </div>
                   <div style={{fontSize:12,color:'rgba(255,255,255,.7)',marginTop:2}}>
                     {communityCountry ? communityContinent : communityContinent ? (lang==='ko'?'국가를 선택하세요':'Select a country') : t('communityDesc')}
@@ -3993,16 +4190,14 @@ function App() {
                 /* Level 0: 대륙 박스 그리드 */
                 <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'1fr 1fr 1fr',gap:12}}>
                   {Object.entries(grouped).map(([cont, obj]) => {
-                    const raw = obj._rawContinent || cont
                     const countryCount = Object.keys(obj).filter(k=>k!=='_rawContinent').length
                     const courseCount = Object.values(obj).filter(v=>Array.isArray(v)).reduce((a,arr)=>a+arr.length,0)
                     return (
                       <div key={cont} onClick={()=>setCommunityContinent(cont)}
-                        style={{padding:'20px 16px',borderRadius:16,background:'linear-gradient(135deg,#f8fafc,#f1f5f9)',border:'2px solid #e2e8f0',cursor:'pointer',textAlign:'center',transition:'all .2s'}}
+                        style={{padding:'24px 16px',borderRadius:16,background:'linear-gradient(135deg,#f8fafc,#f1f5f9)',border:'2px solid #e2e8f0',cursor:'pointer',textAlign:'center',transition:'all .2s',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}
                         onMouseEnter={e=>{e.currentTarget.style.borderColor='#3b82f6';e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 8px 24px rgba(59,130,246,.15)'}}
                         onMouseLeave={e=>{e.currentTarget.style.borderColor='#e2e8f0';e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='none'}}>
-                        <div style={{fontSize:32,marginBottom:8}}>{continentEmoji(raw)}</div>
-                        <div style={{fontSize:14,fontWeight:700,color:'#0f172a'}}>{cont}</div>
+                        <div style={{fontSize:15,fontWeight:700,color:'#0f172a'}}>{cont}</div>
                         <div style={{fontSize:11,color:'#64748b',marginTop:4}}>{countryCount} {lang==='ko'?'개국':'countries'} · {courseCount} {lang==='ko'?'개 코스':'courses'}</div>
                       </div>
                     )
