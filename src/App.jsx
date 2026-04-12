@@ -1522,8 +1522,8 @@ function App() {
     const staticCities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city' }))
     // OSM 동적 도시
     const osmCities = (dynamicCities[countryEn] || []).map(c => ({
-      ...c, name: lang === 'ko' ? c.name : (c.nameEn || c.nameLocal || c.name),
-      _koName: c.name, countryEn, _type: 'city', _isDynamic: true
+      ...c, name: lang==='ko' ? (c.nameKo||c.name) : lang==='ja' ? (c.nameJa||c.nameEn||c.name) : lang==='zh' ? (c.nameZh||c.nameEn||c.name) : (c.nameEn||c.name),
+      _koName: c.nameKo || c.name, countryEn, _type: 'city', _isDynamic: true
     }))
     const allCities = [...staticCities, ...osmCities]
 
@@ -1740,26 +1740,22 @@ function App() {
     const globe = globeRef.current
     const hasSelection = !!selectedCountry
 
-    // 국가 폴리곤 + 도시 경계 폴리곤
-    const allPolygons = cityBoundary ? [...countries, cityBoundary] : countries
-
+    // 국가 폴리곤만
     globe
-      .polygonsData(allPolygons)
+      .polygonsData(countries)
       .polygonCapColor(feat => {
         const name = feat.properties.NAME
-        if (feat.properties._isCityBoundary) return 'rgba(59,130,246,0.18)'
         if (hasSelection) {
           if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.22)'
           if (hoveredCountry === name) return 'rgba(255,220,50,0.35)'
           return 'rgba(0,0,0,0)'
         }
         if (hoveredCountry === name) return 'rgba(255,220,50,0.35)'
-        return COUNTRY_CITIES[name] || dynamicCities[name] ? 'rgba(34,197,94,0.08)' : 'rgba(200,220,180,0.04)'
+        return COUNTRY_CITIES[name] || dynamicCities[name]?.length ? 'rgba(34,197,94,0.08)' : 'rgba(200,220,180,0.04)'
       })
       .polygonSideColor(() => 'rgba(0,0,0,0)')
       .polygonStrokeColor(feat => {
         const name = feat.properties.NAME
-        if (feat.properties._isCityBoundary) return 'rgba(59,130,246,0.9)'
         if (hasSelection) {
           if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.7)'
           if (hoveredCountry === name) return 'rgba(255,220,50,0.7)'
@@ -1770,7 +1766,6 @@ function App() {
       })
       .polygonAltitude(feat => {
         const name = feat.properties.NAME
-        if (feat.properties._isCityBoundary) return 0.008
         if (hasSelection && selectedCountry?.properties.NAME === name) return 0.006
         if (hoveredCountry === name) return 0.005
         return 0.003
@@ -1783,11 +1778,29 @@ function App() {
       .onPolygonClick(feat => {
         if (hasSelection) return
         if (justClickedCityRef.current) return
-        if (feat?.properties?._isCityBoundary) return
         handleCountryClick(feat)
       })
-  }, [countries, hoveredCountry, selectedCountry, lang, cityBoundary])
+  }, [countries, hoveredCountry, selectedCountry, lang])
 
+  // 도시 경계 렌더링 (pathsData 사용 - 폴리곤 레이어와 분리)
+  useEffect(() => {
+    if (!globeRef.current) return
+    const globe = globeRef.current
+    if (cityBoundary && Array.isArray(cityBoundary) && cityBoundary.length > 0) {
+      globe
+        .pathsData(cityBoundary)
+        .pathPoints(d => d.coords)
+        .pathPointLat(p => p.lat)
+        .pathPointLng(p => p.lng)
+        .pathColor(d => d.color || 'rgba(59,130,246,0.85)')
+        .pathStroke(3)
+        .pathDashLength(0)
+        .pathDashGap(0)
+        .pathTransitionDuration(500)
+    } else {
+      globe.pathsData([])
+    }
+  }, [cityBoundary])
 
   // 국가별 최적 줌 레벨 (수동 튜닝)
   const COUNTRY_ZOOM = {
@@ -2278,32 +2291,37 @@ function App() {
     }
   }
 
-  // ── OSM 도시 자동 로드 (Overpass API) ──
+  // ── 도시 자동 로드 (Nominatim) ──
   const fetchOsmCities = async (countryName) => {
     if (dynamicCities[countryName]) return dynamicCities[countryName]
     const iso = COUNTRY_ISO[countryName]
     if (!iso) return []
     try {
-      const query = `[out:json][timeout:30];area["ISO3166-1"="${iso}"]->.a;(node["place"~"city|town"]["population"](area.a););out body;`
-      const res = await fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST', body: 'data=' + encodeURIComponent(query),
-        headers: {'Content-Type':'application/x-www-form-urlencoded'}
-      })
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?country=${encodeURIComponent(countryName)}&countrycodes=${iso.toLowerCase()}&featuretype=city&format=jsonv2&limit=50&namedetails=1&accept-language=${lang==='ko'?'ko,en':lang==='ja'?'ja,en':lang==='zh'?'zh,en':'en'}`)
       const data = await res.json()
-      const existing = (COUNTRY_CITIES[countryName] || []).map(c => c.name.toLowerCase())
-      const cities = (data.elements || [])
-        .filter(el => el.tags?.name && el.tags?.population && parseInt(el.tags.population) >= 50000)
-        .map(el => ({
-          name: el.tags['name:ko'] || el.tags['name:ja'] || el.tags.name,
-          nameEn: el.tags['name:en'] || el.tags.name,
-          nameLocal: el.tags.name,
-          lat: el.lat, lng: el.lon,
-          population: parseInt(el.tags.population) || 0,
-          _fromOsm: true,
-          color: '#64748b'
-        }))
-        .filter(c => !existing.includes(c.name.toLowerCase()) && !existing.includes((c.nameEn||'').toLowerCase()))
-        .sort((a, b) => b.population - a.population)
+      if (!Array.isArray(data)) return []
+      const existing = (COUNTRY_CITIES[countryName] || []).map(c => (c.name||'').toLowerCase())
+      const cities = data
+        .filter(d => d.lat && d.lon && d.display_name)
+        .map(d => {
+          const nd = d.namedetails || {}
+          const enName = nd['name:en'] || nd.name || d.display_name.split(',')[0]?.trim() || ''
+          const koName = nd['name:ko'] || enName
+          const jaName = nd['name:ja'] || enName
+          const zhName = nd['name:zh'] || nd['name:zh-Hans'] || enName
+          const displayName = lang==='ko' ? koName : lang==='ja' ? jaName : lang==='zh' ? zhName : enName
+          return {
+            name: koName,
+            nameEn: enName,
+            nameLocal: nd.name || enName,
+            nameKo: koName, nameJa: jaName, nameZh: zhName,
+            lat: parseFloat(d.lat), lng: parseFloat(d.lon),
+            population: parseInt(d.importance * 1000000) || 0,
+            _fromOsm: true,
+            color: '#64748b'
+          }
+        })
+        .filter(c => c.name && !existing.includes(c.name.toLowerCase()))
         .slice(0, 40)
       setDynamicCities(prev => ({ ...prev, [countryName]: cities }))
       return cities
@@ -2313,24 +2331,28 @@ function App() {
     }
   }
 
-  // ── 도시 경계 로드 (Nominatim) ──
+  // ── 도시 경계 로드 (Nominatim → pathsData로 렌더링) ──
   const fetchCityBoundary = async (cityName, countryName) => {
     try {
       const q = encodeURIComponent(`${cityName}, ${countryName}`)
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=jsonv2&polygon_geojson=1&limit=1`, {
-        headers: { 'Accept-Language': 'en', 'User-Agent': 'ATLAS-Travel-App' }
-      })
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=jsonv2&polygon_geojson=1&limit=1`)
       const data = await res.json()
       if (data.length > 0 && data[0].geojson) {
         const geo = data[0].geojson
-        if (geo.type !== 'Polygon' && geo.type !== 'MultiPolygon') return null
-        const feature = {
-          type: 'Feature',
-          properties: { NAME: cityName, _isCityBoundary: true },
-          geometry: geo
-        }
-        setCityBoundary(feature)
-        return feature
+        // GeoJSON 좌표를 pathsData 형식으로 변환
+        let rings = []
+        if (geo.type === 'Polygon') {
+          rings = geo.coordinates
+        } else if (geo.type === 'MultiPolygon') {
+          rings = geo.coordinates.flatMap(p => p)
+        } else { return null }
+        // 각 링을 path로 변환
+        const paths = rings.map(ring => ({
+          coords: ring.map(([lng, lat]) => ({ lat, lng })),
+          color: 'rgba(59,130,246,0.85)'
+        }))
+        setCityBoundary(paths)
+        return paths
       }
     } catch (e) {
       console.error('[Nominatim] boundary error:', e)
