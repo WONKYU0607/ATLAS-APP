@@ -1782,7 +1782,7 @@ function App() {
       })
   }, [countries, hoveredCountry, selectedCountry, lang])
 
-  // 도시 경계 렌더링 (pathsData 사용 - 폴리곤 레이어와 분리)
+  // 도시 경계 렌더링 (pathsData - 폴리곤 레이어와 분리)
   useEffect(() => {
     if (!globeRef.current) return
     const globe = globeRef.current
@@ -1792,11 +1792,12 @@ function App() {
         .pathPoints(d => d.coords)
         .pathPointLat(p => p.lat)
         .pathPointLng(p => p.lng)
-        .pathColor(d => d.color || 'rgba(59,130,246,0.85)')
-        .pathStroke(3)
-        .pathDashLength(0)
+        .pathColor(d => d.color || 'rgba(59,130,246,0.9)')
+        .pathStroke(4)
+        .pathDashLength(1)
         .pathDashGap(0)
-        .pathTransitionDuration(500)
+        .pathDashAnimateTime(0)
+        .pathTransitionDuration(300)
     } else {
       globe.pathsData([])
     }
@@ -2291,71 +2292,71 @@ function App() {
     }
   }
 
-  // ── 도시 자동 로드 (Nominatim) ──
+  // ── 도시 자동 로드 (Overpass API) ──
   const fetchOsmCities = async (countryName) => {
     if (dynamicCities[countryName]) return dynamicCities[countryName]
     const iso = COUNTRY_ISO[countryName]
     if (!iso) return []
+    const tryFetch = async (baseUrl) => {
+      const query = `[out:json][timeout:25];area["ISO3166-1"="${iso}"]->.a;(node["place"="city"](area.a););out body;`
+      const res = await fetch(`${baseUrl}?data=${encodeURIComponent(query)}`)
+      if (!res.ok) throw new Error(res.status)
+      return await res.json()
+    }
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?country=${encodeURIComponent(countryName)}&countrycodes=${iso.toLowerCase()}&featuretype=city&format=jsonv2&limit=50&namedetails=1&accept-language=${lang==='ko'?'ko,en':lang==='ja'?'ja,en':lang==='zh'?'zh,en':'en'}`)
-      const data = await res.json()
-      if (!Array.isArray(data)) return []
-      const existing = (COUNTRY_CITIES[countryName] || []).map(c => (c.name||'').toLowerCase())
-      const cities = data
-        .filter(d => d.lat && d.lon && d.display_name)
-        .map(d => {
-          const nd = d.namedetails || {}
-          const enName = nd['name:en'] || nd.name || d.display_name.split(',')[0]?.trim() || ''
-          const koName = nd['name:ko'] || enName
-          const jaName = nd['name:ja'] || enName
-          const zhName = nd['name:zh'] || nd['name:zh-Hans'] || enName
-          const displayName = lang==='ko' ? koName : lang==='ja' ? jaName : lang==='zh' ? zhName : enName
+      let data = null
+      try { data = await tryFetch('https://overpass-api.de/api/interpreter') }
+      catch { data = await tryFetch('https://overpass.kumi.systems/api/interpreter') }
+      const existing = new Set((COUNTRY_CITIES[countryName] || []).map(c => (c.name||'').toLowerCase()))
+      const cities = (data?.elements || [])
+        .filter(el => el.tags?.name && el.lat && el.lon)
+        .map(el => {
+          const t = el.tags
+          const en = t['name:en'] || t.name
           return {
-            name: koName,
-            nameEn: enName,
-            nameLocal: nd.name || enName,
-            nameKo: koName, nameJa: jaName, nameZh: zhName,
-            lat: parseFloat(d.lat), lng: parseFloat(d.lon),
-            population: parseInt(d.importance * 1000000) || 0,
-            _fromOsm: true,
-            color: '#64748b'
+            name: t['name:ko'] || en, nameEn: en, nameLocal: t.name,
+            nameKo: t['name:ko'] || en, nameJa: t['name:ja'] || en, nameZh: t['name:zh'] || en,
+            lat: el.lat, lng: el.lon,
+            population: parseInt(t.population) || 0,
+            _fromOsm: true, color: '#64748b'
           }
         })
-        .filter(c => c.name && !existing.includes(c.name.toLowerCase()))
-        .slice(0, 40)
+        .filter(c => !existing.has(c.name.toLowerCase()) && !existing.has((c.nameEn||'').toLowerCase()))
+        .sort((a, b) => b.population - a.population)
+        .slice(0, 50)
+      console.log(`[OSM] ${countryName}: ${cities.length} cities`)
       setDynamicCities(prev => ({ ...prev, [countryName]: cities }))
       return cities
     } catch (e) {
-      console.error('[OSM] cities fetch error:', e)
+      console.error('[OSM] failed:', e)
       return []
     }
   }
 
-  // ── 도시 경계 로드 (Nominatim → pathsData로 렌더링) ──
+  // ── 도시 경계 로드 (Nominatim) ──
   const fetchCityBoundary = async (cityName, countryName) => {
     try {
       const q = encodeURIComponent(`${cityName}, ${countryName}`)
       const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=jsonv2&polygon_geojson=1&limit=1`)
+      if (!res.ok) throw new Error(res.status)
       const data = await res.json()
       if (data.length > 0 && data[0].geojson) {
         const geo = data[0].geojson
-        // GeoJSON 좌표를 pathsData 형식으로 변환
         let rings = []
-        if (geo.type === 'Polygon') {
-          rings = geo.coordinates
-        } else if (geo.type === 'MultiPolygon') {
-          rings = geo.coordinates.flatMap(p => p)
-        } else { return null }
-        // 각 링을 path로 변환
+        if (geo.type === 'Polygon') rings = geo.coordinates
+        else if (geo.type === 'MultiPolygon') rings = geo.coordinates.flatMap(p => p)
+        else return null
         const paths = rings.map(ring => ({
           coords: ring.map(([lng, lat]) => ({ lat, lng })),
-          color: 'rgba(59,130,246,0.85)'
+          color: 'rgba(59,130,246,0.9)'
         }))
+        console.log(`[Boundary] ${cityName}: ${paths.length} rings`)
         setCityBoundary(paths)
         return paths
       }
+      console.log(`[Boundary] ${cityName}: no polygon data`)
     } catch (e) {
-      console.error('[Nominatim] boundary error:', e)
+      console.error('[Boundary] error:', e)
     }
     return null
   }
