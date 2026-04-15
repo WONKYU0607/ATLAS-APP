@@ -337,8 +337,6 @@ function App() {
 
   const [cityData, setCityData] = useState(null)
   const [wikiSpots, setWikiSpots] = useState({}) // 도시별 위키 관광지 캐시
-  const [dynamicCities, setDynamicCities] = useState({}) // 국가별 OSM 도시 캐시
-  const [cityBoundary, setCityBoundary] = useState(null) // 선택된 도시 경계 GeoJSON
   const [loading, setLoading] = useState(false)
   const [selectedSpot, setSelectedSpot] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -1518,15 +1516,7 @@ function App() {
     }
 
     const countryEn = selectedCountry.properties.NAME
-    // 기존 도시 (COUNTRY_CITIES)
-    const staticCities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city' }))
-    // OSM 동적 도시
-    const osmCities = (dynamicCities[countryEn] || []).map(c => ({
-      ...c, name: lang==='ko' ? (c.nameKo||c.name) : lang==='ja' ? (c.nameJa||c.nameEn||c.name) : lang==='zh' ? (c.nameZh||c.nameEn||c.name) : (c.nameEn||c.name),
-      _koName: c.nameKo || c.name, countryEn, _type: 'city', _isDynamic: true
-    }))
-    const allCities = [...staticCities, ...osmCities]
-
+    const cities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city' }))
     const countryLabels = countries.map(feat => ({
       lat: feat.properties.LABEL_Y || 0,
       lng: feat.properties.LABEL_X || 0,
@@ -1535,13 +1525,8 @@ function App() {
       _type: 'country',
     })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn)
 
-    globe.htmlElementsData([...countryLabels, ...allCities, ...OCEAN_LABELS])
-
-    // OSM 도시 백그라운드 로드
-    if (!dynamicCities[countryEn]) {
-      fetchOsmCities(countryEn).catch(() => {})
-    }
-  }, [selectedCountry, selectedCity, countries, lang, dynamicCities])
+    globe.htmlElementsData([...countryLabels, ...cities, ...OCEAN_LABELS])
+  }, [selectedCountry, selectedCity, countries, lang])
 
 
 
@@ -1563,7 +1548,6 @@ function App() {
       setHotspots([])
       setRestaurants([])
       setActiveTab('hotspots')
-      setCityBoundary(null)
     }
   }, [selectedCity, lang])
 
@@ -1751,7 +1735,7 @@ function App() {
           return 'rgba(0,0,0,0)'
         }
         if (hoveredCountry === name) return 'rgba(255,220,50,0.35)'
-        return COUNTRY_CITIES[name] || dynamicCities[name]?.length ? 'rgba(34,197,94,0.08)' : 'rgba(200,220,180,0.04)'
+        return COUNTRY_CITIES[name] ? 'rgba(34,197,94,0.08)' : 'rgba(200,220,180,0.04)'
       })
       .polygonSideColor(() => 'rgba(0,0,0,0)')
       .polygonStrokeColor(feat => {
@@ -1781,27 +1765,6 @@ function App() {
         handleCountryClick(feat)
       })
   }, [countries, hoveredCountry, selectedCountry, lang])
-
-  // 도시 경계 렌더링 (pathsData - 폴리곤 레이어와 분리)
-  useEffect(() => {
-    if (!globeRef.current) return
-    const globe = globeRef.current
-    if (cityBoundary && Array.isArray(cityBoundary) && cityBoundary.length > 0) {
-      globe
-        .pathsData(cityBoundary)
-        .pathPoints(d => d.coords)
-        .pathPointLat(p => p.lat)
-        .pathPointLng(p => p.lng)
-        .pathColor(d => d.color || 'rgba(59,130,246,0.9)')
-        .pathStroke(4)
-        .pathDashLength(1)
-        .pathDashGap(0)
-        .pathDashAnimateTime(0)
-        .pathTransitionDuration(300)
-    } else {
-      globe.pathsData([])
-    }
-  }, [cityBoundary])
 
   // 국가별 최적 줌 레벨 (수동 튜닝)
   const COUNTRY_ZOOM = {
@@ -1996,16 +1959,10 @@ function App() {
       setSelectedCity(city)
       setSelectedSpot(null)
       setCityData(null)
-      setCityBoundary(null)
       setShowCountryInfo(false)
       fetchCityData(city)
-      // 도시 경계 로드 (백그라운드)
-      const countryName = city.countryEn || selectedCountry?.properties?.NAME
-      const searchName = city.nameEn || city.nameLocal || city._koName || city.name
-      if (countryName && searchName) {
-        fetchCityBoundary(searchName, countryName).catch(() => {})
-      }
       // 국가 줌보다 더 가까이 줌인
+      const countryName = city.countryEn || selectedCountry?.properties?.NAME
       const cz = countryName && COUNTRY_ZOOM[countryName]
       const baseAlt = cz ? cz.alt : 0.3
       const cityAlt = Math.max(Math.min(baseAlt * 0.45, 0.15), 0.06)
@@ -2290,75 +2247,6 @@ function App() {
       console.error('[Wiki] fetch error:', e)
       return []
     }
-  }
-
-  // ── 도시 자동 로드 (Overpass API) ──
-  const fetchOsmCities = async (countryName) => {
-    if (dynamicCities[countryName]) return dynamicCities[countryName]
-    const iso = COUNTRY_ISO[countryName]
-    if (!iso) return []
-    const tryFetch = async (baseUrl) => {
-      const query = `[out:json][timeout:25];area["ISO3166-1"="${iso}"]->.a;(node["place"="city"](area.a););out body;`
-      const res = await fetch(`${baseUrl}?data=${encodeURIComponent(query)}`)
-      if (!res.ok) throw new Error(res.status)
-      return await res.json()
-    }
-    try {
-      let data = null
-      try { data = await tryFetch('https://overpass-api.de/api/interpreter') }
-      catch { data = await tryFetch('https://overpass.kumi.systems/api/interpreter') }
-      const existing = new Set((COUNTRY_CITIES[countryName] || []).map(c => (c.name||'').toLowerCase()))
-      const cities = (data?.elements || [])
-        .filter(el => el.tags?.name && el.lat && el.lon)
-        .map(el => {
-          const t = el.tags
-          const en = t['name:en'] || t.name
-          return {
-            name: t['name:ko'] || en, nameEn: en, nameLocal: t.name,
-            nameKo: t['name:ko'] || en, nameJa: t['name:ja'] || en, nameZh: t['name:zh'] || en,
-            lat: el.lat, lng: el.lon,
-            population: parseInt(t.population) || 0,
-            _fromOsm: true, color: '#64748b'
-          }
-        })
-        .filter(c => !existing.has(c.name.toLowerCase()) && !existing.has((c.nameEn||'').toLowerCase()))
-        .sort((a, b) => b.population - a.population)
-        .slice(0, 50)
-      console.log(`[OSM] ${countryName}: ${cities.length} cities`)
-      setDynamicCities(prev => ({ ...prev, [countryName]: cities }))
-      return cities
-    } catch (e) {
-      console.error('[OSM] failed:', e)
-      return []
-    }
-  }
-
-  // ── 도시 경계 로드 (Nominatim) ──
-  const fetchCityBoundary = async (cityName, countryName) => {
-    try {
-      const q = encodeURIComponent(`${cityName}, ${countryName}`)
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=jsonv2&polygon_geojson=1&limit=1`)
-      if (!res.ok) throw new Error(res.status)
-      const data = await res.json()
-      if (data.length > 0 && data[0].geojson) {
-        const geo = data[0].geojson
-        let rings = []
-        if (geo.type === 'Polygon') rings = geo.coordinates
-        else if (geo.type === 'MultiPolygon') rings = geo.coordinates.flatMap(p => p)
-        else return null
-        const paths = rings.map(ring => ({
-          coords: ring.map(([lng, lat]) => ({ lat, lng })),
-          color: 'rgba(59,130,246,0.9)'
-        }))
-        console.log(`[Boundary] ${cityName}: ${paths.length} rings`)
-        setCityBoundary(paths)
-        return paths
-      }
-      console.log(`[Boundary] ${cityName}: no polygon data`)
-    } catch (e) {
-      console.error('[Boundary] error:', e)
-    }
-    return null
   }
 
   const fetchCityData = async (city) => {
