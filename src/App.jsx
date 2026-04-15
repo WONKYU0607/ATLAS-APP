@@ -1303,8 +1303,8 @@ function App() {
 
   // Load world GeoJSON (커스텀 간소화 50m 우선 → 110m fallback)
   useEffect(() => {
-    const load110m = () => fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
-      .then(r => r.json())
+    const loadLocal = () => fetch('/countries.json').then(r => { if (!r.ok) throw new Error(); return r.json() })
+    const load50m = () => fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson').then(r => r.json())
     
     const processGeo = (data) => {
       const fixed = data.features.map(feat => {
@@ -1320,8 +1320,8 @@ function App() {
       setCountries(fixed)
     }
     
-    // 커스텀 파일 우선 시도, 없으면 110m fallback
-    load110m().then(processGeo).catch(() => {})
+    // 로컬 파일 우선, 없으면 50m fallback (제주도 등 섬 포함)
+    loadLocal().then(processGeo).catch(() => load50m().then(processGeo).catch(() => {}))
   }, [])
 
   // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
