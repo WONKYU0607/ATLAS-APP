@@ -1301,9 +1301,9 @@ function App() {
   }
 
 
-  // Load world GeoJSON (커스텀 간소화 50m 우선 → 110m fallback)
+  // Load world GeoJSON (로컬 우선 → 110m fallback)
   useEffect(() => {
-    const load50m = () => fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson').then(r => r.json())
+    const loadLocal = () => fetch('/countries.json').then(r => { if (!r.ok) throw new Error(); return r.json() })
     const load110m = () => fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson').then(r => r.json())
     
     const processGeo = (data) => {
@@ -1321,9 +1321,8 @@ function App() {
       setCountries(fixed)
     }
     
-    // 50m 우선 (제주도 등 섬 포함), 실패 시 110m fallback
-    load50m().then(processGeo).catch(() => {
-      console.warn('[Globe] 50m failed, trying 110m')
+    // 로컬 파일 우선 (제주도 등 섬 포함), 없으면 110m fallback (가벼움)
+    loadLocal().then(processGeo).catch(() => {
       load110m().then(processGeo).catch(() => console.error('[Globe] All GeoJSON sources failed'))
     })
   }, [])
