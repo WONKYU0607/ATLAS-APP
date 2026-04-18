@@ -444,7 +444,7 @@ function App() {
   const [courseSource, setCourseSource] = useState('manual') // 'manual' | 'ai'
 
   const allCitiesFlat = Object.entries(COUNTRY_CITIES).flatMap(([co, cs]) =>
-    cs.map(c => ({ ...c, countryEn: co, countryKo: getCountryDisplayName(co, lang) }))
+    (cs||[]).filter(c => c && c.lat).map(c => ({ ...c, countryEn: co, countryKo: getCountryDisplayName(co, lang) }))
   )
   const aiCityResults = aiCitySearch.length >= 1
     ? allCitiesFlat.filter(c =>
@@ -799,7 +799,7 @@ function App() {
     }
     saveVisited(v)
   }
-  const totalCities = Object.values(COUNTRY_CITIES).flat().length
+  const totalCities = Object.values(COUNTRY_CITIES).flat().filter(Boolean).length
   const totalSpots = Object.values(CITY_DATA).reduce((a, d) => a + (d.spots?.length || 0), 0)
   const visitedCityCount = (visited.cities || []).length
   const visitedSpotCount = Object.values(visited.spots || {}).reduce((a, s) => a + s.length, 0)
@@ -1519,7 +1519,7 @@ function App() {
     }
 
     const countryEn = selectedCountry.properties.NAME
-    const cities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city' }))
+    const cities = (COUNTRY_CITIES[countryEn] || []).filter(c => c && c.lat).map(c => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city' }))
     const countryLabels = countries.map(feat => ({
       lat: feat.properties.LABEL_Y || 0,
       lng: feat.properties.LABEL_X || 0,
@@ -2352,7 +2352,7 @@ function App() {
 
   // Search: all cities + all spots across all countries
   const allCities = Object.entries(COUNTRY_CITIES).flatMap(([country, cities]) =>
-    cities.map(c => ({ ...c, _koName: c.name, countryEn: country, countryKo: getCountryName(country), _searchType: 'city' }))
+    (cities||[]).filter(c=>c&&c.lat).map(c => ({ ...c, _koName: c.name, countryEn: country, countryKo: getCountryName(country), _searchType: 'city' }))
   )
   // Build spot search index
   const allSpots = Object.entries(CITY_DATA).flatMap(([cityName, data]) => {
@@ -2510,7 +2510,7 @@ function App() {
                           {favorites.filter(f=>f.type==='city').map((f,i)=>(
                             <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
                               onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-                              onClick={()=>{const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>cs.map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f._koName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300)};setShowHamburger(false)}}>
+                              onClick={()=>{const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>(cs||[]).filter(c=>c&&c.lat).map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f._koName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300)};setShowHamburger(false)}}>
                               <span style={{fontSize:16}}>{f.emoji||'📍'}</span>
                               <div style={{flex:1,minWidth:0}}>
                                 <div style={{fontSize:12,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCityName(f._koName||f.name)||f.displayName||f.name}</div>
@@ -2527,7 +2527,7 @@ function App() {
                           {favorites.filter(f=>f.type==='spot').map((f,i)=>(
                             <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
                               onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-                              onClick={()=>{if(f.cityName){const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>cs.map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f.cityName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300);setTimeout(()=>{const spot=CITY_DATA[f.cityName]?.spots?.find(s=>s.name===f.name);if(spot)setSelectedSpot(spot)},1200)}};setShowHamburger(false)}}>
+                              onClick={()=>{if(f.cityName){const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>(cs||[]).filter(c=>c&&c.lat).map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f.cityName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300);setTimeout(()=>{const spot=CITY_DATA[f.cityName]?.spots?.find(s=>s.name===f.name);if(spot)setSelectedSpot(spot)},1200)}};setShowHamburger(false)}}>
                               <span style={{fontSize:13,width:24,height:24,borderRadius:6,background:'rgba(251,191,36,.15)',display:'flex',alignItems:'center',justifyContent:'center'}}>📍</span>
                               <div style={{flex:1,minWidth:0}}>
                                 <div style={{fontSize:12,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{trSpot(f.cityName, f.name)?.name || f.name}</div>
