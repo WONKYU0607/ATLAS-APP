@@ -8,7 +8,7 @@ import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
 import { AUTO_I18N } from './auto-i18n'
-import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment } from './firebase'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile } from './firebase'
 
 // ── 실제 관광지 사진 (Wikipedia + Wikimedia Commons 검색) ─────────────
 function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, alt }) {
@@ -266,18 +266,6 @@ function App() {
   const [authError, setAuthError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
   const [homeCountry, setHomeCountry] = useState(() => localStorage.getItem('atlas_home_country') || '')
-  const [showHomeCountryPicker, setShowHomeCountryPicker] = useState(false)
-  const [homeCountryQuery, setHomeCountryQuery] = useState('')
-  const [showCommunity, setShowCommunity] = useState(false)
-  const [communityCoursesData, setCommunityCoursesData] = useState([])
-  const [communityLoading, setCommunityLoading] = useState(false)
-  const [shareModalCourse, setShareModalCourse] = useState(null) // 공유 모달용
-  const [sharePhotos, setSharePhotos] = useState([])
-  const [shareUploading, setShareUploading] = useState(false)
-  const [communityExpanded, setCommunityExpanded] = useState(null)
-  const [communityContinent, setCommunityContinent] = useState(null)
-  const [communityCountry, setCommunityCountry] = useState(null)
-  const [commentText, setCommentText] = useState('')
   const userSyncRef = useRef(false) // Firestore → localStorage 초기 로드 중복 방지
 
   const globeContainerRef = useRef(null)
@@ -336,7 +324,6 @@ function App() {
 
 
   const [cityData, setCityData] = useState(null)
-  const [wikiSpots, setWikiSpots] = useState({}) // 도시별 위키 관광지 캐시
   const [loading, setLoading] = useState(false)
   const [selectedSpot, setSelectedSpot] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -350,7 +337,6 @@ function App() {
   const [showFavorites, setShowFavorites] = useState(false)
   const [showHamburger, setShowHamburger] = useState(false)
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768)
-  const [vpHeight, setVpHeight] = useState(() => typeof window !== 'undefined' ? window.innerHeight : 800)
   const [savedCourses, setSavedCourses] = useState(() => {
     try { return JSON.parse(localStorage.getItem('atlas_saved_courses') || '[]') } catch { return [] }
   })
@@ -444,7 +430,7 @@ function App() {
   const [courseSource, setCourseSource] = useState('manual') // 'manual' | 'ai'
 
   const allCitiesFlat = Object.entries(COUNTRY_CITIES).flatMap(([co, cs]) =>
-    (cs||[]).filter(c => c && c.lat).map(c => ({ ...c, countryEn: co, countryKo: getCountryDisplayName(co, lang) }))
+    cs.map(c => ({ ...c, countryEn: co, countryKo: getCountryDisplayName(co, lang) }))
   )
   const aiCityResults = aiCitySearch.length >= 1
     ? allCitiesFlat.filter(c =>
@@ -484,27 +470,21 @@ function App() {
       const staticData = CITY_DATA[cityKey]
       const cityLat = aiCity.lat, cityLng = aiCity.lng
 
-      // 1) 장소 수집 (CITY_DATA + Wikipedia 보강 데이터)
+      // 1) 장소 수집
       let attractions = []; let foodPlaces = []
-      const allSpots = [...(staticData?.spots || [])]
-      // Wikipedia 보강 데이터 추가
-      const wikiExtra = wikiSpots[cityKey] || []
-      wikiExtra.forEach(ws => {
-        if (!allSpots.some(s => (s.wikiTitle || s.name || '').toLowerCase() === ws.name.toLowerCase())) {
-          allSpots.push(ws)
-        }
-      })
-      allSpots.forEach(s => {
+      if (staticData?.spots) {
+        staticData.spots.forEach(s => {
           const item = {
-            source: s._fromWiki ? 'wiki' : 'spot', name: s.name, displayName: s.name,
+            source: 'spot', name: s.name, displayName: s.name,
             cityName: cityKey, cityDisplayName: getCityName(cityKey),
-            type: s.type, rating: s.rating || 4.0, wikiTitle: s.wikiTitle || s.name,
-            lat: s.lat || cityLat, lng: s.lng || cityLng, _lat: s.lat || cityLat, _lng: s.lng || cityLng,
+            type: s.type, rating: s.rating || 4.0, wikiTitle: s.wikiTitle,
+            lat: cityLat, lng: cityLng, _lat: cityLat, _lng: cityLng,
             emoji: s.type==='자연'?'🌿':s.type==='역사'?'🏛️':s.type==='음식'?'🍽️':s.type==='문화'?'🎭':s.type==='랜드마크'?'🏙️':'📍'
           }
           if (s.type === '음식') foodPlaces.push(item)
           else attractions.push(item)
         })
+      }
       // Google Places 데이터도 활용 (현재 로드된 것)
       if (hotspots.length > 0) {
         hotspots.forEach(p => {
@@ -745,17 +725,22 @@ function App() {
   // 언어 변경 시 경로 캐시 초기화 (Directions API 응답 언어가 다름)
   useEffect(() => { setRouteCache({}) }, [lang])
 
+  // lang 변경 시 폴백 도시 데이터 재생성 (DEFAULT_CITY_DATA 사용 중이면)
+  useEffect(() => {
+    if (!selectedCity || !cityData) return
+    const cityKey = selectedCity._koName || selectedCity.name
+    // CITY_DATA에 있는 도시는 재생성 불필요 (CITY_DATA_I18N/AUTO_I18N로 번역됨)
+    if (CITY_DATA[cityKey]) return
+    // 폴백 도시만 현재 언어로 재생성
+    const fallback = DEFAULT_CITY_DATA(cityKey, lang)
+    setCityData(prev => prev ? { ...fallback, weather: prev.weather } : fallback)
+  }, [lang])
+
   // 모바일 감지
   useEffect(() => {
-    const handleResize = () => { setIsMobile(window.innerWidth <= 768); setVpHeight(window.innerHeight) }
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
     window.addEventListener('resize', handleResize)
-    // Chrome 모바일 주소창 크기 변경 대응
-    const vv = window.visualViewport
-    if (vv) { vv.addEventListener('resize', handleResize); vv.addEventListener('scroll', handleResize) }
-    return () => {
-      window.removeEventListener('resize', handleResize)
-      if (vv) { vv.removeEventListener('resize', handleResize); vv.removeEventListener('scroll', handleResize) }
-    }
+    return () => window.removeEventListener('resize', handleResize)
   }, [])
 
   // 즐겨찾기 (localStorage 저장)
@@ -799,7 +784,7 @@ function App() {
     }
     saveVisited(v)
   }
-  const totalCities = Object.values(COUNTRY_CITIES).flat().filter(Boolean).length
+  const totalCities = Object.values(COUNTRY_CITIES).flat().length
   const totalSpots = Object.values(CITY_DATA).reduce((a, d) => a + (d.spots?.length || 0), 0)
   const visitedCityCount = (visited.cities || []).length
   const visitedSpotCount = Object.values(visited.spots || {}).reduce((a, s) => a + s.length, 0)
@@ -836,23 +821,23 @@ function App() {
     const unsub = onAuth(async (user) => {
       setCurrentUser(user)
       if (user) {
-        try {
-          const data = await loadUserData(user.uid)
-          if (data) {
-            userSyncRef.current = true
-            if (data.favorites?.length) { setFavorites(data.favorites); localStorage.setItem('atlas_favorites', JSON.stringify(data.favorites)) }
-            if (data.savedCourses?.length) { setSavedCourses(data.savedCourses); localStorage.setItem('atlas_saved_courses', JSON.stringify(data.savedCourses)) }
-            if (data.visited && Object.keys(data.visited).length) { setVisited(data.visited); localStorage.setItem('atlas_visited', JSON.stringify(data.visited)) }
-            if (data.homeCountry) { setHomeCountry(data.homeCountry); localStorage.setItem('atlas_home_country', data.homeCountry) }
-            if (data.lang) { setLang(data.lang); localStorage.setItem('atlas_lang', data.lang) }
-            setTimeout(() => { userSyncRef.current = false }, 500)
-          } else {
-            await saveUserData(user.uid, {
-              favorites, savedCourses, visited, homeCountry,
-              lang, displayName: user.displayName || '', email: user.email
-            })
-          }
-        } catch(e) { console.error('[Auth] Firestore sync error:', e) }
+        // Firestore에서 유저 데이터 로드
+        const data = await loadUserData(user.uid)
+        if (data) {
+          userSyncRef.current = true
+          if (data.favorites?.length) { setFavorites(data.favorites); localStorage.setItem('atlas_favorites', JSON.stringify(data.favorites)) }
+          if (data.savedCourses?.length) { setSavedCourses(data.savedCourses); localStorage.setItem('atlas_saved_courses', JSON.stringify(data.savedCourses)) }
+          if (data.visited && Object.keys(data.visited).length) { setVisited(data.visited); localStorage.setItem('atlas_visited', JSON.stringify(data.visited)) }
+          if (data.homeCountry) { setHomeCountry(data.homeCountry); localStorage.setItem('atlas_home_country', data.homeCountry) }
+          if (data.lang) { setLang(data.lang); localStorage.setItem('atlas_lang', data.lang) }
+          setTimeout(() => { userSyncRef.current = false }, 500)
+        } else {
+          // 첫 로그인: localStorage → Firestore 마이그레이션
+          await saveUserData(user.uid, {
+            favorites, savedCourses, visited, homeCountry,
+            lang, displayName: user.displayName || '', email: user.email
+          })
+        }
       }
     })
     return () => unsub()
@@ -862,8 +847,8 @@ function App() {
   useEffect(() => {
     if (!currentUser || userSyncRef.current) return
     const timer = setTimeout(() => {
-      saveUserData(currentUser.uid, { favorites, savedCourses, visited, homeCountry, lang }).catch(e => console.error('[Sync]', e))
-    }, 2000)
+      saveUserData(currentUser.uid, { favorites, savedCourses, visited, homeCountry, lang })
+    }, 1000) // 1초 디바운스
     return () => clearTimeout(timer)
   }, [favorites, savedCourses, visited, homeCountry, lang, currentUser])
 
@@ -903,7 +888,7 @@ function App() {
 
   // 모바일 뒤로가기 = 닫기 (refs for latest state in event handler)
   const backStateRef = useRef({})
-  backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo, lang, showAiModal, showCoursePlanner, showCourseBasket, showCurrencyCalc, showLoginModal, showCommunity }
+  backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo, lang, showAiModal, showCoursePlanner, showCourseBasket, showCurrencyCalc, showLoginModal }
   useEffect(() => {
     // 충분한 history 스택 확보 (모바일 브라우저 호환)
     window.history.replaceState({ atlas: true }, '')
@@ -911,11 +896,6 @@ function App() {
     const handlePop = (e) => {
       const s = backStateRef.current
       // 모달/오버레이 먼저 닫기
-      if (s.showCommunity) {
-        setShowCommunity(false);setCommunityContinent(null);setCommunityCountry(null)
-        backStateRef.current = { ...s, showCommunity: false }
-        return
-      }
       if (s.showLoginModal) {
         setShowLoginModal(false)
         backStateRef.current = { ...s, showLoginModal: false }
@@ -986,9 +966,12 @@ function App() {
         backStateRef.current = { ...s, selectedCountry: null, selectedCity: null, selectedSpot: null, showCountryInfo: false }
         return
       }
-      // 아무것도 열려있지 않으면 그냥 뒤로가기 (브라우저 기본 동작)
-      window.removeEventListener('popstate', handlePop)
-      window.history.back()
+      // 아무것도 열려있지 않으면 종료 확인
+      const msg = s.lang === 'ko' ? '앱을 종료하시겠습니까?' : 'Exit the app?'
+      if (window.confirm(msg)) {
+        window.removeEventListener('popstate', handlePop)
+        window.location.href = 'about:blank'
+      }
     }
     window.addEventListener('popstate', handlePop)
     return () => window.removeEventListener('popstate', handlePop)
@@ -1012,37 +995,6 @@ function App() {
     emergTourist:{ko:'관광안내',en:'Tourist',ja:'観光案内',zh:'旅游咨询'},
     emergGeneral:{ko:'통합신고',en:'General',ja:'総合',zh:'综合'},
     emergCall:{ko:'전화하기',en:'Call',ja:'電話する',zh:'拨打'},
-    community:{ko:'커뮤니티',en:'Community',ja:'コミュニティ',zh:'社区'},
-    communityDesc:{ko:'다른 여행자의 코스 보기',en:'Browse shared courses',ja:'他の旅行者のコースを見る',zh:'浏览共享路线'},
-    communityEmpty:{ko:'아직 공유된 코스가 없습니다',en:'No shared courses yet',ja:'共有コースがまだありません',zh:'还没有共享路线'},
-    communityEmptyHint:{ko:'코스를 저장하고 📤 버튼으로 공유해보세요!',en:'Save a course and share it with 📤!',ja:'コースを保存して📤で共有しましょう!',zh:'保存路线并用📤分享！'},
-    communityLoad:{ko:'코스 불러오기',en:'Load Course',ja:'コースを読込',zh:'加载路线'},
-    communityShared:{ko:'코스가 공유되었습니다!',en:'Course shared!',ja:'コースを共有しました!',zh:'路线已共享！'},
-    communityPlaces:{ko:'곳',en:' places',ja:'箇所',zh:'个地点'},
-    communityDays:{ko:'일',en:' days',ja:'日',zh:'天'},
-    sharePhotos:{ko:'사진 첨부 (선택)',en:'Attach photos (optional)',ja:'写真を添付（任意）',zh:'附加照片（可选）'},
-    shareBtn:{ko:'공유하기',en:'Share',ja:'共有する',zh:'分享'},
-    shareCancel:{ko:'취소',en:'Cancel',ja:'キャンセル',zh:'取消'},
-    commentPlaceholder:{ko:'댓글을 입력하세요...',en:'Write a comment...',ja:'コメントを入力...',zh:'写评论...'},
-    commentPost:{ko:'등록',en:'Post',ja:'投稿',zh:'发布'},
-    commentDelete:{ko:'삭제',en:'Delete',ja:'削除',zh:'删除'},
-    commentLogin:{ko:'댓글을 작성하려면 로그인하세요',en:'Login to comment',ja:'コメントするにはログインしてください',zh:'登录后评论'},
-    uploading:{ko:'업로드 중...',en:'Uploading...',ja:'アップロード中...',zh:'上传中...'},
-    loginRequired:{ko:'로그인이 필요합니다',en:'Login required',ja:'ログインが必要です',zh:'需要登录'},
-    login:{ko:'로그인',en:'Login',ja:'ログイン',zh:'登录'},
-    signup:{ko:'회원가입',en:'Sign Up',ja:'新規登録',zh:'注册'},
-    loginTitle:{ko:'로그인',en:'Login',ja:'ログイン',zh:'登录'},
-    signupTitle:{ko:'회원가입',en:'Sign Up',ja:'新規登録',zh:'注册'},
-    noAccount:{ko:'계정이 없으신가요?',en:'No account?',ja:'アカウントがない？',zh:'没有账号？'},
-    hasAccount:{ko:'이미 계정이 있으신가요?',en:'Have an account?',ja:'アカウントをお持ち？',zh:'已有账号？'},
-    loginLogout:{ko:'로그아웃',en:'Logout',ja:'ログアウト',zh:'退出'},
-    loginSync:{ko:'데이터 클라우드 동기화',en:'Sync your data',ja:'データをクラウド同期',zh:'云同步数据'},
-    loginSignup:{ko:'로그인 / 회원가입',en:'Login / Sign up',ja:'ログイン / 新規登録',zh:'登录 / 注册'},
-    homeCountry:{ko:'홈 국가',en:'Home',ja:'ホーム国',zh:'本国'},
-    homeSearch:{ko:'국가 검색...',en:'Search country...',ja:'国を検索...',zh:'搜索国家...'},
-    nameOptional:{ko:'이름 (선택)',en:'Name (optional)',ja:'名前（任意）',zh:'姓名（可选）'},
-    email:{ko:'이메일',en:'Email',ja:'メール',zh:'邮箱'},
-    password:{ko:'비밀번호',en:'Password',ja:'パスワード',zh:'密码'},
   }
   const t = (key) => {
     const tv = TOOL_I18N[key]?.[lang]
@@ -1143,51 +1095,6 @@ function App() {
     return item.displayName || item.name
   }
   const getCourseItemCity = (item) => getCityName(item.cityName || item.name)
-
-  // 코스 아이템 다국어 이름 생성 (공유 시 사용)
-  const buildItemI18n = (item) => {
-    const names = { ko: item.name }
-    const cityKey = item.cityName
-    // 도시명 번역
-    const cityI18n = { ko: cityKey }
-    if (cityKey && CITY_I18N[cityKey]) {
-      const tr = CITY_I18N[cityKey]
-      cityI18n.en = tr[0] || cityKey; cityI18n.ja = tr[1] || tr[0] || cityKey; cityI18n.zh = tr[2] || tr[0] || cityKey
-    }
-    // 관광지 번역
-    if (item.source === 'spot' && cityKey) {
-      for (const lg of ['en','ja','zh']) {
-        const manual = CITY_DATA_I18N[cityKey]?.[lg]
-        const autoD = AUTO_I18N?.[cityKey]?.[lg] || AUTO_I18N?.[cityKey]?.['en']
-        const trData = manual || autoD
-        if (trData?.spots) {
-          const exact = trData.spots[item.name]
-          if (exact?.name) { names[lg] = exact.name; continue }
-          const fuzzy = Object.keys(trData.spots).find(k => k.startsWith(item.name) || item.name.startsWith(k))
-          if (fuzzy && trData.spots[fuzzy]?.name) { names[lg] = trData.spots[fuzzy].name; continue }
-        }
-        // wikiTitle fallback
-        if (item.wikiTitle) { names[lg] = names[lg] || item.wikiTitle }
-        else { names[lg] = names[lg] || item.name }
-      }
-    } else {
-      // hotspot/restaurant → 원본 이름 유지 (Google Places는 이미 해당 언어)
-      for (const lg of ['en','ja','zh']) names[lg] = names[lg] || item.displayName || item.name
-    }
-    return { names, cityNames: cityI18n }
-  }
-
-  // 코스 전체 다국어 처리 (공유 전)
-  const buildCourseI18n = (course) => {
-    const newDays = (course.days || []).map(d => ({
-      ...d,
-      items: (d.items || []).map(it => {
-        const i18n = buildItemI18n(it)
-        return { ...it, i18n: i18n.names, cityI18n: i18n.cityNames }
-      })
-    }))
-    return { ...course, days: newDays }
-  }
 
   // ── 코스 다운로드 (PPT / Word) ──
   const downloadCoursePPT = async () => {
@@ -1301,30 +1208,47 @@ function App() {
   }
 
 
-  // Load world GeoJSON (로컬 우선 → 110m fallback)
+  // Load world GeoJSON (커스텀 간소화 50m 우선 → 110m fallback)
   useEffect(() => {
-    const loadLocal = () => fetch('/countries.json').then(r => { if (!r.ok) throw new Error(); return r.json() })
-    const load110m = () => fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson').then(r => r.json())
-    
+    const loadCustom = () => fetch('/countries.json').then(r => {
+      if (!r.ok) throw new Error('custom not found')
+      return r.json()
+    })
+    const load110m = () => fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
+      .then(r => r.json())
+
+    // 개별 링 단위로 유효성 검증 (날짜변경선 통과 ring 제거)
+    const isValidRing = (ring) => {
+      if (!ring || ring.length < 4) return false
+      const lngs = ring.map(c => c[0])
+      return (Math.max(...lngs) - Math.min(...lngs)) <= 180
+    }
+
     const processGeo = (data) => {
       const fixed = data.features.map(feat => {
         const geom = feat.geometry
         if (geom.type === 'Polygon') {
-          return { ...feat, geometry: { ...geom, coordinates: [geom.coordinates[0]] } }
+          const rings = geom.coordinates.filter(isValidRing)
+          if (!rings.length) return feat
+          return { ...feat, geometry: { ...geom, coordinates: [rings[0]] } }
         }
         if (geom.type === 'MultiPolygon') {
-          return { ...feat, geometry: { ...geom, coordinates: geom.coordinates.map(poly => [poly[0]]) } }
+          const polys = geom.coordinates
+            .map(poly => poly.filter(isValidRing))
+            .filter(poly => poly.length > 0)
+            .map(poly => [poly[0]])
+          if (!polys.length) return feat
+          return { ...feat, geometry: { ...geom, coordinates: polys } }
         }
         return feat
       })
-      console.log(`[Globe] Loaded ${fixed.length} countries`)
       setCountries(fixed)
     }
-    
-    // 로컬 파일 우선 (제주도 등 섬 포함), 없으면 110m fallback (가벼움)
-    loadLocal().then(processGeo).catch(() => {
-      load110m().then(processGeo).catch(() => console.error('[Globe] All GeoJSON sources failed'))
-    })
+
+    // 커스텀 파일 우선 시도, 없으면 110m fallback
+    loadCustom()
+      .then(processGeo)
+      .catch(() => load110m().then(processGeo).catch(() => {}))
   }, [])
 
   // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
@@ -1519,7 +1443,7 @@ function App() {
     }
 
     const countryEn = selectedCountry.properties.NAME
-    const cities = (COUNTRY_CITIES[countryEn] || []).filter(c => c && c.lat).map(c => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city' }))
+    const cities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city' }))
     const countryLabels = countries.map(feat => ({
       lat: feat.properties.LABEL_Y || 0,
       lng: feat.properties.LABEL_X || 0,
@@ -1727,7 +1651,6 @@ function App() {
     const globe = globeRef.current
     const hasSelection = !!selectedCountry
 
-    // 국가 폴리곤만
     globe
       .polygonsData(countries)
       .polygonCapColor(feat => {
@@ -1759,15 +1682,18 @@ function App() {
       })
       .polygonLabel(() => '')
       .onPolygonHover(feat => {
+        // 국가 선택 중에는 다른 나라 호버 완전 차단
         if (hasSelection) return
         setHoveredCountry(feat ? feat.properties.NAME : null)
       })
       .onPolygonClick(feat => {
+        // 국가 선택 중에는 다른 나라 클릭 완전 차단 (국경 근처 도시 오클릭 방지)
         if (hasSelection) return
         if (justClickedCityRef.current) return
         handleCountryClick(feat)
       })
   }, [countries, hoveredCountry, selectedCountry, lang])
+
 
   // 국가별 최적 줌 레벨 (수동 튜닝)
   const COUNTRY_ZOOM = {
@@ -2169,89 +2095,6 @@ function App() {
     }
   }
 
-  // ── Wikipedia 관광지 자동 수집 ──
-  const fetchWikiSpots = async (lat, lng, cityKey) => {
-    // 캐시 확인
-    if (wikiSpots[cityKey]) return wikiSpots[cityKey]
-    try {
-      // 1) 주변 위키피디아 문서 검색 (반경 10km)
-      const geoRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius=10000&gscoord=${lat}|${lng}&gslimit=50&format=json&origin=*`)
-      const geoData = await geoRes.json()
-      const pages = geoData?.query?.geosearch || []
-      if (pages.length === 0) return []
-
-      // 2) 페이지 상세 정보 (카테고리 + 설명)
-      const pageIds = pages.map(p => p.pageid).join('|')
-      const detailRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&pageids=${pageIds}&prop=categories|extracts|pageimages&exintro&explaintext&exsentences=2&pithumbsize=300&cllimit=10&format=json&origin=*`)
-      const detailData = await detailRes.json()
-      const pageDetails = detailData?.query?.pages || {}
-
-      // 3) 관광 관련 필터
-      const tourismKeywords = ['landmark','monument','museum','temple','church','cathedral','mosque','palace','castle','park','garden','tower','bridge','square','plaza','district','beach','mountain','lake','waterfall','heritage','historic','memorial','statue','shrine','fort','ruins','archaeological','zoo','aquarium','gallery','theater','theatre','stadium','market','bazaar','island','cave','gorge','canyon','lighthouse','observatory','unesco','attraction','tourism']
-      const excludeKeywords = ['football','soccer','baseball','basketball','rugby','cricket','league','season','election','university student','municipality','census','administrative','railway station','metro station','bus','airline','company','corporation','school','hospital','prison','military','regiment','battle of','war of','birth','death','politician','actor','singer','band','album','film','novel','newspaper']
-
-      const existingNames = new Set((CITY_DATA[cityKey]?.spots || []).map(s => (s.wikiTitle || s.name || '').toLowerCase()))
-
-      const results = []
-      for (const p of pages) {
-        const detail = pageDetails[p.pageid]
-        if (!detail) continue
-        const title = detail.title || ''
-        const extract = (detail.extract || '').toLowerCase()
-        const cats = (detail.categories || []).map(c => c.title?.toLowerCase() || '')
-        const allText = (title + ' ' + cats.join(' ') + ' ' + extract).toLowerCase()
-
-        // 제외: 사람, 스포츠, 행정, 회사 등
-        if (excludeKeywords.some(k => allText.includes(k))) continue
-        // 제외: 너무 짧은 설명 (의미 없는 문서)
-        if (!detail.extract || detail.extract.length < 30) continue
-        // 중복 제외
-        if (existingNames.has(title.toLowerCase())) continue
-        // 도시 자체 문서 제외
-        if (title.toLowerCase() === cityKey.toLowerCase()) continue
-
-        // 관광 관련성 점수
-        let score = 0
-        tourismKeywords.forEach(k => { if (allText.includes(k)) score++ })
-        // 카테고리에 관광 키워드 있으면 가산
-        cats.forEach(c => { tourismKeywords.forEach(k => { if (c.includes(k)) score += 2 }) })
-
-        if (score >= 1) {
-          // 유형 추정
-          let type = '관광지'
-          if (['museum','gallery'].some(k => allText.includes(k))) type = '문화'
-          else if (['temple','church','cathedral','mosque','shrine','palace','castle','fort','ruins','heritage','historic','memorial'].some(k => allText.includes(k))) type = '역사'
-          else if (['park','garden','beach','mountain','lake','waterfall','cave','island','gorge','canyon'].some(k => allText.includes(k))) type = '자연'
-          else if (['tower','bridge','square','plaza','statue','landmark','monument'].some(k => allText.includes(k))) type = '랜드마크'
-
-          results.push({
-            name: title,
-            wikiTitle: title,
-            type,
-            rating: Math.min(4.0 + score * 0.1, 4.8),
-            desc: detail.extract?.slice(0, 100) || '',
-            lat: p.lat,
-            lng: p.lon,
-            _fromWiki: true,
-            _score: score,
-            thumbnail: detail.thumbnail?.source || null
-          })
-        }
-      }
-
-      // 점수순 정렬, 상위 20개
-      results.sort((a, b) => b._score - a._score)
-      const top = results.slice(0, 20)
-
-      // 캐시 저장
-      setWikiSpots(prev => ({ ...prev, [cityKey]: top }))
-      return top
-    } catch (e) {
-      console.error('[Wiki] fetch error:', e)
-      return []
-    }
-  }
-
   const fetchCityData = async (city) => {
     try {
       // 1. 사전 데이터 (240개 도시 전체 포함)
@@ -2265,23 +2108,11 @@ function App() {
         fetchWeather(city.lat, city.lng).then(w => {
           if (w) setCityData(prev => prev ? { ...prev, weather: w } : prev)
         }).catch(() => {})
-        // Wikipedia 관광지 보강 (백그라운드)
-        fetchWikiSpots(city.lat, city.lng, cityKey).then(wiki => {
-          if (wiki?.length > 0) {
-            setCityData(prev => {
-              if (!prev) return prev
-              const existingNames = new Set((prev.spots || []).map(s => (s.wikiTitle || s.name || '').toLowerCase()))
-              const newSpots = wiki.filter(w => !existingNames.has(w.name.toLowerCase()))
-              if (newSpots.length === 0) return prev
-              return { ...prev, spots: [...(prev.spots || []), ...newSpots] }
-            })
-          }
-        }).catch(() => {})
         return
       }
 
       // 2. 사전 데이터 없는 경우 기본 데이터 사용
-      const fallback = DEFAULT_CITY_DATA(cityKey)
+      const fallback = DEFAULT_CITY_DATA(cityKey, lang)
       setCityData(fallback)
       setLoading(false)
       fetchWeather(city.lat, city.lng).then(w => {
@@ -2293,18 +2124,9 @@ function App() {
       setCityData({
         weather: { temp: '—', condition: '—', icon: '🌤️', humidity: '—' },
         description: `${cityKey2}`,
-        spots: DEFAULT_CITY_DATA(cityKey2).spots,
+        spots: DEFAULT_CITY_DATA(cityKey2, lang).spots,
       })
       setLoading(false)
-      // Wikipedia 관광지 보강
-      fetchWikiSpots(city.lat, city.lng, cityKey).then(wiki => {
-        if (wiki?.length > 0) {
-          setCityData(prev => {
-            if (!prev) return prev
-            return { ...prev, spots: [...(prev.spots || []), ...wiki] }
-          })
-        }
-      }).catch(() => {})
     }
   }
 
@@ -2352,7 +2174,7 @@ function App() {
 
   // Search: all cities + all spots across all countries
   const allCities = Object.entries(COUNTRY_CITIES).flatMap(([country, cities]) =>
-    (cities||[]).filter(c=>c&&c.lat).map(c => ({ ...c, _koName: c.name, countryEn: country, countryKo: getCountryName(country), _searchType: 'city' }))
+    cities.map(c => ({ ...c, _koName: c.name, countryEn: country, countryKo: getCountryName(country), _searchType: 'city' }))
   )
   // Build spot search index
   const allSpots = Object.entries(CITY_DATA).flatMap(([cityName, data]) => {
@@ -2381,11 +2203,10 @@ function App() {
   const countryKo = selectedCountry ? getCountryName(selectedCountry.properties.NAME) : ''
 
   return (
-    <div style={{width:'100vw',height:vpHeight,overflow:'hidden',position:'relative',fontFamily:"'Pretendard','Inter',system-ui,sans-serif",background:'#000'}}>
+    <div style={{width:'100vw',height:'100vh',overflow:'hidden',position:'relative',fontFamily:"'Pretendard','Inter',system-ui,sans-serif",background:'#000'}}>
       <style>{`
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-        html,body,#root{height:100%;overflow:hidden}
         ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px}
         .panel{animation:sIn .42s cubic-bezier(.16,1,.3,1)}
         .countryInfoPanel{animation:cInfoIn .35s cubic-bezier(.16,1,.3,1)}
@@ -2455,7 +2276,6 @@ function App() {
                             <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
                           <button onClick={()=>loadSavedCourse(sc)} style={{background:'#7c3aed',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
-                          <button onClick={()=>{if(!currentUser){setShowLoginModal(true);setShowHamburger(false);return};setShareModalCourse(sc);setSharePhotos([])}} style={{background:'none',border:'1px solid rgba(59,130,246,.4)',color:'#60a5fa',padding:'3px 7px',borderRadius:6,fontSize:10,fontWeight:600,cursor:'pointer'}}>📤</button>
                           <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
                         </div>
                       ))}
@@ -2481,7 +2301,6 @@ function App() {
                             <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
                           <button onClick={()=>loadSavedCourse(sc)} style={{background:'#3b82f6',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
-                          <button onClick={()=>{if(!currentUser){setShowLoginModal(true);setShowHamburger(false);return};setShareModalCourse(sc);setSharePhotos([])}} style={{background:'none',border:'1px solid rgba(59,130,246,.4)',color:'#60a5fa',padding:'3px 7px',borderRadius:6,fontSize:10,fontWeight:600,cursor:'pointer'}}>📤</button>
                           <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
                         </div>
                       ))}
@@ -2510,7 +2329,7 @@ function App() {
                           {favorites.filter(f=>f.type==='city').map((f,i)=>(
                             <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
                               onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-                              onClick={()=>{const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>(cs||[]).filter(c=>c&&c.lat).map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f._koName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300)};setShowHamburger(false)}}>
+                              onClick={()=>{const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>cs.map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f._koName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300)};setShowHamburger(false)}}>
                               <span style={{fontSize:16}}>{f.emoji||'📍'}</span>
                               <div style={{flex:1,minWidth:0}}>
                                 <div style={{fontSize:12,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCityName(f._koName||f.name)||f.displayName||f.name}</div>
@@ -2527,7 +2346,7 @@ function App() {
                           {favorites.filter(f=>f.type==='spot').map((f,i)=>(
                             <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
                               onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-                              onClick={()=>{if(f.cityName){const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>(cs||[]).filter(c=>c&&c.lat).map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f.cityName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300);setTimeout(()=>{const spot=CITY_DATA[f.cityName]?.spots?.find(s=>s.name===f.name);if(spot)setSelectedSpot(spot)},1200)}};setShowHamburger(false)}}>
+                              onClick={()=>{if(f.cityName){const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>cs.map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f.cityName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300);setTimeout(()=>{const spot=CITY_DATA[f.cityName]?.spots?.find(s=>s.name===f.name);if(spot)setSelectedSpot(spot)},1200)}};setShowHamburger(false)}}>
                               <span style={{fontSize:13,width:24,height:24,borderRadius:6,background:'rgba(251,191,36,.15)',display:'flex',alignItems:'center',justifyContent:'center'}}>📍</span>
                               <div style={{flex:1,minWidth:0}}>
                                 <div style={{fontSize:12,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{trSpot(f.cityName, f.name)?.name || f.name}</div>
@@ -2567,7 +2386,7 @@ function App() {
                     onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
                     onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,rgba(200,133,106,.2),rgba(200,133,106,.1))',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c8856a" strokeWidth="2" strokeLinecap="round"><path d="M3 7l6-4 6 4 6-4v14l-6 4-6-4-6 4z"/><path d="M9 3v14"/><path d="M15 7v14"/></svg></div>
+                      <span style={{fontSize:18}}>🌍</span>
                       <div>
                         <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('visitedTitle')}</div>
                         <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>
@@ -2593,31 +2412,10 @@ function App() {
                     onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
                     onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,rgba(16,185,129,.2),rgba(16,185,129,.1))',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+                      <div style={{width:24,height:24,borderRadius:6,background:'rgba(5,150,105,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:'#10b981'}}>¤</div>
                       <div>
                         <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('currCalc')}</div>
                         <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{currFrom} → {currTo}</div>
-                      </div>
-                    </div>
-                    <span style={{fontSize:14,color:'#64748b'}}>→</span>
-                  </div>
-                </div>
-
-                {/* 커뮤니티 코스 */}
-                <div style={{padding:'0 16px 14px'}}>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
-                    onClick={async()=>{
-                      setShowCommunity(true);setShowHamburger(false);setCommunityLoading(true);setCommunityContinent(null);setCommunityCountry(null);setCommunityExpanded(null)
-                      try{const data=await loadSharedCourses();setCommunityCoursesData(data)}catch(e){console.error(e)}
-                      setCommunityLoading(false)
-                    }}
-                    onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
-                    onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
-                    <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,191,36,.1))',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-                      <div>
-                        <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('community')}</div>
-                        <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{t('communityDesc')}</div>
                       </div>
                     </div>
                     <span style={{fontSize:14,color:'#64748b'}}>→</span>
@@ -2636,47 +2434,17 @@ function App() {
                         </div>
                       </div>
                       {/* 홈 국가 설정 */}
-                      <div style={{position:'relative',marginBottom:8}}>
-                        <div style={{display:'flex',alignItems:'center',gap:6,cursor:'pointer',padding:'5px 8px',borderRadius:8,border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.08)'}}
-                          onClick={()=>setShowHomeCountryPicker(v=>!v)}>
-                          <span style={{fontSize:10,color:'#94a3b8',whiteSpace:'nowrap'}}>{t('homeCountry')}</span>
-                          {homeCountry ? (
-                            <span style={{display:'flex',alignItems:'center',gap:5,flex:1}}>
-                              {getFlagImg(COUNTRY_INFO[homeCountry]?.emoji,20) ? <img src={getFlagImg(COUNTRY_INFO[homeCountry]?.emoji,20)} width={18} height={13} style={{borderRadius:2,objectFit:'cover'}} /> : <span>{COUNTRY_INFO[homeCountry]?.emoji}</span>}
-                              <span style={{fontSize:12,color:'white'}}>{getCountryName(homeCountry)}</span>
-                            </span>
-                          ) : (
-                            <span style={{fontSize:11,color:'#64748b',flex:1}}>—</span>
-                          )}
-                          <span style={{fontSize:8,color:'#64748b'}}>{showHomeCountryPicker?'▲':'▼'}</span>
-                        </div>
-                        {showHomeCountryPicker && (
-                          <div style={{position:'absolute',bottom:'calc(100% + 4px)',left:0,right:0,background:'rgba(15,23,42,.98)',border:'1px solid rgba(255,255,255,.15)',borderRadius:10,overflow:'hidden',zIndex:3000,boxShadow:'0 8px 24px rgba(0,0,0,.5)',maxHeight:200}}>
-                            <div style={{padding:'6px 8px',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
-                              <input placeholder={t('homeSearch')} value={homeCountryQuery} onChange={e=>setHomeCountryQuery(e.target.value)} autoFocus
-                                style={{width:'100%',padding:'5px 8px',borderRadius:6,border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.08)',color:'white',fontSize:11,outline:'none',boxSizing:'border-box'}} />
-                            </div>
-                            <div style={{maxHeight:160,overflowY:'auto'}}>
-                              {Object.keys(COUNTRY_INFO).filter(c=>{
-                                if(!homeCountryQuery)return true
-                                const q=homeCountryQuery.toLowerCase()
-                                return c.toLowerCase().includes(q) || (getCountryName(c)||'').toLowerCase().includes(q)
-                              }).sort().map(c=>(
-                                <div key={c} onClick={()=>{setHomeCountry(c);localStorage.setItem('atlas_home_country',c);const code=extractCurrencyCode(COUNTRY_INFO[c]?.currency);if(code)setCurrFrom(code);setShowHomeCountryPicker(false);setHomeCountryQuery('')}}
-                                  style={{display:'flex',alignItems:'center',gap:8,padding:'7px 12px',cursor:'pointer',background:homeCountry===c?'rgba(59,130,246,.2)':'transparent',transition:'background .1s'}}
-                                  onMouseEnter={e=>{if(homeCountry!==c)e.currentTarget.style.background='rgba(255,255,255,.08)'}} onMouseLeave={e=>{if(homeCountry!==c)e.currentTarget.style.background='transparent'}}>
-                                  {getFlagImg(COUNTRY_INFO[c]?.emoji,20) ? <img src={getFlagImg(COUNTRY_INFO[c]?.emoji,20)} width={20} height={15} style={{borderRadius:2,objectFit:'cover'}} /> : <span style={{fontSize:16}}>{COUNTRY_INFO[c].emoji}</span>}
-                                  <span style={{fontSize:11,color:'white',fontWeight:homeCountry===c?700:400}}>{getCountryName(c)}</span>
-                                  {homeCountry===c && <span style={{marginLeft:'auto',fontSize:10,color:'#60a5fa'}}>✓</span>}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                      <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
+                        <span style={{fontSize:10,color:'#94a3b8',whiteSpace:'nowrap'}}>{lang==='ko'?'홈 국가':'Home'}</span>
+                        <select value={homeCountry} onChange={e=>{setHomeCountry(e.target.value);localStorage.setItem('atlas_home_country',e.target.value);const code=extractCurrencyCode(COUNTRY_INFO[e.target.value]?.currency);if(code)setCurrFrom(code)}}
+                          style={{flex:1,padding:'4px 6px',borderRadius:6,border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.08)',color:'white',fontSize:11,cursor:'pointer'}}>
+                          <option value="" style={{background:'#1e293b'}}>—</option>
+                          {Object.keys(COUNTRY_INFO).sort().map(c=><option key={c} value={c} style={{background:'#1e293b'}}>{COUNTRY_INFO[c].emoji} {lang==='ko'?c:c}</option>)}
+                        </select>
                       </div>
                       <button onClick={()=>{handleLogout();setShowHamburger(false)}}
                         style={{width:'100%',padding:'6px',borderRadius:8,border:'1px solid rgba(239,68,68,.3)',background:'rgba(239,68,68,.1)',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer'}}>
-                        {t('loginLogout')}
+                        {lang==='ko'?'로그아웃':'Logout'}
                       </button>
                     </div>
                   ) : (
@@ -2685,10 +2453,10 @@ function App() {
                       onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
                       onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
                       <div style={{display:'flex',alignItems:'center',gap:8}}>
-                        <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,rgba(99,102,241,.2),rgba(99,102,241,.1))',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg></div>
+                        <div style={{width:24,height:24,borderRadius:6,background:'rgba(59,130,246,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:'#60a5fa'}}>👤</div>
                         <div>
-                          <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('loginSignup')}</div>
-                          <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{t('loginSync')}</div>
+                          <div style={{fontSize:13,fontWeight:700,color:'white'}}>{lang==='ko'?'로그인 / 회원가입':'Login / Sign up'}</div>
+                          <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{lang==='ko'?'데이터 클라우드 동기화':'Sync your data'}</div>
                         </div>
                       </div>
                       <span style={{fontSize:14,color:'#64748b'}}>→</span>
@@ -4051,252 +3819,13 @@ function App() {
         </>
       )}
 
-      {/* Community Courses Modal */}
-      {showCommunity && (() => {
-        // 데이터 그룹핑
-        const grouped = {}
-        communityCoursesData.forEach(sc => {
-          const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))]
-          const firstCity = cities[0]
-          let country = '', continent = ''
-          if (firstCity) {
-            const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(c=>c.name===firstCity))
-            if (entry) { country = entry[0]; continent = COUNTRY_INFO[country]?.continent || '' }
-          }
-          if (!continent) continent = lang==='ko'?'기타':'Other'
-          if (!country) country = lang==='ko'?'기타':'Other'
-          const contDisplay = lang==='ko' ? continent : (CONTINENT_I18N[continent]?.[lang] || continent)
-          if (!grouped[contDisplay]) grouped[contDisplay] = {_rawContinent:continent}
-          if (!grouped[contDisplay][country]) grouped[contDisplay][country] = []
-          grouped[contDisplay][country].push(sc)
-        })
-        return (
-        <>
-          <div onClick={()=>{setShowCommunity(false);setCommunityContinent(null);setCommunityCountry(null)}} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
-          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'96vw':560,maxHeight:'88vh',background:'white',borderRadius:22,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden',display:'flex',flexDirection:'column'}}>
-            <div style={{background:'linear-gradient(135deg,#f59e0b,#ef4444)',padding:'20px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
-              <div style={{display:'flex',alignItems:'center',gap:10}}>
-                {(communityContinent || communityCountry) && (
-                  <button onClick={()=>{if(communityCountry)setCommunityCountry(null);else setCommunityContinent(null)}}
-                    style={{background:'rgba(255,255,255,.25)',border:'none',color:'white',width:28,height:28,borderRadius:8,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>←</button>
-                )}
-                <div>
-                  <div style={{fontSize:19,fontWeight:800,color:'white'}}>
-                    {communityCountry ? getCountryName(communityCountry) : communityContinent ? communityContinent : t('community')}
-                  </div>
-                  <div style={{fontSize:12,color:'rgba(255,255,255,.7)',marginTop:2}}>
-                    {communityCountry ? communityContinent : communityContinent ? (lang==='ko'?'국가를 선택하세요':'Select a country') : t('communityDesc')}
-                  </div>
-                </div>
-              </div>
-              <button onClick={()=>{setShowCommunity(false);setCommunityContinent(null);setCommunityCountry(null)}} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:32,height:32,borderRadius:10,fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
-            </div>
-            <div style={{flex:1,overflowY:'auto',padding:'18px 22px'}}>
-              {communityLoading ? (
-                <div style={{textAlign:'center',padding:'50px 0',color:'#94a3b8',fontSize:15}}>{lang==='ko'?'불러오는 중...':'Loading...'}</div>
-              ) : communityCoursesData.length === 0 ? (
-                <div style={{textAlign:'center',padding:'50px 0'}}>
-                  <div style={{fontSize:48,marginBottom:14}}>📭</div>
-                  <div style={{color:'#94a3b8',fontSize:14,fontWeight:600}}>{t('communityEmpty')}</div>
-                  <div style={{color:'#cbd5e1',fontSize:12,marginTop:6}}>{t('communityEmptyHint')}</div>
-                </div>
-              ) : !communityContinent ? (
-                /* Level 0: 대륙 박스 그리드 */
-                <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'1fr 1fr 1fr',gap:12}}>
-                  {Object.entries(grouped).map(([cont, obj]) => {
-                    const countryCount = Object.keys(obj).filter(k=>k!=='_rawContinent').length
-                    const courseCount = Object.values(obj).filter(v=>Array.isArray(v)).reduce((a,arr)=>a+arr.length,0)
-                    return (
-                      <div key={cont} onClick={()=>setCommunityContinent(cont)}
-                        style={{padding:'24px 16px',borderRadius:16,background:'linear-gradient(135deg,#f8fafc,#f1f5f9)',border:'2px solid #e2e8f0',cursor:'pointer',textAlign:'center',transition:'all .2s',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}
-                        onMouseEnter={e=>{e.currentTarget.style.borderColor='#3b82f6';e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 8px 24px rgba(59,130,246,.15)'}}
-                        onMouseLeave={e=>{e.currentTarget.style.borderColor='#e2e8f0';e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='none'}}>
-                        <div style={{fontSize:15,fontWeight:700,color:'#0f172a'}}>{cont}</div>
-                        <div style={{fontSize:11,color:'#64748b',marginTop:4}}>{countryCount} {lang==='ko'?'개국':'countries'} · {courseCount} {lang==='ko'?'개 코스':'courses'}</div>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : !communityCountry ? (
-                /* Level 1: 선택된 대륙 내 국가 리스트 */
-                <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                  {Object.entries(grouped[communityContinent]||{}).filter(([k])=>k!=='_rawContinent').map(([countryName, courses]) => (
-                    <div key={countryName} onClick={()=>setCommunityCountry(countryName)}
-                      style={{display:'flex',alignItems:'center',gap:12,padding:'14px 18px',borderRadius:14,border:'1.5px solid #e2e8f0',background:'white',cursor:'pointer',transition:'all .15s'}}
-                      onMouseEnter={e=>{e.currentTarget.style.borderColor='#3b82f6';e.currentTarget.style.boxShadow='0 4px 12px rgba(59,130,246,.1)'}}
-                      onMouseLeave={e=>{e.currentTarget.style.borderColor='#e2e8f0';e.currentTarget.style.boxShadow='none'}}>
-                      {getFlagImg(COUNTRY_INFO[countryName]?.emoji,20) ? <img src={getFlagImg(COUNTRY_INFO[countryName]?.emoji,20)} width={24} height={18} style={{borderRadius:3}} /> : <span style={{fontSize:20}}>{COUNTRY_INFO[countryName]?.emoji||''}</span>}
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:15,fontWeight:700,color:'#0f172a'}}>{getCountryName(countryName)}</div>
-                        <div style={{fontSize:11,color:'#64748b',marginTop:2}}>{courses.length} {lang==='ko'?'개 코스':'courses'}</div>
-                      </div>
-                      <span style={{fontSize:16,color:'#94a3b8'}}>›</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                /* Level 2: 선택된 국가 내 코스 목록 */
-                <div style={{display:'flex',flexDirection:'column',gap:14}}>
-                  {(grouped[communityContinent]?.[communityCountry]||[]).map((sc,idx) => {
-                    const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityI18n?.[lang] || getCityName(it.cityName||it.name))).filter(Boolean))]
-                    const totalPlaces = (sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)
-                    const dayCount = (sc.days||[]).length
-                    const dateStr = sc.sharedAt ? new Date(sc.sharedAt).toLocaleDateString() : ''
-                    const isExpanded = communityExpanded === (sc.id||idx)
-                    const comments = sc.comments || []
-                    const photos = sc.photos || []
-                    return (
-                      <div key={sc.id||idx} style={{borderRadius:16,border:'1.5px solid #e2e8f0',background:'white',overflow:'hidden',boxShadow:'0 2px 8px rgba(0,0,0,.04)'}}>
-                        <div style={{padding:'18px 20px'}}>
-                          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
-                            <div>
-                              <div style={{fontSize:18,fontWeight:800,color:'#0f172a'}}>{cities.join(' · ') || 'Course'}</div>
-                              <div style={{fontSize:12,color:'#64748b',marginTop:4}}>
-                                {totalPlaces}{t('communityPlaces')} · {dayCount}{t('communityDays')}
-                                {sc.type==='ai' && <span style={{marginLeft:6,padding:'1px 6px',borderRadius:4,background:'#f3e8ff',color:'#7c3aed',fontSize:10,fontWeight:700}}>AI</span>}
-                              </div>
-                            </div>
-                            {currentUser && sc.uid === currentUser.uid && (
-                              <button onClick={async()=>{if(confirm('Delete?')){await deleteSharedCourse(sc.id);setCommunityCoursesData(prev=>prev.filter(c=>c.id!==sc.id))}}}
-                                style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer'}}>✕</button>
-                            )}
-                          </div>
-                          {photos.length > 0 && (
-                            <div style={{display:'flex',gap:8,marginBottom:12,overflowX:'auto',paddingBottom:4}}>
-                              {photos.map((url,i)=>(
-                                <img key={i} src={url} style={{width:110,height:80,borderRadius:10,objectFit:'cover',flexShrink:0,cursor:'pointer',border:'1px solid #e2e8f0'}} onClick={()=>window.open(url,'_blank')} />
-                              ))}
-                            </div>
-                          )}
-                          <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:14}}>
-                            {(sc.days||[]).flatMap(d=>d.items||[]).slice(0,8).map((it,i)=>(
-                              <span key={i} style={{padding:'4px 10px',borderRadius:20,background:'#f1f5f9',fontSize:11,color:'#475569',fontWeight:500}}>{it.i18n?.[lang] || getCourseItemName(it)}</span>
-                            ))}
-                            {(sc.days||[]).flatMap(d=>d.items||[]).length > 8 && <span style={{padding:'4px 10px',borderRadius:20,background:'#f1f5f9',fontSize:11,color:'#94a3b8'}}>+{(sc.days||[]).flatMap(d=>d.items||[]).length-8}</span>}
-                          </div>
-                          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                            <div style={{display:'flex',alignItems:'center',gap:10}}>
-                              <span style={{fontSize:11,color:'#94a3b8'}}>{sc.userName || 'Anonymous'} · {dateStr}</span>
-                              <button onClick={()=>setCommunityExpanded(isExpanded?null:(sc.id||idx))}
-                                style={{background:'#f1f5f9',border:'none',color:'#3b82f6',fontSize:11,cursor:'pointer',fontWeight:600,padding:'3px 8px',borderRadius:6}}>
-                                💬 {comments.length} {isExpanded?'▲':'▼'}
-                              </button>
-                            </div>
-                            <button onClick={()=>{
-                              const days = sc.days || []
-                              setCourseDays(days);localStorage.setItem('atlas_course_days',JSON.stringify(days))
-                              const flat = days.flatMap(d=>d.items||[]);saveCourse(flat)
-                              setCourseTransport(sc.transport||'transit')
-                              setActiveDayTab(0);setShowCoursePlanner(true);setShowCommunity(false)
-                              setCourseSource(sc.type||'manual')
-                            }} style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',color:'white',padding:'8px 20px',borderRadius:10,fontSize:13,fontWeight:700,cursor:'pointer'}}>
-                              {t('communityLoad')}
-                            </button>
-                          </div>
-                        </div>
-                        {isExpanded && (
-                          <div style={{borderTop:'1px solid #e2e8f0',padding:'14px 20px',background:'#f8fafc'}}>
-                            {comments.length === 0 && <div style={{fontSize:12,color:'#94a3b8',textAlign:'center',padding:'10px 0'}}>{lang==='ko'?'아직 댓글이 없습니다':'No comments yet'}</div>}
-                            {comments.map((cm,ci)=>(
-                              <div key={cm.id||ci} style={{display:'flex',gap:10,marginBottom:10}}>
-                                <div style={{width:26,height:26,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'white',flexShrink:0}}>{(cm.userName||'?')[0]?.toUpperCase()}</div>
-                                <div style={{flex:1}}>
-                                  <div style={{display:'flex',alignItems:'center',gap:6}}>
-                                    <span style={{fontSize:12,fontWeight:600,color:'#1e293b'}}>{cm.userName}</span>
-                                    <span style={{fontSize:10,color:'#94a3b8'}}>{cm.createdAt ? new Date(cm.createdAt).toLocaleDateString() : ''}</span>
-                                    {currentUser && cm.uid === currentUser.uid && (
-                                      <button onClick={async()=>{const updated=await deleteComment(sc.id,cm.id);setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c))}}
-                                        style={{background:'none',border:'none',color:'#ef4444',fontSize:10,cursor:'pointer',marginLeft:'auto'}}>{t('commentDelete')}</button>
-                                    )}
-                                  </div>
-                                  <div style={{fontSize:13,color:'#475569',marginTop:3,lineHeight:1.5}}>{cm.text}</div>
-                                </div>
-                              </div>
-                            ))}
-                            {currentUser ? (
-                              <div style={{display:'flex',gap:8,marginTop:10}}>
-                                <input value={commentText} onChange={e=>setCommentText(e.target.value)} placeholder={t('commentPlaceholder')}
-                                  onKeyDown={e=>{if(e.key==='Enter'&&commentText.trim()){addComment(sc.id,{text:commentText.trim(),uid:currentUser.uid,userName:currentUser.displayName||currentUser.email}).then(updated=>{setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c));setCommentText('')})}}}
-                                  style={{flex:1,padding:'8px 12px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box'}} />
-                                <button onClick={()=>{if(commentText.trim()){addComment(sc.id,{text:commentText.trim(),uid:currentUser.uid,userName:currentUser.displayName||currentUser.email}).then(updated=>{setCommunityCoursesData(prev=>prev.map(c=>c.id===sc.id?{...c,comments:updated}:c));setCommentText('')})}}}
-                                  style={{background:'#3b82f6',border:'none',color:'white',padding:'8px 16px',borderRadius:10,fontSize:12,fontWeight:600,cursor:'pointer'}}>{t('commentPost')}</button>
-                              </div>
-                            ) : (
-                              <div style={{fontSize:12,color:'#94a3b8',textAlign:'center',marginTop:10}}>{t('commentLogin')}</div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </>
-        )
-      })()}
-
-      {/* Share Modal */}
-      {shareModalCourse && (
-        <>
-          <div onClick={()=>setShareModalCourse(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3100}} />
-          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3101,width:isMobile?'92vw':400,background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden'}}>
-            <div style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <span style={{fontSize:17,fontWeight:800,color:'white'}}>{t('shareBtn')}</span>
-              <button onClick={()=>setShareModalCourse(null)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:30,height:30,borderRadius:8,fontSize:15,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
-            </div>
-            <div style={{padding:'18px 22px 22px'}}>
-              <div style={{padding:'12px 16px',borderRadius:12,background:'#f8fafc',border:'1px solid #e2e8f0',marginBottom:16}}>
-                <div style={{fontSize:15,fontWeight:700,color:'#0f172a'}}>{[...new Set((shareModalCourse.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))].map(c=>getCityName(c)).join(' · ')}</div>
-                <div style={{fontSize:12,color:'#64748b',marginTop:4}}>{(shareModalCourse.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('communityPlaces')} · {(shareModalCourse.days||[]).length}{t('communityDays')}</div>
-              </div>
-              <div style={{marginBottom:16}}>
-                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:6}}>{t('sharePhotos')}</label>
-                <input type="file" accept="image/*" multiple onChange={e=>setSharePhotos([...e.target.files].slice(0,5))}
-                  style={{fontSize:12,color:'#64748b'}} />
-                {sharePhotos.length > 0 && (
-                  <div style={{display:'flex',gap:8,marginTop:8,flexWrap:'wrap'}}>
-                    {[...sharePhotos].map((f,i)=>(
-                      <div key={i} style={{width:64,height:48,borderRadius:8,overflow:'hidden',border:'1px solid #e2e8f0'}}>
-                        <img src={URL.createObjectURL(f)} style={{width:'100%',height:'100%',objectFit:'cover'}} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div style={{display:'flex',gap:10}}>
-                <button onClick={()=>setShareModalCourse(null)} style={{flex:1,padding:'11px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'white',color:'#64748b',fontSize:13,fontWeight:600,cursor:'pointer'}}>{t('shareCancel')}</button>
-                <button disabled={shareUploading} onClick={async()=>{
-                  setShareUploading(true)
-                  try {
-                    let photoUrls = []
-                    for (const f of sharePhotos) {
-                      const path = 'courses/'+currentUser.uid+'/'+Date.now()+'_'+f.name
-                      const url = await uploadPhoto(f, path)
-                      photoUrls.push(url)
-                    }
-                    await shareCourse(currentUser.uid, buildCourseI18n(shareModalCourse), currentUser.displayName||currentUser.email, photoUrls)
-                    alert(t('communityShared'))
-                    setShareModalCourse(null);setSharePhotos([])
-                  } catch(e) { alert(e.message) }
-                  setShareUploading(false)
-                }} style={{flex:1,padding:'11px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#2563eb,#7c3aed)',color:'white',fontSize:13,fontWeight:700,cursor:'pointer',opacity:shareUploading?.6:1}}>
-                  {shareUploading ? t('uploading') : t('shareBtn')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
       {/* Login Modal */}
       {showLoginModal && (
         <>
           <div onClick={()=>setShowLoginModal(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
           <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'92vw':380,background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden'}}>
             <div style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <span style={{fontSize:17,fontWeight:800,color:'white'}}>{authMode==='login'?t('loginTitle'):t('signupTitle')}</span>
+              <span style={{fontSize:17,fontWeight:800,color:'white'}}>{authMode==='login'?(lang==='ko'?'로그인':'Login'):(lang==='ko'?'회원가입':'Sign Up')}</span>
               <button onClick={()=>setShowLoginModal(false)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:30,height:30,borderRadius:8,fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
             </div>
             <div style={{padding:'20px 22px 24px'}}>
@@ -4305,7 +3834,7 @@ function App() {
                 style={{width:'100%',padding:'11px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontSize:14,fontWeight:600,color:'#374151',marginBottom:16,transition:'all .15s'}}
                 onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background='white'}>
                 <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#34A853" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#FBBC05" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-                Google {t('login')}
+                Google {lang==='ko'?'로그인':'Login'}
               </button>
               <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
                 <div style={{flex:1,height:1,background:'#e2e8f0'}} />
@@ -4315,18 +3844,18 @@ function App() {
               {/* 이메일 폼 */}
               {authMode==='signup' && (
                 <div style={{marginBottom:10}}>
-                  <input placeholder={t('nameOptional')} value={authName} onChange={e=>setAuthName(e.target.value)}
+                  <input placeholder={lang==='ko'?'이름 (선택)':'Name (optional)'} value={authName} onChange={e=>setAuthName(e.target.value)}
                     style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,color:'#0f172a',outline:'none',boxSizing:'border-box'}}
                     onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'} />
                 </div>
               )}
               <div style={{marginBottom:10}}>
-                <input type="email" placeholder={t('email')} value={authEmail} onChange={e=>setAuthEmail(e.target.value)}
+                <input type="email" placeholder={lang==='ko'?'이메일':'Email'} value={authEmail} onChange={e=>setAuthEmail(e.target.value)}
                   style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,color:'#0f172a',outline:'none',boxSizing:'border-box'}}
                   onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'} />
               </div>
               <div style={{marginBottom:14}}>
-                <input type="password" placeholder={t('password')} value={authPw} onChange={e=>setAuthPw(e.target.value)}
+                <input type="password" placeholder={lang==='ko'?'비밀번호':'Password'} value={authPw} onChange={e=>setAuthPw(e.target.value)}
                   onKeyDown={e=>{if(e.key==='Enter')handleAuth()}}
                   style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,color:'#0f172a',outline:'none',boxSizing:'border-box'}}
                   onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'} />
@@ -4334,12 +3863,12 @@ function App() {
               {authError && <div style={{marginBottom:12,padding:'8px 12px',borderRadius:8,background:'#fef2f2',border:'1px solid #fecaca',fontSize:12,color:'#dc2626'}}>{authError}</div>}
               <button onClick={handleAuth} disabled={authLoading}
                 style={{width:'100%',padding:'12px',background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',borderRadius:12,color:'white',fontSize:15,fontWeight:700,cursor:'pointer',opacity:authLoading?.6:1}}>
-                {authLoading ? '...' : authMode==='login'?t('login'):t('signup')}
+                {authLoading ? '...' : authMode==='login'?(lang==='ko'?'로그인':'Login'):(lang==='ko'?'가입하기':'Sign Up')}
               </button>
               <div style={{marginTop:14,textAlign:'center'}}>
-                <span style={{fontSize:12,color:'#64748b'}}>{authMode==='login'?t('noAccount'):t('hasAccount')} </span>
+                <span style={{fontSize:12,color:'#64748b'}}>{authMode==='login'?(lang==='ko'?'계정이 없으신가요?':'No account?'):(lang==='ko'?'이미 계정이 있으신가요?':'Have an account?')} </span>
                 <span onClick={()=>{setAuthMode(authMode==='login'?'signup':'login');setAuthError('')}}
-                  style={{fontSize:12,color:'#3b82f6',fontWeight:600,cursor:'pointer'}}>{authMode==='login'?t('signup'):t('login')}</span>
+                  style={{fontSize:12,color:'#3b82f6',fontWeight:600,cursor:'pointer'}}>{authMode==='login'?(lang==='ko'?'회원가입':'Sign Up'):(lang==='ko'?'로그인':'Login')}</span>
               </div>
             </div>
           </div>
