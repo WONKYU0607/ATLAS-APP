@@ -728,14 +728,11 @@ function App() {
   // 언어 변경 시 경로 캐시 초기화 (Directions API 응답 언어가 다름)
   useEffect(() => { setRouteCache({}) }, [lang])
 
-<<<<<<< HEAD
   // 언어 변경 시 localStorage 자동 동기화 (리로드 후 복원 보장)
   useEffect(() => {
     try { localStorage.setItem('atlas_lang', lang) } catch {}
   }, [lang])
 
-=======
->>>>>>> 31b35659c062c4e00593c2288ffce8295ded808f
   // lang 변경 시 폴백 도시 데이터 재생성 (DEFAULT_CITY_DATA 사용 중이면)
   useEffect(() => {
     if (!selectedCity || !cityData) return
@@ -1240,7 +1237,6 @@ function App() {
         const geom = feat.geometry
         if (!geom) return feat
         if (geom.type === 'Polygon') {
-<<<<<<< HEAD
           const validRings = geom.coordinates.filter(isValidRing)
           // 유효 링이 없으면 빈 coordinates로 (원본 feature 유지 시 전 지구 덮는 버그 발생)
           if (!validRings.length) return { ...feat, geometry: { ...geom, coordinates: [] } }
@@ -1252,19 +1248,6 @@ function App() {
             .filter(poly => poly.length > 0)
           if (!validPolys.length) return { ...feat, geometry: { ...geom, coordinates: [] } }
           return { ...feat, geometry: { ...geom, coordinates: validPolys } }
-=======
-          const rings = geom.coordinates.filter(isValidRing)
-          if (!rings.length) return feat
-          return { ...feat, geometry: { ...geom, coordinates: [rings[0]] } }
-        }
-        if (geom.type === 'MultiPolygon') {
-          const polys = geom.coordinates
-            .map(poly => poly.filter(isValidRing))
-            .filter(poly => poly.length > 0)
-            .map(poly => [poly[0]])
-          if (!polys.length) return feat
-          return { ...feat, geometry: { ...geom, coordinates: polys } }
->>>>>>> 31b35659c062c4e00593c2288ffce8295ded808f
         }
         return feat
       })
@@ -1274,7 +1257,6 @@ function App() {
 
     // 커스텀 파일 우선 시도, 없으면 110m fallback
     loadCustom()
-<<<<<<< HEAD
       .then(data => { console.log('[ATLAS] /countries.json loaded'); processGeo(data) })
       .catch(err => {
         console.warn('[ATLAS] /countries.json failed, trying 110m fallback:', err.message)
@@ -1282,10 +1264,6 @@ function App() {
           .then(data => { console.log('[ATLAS] 110m fallback loaded'); processGeo(data) })
           .catch(err2 => console.error('[ATLAS] Both polygon sources failed:', err2))
       })
-=======
-      .then(processGeo)
-      .catch(() => load110m().then(processGeo).catch(() => {}))
->>>>>>> 31b35659c062c4e00593c2288ffce8295ded808f
   }, [])
 
   // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
