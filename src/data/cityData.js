@@ -2360,6 +2360,337 @@ export const CITY_DATA = {
   {name:"통영 한려해상 케이블카", wikiTitle:"Tongyeong", type:"자연", desc:"한려해상국립공원의 섬들을 공중에서 감상하는 대한민국 최장 케이블카입니다.", rating:4.6, openTime:"09:00~18:00", price:"성인 15,000원", website:"https://en.wikipedia.org/wiki/Tongyeong"},
   {name:"동피랑 벽화마을", wikiTitle:"Tongyeong", type:"문화", desc:"언덕 위 마을 담벼락에 다채로운 벽화가 그려진 통영의 포토스팟입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Tongyeong"},
 ]},
+"대전": { description:"대전은 대한민국의 과학기술 중심 도시로 KAIST와 엑스포과학공원, 유성온천이 있는 충청권 최대 도시입니다.", spots:[
+  {name:"국립중앙과학관", wikiTitle:"National Science Museum of Korea", type:"문화", desc:"자연사·과학기술·미래기술을 망라한 대한민국 대표 과학관으로 천체관측소도 운영합니다.", rating:4.5, openTime:"09:30~17:50", price:"무료", website:"https://www.science.go.kr"},
+  {name:"한밭수목원", wikiTitle:"Hanbat Arboretum", type:"자연", desc:"도심 속 국내 최대 인공 수목원으로 동·서원이 엑스포공원을 가로지르며 계절마다 다른 풍경을 선사합니다.", rating:4.6, openTime:"06:00~20:00", price:"무료", website:"https://www.daejeon.go.kr/gar"},
+  {name:"유성온천", wikiTitle:"Yuseong Hot Springs", type:"자연", desc:"27도 알칼리성 온천수로 유명한 천년 역사의 온천 관광특구로 족욕체험장이 무료로 운영됩니다.", rating:4.3, openTime:"연중", price:"족욕 무료", website:"https://en.wikipedia.org/wiki/Yuseong-gu"},
+  {name:"성심당", wikiTitle:"Sungsimdang", type:"음식", desc:"1956년 창업한 대전의 전설적인 베이커리로 튀김소보로와 부추빵이 전국적으로 유명합니다.", rating:4.8, openTime:"08:00~22:00", price:"빵 2,000원~", website:"https://www.sungsimdang.co.kr"},
+  {name:"대전 엑스포과학공원", wikiTitle:"Daejeon Expo Park", type:"랜드마크", desc:"1993년 대전엑스포가 열렸던 곳으로 한빛탑은 대전의 상징적 랜드마크입니다.", rating:4.2, openTime:"09:00~22:00", price:"무료", website:"https://en.wikipedia.org/wiki/Expo_93"},
+]},
+"울산": { description:"울산은 대한민국 최대 산업도시이자 고래문화와 태화강, 영남알프스를 품은 경상도 동남부의 관문입니다.", spots:[
+  {name:"태화강 국가정원", wikiTitle:"Taehwagang National Garden", type:"자연", desc:"대한민국 제2호 국가정원으로 십리대숲과 계절별 꽃밭이 어우러진 도심 생태공원입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://www.ulsan.go.kr/s/garden"},
+  {name:"장생포 고래문화마을", wikiTitle:"Jangsaengpo", type:"문화", desc:"대한민국 유일의 고래박물관과 고래생태체험관이 있는 옛 포경 마을을 재현한 테마 공간입니다.", rating:4.4, openTime:"09:30~18:00", price:"성인 2,000원", website:"https://www.whalecity.kr"},
+  {name:"간절곶", wikiTitle:"Ganjeolgot", type:"자연", desc:"대한민국 본토에서 가장 먼저 해가 뜨는 일출 명소로 등대와 소망우체통이 있습니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Ganjeolgot"},
+  {name:"영남알프스", wikiTitle:"Yeongnam Alps", type:"자연", desc:"가지산·신불산 등 해발 1,000m급 9개 봉우리로 이루어진 한반도 남부 최대 고산 군입니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Yeongnam_Alps"},
+  {name:"대왕암공원", wikiTitle:"Daewangam Park", type:"자연", desc:"신라 문무왕비의 전설이 서린 기암절벽 공원으로 동해의 푸른 파도와 해송림이 장관입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://www.ulsan.go.kr/s/daewangam"},
+]},
+"포항": { description:"포항은 포스코 제철소의 도시이자 호미곶 일출과 영일대해수욕장, 죽도시장 회로 유명한 경북 동해안 도시입니다.", spots:[
+  {name:"호미곶", wikiTitle:"Homigot", type:"자연", desc:"한반도 동쪽 최끝단으로 '상생의 손' 조각과 일출 명소로 유명하며 새해맞이 축제가 열립니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Homigot"},
+  {name:"영일대해수욕장", wikiTitle:"Yeongildae Beach", type:"자연", desc:"바다 위에 세워진 국내 최초의 해상누각 영일대가 있는 포항 대표 해변으로 야경이 특히 아름답습니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Pohang"},
+  {name:"죽도시장", wikiTitle:"Jukdo Market", type:"음식", desc:"동해안 최대 전통시장으로 싱싱한 회와 대게, 과메기를 현장에서 맛볼 수 있습니다.", rating:4.5, openTime:"06:00~22:00", price:"무료", website:"https://en.wikipedia.org/wiki/Pohang"},
+  {name:"내연산 12폭포", wikiTitle:"Naeyeonsan", type:"자연", desc:"보경사 뒤편 계곡을 따라 12개의 폭포가 이어지는 트레킹 명소로 상생폭포와 관음폭포가 백미입니다.", rating:4.6, openTime:"일출~일몰", price:"성인 3,500원", website:"https://en.wikipedia.org/wiki/Naeyeonsan"},
+  {name:"구룡포 일본인 가옥거리", wikiTitle:"Guryongpo", type:"문화", desc:"1883년 일제강점기 일본인 어업 이주자들이 거주했던 거리로 드라마 '동백꽃 필 무렵' 촬영지입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Guryongpo-eup"},
+]},
+"창원": { description:"창원은 경상남도의 도청 소재지이자 마산·진해를 아우르는 계획도시로 진해 벚꽃과 마산 아구찜으로 유명합니다.", spots:[
+  {name:"진해 여좌천", wikiTitle:"Yeojwacheon", type:"자연", desc:"진해군항제 기간 약 1.5km 길이의 벚꽃터널이 형성되는 대한민국 최고의 벚꽃 명소입니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Jinhae-gu"},
+  {name:"경화역 공원", wikiTitle:"Gyeonghwa Station", type:"문화", desc:"폐역된 철로 양편에 심은 벚나무가 800m 이어지는 유명 포토존으로 벚꽃 시즌 철로 배경 촬영이 일품입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Gyeonghwa_station"},
+  {name:"용지호수공원", wikiTitle:"Yongji Lake Park", type:"자연", desc:"창원 시민의 대표 휴식처로 음악분수쇼가 열리며 야경 산책로로 사랑받습니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Changwon"},
+  {name:"마산 아구찜거리", wikiTitle:"Masan", type:"음식", desc:"전국에서 유일하게 아구찜 원조 골목이 형성된 거리로 얼큰하고 쫄깃한 마산식 아구찜을 즐길 수 있습니다.", rating:4.5, openTime:"11:00~22:00", price:"2인 30,000원~", website:"https://en.wikipedia.org/wiki/Masan"},
+  {name:"돝섬 해상유원지", wikiTitle:"Dotseom", type:"랜드마크", desc:"마산만의 작은 섬을 유원지로 조성한 곳으로 요트타기와 일몰 감상이 가능합니다.", rating:4.2, openTime:"09:00~18:00", price:"왕복 페리 10,000원", website:"https://en.wikipedia.org/wiki/Masan"},
+]},
+"안동": { description:"안동은 유네스코 세계유산 하회마을과 도산서원, 안동찜닭과 간고등어로 대표되는 한국 정신문화의 수도입니다.", spots:[
+  {name:"하회마을", wikiTitle:"Hahoe Folk Village", type:"역사", desc:"풍산 류씨 집성촌으로 낙동강이 마을을 휘감아 도는 유네스코 세계문화유산입니다.", rating:4.7, openTime:"09:00~18:00", price:"성인 5,000원", website:"https://www.hahoe.or.kr"},
+  {name:"도산서원", wikiTitle:"Dosan Seowon", type:"역사", desc:"조선 성리학의 대가 퇴계 이황이 제자를 가르친 서원으로 유네스코 세계유산에 등재되어 있습니다.", rating:4.6, openTime:"09:00~18:00", price:"성인 1,500원", website:"https://www.andong.go.kr/dosanseowon"},
+  {name:"월영교", wikiTitle:"Woryeonggyo Bridge", type:"랜드마크", desc:"안동호 위에 놓인 국내 최장 목책교로 야간 조명이 특히 아름답습니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Andong"},
+  {name:"안동 구시장 찜닭골목", wikiTitle:"Andong Jjimdak", type:"음식", desc:"안동찜닭의 원조 골목으로 30여 개 찜닭 전문점이 밀집해 있습니다.", rating:4.6, openTime:"10:00~22:00", price:"소 25,000원~", website:"https://en.wikipedia.org/wiki/Andong_jjimdak"},
+  {name:"부용대", wikiTitle:"Buyongdae", type:"자연", desc:"하회마을 전경을 한눈에 내려다볼 수 있는 절벽 전망대로 낙동강 풍광이 장관입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Hahoe_Folk_Village"},
+]},
+"목포": { description:"목포는 전라남도 서남단의 항구도시로 유달산과 갓바위, 근대역사문화공간으로 유명한 '다도해의 관문'입니다.", spots:[
+  {name:"유달산", wikiTitle:"Yudalsan", type:"자연", desc:"목포 시내와 다도해를 한눈에 내려다볼 수 있는 해발 228m의 명산으로 노적봉이 특히 유명합니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Yudalsan"},
+  {name:"목포 근대역사관", wikiTitle:"Mokpo", type:"역사", desc:"옛 일본영사관을 리모델링한 박물관으로 목포의 근대 100년사를 전시합니다.", rating:4.4, openTime:"09:00~18:00", price:"성인 2,000원", website:"https://www.mokpo.go.kr/culture"},
+  {name:"갓바위", wikiTitle:"Gatbawi", type:"자연", desc:"갓을 쓴 듯한 기암괴석으로 천연기념물 500호로 지정된 목포의 대표 자연경관입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Mokpo"},
+  {name:"목포해상케이블카", wikiTitle:"Mokpo Maritime Cable Car", type:"랜드마크", desc:"국내 최장 3.23km 해상 케이블카로 유달산과 고하도를 잇는 스카이워크입니다.", rating:4.7, openTime:"09:20~21:00", price:"왕복 성인 24,000원", website:"https://mmcablecar.com"},
+  {name:"목포 홍어거리", wikiTitle:"Hongeo", type:"음식", desc:"삭힌 홍어 요리의 본고장으로 홍어삼합과 홍어애탕을 현지에서 맛볼 수 있습니다.", rating:4.3, openTime:"11:00~22:00", price:"1인 30,000원~", website:"https://en.wikipedia.org/wiki/Hongeo-hoe"},
+]},
+"공주": { description:"공주는 백제 문주왕이 웅진으로 천도한 475~538년 백제 두 번째 수도로 공산성과 무령왕릉 등 유네스코 세계유산을 품은 충청남도 역사도시입니다.", spots:[
+  {name:"공산성", wikiTitle:"Gongsanseong", type:"역사", desc:"백제 웅진시대 왕궁을 지키던 산성으로 금강을 굽어보며 둘레 2.66km의 성벽이 남아있는 유네스코 세계유산입니다.", rating:4.6, openTime:"09:00~18:00", price:"성인 3,000원", website:"https://www.gongju.go.kr/tour"},
+  {name:"무령왕릉과 왕릉원", wikiTitle:"Tomb of King Muryeong", type:"역사", desc:"1971년 발견된 백제 무령왕 부부의 벽돌무덤으로 4,600여 점의 유물이 출토된 한국 고고학 최대의 발견입니다.", rating:4.5, openTime:"09:00~18:00", price:"성인 3,000원", website:"https://royaltomb.gongju.go.kr"},
+  {name:"국립공주박물관", wikiTitle:"Gongju National Museum", type:"문화", desc:"무령왕릉 출토 유물 1,000여 점을 포함한 웅진 백제 문화의 정수를 전시하는 박물관입니다.", rating:4.4, openTime:"09:00~18:00", price:"무료", website:"https://gongju.museum.go.kr"},
+  {name:"마곡사", wikiTitle:"Magoksa", type:"역사", desc:"640년 창건된 천년고찰로 유네스코 세계유산 '한국의 산지승원' 중 하나입니다.", rating:4.6, openTime:"06:00~19:00", price:"성인 3,000원", website:"https://www.magoksa.or.kr"},
+  {name:"공주 산성시장", wikiTitle:"Gongju", type:"음식", desc:"공산성 아래 재래시장으로 공주 밤막걸리와 국밥, 알밤빵이 유명합니다.", rating:4.3, openTime:"09:00~21:00", price:"무료", website:"https://en.wikipedia.org/wiki/Gongju"},
+]},
+"요코하마": { description:"요코하마는 일본 제2의 도시로 1859년 개항한 국제 항구이자 차이나타운, 미나토미라이 야경, 빨간 구두를 신은 소녀로 유명합니다.", spots:[
+  {name:"미나토미라이 21", wikiTitle:"Minato Mirai 21", type:"랜드마크", desc:"요코하마 랜드마크 타워와 코스모 월드 대관람차가 있는 미래형 워터프론트 지구입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://www.minatomirai21.com"},
+  {name:"차이나타운", wikiTitle:"Yokohama Chinatown", type:"음식", desc:"일본 최대 차이나타운으로 600여 개 중화요리점과 딤섬, 니쿠망이 유명합니다.", rating:4.5, openTime:"10:00~22:00", price:"무료", website:"https://www.chinatown.or.jp"},
+  {name:"산케이엔 정원", wikiTitle:"Sankeien", type:"자연", desc:"17개의 역사적 건축물이 있는 전통 일본 정원으로 벚꽃과 단풍이 아름답습니다.", rating:4.5, openTime:"09:00~17:00", price:"700엔", website:"https://www.sankeien.or.jp"},
+  {name:"컵누들 박물관", wikiTitle:"Cup Noodles Museum", type:"문화", desc:"닛신 창업자가 만든 체험형 박물관으로 나만의 컵누들을 만들 수 있습니다.", rating:4.6, openTime:"10:00~18:00", price:"500엔", website:"https://www.cupnoodles-museum.jp/ja/yokohama"},
+]},
+"닛코": { description:"닛코는 도쿄에서 2시간 거리의 유네스코 세계유산 도시로 도쿠가와 이에야스를 모신 닛코 도쇼구와 화려한 폭포로 유명합니다.", spots:[
+  {name:"닛코 도쇼구", wikiTitle:"Nikko Toshogu", type:"역사", desc:"도쿠가와 이에야스를 모신 유네스코 세계유산 신사로 '보지 않고, 말하지 않고, 듣지 않는' 세 원숭이 조각이 유명합니다.", rating:4.7, openTime:"08:00~17:00", price:"1,300엔", website:"https://www.toshogu.jp"},
+  {name:"케곤 폭포", wikiTitle:"Kegon Falls", type:"자연", desc:"97m 낙차의 일본 3대 폭포 중 하나로 엘리베이터로 폭포 아래 전망대까지 내려갈 수 있습니다.", rating:4.6, openTime:"08:00~17:00", price:"엘리베이터 570엔", website:"https://en.wikipedia.org/wiki/Kegon_Falls"},
+  {name:"주젠지 호수", wikiTitle:"Lake Chuzenji", type:"자연", desc:"해발 1,269m의 고산 호수로 사계절 다른 풍경을 선사하며 가을 단풍이 절경입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Lake_Chuzenji"},
+  {name:"신쿄 다리", wikiTitle:"Shinkyo Bridge", type:"랜드마크", desc:"붉은 옻칠의 아치형 나무다리로 일본 3대 기교 중 하나이자 닛코의 상징입니다.", rating:4.3, openTime:"08:00~16:00", price:"무료(건너지 않을 시)", website:"https://en.wikipedia.org/wiki/Shinkyo_(Nikko)"},
+]},
+"가마쿠라": { description:"가마쿠라는 도쿄에서 1시간 거리의 옛 무사 수도로 대불과 고찰, 쇼난 해변이 어우러진 관동 지역의 대표 당일치기 여행지입니다.", spots:[
+  {name:"가마쿠라 대불", wikiTitle:"Kōtoku-in", type:"역사", desc:"고토쿠인의 높이 13.35m 청동 아미타불 좌상으로 1252년에 주조된 일본 국보입니다.", rating:4.7, openTime:"08:00~17:30", price:"300엔", website:"https://www.kotoku-in.jp"},
+  {name:"쓰루가오카 하치만구", wikiTitle:"Tsurugaoka Hachimangu", type:"역사", desc:"가마쿠라 막부의 수호신사로 벚꽃과 연꽃이 계절마다 장관을 이루는 가마쿠라의 중심입니다.", rating:4.5, openTime:"05:00~21:00", price:"무료", website:"https://www.hachimangu.or.jp"},
+  {name:"하세데라", wikiTitle:"Hasedera (Kamakura)", type:"역사", desc:"9.18m 십일면관음상과 수국으로 유명한 사찰로 전망대에서 쇼난 해안이 내려다보입니다.", rating:4.7, openTime:"08:00~16:30", price:"400엔", website:"https://www.hasedera.jp"},
+  {name:"에노시마", wikiTitle:"Enoshima", type:"자연", desc:"가마쿠라 옆의 작은 섬으로 신사와 전망대, 바다 동굴이 있고 후지산 전망이 가능합니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://enoshima-seacandle.com"},
+]},
+"다카야마": { description:"다카야마는 '작은 교토'로 불리는 에도시대 거리가 그대로 보존된 기후현 산악 도시로 고산 축제와 히다규로 유명합니다.", spots:[
+  {name:"산마치스지", wikiTitle:"Takayama, Gifu", type:"역사", desc:"에도시대 상인 거리가 그대로 보존된 구시가로 전통 사케 양조장과 수공예품점이 늘어서 있습니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://www.hida.jp"},
+  {name:"다카야마 진야", wikiTitle:"Takayama Jinya", type:"역사", desc:"에도 막부가 직접 통치하던 당시의 관청 건물로 일본에 유일하게 원형대로 남아있습니다.", rating:4.5, openTime:"08:45~17:00", price:"440엔", website:"https://jinya.gifu.jp"},
+  {name:"시라카와고", wikiTitle:"Shirakawa-gō", type:"역사", desc:"유네스코 세계유산 합장식 전통 가옥 마을로 겨울 설경이 세계적으로 유명합니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://shirakawa-go.gr.jp"},
+  {name:"히다규 스테이크", wikiTitle:"Hida beef", type:"음식", desc:"일본 3대 와규 중 하나인 히다규를 현지에서 맛볼 수 있는 다카야마의 대표 음식입니다.", rating:4.8, openTime:"식당 11:00~22:00", price:"5,000엔~", website:"https://www.hida.jp"},
+]},
+"나가사키": { description:"나가사키는 일본 유일의 기독교 문화와 데지마 네덜란드 상관, 원폭 희생지로서의 평화 메시지가 공존하는 규슈 서부의 항구도시입니다.", spots:[
+  {name:"원폭자료관", wikiTitle:"Nagasaki Atomic Bomb Museum", type:"역사", desc:"1945년 원폭 투하의 참상을 기록한 박물관으로 평화공원과 함께 세계적 평화 교육 명소입니다.", rating:4.7, openTime:"08:30~17:30", price:"200엔", website:"https://nagasakipeace.jp"},
+  {name:"데지마", wikiTitle:"Dejima", type:"역사", desc:"쇄국시대 네덜란드와의 유일한 교역지였던 인공섬으로 당시 건축물이 복원되어 있습니다.", rating:4.4, openTime:"08:00~21:00", price:"520엔", website:"https://nagasakidejima.jp"},
+  {name:"군함도(하시마)", wikiTitle:"Hashima Island", type:"역사", desc:"유네스코 세계유산 해저 탄광섬으로 영화 '007'에 등장한 폐허 도시 투어가 가능합니다.", rating:4.5, openTime:"투어 예약제", price:"4,000엔", website:"https://www.gunkanjima-concierge.com"},
+  {name:"이나사야마 전망대", wikiTitle:"Mount Inasa", type:"자연", desc:"세계 신3대 야경으로 꼽히는 나가사키 야경을 감상할 수 있는 해발 333m 전망대입니다.", rating:4.7, openTime:"24시간(케이블카 9:00~22:00)", price:"케이블카 왕복 1,250엔", website:"https://www.nagasaki-ropeway.jp"},
+]},
+"구마모토": { description:"구마모토는 규슈 중앙의 성시로 일본 3대 명성 구마모토성과 구마몬 캐릭터, 아소산 화산 지형으로 유명합니다.", spots:[
+  {name:"구마모토성", wikiTitle:"Kumamoto Castle", type:"역사", desc:"가토 기요마사가 축성한 일본 3대 명성 중 하나로 2016년 지진 피해 후 복원 중에도 웅장함을 자랑합니다.", rating:4.6, openTime:"09:00~17:00", price:"800엔", website:"https://castle.kumamoto-guide.jp"},
+  {name:"아소산", wikiTitle:"Mount Aso", type:"자연", desc:"세계 최대급 칼데라 화산으로 분화구를 직접 볼 수 있는 활화산이자 국립공원입니다.", rating:4.7, openTime:"분화구 08:30~18:00", price:"무료", website:"https://www.aso.ne.jp"},
+  {name:"스이젠지 조주엔", wikiTitle:"Suizenji Jōjuen", type:"자연", desc:"도카이도 53차를 축소해 조성한 에도시대 회유식 정원으로 후지산을 모방한 언덕이 특징입니다.", rating:4.4, openTime:"07:30~18:00", price:"400엔", website:"https://www.suizenji.or.jp"},
+  {name:"구로카와 온천", wikiTitle:"Kurokawa Onsen", type:"자연", desc:"아소 인근의 전통 료칸 온천 마을로 3곳의 노천탕을 순회할 수 있는 '입유수형(入湯手形)' 이용권이 유명합니다.", rating:4.8, openTime:"료칸별 상이", price:"수형 1,500엔", website:"https://www.kurokawaonsen.or.jp"},
+]},
+"벳푸": { description:"벳푸는 일본 최대 온천 용출량을 자랑하는 오이타현의 온천 도시로 '지옥순례'와 모래찜질, 석유가 필요 없는 증기 도시로 유명합니다.", spots:[
+  {name:"벳푸 지옥순례", wikiTitle:"Beppu", type:"자연", desc:"바다지옥, 피의지옥 등 7개의 독특한 색과 형태의 천연 온천을 순례하는 벳푸의 대표 관광 코스입니다.", rating:4.6, openTime:"08:00~17:00", price:"공통관람권 2,200엔", website:"https://www.beppu-jigoku.com"},
+  {name:"다케가와라 온천", wikiTitle:"Takegawara Onsen", type:"랜드마크", desc:"1879년 건립된 메이지시대 목조 공중욕탕으로 모래찜질 체험이 유명한 벳푸의 상징입니다.", rating:4.4, openTime:"06:30~22:30", price:"입욕 100엔/모래찜질 1,500엔", website:"https://en.wikipedia.org/wiki/Takegawara_Onsen"},
+  {name:"묘반 온천", wikiTitle:"Myōban Onsen", type:"자연", desc:"초가지붕 증기 오두막이 늘어선 산중 온천 지구로 유노하나(탕의 꽃)라는 온천 소금을 만듭니다.", rating:4.5, openTime:"10:00~21:00", price:"입욕 600엔~", website:"https://en.wikipedia.org/wiki/Myoban_Onsen"},
+  {name:"유후인", wikiTitle:"Yufuin", type:"자연", desc:"벳푸 옆 아담한 온천 마을로 유후다케 산을 배경으로 한 긴린코 호수와 공예품 거리가 낭만적입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://www.yufuin.gr.jp"},
+]},
+"센다이": { description:"센다이는 도호쿠 최대 도시이자 다테 마사무네의 성시로 '숲의 도시(杜の都)'로 불리는 미야기현의 문화·상업 중심지입니다.", spots:[
+  {name:"센다이성(아오바성)", wikiTitle:"Sendai Castle", type:"역사", desc:"다테 마사무네가 1600년 축성한 산성 터로 마사무네 기마상이 있는 아오바야마 공원에서 센다이 시내가 한눈에 내려다보입니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://www.sendaijyo.com"},
+  {name:"마쓰시마", wikiTitle:"Matsushima", type:"자연", desc:"일본 3경 중 하나로 260여 개의 소나무 섬이 바다 위에 흩어져 있는 동북 최고의 풍경지입니다.", rating:4.6, openTime:"유람선 09:00~16:00", price:"유람선 1,500엔", website:"https://www.matsushima-kanko.com"},
+  {name:"즈이호덴", wikiTitle:"Zuihōden", type:"역사", desc:"다테 마사무네의 영묘로 극채색의 모모야마 양식이 화려한 도호쿠를 대표하는 사적입니다.", rating:4.5, openTime:"09:00~16:30", price:"570엔", website:"https://www.zuihoden.com"},
+  {name:"규탕(우설 요리)", wikiTitle:"Gyūtan", type:"음식", desc:"센다이의 명물로 통통한 소 혀를 숯불에 구워내는 정통 규탕 전문점이 시내 곳곳에 있습니다.", rating:4.7, openTime:"11:00~22:00", price:"정식 2,500엔~", website:"https://www.sentabi.jp"},
+]},
+"광저우": { description:"광저우는 중국 남부의 중심 도시이자 광둥요리의 본고장, 2,200년 역사의 해상실크로드 시발지로 딤섬과 차 문화가 발달했습니다.", spots:[
+  {name:"광저우타워", wikiTitle:"Canton Tower", type:"랜드마크", desc:"높이 600m의 트위스트 형태 전파탑으로 야경이 화려하며 전망대와 스릴 놀이기구가 있습니다.", rating:4.7, openTime:"09:30~22:30", price:"228위안", website:"https://www.cantontower.com"},
+  {name:"천허청", wikiTitle:"Chen Clan Ancestral Hall", type:"역사", desc:"청나라 1894년 건립된 광둥 최대 종친 사당으로 정교한 목조·석조 조각 예술이 집약되어 있습니다.", rating:4.5, openTime:"08:30~17:30", price:"10위안", website:"https://en.wikipedia.org/wiki/Chen_Clan_Ancestral_Hall"},
+  {name:"샤멘섬", wikiTitle:"Shamian Island", type:"문화", desc:"19세기 영국·프랑스 조계지였던 작은 섬으로 유럽풍 건축물과 고풍스러운 카페가 있는 산책 명소입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Shamian_Island"},
+  {name:"딤섬(음차)", wikiTitle:"Dim sum", type:"음식", desc:"광저우의 명물 음차 문화로 광둥 레스토랑에서 다양한 딤섬을 차와 함께 즐기는 것이 전통입니다.", rating:4.8, openTime:"07:00~15:00", price:"1인 100위안~", website:"https://en.wikipedia.org/wiki/Dim_sum"},
+]},
+"선전": { description:"선전은 1980년 경제특구 지정 이후 어촌에서 인구 1,700만 메가시티로 성장한 중국의 실리콘밸리이자 첨단 기술·디자인의 중심지입니다.", spots:[
+  {name:"화창베이", wikiTitle:"Huaqiangbei", type:"랜드마크", desc:"세계 최대 전자상가로 반도체 부품부터 완제품까지 없는 것이 없는 중국 전자의 성지입니다.", rating:4.5, openTime:"10:00~22:00", price:"무료", website:"https://en.wikipedia.org/wiki/Huaqiangbei"},
+  {name:"OCT하베이", wikiTitle:"OCT Harbour", type:"문화", desc:"화차오청그룹의 복합 예술·쇼핑·테마파크 지구로 디자인 호텔과 현대미술관이 모여 있습니다.", rating:4.4, openTime:"10:00~22:00", price:"무료", website:"https://www.octharbour.com"},
+  {name:"선전 만 공원", wikiTitle:"Shenzhen Bay Park", type:"자연", desc:"홍콩과 마주한 해안 공원으로 13km 자전거 도로와 철새 관찰지로 인기입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Shenzhen_Bay_Sports_Center"},
+  {name:"세계의 창", wikiTitle:"Window of the World", type:"랜드마크", desc:"전 세계 130여 개 랜드마크를 축소 재현한 테마파크로 에펠탑, 피라미드 등을 하루에 돌아볼 수 있습니다.", rating:4.3, openTime:"09:00~22:30", price:"200위안", website:"https://www.szwwco.com"},
+]},
+"충칭": { description:"충칭은 장강과 가릉강이 만나는 산악 도시로 인구 3,200만의 중국 4대 직할시이자 훠궈와 홍애 야경으로 유명합니다.", spots:[
+  {name:"홍애동", wikiTitle:"Hongya Cave", type:"랜드마크", desc:"절벽 위에 11층 구조로 세워진 전통 목조 건축 테마거리로 야경이 미야자키 애니메이션을 연상시킵니다.", rating:4.6, openTime:"11:00~23:00", price:"무료", website:"https://en.wikipedia.org/wiki/Hongyadong"},
+  {name:"다주 석각", wikiTitle:"Dazu Rock Carvings", type:"역사", desc:"유네스코 세계유산 불교·도교·유교 석각군으로 5만여 점의 정교한 조각이 당송대 예술의 정수를 보여줍니다.", rating:4.7, openTime:"08:30~18:00", price:"135위안", website:"https://en.wikipedia.org/wiki/Dazu_Rock_Carvings"},
+  {name:"양쯔강 삭도", wikiTitle:"Yangtze River Cableway", type:"랜드마크", desc:"양쯔강을 가로지르는 공중 케이블카로 충칭의 산악 도시 풍경과 강변 야경을 한눈에 볼 수 있습니다.", rating:4.5, openTime:"07:30~22:30", price:"편도 20위안", website:"https://en.wikipedia.org/wiki/Yangtze_River_Cableway"},
+  {name:"쓰촨 훠궈", wikiTitle:"Chongqing hot pot", type:"음식", desc:"충칭의 매운 홍탕 훠궈는 산초와 고추의 마라 맛이 중국 최고로 유명하며 현지 훠궈 체인이 수백 개 있습니다.", rating:4.8, openTime:"11:00~02:00", price:"1인 80위안~", website:"https://en.wikipedia.org/wiki/Chongqing_hot_pot"},
+]},
+"우한": { description:"우한은 장강 중류의 교통 요충지이자 '삼국지' 적벽대전의 무대 주변 도시로 황학루와 벚꽃 대학 캠퍼스로 유명합니다.", spots:[
+  {name:"황학루", wikiTitle:"Yellow Crane Tower", type:"역사", desc:"중국 4대 명루 중 하나로 장강을 굽어보는 51m 5층 목조탑이며 이백·최호 등이 시를 남긴 명소입니다.", rating:4.6, openTime:"08:00~18:30", price:"70위안", website:"https://www.cnhhl.com"},
+  {name:"동호", wikiTitle:"East Lake (Wuhan)", type:"자연", desc:"시후의 6배 크기인 중국 최대 도시 호수로 벚꽃·매화·연꽃 계절별 풍경이 장관입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/East_Lake_(Wuhan)"},
+  {name:"우한대학 벚꽃", wikiTitle:"Wuhan University", type:"자연", desc:"중국 3대 벚꽃 명소 중 하나로 3월 하순 1,000여 그루의 벚꽃이 캠퍼스를 물들입니다.", rating:4.7, openTime:"벚꽃철 예약제", price:"무료(예약 필수)", website:"https://www.whu.edu.cn"},
+  {name:"츠바이지에 먹거리골목", wikiTitle:"Wuhan", type:"음식", desc:"우한 최고의 아침식사 거리로 러간몐(열건면)과 더우피(두부 부침)가 우한의 대표 맛입니다.", rating:4.5, openTime:"05:00~12:00", price:"10위안~", website:"https://en.wikipedia.org/wiki/Wuhan"},
+]},
+"칭다오": { description:"칭다오는 독일 조차지의 유럽풍 건축과 맥주 문화가 남아있는 산둥반도의 해변 도시로 중국 3대 여름 휴양지입니다.", spots:[
+  {name:"칭다오 맥주박물관", wikiTitle:"Tsingtao Brewery", type:"문화", desc:"1903년 독일인이 설립한 칭다오맥주의 100년 역사를 전시한 박물관으로 신선한 생맥주 시음도 가능합니다.", rating:4.7, openTime:"08:30~17:30", price:"60위안", website:"https://en.wikipedia.org/wiki/Tsingtao_Brewery"},
+  {name:"잔교", wikiTitle:"Zhanqiao Pier", type:"랜드마크", desc:"1891년 건설된 440m 해상 잔교로 칭다오의 상징이자 회란각 전망대에서 해변이 한눈에 보입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Qingdao"},
+  {name:"바다샹 공원", wikiTitle:"Badaguan", type:"문화", desc:"독일·러시아·이탈리아 등 10여 개국 양식의 별장 200여 동이 보존된 이국적인 산책로입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Badaguan"},
+  {name:"라오산", wikiTitle:"Mount Lao", type:"자연", desc:"중국 도교의 성지로 해발 1,133m 해안 산악으로 바다와 산이 만나는 절경을 자랑합니다.", rating:4.6, openTime:"06:30~16:00", price:"130위안", website:"https://en.wikipedia.org/wiki/Mount_Lao"},
+]},
+"다롄": { description:"다롄은 러시아·일본 조차 흔적이 남은 랴오둥반도 남단의 해변 도시로 해산물과 광장 건축이 유명합니다.", spots:[
+  {name:"싱하이 광장", wikiTitle:"Xinghai Square", type:"랜드마크", desc:"세계에서 가장 큰 광장(110만㎡)으로 다롄 100주년 기념탑과 화강암 발자국 조형물이 있습니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Xinghai_Square"},
+  {name:"진스탄 해변", wikiTitle:"Dalian", type:"자연", desc:"'황금 모래사장'이라는 뜻의 해변으로 해양공원과 테마파크가 함께 있어 가족 여행에 인기입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Dalian"},
+  {name:"러시아풍 거리", wikiTitle:"Dalian", type:"문화", desc:"러시아 조차기 건축물이 보존된 거리로 유럽풍 카페와 기념품점이 낭만적입니다.", rating:4.2, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Dalian"},
+  {name:"노호탄 해양공원", wikiTitle:"Laohutan Ocean Park", type:"자연", desc:"호랑이 형상의 거석 해안을 활용한 해양 테마파크로 돌고래쇼와 아쿠아리움이 있습니다.", rating:4.4, openTime:"08:30~17:30", price:"220위안", website:"https://en.wikipedia.org/wiki/Laohutan"},
+]},
+"하얼빈": { description:"하얼빈은 헤이룽장성의 도시로 러시아풍 건축과 매년 1월 세계 최대의 국제 빙설제가 열리는 중국 최북단 관광지입니다.", spots:[
+  {name:"하얼빈 빙설대세계", wikiTitle:"Harbin Ice and Snow World", type:"랜드마크", desc:"매년 겨울 송화강 얼음으로 만든 초대형 얼음 궁전 테마파크로 세계 3대 겨울 축제입니다.", rating:4.9, openTime:"11:00~21:30(12~2월)", price:"330위안", website:"https://en.wikipedia.org/wiki/Harbin_Ice_and_Snow_World"},
+  {name:"중앙대가", wikiTitle:"Central Street, Harbin", type:"문화", desc:"1898년 건설된 1.4km 석조 보행자 거리로 러시아·유럽풍 건물 71동이 보존되어 있습니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Central_Street"},
+  {name:"성소피아 성당", wikiTitle:"Saint Sophia Cathedral, Harbin", type:"역사", desc:"1907년 러시아인이 세운 비잔틴양식 정교회로 극동 최대 규모를 자랑하며 현재는 건축예술박물관입니다.", rating:4.6, openTime:"08:30~17:00", price:"20위안", website:"https://en.wikipedia.org/wiki/Saint_Sophia_Cathedral,_Harbin"},
+  {name:"태양도 공원", wikiTitle:"Sun Island", type:"자연", desc:"송화강의 섬 공원으로 겨울엔 눈 조각 예술제, 여름엔 수상 레저를 즐길 수 있습니다.", rating:4.5, openTime:"08:00~17:30", price:"30위안", website:"https://en.wikipedia.org/wiki/Sun_Island"},
+]},
+"톈진": { description:"톈진은 베이징에서 120km 거리의 항구도시로 19세기 9개국 조계지의 이국적 건축과 중국 만담 '상성'의 본고장입니다.", spots:[
+  {name:"톈진의 눈", wikiTitle:"Tianjin Eye", type:"랜드마크", desc:"하이허강 다리 위에 세워진 세계 유일의 다리 위 대관람차로 높이 120m에서 야경이 장관입니다.", rating:4.5, openTime:"09:30~21:30", price:"70위안", website:"https://en.wikipedia.org/wiki/Tianjin_Eye"},
+  {name:"우다다오", wikiTitle:"Five Great Avenues", type:"문화", desc:"'만국건축박람회'로 불리는 2km 거리로 230여 동의 영·프·독·이탈리아식 저택이 보존되어 있습니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Five_Great_Avenues"},
+  {name:"고문화가", wikiTitle:"Tianjin Ancient Culture Street", type:"문화", desc:"명·청대 양식의 전통 거리로 톈진 전통 공예품인 니런장 인형과 양류칭 목판화가 유명합니다.", rating:4.4, openTime:"09:00~19:00", price:"무료", website:"https://en.wikipedia.org/wiki/Tianjin"},
+  {name:"거우부리 만두", wikiTitle:"Goubuli", type:"음식", desc:"1858년 창업한 톈진 3대 음식 중 하나로 18개의 정교한 주름을 가진 '개도 거들떠보지 않는' 만두가 명물입니다.", rating:4.6, openTime:"10:00~21:00", price:"60위안~", website:"https://en.wikipedia.org/wiki/Goubuli"},
+]},
+"수코타이": { description:"수코타이는 1238~1438년 태국 최초의 왕국 수코타이 왕조의 수도로 유네스코 세계유산 유적공원이 있는 고도입니다.", spots:[
+  {name:"수코타이 역사공원", wikiTitle:"Sukhothai Historical Park", type:"역사", desc:"유네스코 세계유산으로 13~14세기 수코타이 왕조의 궁전·사원 193곳이 분포한 70㎢의 대규모 유적지입니다.", rating:4.8, openTime:"06:30~19:30", price:"100바트", website:"https://en.wikipedia.org/wiki/Sukhothai_Historical_Park"},
+  {name:"왓 마하탓", wikiTitle:"Wat Mahathat, Sukhothai", type:"역사", desc:"수코타이 역사공원 중심의 왕실 사원으로 연꽃 봉오리 모양 쳇디와 거대한 불상이 상징적입니다.", rating:4.7, openTime:"06:30~19:30", price:"공원 입장권 포함", website:"https://en.wikipedia.org/wiki/Wat_Mahathat,_Sukhothai"},
+  {name:"왓 시촘", wikiTitle:"Wat Si Chum", type:"역사", desc:"높이 15m의 좌불상 '프라 아차나'가 좁은 만다파 내부에 모셔져 있어 문 틈 사이로 거대한 불상을 볼 수 있습니다.", rating:4.7, openTime:"06:30~19:30", price:"공원 입장권 포함", website:"https://en.wikipedia.org/wiki/Wat_Si_Chum"},
+  {name:"로이끄라통 축제", wikiTitle:"Loi Krathong", type:"문화", desc:"수코타이에서 기원한 물의 축제로 매년 11월 보름 연꽃 등불을 강에 띄우는 장관이 펼쳐집니다.", rating:4.9, openTime:"11월 보름", price:"무료", website:"https://en.wikipedia.org/wiki/Loi_Krathong"},
+]},
+"깐차나부리": { description:"깐차나부리는 방콕에서 130km 거리의 역사 도시로 영화 '콰이강의 다리' 배경이자 에라완 폭포로 유명합니다.", spots:[
+  {name:"콰이강의 다리", wikiTitle:"Bridge on the River Kwai", type:"역사", desc:"제2차 세계대전 당시 일본군이 전쟁포로를 동원해 건설한 '죽음의 철도' 다리로 동명 영화로 유명합니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Bridge_over_the_River_Kwai"},
+  {name:"에라완 폭포", wikiTitle:"Erawan Falls", type:"자연", desc:"7단계의 에메랄드빛 폭포와 천연 수영장으로 태국 최고의 트레킹 폭포입니다.", rating:4.7, openTime:"08:00~16:30", price:"300바트", website:"https://en.wikipedia.org/wiki/Erawan_National_Park"},
+  {name:"헬파이어 패스", wikiTitle:"Hellfire Pass", type:"역사", desc:"'죽음의 철도' 중 가장 혹독했던 구간으로 호주 정부가 관리하는 전쟁박물관과 기념 트레일이 있습니다.", rating:4.6, openTime:"09:00~16:00", price:"무료(기부)", website:"https://en.wikipedia.org/wiki/Hellfire_Pass"},
+  {name:"새프 사완 국립공원", wikiTitle:"Sai Yok National Park", type:"자연", desc:"콰이강을 따라 이어지는 열대우림 국립공원으로 뗏목 숙박과 동굴 탐험이 가능합니다.", rating:4.5, openTime:"08:00~18:00", price:"300바트", website:"https://en.wikipedia.org/wiki/Sai_Yok_National_Park"},
+]},
+"후아힌": { description:"후아힌은 태국 왕실 휴양지로 유명한 샴만의 해변 도시로 방콕에서 3시간 거리이며 가족 여행지로 인기입니다.", spots:[
+  {name:"후아힌 해변", wikiTitle:"Hua Hin", type:"자연", desc:"5km의 넓고 고운 백사장으로 왕실 별궁 '끌라이깡완'이 있는 태국 왕실 지정 휴양지입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Hua_Hin_District"},
+  {name:"후아힌 기차역", wikiTitle:"Hua Hin Railway Station", type:"역사", desc:"1926년 라마 6세 때 건설된 태국에서 가장 오래된 기차역으로 왕실 전용 대합실이 남아있습니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Hua_Hin_Railway_Station"},
+  {name:"차도 선데이 나이트 마켓", wikiTitle:"Hua Hin", type:"음식", desc:"매주 일요일 열리는 야시장으로 해산물 요리와 태국식 간식이 저렴하게 판매됩니다.", rating:4.5, openTime:"일 17:00~23:00", price:"무료", website:"https://en.wikipedia.org/wiki/Hua_Hin_District"},
+  {name:"몬순 밸리 빈야드", wikiTitle:"Hua Hin", type:"자연", desc:"태국의 몇 안 되는 포도농장 와이너리로 시음 투어와 전망 레스토랑이 운영됩니다.", rating:4.6, openTime:"09:00~18:00", price:"투어 450바트", website:"https://monsoonvalley.com"},
+]},
+"코타오": { description:"코타오는 '거북섬'이라는 뜻의 작은 섬으로 세계적 스쿠버다이빙 성지이자 PADI 자격증 취득 세계 1위입니다.", spots:[
+  {name:"샤크 베이", wikiTitle:"Ko Tao", type:"자연", desc:"산호와 열대어가 풍부한 스노클링·다이빙 포인트로 블랙팁 상어를 만날 수 있습니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Ko_Tao"},
+  {name:"난영 섬", wikiTitle:"Ko Nang Yuan", type:"자연", desc:"세 개의 섬이 모래톱으로 연결된 태국 엽서 사진의 대표 풍경으로 섬 전망대에서 뷰가 환상적입니다.", rating:4.8, openTime:"10:00~16:00", price:"입섬료 150바트", website:"https://en.wikipedia.org/wiki/Ko_Nang_Yuan"},
+  {name:"프리덤 비치", wikiTitle:"Ko Tao", type:"자연", desc:"정글을 지나야 만나는 숨겨진 해변으로 인적이 드문 프라이빗 비치 분위기입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Ko_Tao"},
+  {name:"존 수완 뷰포인트", wikiTitle:"Ko Tao", type:"자연", desc:"코타오에서 가장 높은 뷰포인트로 샤크 베이와 차론 베이가 내려다보입니다.", rating:4.6, openTime:"일출~일몰", price:"무료", website:"https://en.wikipedia.org/wiki/Ko_Tao"},
+]},
+"코팡안": { description:"코팡안은 매달 보름밤 풀문파티로 세계 배낭여행자들이 모이는 섬이자 요가·명상 리트릿의 중심지입니다.", spots:[
+  {name:"할린 비치 풀문파티", wikiTitle:"Full Moon Party", type:"문화", desc:"매달 보름밤 할린 비치에서 열리는 세계적 파티로 수만 명이 모여 밤새 해변을 달굽니다.", rating:4.5, openTime:"보름 21:00~06:00", price:"100바트", website:"https://en.wikipedia.org/wiki/Full_Moon_Party"},
+  {name:"보통 폭포", wikiTitle:"Ko Pha-ngan", type:"자연", desc:"3단 폭포로 정글 트레킹 후 닿을 수 있는 천연 수영장으로 시원한 휴식처입니다.", rating:4.4, openTime:"09:00~17:00", price:"무료", website:"https://en.wikipedia.org/wiki/Ko_Pha-ngan"},
+  {name:"시크릿 비치(해닷)", wikiTitle:"Ko Pha-ngan", type:"자연", desc:"섬 북쪽의 조용한 해변으로 스노클링과 일몰이 아름답고 요가 리트릿이 많이 있습니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Ko_Pha-ngan"},
+  {name:"왓 프라투 차이", wikiTitle:"Ko Pha-ngan", type:"역사", desc:"섬에서 가장 큰 불교 사원으로 거대한 황금 좌불상과 전망대가 있습니다.", rating:4.3, openTime:"06:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Ko_Pha-ngan"},
+]},
+"코창": { description:"코창은 태국에서 세 번째로 큰 섬으로 '코끼리 섬'이라는 뜻이며 방콕 근처이면서도 덜 개발된 청정 해변이 매력적입니다.", spots:[
+  {name:"화이트 샌드 비치", wikiTitle:"Ko Chang", type:"자연", desc:"코창에서 가장 긴 해변으로 고운 백사장과 맑은 바다가 있어 가족 여행지로 인기입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Ko_Chang_(Trat)"},
+  {name:"클롱 플루 폭포", wikiTitle:"Ko Chang", type:"자연", desc:"25m 높이의 3단 폭포로 정글 트레킹과 천연 수영장 체험이 가능합니다.", rating:4.6, openTime:"08:00~17:00", price:"200바트", website:"https://en.wikipedia.org/wiki/Ko_Chang_(Trat)"},
+  {name:"로나 베이", wikiTitle:"Ko Chang", type:"자연", desc:"스노클링과 보트 투어의 출발점으로 주변 섬 4~5곳을 돌아보는 투어가 인기입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Ko_Chang_(Trat)"},
+  {name:"반 살락콕 어촌마을", wikiTitle:"Ko Chang", type:"문화", desc:"수상 가옥에서 전통 어업을 이어가는 어촌 마을로 해산물 레스토랑이 유명합니다.", rating:4.4, openTime:"10:00~21:00", price:"무료", website:"https://en.wikipedia.org/wiki/Ko_Chang_(Trat)"},
+]},
+"코란타": { description:"코란타는 푸켓 남쪽 안다만해의 두 섬(코란타 야이·코란타 노이)으로 조용한 비치와 라스타파리안 분위기가 특징입니다.", spots:[
+  {name:"롱 비치", wikiTitle:"Ko Lanta", type:"자연", desc:"코란타 서부의 4km 해변으로 일몰이 아름답고 해변 바와 레스토랑이 늘어서 있습니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Ko_Lanta_Yai"},
+  {name:"코란타 국립공원", wikiTitle:"Mu Ko Lanta National Park", type:"자연", desc:"코란타 남단의 해양 국립공원으로 등대와 원숭이 출몰 정글 트레일이 있습니다.", rating:4.5, openTime:"08:00~17:00", price:"200바트", website:"https://en.wikipedia.org/wiki/Mu_Ko_Lanta_National_Park"},
+  {name:"올드타운 란타", wikiTitle:"Ko Lanta", type:"문화", desc:"바다 집시·중국 상인들이 100년 전 형성한 목조 수상 가옥 마을로 시푸드 레스토랑이 유명합니다.", rating:4.4, openTime:"10:00~22:00", price:"무료", website:"https://en.wikipedia.org/wiki/Ko_Lanta_Yai"},
+  {name:"클라라 동굴", wikiTitle:"Ko Lanta", type:"자연", desc:"석회암 동굴 투어로 종유석과 지하 방을 탐험하는 어드벤처 액티비티입니다.", rating:4.4, openTime:"09:00~16:00", price:"투어 500바트~", website:"https://en.wikipedia.org/wiki/Ko_Lanta_Yai"},
+]},
+"람빵": { description:"람빵은 치앙마이 남동쪽의 오래된 도시로 태국 유일 마차 교통과 흰코끼리 보호소, 도자기 공예로 유명합니다.", spots:[
+  {name:"왓 프라 탓 람팡 루앙", wikiTitle:"Wat Phra That Lampang Luang", type:"역사", desc:"14세기에 건립된 란나 양식 사원으로 태국 최고의 목조 건축물 중 하나로 꼽힙니다.", rating:4.7, openTime:"07:30~17:00", price:"무료", website:"https://en.wikipedia.org/wiki/Wat_Phra_That_Lampang_Luang"},
+  {name:"람빵 마차 투어", wikiTitle:"Lampang", type:"문화", desc:"태국 유일의 마차 교통 도시로 구시가지와 왓 프라깨오 둔다오를 도는 마차 투어가 명물입니다.", rating:4.5, openTime:"08:00~18:00", price:"30분 300바트", website:"https://en.wikipedia.org/wiki/Lampang"},
+  {name:"태국 코끼리 보전 센터", wikiTitle:"Thai Elephant Conservation Center", type:"자연", desc:"태국 왕실 후원 아래 운영되는 국립 흰코끼리 보호소로 쇼가 아닌 진정한 코끼리 생태 관찰이 가능합니다.", rating:4.6, openTime:"09:00~16:30", price:"300바트", website:"https://www.thailandelephant.org"},
+  {name:"반 사오 낙", wikiTitle:"Lampang", type:"역사", desc:"100개 이상의 티크 기둥으로 지은 19세기 전통 목조 가옥으로 람빵 버마계 상인 문화 박물관입니다.", rating:4.4, openTime:"10:00~17:00", price:"50바트", website:"https://en.wikipedia.org/wiki/Lampang"},
+]},
+"핏사눌로크": { description:"핏사눌로크는 수코타이와 치앙마이 사이의 중간 거점 도시로 태국에서 가장 아름다운 불상이 모셔진 왓 프라 씨 마하탓이 유명합니다.", spots:[
+  {name:"왓 프라 씨 라타나 마하탓", wikiTitle:"Wat Phra Si Rattana Mahathat", type:"역사", desc:"태국에서 가장 아름다운 불상 '프라 풋타 친나랏'이 모셔진 사원으로 방콕 에메랄드 사원보다 먼저 있던 곳입니다.", rating:4.8, openTime:"06:30~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Wat_Phra_Si_Rattana_Mahathat"},
+  {name:"나레수언 왕 박물관", wikiTitle:"Naresuan", type:"역사", desc:"태국을 구한 전설의 나레수언 대왕의 생애와 버마 전쟁을 전시하는 역사박물관입니다.", rating:4.3, openTime:"09:00~16:00", price:"무료", website:"https://en.wikipedia.org/wiki/Naresuan"},
+  {name:"사게즈 라이프 민속박물관", wikiTitle:"Phitsanulok", type:"문화", desc:"태국 중부 전통 민속품 10만여 점을 수집한 민속박물관으로 한 개인의 평생 수집품입니다.", rating:4.5, openTime:"08:30~16:30", price:"50바트", website:"https://en.wikipedia.org/wiki/Phitsanulok"},
+  {name:"난 강변 야시장", wikiTitle:"Phitsanulok", type:"음식", desc:"매일 저녁 열리는 강변 나이트 마켓으로 핏사눌로크의 대표 음식 '데치는 공중 채소볶음'이 유명합니다.", rating:4.5, openTime:"17:00~23:00", price:"무료", website:"https://en.wikipedia.org/wiki/Phitsanulok"},
+]},
+"부리람": { description:"부리람은 '행복의 도시'라는 뜻의 이산 지방 도시로 크메르 유적 파놈룽과 동남아 최대 축구 경기장이 유명합니다.", spots:[
+  {name:"파놈룽 역사공원", wikiTitle:"Phanom Rung", type:"역사", desc:"사화산 정상에 세워진 11세기 크메르 힌두 사원으로 앙코르 이전 석조 건축의 걸작입니다.", rating:4.8, openTime:"06:00~18:00", price:"100바트", website:"https://en.wikipedia.org/wiki/Phanom_Rung_Historical_Park"},
+  {name:"창 아레나", wikiTitle:"Chang Arena", type:"랜드마크", desc:"3만 관중을 수용하는 동남아시아 최대 프로축구 전용구장으로 부리람 유나이티드의 홈입니다.", rating:4.6, openTime:"경기일", price:"경기 티켓", website:"https://en.wikipedia.org/wiki/Chang_Arena"},
+  {name:"부리람 국제 서킷", wikiTitle:"Chang International Circuit", type:"랜드마크", desc:"모토GP와 투어링카 월드챔피언십이 열리는 FIA급 4.5km 레이싱 서킷입니다.", rating:4.7, openTime:"행사일", price:"행사 티켓", website:"https://en.wikipedia.org/wiki/Chang_International_Circuit"},
+  {name:"이산 전통요리", wikiTitle:"Isan", type:"음식", desc:"부리람 일대 이산 요리의 본고장으로 솜땀(파파야샐러드)과 까이양(닭구이), 라압이 유명합니다.", rating:4.7, openTime:"10:00~22:00", price:"1인 100바트~", website:"https://en.wikipedia.org/wiki/Isan_food"},
+]},
+"벵갈루루": { description:"벵갈루루는 인도 IT 수도로 인구 1,300만의 남인도 중심지이자 정원의 도시로 불리는 카르나타카주 주도입니다.", spots:[
+  {name:"랄바그 식물원", wikiTitle:"Lalbagh", type:"자연", desc:"티푸 술탄이 1760년 조성한 240에이커 영국식 식물원으로 3,000여 종의 식물을 보유하고 있습니다.", rating:4.5, openTime:"06:00~19:00", price:"외국인 150루피", website:"https://en.wikipedia.org/wiki/Lal_Bagh"},
+  {name:"방갈로르 궁전", wikiTitle:"Bangalore Palace", type:"역사", desc:"1887년 영국 윈저성을 모방해 지은 튜더 양식 궁전으로 마이소르 왕가의 거주지였습니다.", rating:4.3, openTime:"10:00~17:30", price:"외국인 460루피", website:"https://en.wikipedia.org/wiki/Bangalore_Palace"},
+  {name:"크베이펫", wikiTitle:"Bangalore", type:"문화", desc:"전통 시장과 800년 된 사원이 있는 올드 벵갈루루의 심장부로 현지 상점 순례가 가능합니다.", rating:4.3, openTime:"09:00~21:00", price:"무료", website:"https://en.wikipedia.org/wiki/Bangalore"},
+  {name:"UB 시티", wikiTitle:"UB City", type:"문화", desc:"인도 IT 기업 유나이티드 브루어리스가 개발한 럭셔리 복합단지로 명품 쇼핑과 파인다이닝의 중심입니다.", rating:4.5, openTime:"11:00~23:00", price:"무료", website:"https://en.wikipedia.org/wiki/UB_City"},
+]},
+"첸나이": { description:"첸나이는 타밀나두주 주도이자 남인도 관문으로 영국 식민지 시대 유산과 드라비다 힌두 문화, 해변으로 유명합니다.", spots:[
+  {name:"마리나 비치", wikiTitle:"Marina Beach", type:"자연", desc:"13km의 세계에서 두 번째로 긴 도시 해변으로 첸나이 시민의 대표 휴식처입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Marina_Beach"},
+  {name:"카팔리슈와라 사원", wikiTitle:"Kapaleeshwarar Temple", type:"역사", desc:"7세기 팔라바 왕조가 세운 시바 사원으로 37m 고푸라탑과 남인도 드라비다 건축의 정수를 보여줍니다.", rating:4.7, openTime:"05:30~22:00", price:"무료", website:"https://en.wikipedia.org/wiki/Kapaleeshwarar_Temple"},
+  {name:"포트 세인트 조지", wikiTitle:"Fort St. George, India", type:"역사", desc:"1644년 영국 동인도회사가 건설한 인도 최초의 영국 요새로 현재는 타밀나두주 의사당입니다.", rating:4.4, openTime:"09:00~17:00", price:"외국인 200루피", website:"https://en.wikipedia.org/wiki/Fort_St._George,_India"},
+  {name:"마하발리푸람", wikiTitle:"Mahabalipuram", type:"역사", desc:"첸나이 남쪽 60km의 유네스코 세계유산 석조 유적군으로 7세기 해안 사원이 압권입니다.", rating:4.8, openTime:"06:00~18:00", price:"외국인 600루피", website:"https://en.wikipedia.org/wiki/Group_of_Monuments_at_Mahabalipuram"},
+]},
+"하이데라바드": { description:"하이데라바드는 텔랑가나주 주도로 400년 니잠 왕조의 이슬람 문화와 인도 IT 허브 'HITEC City'가 공존하는 도시입니다.", spots:[
+  {name:"차르미나르", wikiTitle:"Charminar", type:"역사", desc:"1591년 세워진 56m 4개 첨탑 개선문으로 하이데라바드의 상징이자 옛 성벽도시의 중심입니다.", rating:4.5, openTime:"09:30~17:30", price:"외국인 250루피", website:"https://en.wikipedia.org/wiki/Charminar"},
+  {name:"골콘다 요새", wikiTitle:"Golconda Fort", type:"역사", desc:"13세기부터 발전한 다이아몬드의 요새 도시로 '코이누르 다이아몬드'가 여기서 채굴됐습니다.", rating:4.6, openTime:"09:00~17:30", price:"외국인 300루피", website:"https://en.wikipedia.org/wiki/Golconda_Fort"},
+  {name:"라모지 필름 시티", wikiTitle:"Ramoji Film City", type:"문화", desc:"세계 최대 통합 영화 제작 복합단지로 기네스북 등재되었으며 일반인 투어가 가능합니다.", rating:4.4, openTime:"09:00~17:30", price:"1,350루피", website:"https://www.ramojifilmcity.com"},
+  {name:"하이데라바디 비리야니", wikiTitle:"Hyderabadi biryani", type:"음식", desc:"니잠 왕실 요리에서 기원한 '덤' 방식 조리법의 세계적 비리야니로 파라다이스 등 전설적 노포가 있습니다.", rating:4.8, openTime:"11:00~23:00", price:"1인 300루피~", website:"https://en.wikipedia.org/wiki/Hyderabadi_biryani"},
+]},
+"다르질링": { description:"다르질링은 해발 2,042m의 히말라야 차 산지로 유네스코 세계유산 토이 트레인과 칸첸중가 일출로 유명합니다.", spots:[
+  {name:"다르질링 히말라야 철도(토이 트레인)", wikiTitle:"Darjeeling Himalayan Railway", type:"역사", desc:"1881년 개통된 유네스코 세계유산 증기 기관차로 해발 2,258m까지 오르는 '토이 트레인'입니다.", rating:4.7, openTime:"운행 시간표", price:"조이 라이드 1,500루피", website:"https://en.wikipedia.org/wiki/Darjeeling_Himalayan_Railway"},
+  {name:"타이거 힐 일출", wikiTitle:"Tiger Hill, Darjeeling", type:"자연", desc:"해발 2,590m에서 칸첸중가 연봉과 에베레스트까지 보이는 히말라야 일출 명소입니다.", rating:4.8, openTime:"새벽 3:30~", price:"외국인 75루피", website:"https://en.wikipedia.org/wiki/Tiger_Hill_(Darjeeling)"},
+  {name:"다르질링 차 농장 투어", wikiTitle:"Darjeeling tea", type:"문화", desc:"세계 최고급 홍차 다르질링의 농장을 방문해 채엽·제다 과정을 보고 시음하는 투어입니다.", rating:4.7, openTime:"09:00~16:00", price:"투어 500루피", website:"https://en.wikipedia.org/wiki/Darjeeling_tea"},
+  {name:"히말라야 동물원", wikiTitle:"Padmaja Naidu Himalayan Zoological Park", type:"자연", desc:"해발 2,134m 세계 최고 고도 동물원으로 눈표범·붉은판다 등 히말라야 고유종을 볼 수 있습니다.", rating:4.6, openTime:"08:30~16:30", price:"외국인 100루피", website:"https://en.wikipedia.org/wiki/Padmaja_Naidu_Himalayan_Zoological_Park"},
+]},
+"시믈라": { description:"시믈라는 해발 2,276m 히마찰프라데시주 주도이자 영국 식민지 시대 인도의 여름 수도였던 고산 휴양지입니다.", spots:[
+  {name:"몰 로드", wikiTitle:"Mall Road, Shimla", type:"문화", desc:"시믈라의 중심 보행자 거리로 영국식 건축물과 스카데일 크라이스트 처치, 전망대가 있습니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Mall_Road,_Shimla"},
+  {name:"크라이스트 처치", wikiTitle:"Christ Church, Shimla", type:"역사", desc:"1857년 네오고딕 양식으로 세워진 북인도 두 번째 오래된 교회로 시믈라의 상징입니다.", rating:4.5, openTime:"09:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Christ_Church,_Shimla"},
+  {name:"칼카-시믈라 철도", wikiTitle:"Kalka–Shimla railway", type:"역사", desc:"1903년 개통된 유네스코 세계유산 96km 협궤 철도로 102개의 터널을 지나는 '장난감 기차'입니다.", rating:4.7, openTime:"운행 시간표", price:"일반석 300루피", website:"https://en.wikipedia.org/wiki/Kalka%E2%80%93Shimla_railway"},
+  {name:"자쿠 사원", wikiTitle:"Jakhoo Temple", type:"역사", desc:"해발 2,455m 시믈라 최고봉의 하누만 사원으로 33m 거대 하누만 상이 시내 어디서나 보입니다.", rating:4.6, openTime:"05:00~20:00", price:"무료(로프웨이 400루피)", website:"https://en.wikipedia.org/wiki/Jakhoo"},
+]},
+"리시케시": { description:"리시케시는 갠지스강 상류의 '세계 요가 수도'로 비틀스가 명상하러 온 도시이자 히말라야 트레킹의 관문입니다.", spots:[
+  {name:"락슈만 줄라", wikiTitle:"Lakshman Jhula", type:"역사", desc:"갠지스강을 가로지르는 1929년 건설된 현수교로 리시케시의 상징이자 요가원과 아쉬람으로 이어집니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Lakshman_Jhula"},
+  {name:"파르마르트 니케탄 강가 아르티", wikiTitle:"Parmarth Niketan", type:"문화", desc:"매일 저녁 갠지스강변에서 열리는 촛불 기도의식으로 수백 명의 수행자들이 참여하는 종교적 장관입니다.", rating:4.8, openTime:"일몰 18:00~19:00", price:"무료", website:"https://www.parmarth.org"},
+  {name:"비틀스 아쉬람", wikiTitle:"Chaurasi Kutia", type:"역사", desc:"1968년 비틀스가 마하리시의 가르침을 받으며 '화이트 앨범'을 작곡한 버려진 아쉬람입니다.", rating:4.5, openTime:"09:00~17:00", price:"외국인 600루피", website:"https://en.wikipedia.org/wiki/Chaurasi_Kutia"},
+  {name:"갠지스 래프팅", wikiTitle:"Rishikesh", type:"자연", desc:"리시케시는 인도 최고의 래프팅 스팟으로 Grade II-IV의 급류를 체험할 수 있습니다.", rating:4.7, openTime:"09:00~17:00", price:"1,000루피~", website:"https://en.wikipedia.org/wiki/Rishikesh"},
+]},
+"함피": { description:"함피는 14~16세기 비자야나가라 제국의 수도였던 유네스코 세계유산 유적도시로 거대한 화강암 지형과 사원군이 장관입니다.", spots:[
+  {name:"비루팍샤 사원", wikiTitle:"Virupaksha Temple", type:"역사", desc:"7세기부터 이어진 시바 사원으로 50m 고푸라탑이 솟아있는 함피 유적군의 중심입니다.", rating:4.8, openTime:"06:00~19:00", price:"외국인 2루피", website:"https://en.wikipedia.org/wiki/Virupaksha_Temple,_Hampi"},
+  {name:"비탈라 사원 석조 전차", wikiTitle:"Vittala Temple", type:"역사", desc:"15세기 비자야나가라 건축의 정수인 석조 전차 조각이 있는 사원으로 인도 50루피 지폐에 등장합니다.", rating:4.9, openTime:"08:30~17:30", price:"외국인 600루피", website:"https://en.wikipedia.org/wiki/Vittala_Temple"},
+  {name:"마탕가 힐", wikiTitle:"Hampi", type:"자연", desc:"함피 전체 유적지를 내려다볼 수 있는 일출·일몰 명소 언덕으로 짧은 트레킹이 가능합니다.", rating:4.8, openTime:"일출~일몰", price:"무료", website:"https://en.wikipedia.org/wiki/Hampi"},
+  {name:"왕실 중심부", wikiTitle:"Hampi", type:"역사", desc:"여왕의 목욕탕·로터스 마할·코끼리 마구간 등 비자야나가라 왕실 건축군이 밀집한 지구입니다.", rating:4.7, openTime:"08:30~17:30", price:"외국인 600루피 공통", website:"https://en.wikipedia.org/wiki/Hampi"},
+]},
+"조드푸르": { description:"조드푸르는 라자스탄주의 '블루 시티'로 타르 사막 가장자리의 메헤랑가르 성채와 파란색으로 칠한 구시가지가 상징입니다.", spots:[
+  {name:"메헤랑가르 성채", wikiTitle:"Mehrangarh", type:"역사", desc:"1459년 건설된 125m 고지의 라자스탄 최대 요새로 성벽 높이만 36m에 달하며 세계에서 가장 아름다운 성 중 하나입니다.", rating:4.8, openTime:"09:00~17:00", price:"외국인 600루피", website:"https://www.mehrangarh.org"},
+  {name:"우마이드 바완 궁전", wikiTitle:"Umaid Bhawan Palace", type:"역사", desc:"1943년 완성된 아르데코 양식 궁전으로 현재 일부가 호텔로 운영되며 2008년 세계 최고 호텔로 선정되었습니다.", rating:4.6, openTime:"09:00~17:00", price:"외국인 100루피", website:"https://en.wikipedia.org/wiki/Umaid_Bhawan_Palace"},
+  {name:"자스완트 타다", wikiTitle:"Jaswant Thada", type:"역사", desc:"1899년 건립된 조드푸르 왕가의 세노타프(기념묘)로 백색 대리석 건축이 '라자스탄의 타지마할'로 불립니다.", rating:4.5, openTime:"09:00~17:00", price:"외국인 50루피", website:"https://en.wikipedia.org/wiki/Jaswant_Thada"},
+  {name:"블루시티 골목", wikiTitle:"Jodhpur", type:"문화", desc:"브라만 계급이 거주하던 구시가지 수백 채의 집이 인디고 블루로 칠해진 골목으로 세계적 포토스팟입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Jodhpur"},
+]},
+"푸시카르": { description:"푸시카르는 라자스탄주의 힌두 성지로 인도 유일의 브라흐마 사원과 푸시카르 호수, 매년 11월 세계 최대 낙타 축제가 열립니다.", spots:[
+  {name:"푸시카르 호수", wikiTitle:"Pushkar Lake", type:"역사", desc:"브라흐마가 연꽃을 떨어뜨려 생겼다는 전설의 성스러운 호수로 52개의 가트가 둘러싸고 있습니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Pushkar_Lake"},
+  {name:"브라흐마 사원", wikiTitle:"Brahma Temple, Pushkar", type:"역사", desc:"14세기에 건립된 인도 유일의 창조신 브라흐마 사원으로 힌두교도들의 일생에 한 번 가야 할 성지입니다.", rating:4.6, openTime:"05:00~21:00", price:"무료", website:"https://en.wikipedia.org/wiki/Brahma_Temple,_Pushkar"},
+  {name:"푸시카르 낙타 축제", wikiTitle:"Pushkar Camel Fair", type:"문화", desc:"매년 11월 보름 5만 마리의 낙타가 모이는 세계 최대 가축 시장 겸 민속 축제입니다.", rating:4.8, openTime:"11월 보름", price:"무료", website:"https://en.wikipedia.org/wiki/Pushkar_Fair"},
+  {name:"사비트리 사원", wikiTitle:"Pushkar", type:"자연", desc:"푸시카르 언덕 정상의 사원으로 로프웨이로 오르며 푸시카르 호수와 낙타 축제장이 한눈에 보입니다.", rating:4.5, openTime:"05:00~19:00", price:"로프웨이 왕복 100루피", website:"https://en.wikipedia.org/wiki/Pushkar"},
+]},
+"다람살라": { description:"다람살라는 히마찰프라데시주 해발 1,457m 산악 도시로 달라이 라마와 티벳 망명 정부가 있는 '작은 라싸'입니다.", spots:[
+  {name:"맥레오드 간즈", wikiTitle:"McLeod Ganj", type:"문화", desc:"달라이 라마 관저가 있는 다람살라 상부 마을로 티벳 문화·불교·명상 수행의 중심지입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/McLeod_Ganj"},
+  {name:"츠글라캉 사원", wikiTitle:"Tsuglagkhang", type:"역사", desc:"달라이 라마가 설법하는 티벳 망명 사원으로 종교 의식과 법문을 직접 접할 수 있습니다.", rating:4.8, openTime:"05:00~20:00", price:"무료", website:"https://en.wikipedia.org/wiki/Tsuglagkhang_Complex"},
+  {name:"바그수나그 폭포", wikiTitle:"Bhagsunath Temple", type:"자연", desc:"맥레오드 간즈에서 30분 거리의 폭포로 고대 시바 사원과 함께 있는 트레킹 명소입니다.", rating:4.4, openTime:"06:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Bhagsunath_Temple"},
+  {name:"트리운드 트레킹", wikiTitle:"Triund", type:"자연", desc:"해발 2,850m까지 9km 오르는 초보자 트레킹 코스로 다울라다르 산맥 일출이 장관입니다.", rating:4.8, openTime:"일출~일몰", price:"무료", website:"https://en.wikipedia.org/wiki/Triund"},
+]},
+"달랏": { description:"달랏은 해발 1,500m의 고원 도시로 프랑스 식민지풍 건축과 시원한 기후, 꽃과 커피·와인으로 '베트남의 파리'로 불립니다.", spots:[
+  {name:"쑤언흐엉 호수", wikiTitle:"Xuan Huong Lake", type:"자연", desc:"달랏 중심의 인공 호수로 둘레 5km 산책로와 수상 레스토랑이 낭만적인 프랑스풍 분위기를 선사합니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Xuan_Huong_Lake"},
+  {name:"크레이지 하우스", wikiTitle:"Crazy House", type:"랜드마크", desc:"건축가 당비엣응아가 설계한 가우디 풍 비정형 건물로 내부가 호텔·전시 공간으로 운영됩니다.", rating:4.4, openTime:"08:30~19:00", price:"60,000동", website:"https://en.wikipedia.org/wiki/Hang_Nga_Guesthouse"},
+  {name:"랑비앙산", wikiTitle:"Langbiang", type:"자연", desc:"해발 2,167m 달랏 최고봉으로 지프투어와 케이블카로 오를 수 있으며 고원 풍경이 장관입니다.", rating:4.5, openTime:"07:30~16:30", price:"60,000동", website:"https://en.wikipedia.org/wiki/Langbiang"},
+  {name:"달랏 커피 농장", wikiTitle:"Vietnamese coffee", type:"음식", desc:"베트남 최대 아라비카 커피 산지로 농장 투어와 위즐 커피(족제비 커피) 시음이 유명합니다.", rating:4.6, openTime:"08:00~17:00", price:"투어 200,000동", website:"https://en.wikipedia.org/wiki/Coffee_production_in_Vietnam"},
+]},
+"판티엣": { description:"판티엣은 호찌민시에서 차로 4시간 거리의 해변 리조트 도시로 사막 같은 적색·백색 모래언덕으로 유명합니다.", spots:[
+  {name:"백색 모래언덕", wikiTitle:"Mui Ne", type:"자연", desc:"무이네 인근의 거대한 백색 모래언덕으로 사막 같은 풍경에서 ATV와 샌드보딩이 가능합니다.", rating:4.6, openTime:"05:00~19:00", price:"지프투어 300,000동", website:"https://en.wikipedia.org/wiki/Mui_Ne"},
+  {name:"적색 모래언덕", wikiTitle:"Mui Ne", type:"자연", desc:"일출·일몰이 아름다운 붉은 모래언덕으로 무이네의 상징적 풍경입니다.", rating:4.4, openTime:"05:00~19:00", price:"무료", website:"https://en.wikipedia.org/wiki/Mui_Ne"},
+  {name:"요정 개울", wikiTitle:"Fairy Stream", type:"자연", desc:"붉은 바위 협곡을 맨발로 걸어 올라가는 얕은 개울로 지형이 화성처럼 독특합니다.", rating:4.5, openTime:"06:00~18:00", price:"15,000동", website:"https://en.wikipedia.org/wiki/Phan_Thiết"},
+  {name:"판티엣 어항", wikiTitle:"Phan Thiết", type:"문화", desc:"새벽마다 수백 척의 둥근 바구니 배가 고기를 가져오는 베트남 전통 어항으로 일출 명소입니다.", rating:4.5, openTime:"04:00~08:00", price:"무료", website:"https://en.wikipedia.org/wiki/Phan_Thiết"},
+]},
+"무이네": { description:"무이네는 판티엣 동쪽 해변 마을로 카이트서핑·윈드서핑의 세계적 스팟이자 배낭여행자들의 낙원입니다.", spots:[
+  {name:"무이네 해변", wikiTitle:"Mui Ne", type:"자연", desc:"10km 해변을 따라 리조트와 카이트서핑 스쿨이 늘어선 베트남 최고의 윈드스포츠 스팟입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Mui_Ne"},
+  {name:"참 타워", wikiTitle:"Po Shanu", type:"역사", desc:"9세기 참파 왕국의 힌두 탑 3기가 언덕 위에 남아있는 무이네의 유일한 역사 유적입니다.", rating:4.3, openTime:"07:30~17:00", price:"15,000동", website:"https://en.wikipedia.org/wiki/Po_Shanu"},
+  {name:"카이트서핑 스쿨", wikiTitle:"Mui Ne", type:"자연", desc:"무이네는 연중 강한 바람으로 세계 카이트서핑 월드컵이 열리는 초보자부터 프로까지 최고의 장소입니다.", rating:4.7, openTime:"09:00~17:00", price:"레슨 50$~", website:"https://en.wikipedia.org/wiki/Mui_Ne"},
+  {name:"시푸드 노점 거리", wikiTitle:"Mui Ne", type:"음식", desc:"어항 인근의 시푸드 레스토랑 거리로 킹크랩·전복·랍스터를 현지 가격에 맛볼 수 있습니다.", rating:4.6, openTime:"17:00~23:00", price:"1인 300,000동~", website:"https://en.wikipedia.org/wiki/Mui_Ne"},
+]},
+"꼰다오": { description:"꼰다오는 베트남 남부 해안에서 180km 떨어진 16개 섬으로 된 외진 군도로 천혜의 해양 생태와 슬픈 역사가 공존합니다.", spots:[
+  {name:"꼰다오 국립공원", wikiTitle:"Côn Đảo National Park", type:"자연", desc:"바다거북 산란지와 다이빙 스팟이 풍부한 해양 보호구역으로 7~10월 거북 부화를 관찰할 수 있습니다.", rating:4.8, openTime:"24시간", price:"200,000동", website:"https://en.wikipedia.org/wiki/Côn_Đảo_National_Park"},
+  {name:"꼰다오 감옥", wikiTitle:"Côn Đảo Prison", type:"역사", desc:"프랑스·미국 식민 시대 정치범 수용소였던 '지옥섬'으로 호랑이 우리·바이너리 우리 등이 보존되어 있습니다.", rating:4.6, openTime:"07:30~17:00", price:"40,000동", website:"https://en.wikipedia.org/wiki/Côn_Đảo_Prison"},
+  {name:"담찌엔 해변", wikiTitle:"Côn Đảo", type:"자연", desc:"꼰다오에서 가장 유명한 흰 모래 해변으로 야자수와 맑은 바다가 인도양 리조트를 연상시킵니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Côn_Đảo"},
+  {name:"보티사우 묘역", wikiTitle:"Côn Đảo", type:"역사", desc:"베트남 여성 혁명가 보 티 사우의 묘소로 현지인들이 새벽에 참배하는 성지입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Võ_Thị_Sáu"},
+]},
+"하이퐁": { description:"하이퐁은 베트남 북부 3대 도시이자 하노이의 관문 항구로 캣바섬 투어 출발지이자 지명도 높은 식도락 도시입니다.", spots:[
+  {name:"캣바 섬", wikiTitle:"Cát Bà Island", type:"자연", desc:"하롱베이와 이어지는 베트남 최대 섬 국립공원으로 석회암 지형과 랑까우 원숭이 서식지가 유명합니다.", rating:4.7, openTime:"24시간", price:"50,000동", website:"https://en.wikipedia.org/wiki/Cát_Bà"},
+  {name:"두손 해변", wikiTitle:"Đồ Sơn", type:"자연", desc:"하이퐁 최고의 해변 휴양지로 프랑스 식민시대 별장과 카지노 리조트가 있습니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Đồ_Sơn"},
+  {name:"랑선 대성당", wikiTitle:"Hai Phong", type:"역사", desc:"1886년 건립된 프랑스 식민시대 고딕 성당으로 하이퐁의 상징적 건축물입니다.", rating:4.4, openTime:"06:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Haiphong"},
+  {name:"반 카오 국숫 거리", wikiTitle:"Haiphong", type:"음식", desc:"하이퐁 명물 '반다꾸어'(게국수) 노포가 모인 거리로 현지 스타일 쌀국수를 맛볼 수 있습니다.", rating:4.6, openTime:"06:00~22:00", price:"50,000동~", website:"https://en.wikipedia.org/wiki/Haiphong"},
+]},
+"깐터": { description:"깐터는 메콩델타 최대 도시이자 '9마리 용의 강' 메콩강의 수상 시장과 운하 크루즈로 유명한 남부 농업 중심지입니다.", spots:[
+  {name:"까이랑 수상시장", wikiTitle:"Cái Răng Floating Market", type:"문화", desc:"메콩델타 최대 도매 수상시장으로 새벽 4~6시 수백 척의 보트가 과일과 채소를 거래하는 장관이 펼쳐집니다.", rating:4.6, openTime:"04:00~09:00", price:"투어 300,000동", website:"https://en.wikipedia.org/wiki/Cái_Răng_Floating_Market"},
+  {name:"므이 사오 누이 사원", wikiTitle:"Can Tho", type:"역사", desc:"깐터 최대 화교 사원으로 중국식 건축과 정교한 조각이 인상적인 도교 사원입니다.", rating:4.3, openTime:"06:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Cần_Thơ"},
+  {name:"닌끼에우 선착장", wikiTitle:"Can Tho", type:"랜드마크", desc:"메콩강변 산책로로 밤이 되면 네온사인 조명이 화려해지며 크루즈 보트가 출발합니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Cần_Thơ"},
+  {name:"메콩 과일 농장 투어", wikiTitle:"Mekong Delta", type:"자연", desc:"운하를 따라 사공배로 돌아보는 망고·람부탄·용과 과일 농장 투어가 메콩델타의 명물입니다.", rating:4.7, openTime:"08:00~17:00", price:"500,000동~", website:"https://en.wikipedia.org/wiki/Mekong_Delta"},
+]},
+"동호이": { description:"동호이는 베트남 중부 꽝빈성의 작은 도시로 세계 최대 동굴 선둥이 있는 퐁냐케방 국립공원의 관문입니다.", spots:[
+  {name:"퐁냐 동굴", wikiTitle:"Phong Nha Cave", type:"자연", desc:"메콩강 지류 따라 보트로 들어가는 4.5km 강을 품은 석회암 동굴로 유네스코 세계유산입니다.", rating:4.8, openTime:"07:30~16:00", price:"150,000동", website:"https://en.wikipedia.org/wiki/Phong_Nha_Cave"},
+  {name:"선둥 동굴", wikiTitle:"Sơn Đoòng Cave", type:"자연", desc:"2009년 발견된 세계 최대 동굴로 내부에 원시림·강·구름이 생성되며 2주 전 예약 트레킹만 가능합니다.", rating:4.9, openTime:"4일 투어(한정)", price:"3,000$", website:"https://en.wikipedia.org/wiki/Sơn_Đoòng_Cave"},
+  {name:"동호이 해변", wikiTitle:"Đồng Hới", type:"자연", desc:"동호이 시내에서 가까운 녁래 해변과 바우쭈아 해변이 조용하고 깨끗해 현지인들이 사랑합니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Đồng_Hới"},
+  {name:"꽝빈 전쟁기념관", wikiTitle:"Quảng Bình Province", type:"역사", desc:"베트남 전쟁 당시 호찌민 루트의 주요 통로였던 꽝빈성의 전쟁 유적과 기념물을 전시합니다.", rating:4.2, openTime:"08:00~17:00", price:"30,000동", website:"https://en.wikipedia.org/wiki/Quảng_Bình_Province"},
+]},
+"붕따우": { description:"붕따우는 호찌민시에서 가장 가까운 해변 도시로 프랑스 식민지 별장과 예수상, 해산물이 유명한 주말 여행지입니다.", spots:[
+  {name:"붕따우 예수상", wikiTitle:"Christ of Vũng Tàu", type:"랜드마크", desc:"1974년 건립된 높이 32m의 예수상으로 브라질 리우데자네이루 예수상보다 큰 베트남 최대 조각입니다.", rating:4.6, openTime:"07:00~17:00", price:"무료", website:"https://en.wikipedia.org/wiki/Christ_of_Vũng_Tàu"},
+  {name:"박진 비치", wikiTitle:"Vũng Tàu", type:"자연", desc:"붕따우 뒷바다의 황금빛 모래 해변으로 서퍼들이 좋아하는 현지인 해변입니다.", rating:4.4, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Vũng_Tàu"},
+  {name:"화이트 빌라", wikiTitle:"Vũng Tàu", type:"역사", desc:"프랑스 총독의 여름 별장이었던 19세기 백색 저택으로 붕따우 시내 전망이 훌륭합니다.", rating:4.3, openTime:"07:00~17:00", price:"5,000동", website:"https://en.wikipedia.org/wiki/Vũng_Tàu"},
+  {name:"붕따우 해산물", wikiTitle:"Vũng Tàu", type:"음식", desc:"주말 호찌민 시민들이 해산물 식사를 위해 찾는 해안 레스토랑 거리로 랍스터와 전복이 저렴합니다.", rating:4.7, openTime:"11:00~22:00", price:"1인 200,000동~", website:"https://en.wikipedia.org/wiki/Vũng_Tàu"},
+]},
+"반메투옷": { description:"반메투옷은 베트남 중앙 고원 닥락성의 주도로 베트남 커피(로부스타) 생산 1위 도시이자 코끼리·폭포로 유명합니다.", spots:[
+  {name:"드레이 사프 폭포", wikiTitle:"Dray Sap Waterfall", type:"자연", desc:"높이 20m, 폭 100m의 '연기 폭포'로 '베트남 나이아가라'라고 불리며 원시림에 둘러싸여 있습니다.", rating:4.6, openTime:"07:00~17:00", price:"60,000동", website:"https://en.wikipedia.org/wiki/Dray_Sap_Falls"},
+  {name:"반동 마을 코끼리 투어", wikiTitle:"Buôn Ma Thuột", type:"문화", desc:"원주민 에데족 마을을 방문해 윤리적 코끼리 생태 투어를 체험하는 여행 프로그램입니다.", rating:4.5, openTime:"08:00~17:00", price:"500,000동~", website:"https://en.wikipedia.org/wiki/Buôn_Ma_Thuột"},
+  {name:"세계 커피 박물관", wikiTitle:"Trung Nguyên", type:"문화", desc:"쯩응우엔 커피가 운영하는 세계 커피 문화 박물관으로 독특한 건축과 시음 체험이 가능합니다.", rating:4.7, openTime:"07:00~21:00", price:"75,000동", website:"https://en.wikipedia.org/wiki/Trung_Nguyên"},
+  {name:"락 호수", wikiTitle:"Lak Lake", type:"자연", desc:"중앙고원 최대 천연 담수호로 보트와 코끼리 타기, 수상가옥 홈스테이가 유명합니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Lak_Lake"},
+]},
+"매홍손": { description:"매홍손은 미얀마 국경과 접한 산악 도시로 태국 북부 원주민 문화와 안개 낀 산세, '긴목족' 마을로 유명한 '삼안개의 도시'입니다.", spots:[
+  {name:"왓 프라탓 도이 꽁무", wikiTitle:"Wat Phrathat Doi Kong Mu", type:"역사", desc:"매홍손 시내를 내려다보는 언덕 위 사원으로 샨족 양식의 흰 쳇디와 일몰 전망이 장관입니다.", rating:4.7, openTime:"06:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Mae_Hong_Son_Province"},
+  {name:"판 우움 호수", wikiTitle:"Mae Hong Son", type:"자연", desc:"매홍손 시내 한복판 호수로 안개 낀 아침과 호반 사원이 환상적인 풍경을 연출합니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Mae_Hong_Son"},
+  {name:"긴목족 마을", wikiTitle:"Kayan people (Myanmar)", type:"문화", desc:"미얀마 피난민 카얀족 여성들이 전통대로 목에 놋쇠 고리를 걸고 생활하는 관광 마을입니다.", rating:4.2, openTime:"08:00~17:00", price:"250바트", website:"https://en.wikipedia.org/wiki/Kayan_people_(Myanmar)"},
+  {name:"파이", wikiTitle:"Pai", type:"자연", desc:"매홍손주에 속한 히피 배낭여행자 성지로 산과 폭포, 온천에 둘러싸인 자유로운 분위기가 매력입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Pai,_Thailand"},
+]},
+"꾸이년": { description:"꾸이년은 베트남 중부 빈딘성의 해변 도시로 조용한 해안과 참파 왕국 유적, 저렴한 해산물로 최근 떠오르는 휴양지입니다.", spots:[
+  {name:"꾸이년 해변", wikiTitle:"Quy Nhơn", type:"자연", desc:"5km의 초승달 모양 해변으로 나트랑이나 다낭보다 조용하며 현지인과 어부의 일상을 볼 수 있습니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Quy_Nhơn"},
+  {name:"반이 참 유적", wikiTitle:"Bánh Ít Towers", type:"역사", desc:"11세기 참파 왕국이 세운 4개의 탑으로 이루어진 힌두 유적으로 언덕 위에서 빈딘 평원이 내려다보입니다.", rating:4.5, openTime:"07:00~17:00", price:"20,000동", website:"https://en.wikipedia.org/wiki/Bánh_Ít_Towers"},
+  {name:"끼꼬 섬", wikiTitle:"Quy Nhơn", type:"자연", desc:"꾸이년 앞바다의 무인 섬들로 보트 투어로 스노클링과 자연 그대로의 해변을 즐길 수 있습니다.", rating:4.6, openTime:"08:00~16:00", price:"투어 600,000동", website:"https://en.wikipedia.org/wiki/Quy_Nhơn"},
+  {name:"냐짱 시푸드 시장", wikiTitle:"Quy Nhơn", type:"음식", desc:"꾸이년은 베트남에서 가장 저렴하게 신선한 해산물을 먹을 수 있는 곳으로 현지 시장 레스토랑이 유명합니다.", rating:4.7, openTime:"16:00~22:00", price:"1인 150,000동~", website:"https://en.wikipedia.org/wiki/Quy_Nhơn"},
+]},
 "나트랑": { description:"나트랑은 베트남 남부의 해변 리조트 도시로 맑은 바다와 스노클링, 저렴한 물가로 인기가 급상승 중입니다.", spots:[
   {name:"빈펄랜드", wikiTitle:"Vinpearl", type:"랜드마크", desc:"섬 위의 대형 테마파크로 케이블카를 타고 바다를 건너 들어갑니다.", rating:4.4, openTime:"08:00~21:00", price:"VND 880,000", website:"https://en.wikipedia.org/wiki/Vinpearl"},
   {name:"혼문 섬 스노클링", wikiTitle:"Nha Trang", type:"자연", desc:"투명한 바다에서 산호초와 열대어를 만나는 나트랑 최고의 스노클링 포인트입니다.", rating:4.5, openTime:"보트투어 08:00~", price:"VND 300,000", website:"https://en.wikipedia.org/wiki/Nha_Trang"},
@@ -2378,16 +2709,64 @@ export const CITY_DATA = {
 ]},
 }
 
-export const DEFAULT_CITY_DATA = (cityName) => ({
-  weather:{temp:Math.floor(Math.random()*20)+10,condition:"구름 조금",icon:"⛅",humidity:Math.floor(Math.random()*40)+45},
-  description:`${cityName}은(는) 독특한 문화적 경험과 아름다운 자연 풍경, 잊을 수 없는 추억을 선사하는 매력적인 여행지입니다.`,
-  spots:[
-    {name:`${cityName} 구시가지`,wikiTitle:cityName,type:"역사",desc:"도시의 풍부한 문화 유산을 보여주는 아름답게 보존된 역사 지구입니다.",rating:4.5},
-    {name:`${cityName} 국립 박물관`,wikiTitle:`${cityName} museum`,type:"문화",desc:"이 지역의 훌륭한 예술 작품과 유물, 역사를 전시하는 세계적 수준의 기관입니다.",rating:4.4},
-    {name:`${cityName} 시립 공원`,wikiTitle:`${cityName} park`,type:"자연",desc:"도시 중심부에 자리한 사랑받는 녹지 오아시스로 계절마다 다른 정원을 즐길 수 있습니다.",rating:4.6},
-    {name:`${cityName} 전통 시장`,wikiTitle:`${cityName} market`,type:"음식",desc:"신선한 농산물과 길거리 음식, 수공예품이 가득한 활기찬 로컬 시장입니다.",rating:4.3},
-  ]
-})
+export const DEFAULT_CITY_DATA = (cityName, lang = 'ko') => {
+  const L = {
+    ko: {
+      condition: '구름 조금',
+      desc: `${cityName}은(는) 독특한 문화적 경험과 아름다운 자연 풍경, 잊을 수 없는 추억을 선사하는 매력적인 여행지입니다.`,
+      spots: [
+        { name:`${cityName} 구시가지`,        desc:'도시의 풍부한 문화 유산을 보여주는 아름답게 보존된 역사 지구입니다.' },
+        { name:`${cityName} 국립 박물관`,     desc:'이 지역의 훌륭한 예술 작품과 유물, 역사를 전시하는 세계적 수준의 기관입니다.' },
+        { name:`${cityName} 시립 공원`,       desc:'도시 중심부에 자리한 사랑받는 녹지 오아시스로 계절마다 다른 정원을 즐길 수 있습니다.' },
+        { name:`${cityName} 전통 시장`,       desc:'신선한 농산물과 길거리 음식, 수공예품이 가득한 활기찬 로컬 시장입니다.' },
+      ]
+    },
+    en: {
+      condition: 'partly cloudy',
+      desc: `${cityName} is a charming destination offering unique cultural experiences, beautiful natural scenery, and unforgettable memories.`,
+      spots: [
+        { name:`${cityName} Old Town`,           desc:'A beautifully preserved historic district showcasing the rich cultural heritage of the city.' },
+        { name:`${cityName} National Museum`,    desc:'A world-class institution exhibiting fine art, artifacts, and history of the region.' },
+        { name:`${cityName} City Park`,          desc:'A beloved green oasis in the heart of the city with seasonal gardens to enjoy year-round.' },
+        { name:`${cityName} Traditional Market`, desc:'A vibrant local market bursting with fresh produce, street food, and handcrafted goods.' },
+      ]
+    },
+    ja: {
+      condition: '晴れ時々曇り',
+      desc: `${cityName}は、ユニークな文化体験と美しい自然景観、忘れられない思い出を提供する魅力的な観光地です。`,
+      spots: [
+        { name:`${cityName} 旧市街`,       desc:'街の豊かな文化遺産を伝える、美しく保存された歴史地区です。' },
+        { name:`${cityName} 国立博物館`,   desc:'この地域の優れた美術品・遺物・歴史を展示する、世界水準の施設です。' },
+        { name:`${cityName} 市立公園`,     desc:'街の中心に位置する愛される緑のオアシスで、四季折々の庭園を楽しめます。' },
+        { name:`${cityName} 伝統市場`,     desc:'新鮮な農産物、屋台グルメ、手工芸品であふれる活気ある地元市場です。' },
+      ]
+    },
+    zh: {
+      condition: '多云',
+      desc: `${cityName}是一个充满魅力的旅游目的地，提供独特的文化体验、美丽的自然风光和难忘的回忆。`,
+      spots: [
+        { name:`${cityName} 老城区`,       desc:'一个美丽保存的历史街区，展示了城市丰富的文化遗产。' },
+        { name:`${cityName} 国立博物馆`,   desc:'一流的文化机构，展示该地区优秀的艺术品、文物与历史。' },
+        { name:`${cityName} 市立公园`,     desc:'坐落于市中心的绿色绿洲，四季花园各具风情。' },
+        { name:`${cityName} 传统市场`,     desc:'充满活力的本地市场，云集新鲜农产品、街头美食与手工艺品。' },
+      ]
+    },
+  }
+  const data = L[lang] || L.ko
+  const types = ['역사','문화','자연','음식']
+  const ratings = [4.5, 4.4, 4.6, 4.3]
+  return {
+    weather:{ temp:Math.floor(Math.random()*20)+10, condition:data.condition, icon:'⛅', humidity:Math.floor(Math.random()*40)+45 },
+    description: data.desc,
+    spots: data.spots.map((s, i) => ({
+      name: s.name,
+      wikiTitle: `${cityName} ${types[i]==='역사'?'old town':types[i]==='문화'?'museum':types[i]==='자연'?'park':'market'}`,
+      type: types[i],
+      desc: s.desc,
+      rating: ratings[i],
+    }))
+  }
+}
 
 // 카테고리별 폴백 플레이스홀더 (실사진 못 찾을 때만 사용)
 export const TYPE_EMOJI = { "문화":"🎭","자연":"🌿","랜드마크":"⭐","도시":"🏙️","역사":"🏛️","음식":"🍽️" }
