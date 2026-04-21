@@ -330,7 +330,10 @@ function App() {
   const [showDrop, setShowDrop] = useState(false)
   const [hoveredCountry, setHoveredCountry] = useState(null)
   const [showCountryInfo, setShowCountryInfo] = useState(false)
-  const [lang, setLang] = useState('en')
+  const [lang, setLang] = useState(() => {
+    if (typeof window === 'undefined') return 'en'
+    try { return localStorage.getItem('atlas_lang') || 'en' } catch { return 'en' }
+  })
   const [showLangMenu, setShowLangMenu] = useState(false)
   const [showSharePopup, setShowSharePopup] = useState(false)
   const [sidePanel, setSidePanel] = useState(null) // 'hotspots' | 'restaurants' | null
@@ -724,6 +727,22 @@ function App() {
 
   // 언어 변경 시 경로 캐시 초기화 (Directions API 응답 언어가 다름)
   useEffect(() => { setRouteCache({}) }, [lang])
+
+  // 언어 변경 시 localStorage 자동 동기화 (리로드 후 복원 보장)
+  useEffect(() => {
+    try { localStorage.setItem('atlas_lang', lang) } catch {}
+  }, [lang])
+
+  // lang 변경 시 폴백 도시 데이터 재생성 (DEFAULT_CITY_DATA 사용 중이면)
+  useEffect(() => {
+    if (!selectedCity || !cityData) return
+    const cityKey = selectedCity._koName || selectedCity.name
+    // CITY_DATA에 있는 도시는 재생성 불필요 (CITY_DATA_I18N/AUTO_I18N로 번역됨)
+    if (CITY_DATA[cityKey]) return
+    // 폴백 도시만 현재 언어로 재생성
+    const fallback = DEFAULT_CITY_DATA(cityKey, lang)
+    setCityData(prev => prev ? { ...fallback, weather: prev.weather } : fallback)
+  }, [lang])
 
   // 모바일 감지
   useEffect(() => {
@@ -1199,25 +1218,52 @@ function App() {
 
   // Load world GeoJSON (커스텀 간소화 50m 우선 → 110m fallback)
   useEffect(() => {
+    const loadCustom = () => fetch('/countries.json').then(r => {
+      if (!r.ok) throw new Error('custom not found')
+      return r.json()
+    })
     const load110m = () => fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
       .then(r => r.json())
-    
+
+    // 개별 링 단위로 유효성 검증 (날짜변경선 통과 ring 제거)
+    const isValidRing = (ring) => {
+      if (!ring || ring.length < 4) return false
+      const lngs = ring.map(c => c[0])
+      return (Math.max(...lngs) - Math.min(...lngs)) <= 180
+    }
+
     const processGeo = (data) => {
       const fixed = data.features.map(feat => {
         const geom = feat.geometry
+        if (!geom) return feat
         if (geom.type === 'Polygon') {
-          return { ...feat, geometry: { ...geom, coordinates: [geom.coordinates[0]] } }
+          const validRings = geom.coordinates.filter(isValidRing)
+          // 유효 링이 없으면 빈 coordinates로 (원본 feature 유지 시 전 지구 덮는 버그 발생)
+          if (!validRings.length) return { ...feat, geometry: { ...geom, coordinates: [] } }
+          return { ...feat, geometry: { ...geom, coordinates: validRings } }
         }
         if (geom.type === 'MultiPolygon') {
-          return { ...feat, geometry: { ...geom, coordinates: geom.coordinates.map(poly => [poly[0]]) } }
+          const validPolys = geom.coordinates
+            .map(poly => poly.filter(isValidRing))
+            .filter(poly => poly.length > 0)
+          if (!validPolys.length) return { ...feat, geometry: { ...geom, coordinates: [] } }
+          return { ...feat, geometry: { ...geom, coordinates: validPolys } }
         }
         return feat
       })
+      console.log('[ATLAS] Loaded', fixed.length, 'country polygons')
       setCountries(fixed)
     }
-    
+
     // 커스텀 파일 우선 시도, 없으면 110m fallback
-    load110m().then(processGeo).catch(() => {})
+    loadCustom()
+      .then(data => { console.log('[ATLAS] /countries.json loaded'); processGeo(data) })
+      .catch(err => {
+        console.warn('[ATLAS] /countries.json failed, trying 110m fallback:', err.message)
+        load110m()
+          .then(data => { console.log('[ATLAS] 110m fallback loaded'); processGeo(data) })
+          .catch(err2 => console.error('[ATLAS] Both polygon sources failed:', err2))
+      })
   }, [])
 
   // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
@@ -1614,14 +1660,22 @@ function App() {
       .arcAltitude(0.001)
   }, [])
 
-  // Update polygons
+  // Update polygons — effect 분리로 렉 해결
+  // Effect A: countries 변경 시에만 polygonsData 재바인딩 (무거움 - 최소 실행)
+  useEffect(() => {
+    if (!globeRef.current || countries.length === 0) return
+    globeRef.current
+      .polygonsData(countries)
+      .polygonsTransitionDuration(0) // 호버 애니메이션 제거 → 재렌더 최소화
+  }, [countries])
+
+  // Effect B: hover/select/lang 변경 시 accessor만 재설정 (가벼움)
   useEffect(() => {
     if (!globeRef.current || countries.length === 0) return
     const globe = globeRef.current
     const hasSelection = !!selectedCountry
 
     globe
-      .polygonsData(countries)
       .polygonCapColor(feat => {
         const name = feat.properties.NAME
         if (hasSelection) {
@@ -1651,17 +1705,15 @@ function App() {
       })
       .polygonLabel(() => '')
       .onPolygonHover(feat => {
-        // 국가 선택 중에는 다른 나라 호버 완전 차단
         if (hasSelection) return
         setHoveredCountry(feat ? feat.properties.NAME : null)
       })
       .onPolygonClick(feat => {
-        // 국가 선택 중에는 다른 나라 클릭 완전 차단 (국경 근처 도시 오클릭 방지)
         if (hasSelection) return
         if (justClickedCityRef.current) return
         handleCountryClick(feat)
       })
-  }, [countries, hoveredCountry, selectedCountry, lang])
+  }, [hoveredCountry, selectedCountry, lang, countries])
 
 
   // 국가별 최적 줌 레벨 (수동 튜닝)
@@ -2081,7 +2133,7 @@ function App() {
       }
 
       // 2. 사전 데이터 없는 경우 기본 데이터 사용
-      const fallback = DEFAULT_CITY_DATA(cityKey)
+      const fallback = DEFAULT_CITY_DATA(cityKey, lang)
       setCityData(fallback)
       setLoading(false)
       fetchWeather(city.lat, city.lng).then(w => {
@@ -2093,7 +2145,7 @@ function App() {
       setCityData({
         weather: { temp: '—', condition: '—', icon: '🌤️', humidity: '—' },
         description: `${cityKey2}`,
-        spots: DEFAULT_CITY_DATA(cityKey2).spots,
+        spots: DEFAULT_CITY_DATA(cityKey2, lang).spots,
       })
       setLoading(false)
     }
