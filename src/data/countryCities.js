@@ -3,10 +3,10 @@ export const COUNTRY_CITIES = {
   "South Korea": [
     { name:"서울", lat:37.57, lng:126.98, emoji:"🏙️", color:"#e74c3c" },
     { name:"부산", lat:35.18, lng:129.07, emoji:"🌊", color:"#3498db" },
-    { name:"제주", lat:33.5, lng:126.53, emoji:"🌺", color:"#2ecc71" },
+    { name:"제주", lat:33.50, lng:126.53, emoji:"🌺", color:"#2ecc71" },
     { name:"경주", lat:35.85, lng:129.22, emoji:"🏛️", color:"#f39c12" },
     { name:"인천", lat:37.46, lng:126.71, emoji:"✈️", color:"#9b59b6" },
-    { name:"대구", lat:35.87, lng:128.6, emoji:"🍎", color:"#e67e22" },
+    { name:"대구", lat:35.87, lng:128.60, emoji:"🍎", color:"#e67e22" },
     { name:"전주", lat:35.82, lng:127.15, emoji:"🥘", color:"#8e44ad" },
     { name:"강릉", lat:37.75, lng:128.88, emoji:"🏖️", color:"#2980b9" },
     { name:"수원", lat:37.27, lng:127.01, emoji:"🏰", color:"#c0392b" },
@@ -14,47 +14,38 @@ export const COUNTRY_CITIES = {
     { name:"여수", lat:34.74, lng:127.74, emoji:"🌉", color:"#3498db" },
     { name:"속초", lat:38.19, lng:128.59, emoji:"🏔️", color:"#2ecc71" },
     { name:"통영", lat:34.85, lng:128.43, emoji:"🎵", color:"#9b59b6" },
-    { name:"대전", lat:36.35, lng:127.38, emoji:"🔬", color:"#3498db" },
-    { name:"울산", lat:35.54, lng:129.31, emoji:"🏭", color:"#95a5a6" },
-    { name:"창원", lat:35.23, lng:128.68, emoji:"🏞️", color:"#1abc9c" },
-    { name:"춘천", lat:37.88, lng:127.73, emoji:"🍗", color:"#e67e22" },
-    { name:"안동", lat:36.57, lng:128.73, emoji:"🏘️", color:"#8e44ad" },
-    { name:"목포", lat:34.79, lng:126.39, emoji:"🌊", color:"#2980b9" },
-    { name:"포항", lat:36.02, lng:129.37, emoji:"🦀", color:"#e74c3c" },
-    { name:"거제", lat:34.88, lng:128.62, emoji:"⛵", color:"#16a085" },
-    { name:"담양", lat:35.32, lng:126.99, emoji:"🎋", color:"#27ae60" },
-    { name:"공주", lat:36.45, lng:126.96, emoji:"👑", color:"#9b59b6" }
+    { name:"대전", lat:36.35, lng:127.38, emoji:"🔬", color:"#16a085" },
+    { name:"울산", lat:35.54, lng:129.31, emoji:"🏭", color:"#d35400" },
+    { name:"포항", lat:36.02, lng:129.34, emoji:"🌅", color:"#e67e22" },
+    { name:"창원", lat:35.23, lng:128.68, emoji:"🌸", color:"#e91e63" },
+    { name:"안동", lat:36.57, lng:128.73, emoji:"🏯", color:"#8e44ad" },
+    { name:"목포", lat:34.81, lng:126.39, emoji:"⚓", color:"#2980b9" },
+    { name:"공주", lat:36.45, lng:127.12, emoji:"🏯", color:"#c0392b" },
   ],
   "Japan": [
     { name:"도쿄", lat:35.68, lng:139.69, emoji:"🗼", color:"#e74c3c" },
     { name:"교토", lat:35.01, lng:135.77, emoji:"⛩️", color:"#9b59b6" },
-    { name:"오사카", lat:34.69, lng:135.5, emoji:"🏯", color:"#f39c12" },
+    { name:"오사카", lat:34.69, lng:135.50, emoji:"🏯", color:"#f39c12" },
     { name:"삿포로", lat:43.06, lng:141.35, emoji:"❄️", color:"#3498db" },
     { name:"나라", lat:34.68, lng:135.83, emoji:"🦌", color:"#2ecc71" },
     { name:"나고야", lat:35.18, lng:136.91, emoji:"🏯", color:"#e67e22" },
-    { name:"후쿠오카", lat:33.59, lng:130.4, emoji:"🍜", color:"#c0392b" },
+    { name:"후쿠오카", lat:33.59, lng:130.40, emoji:"🍜", color:"#c0392b" },
     { name:"히로시마", lat:34.39, lng:132.45, emoji:"☮️", color:"#8e44ad" },
     { name:"고베", lat:34.69, lng:135.19, emoji:"🥩", color:"#16a085" },
     { name:"오키나와", lat:26.21, lng:127.68, emoji:"🏖️", color:"#2980b9" },
     { name:"가나자와", lat:36.56, lng:136.66, emoji:"🎋", color:"#27ae60" },
     { name:"하코네", lat:35.23, lng:139.02, emoji:"🌋", color:"#e74c3c" },
-    { name:"가마쿠라", lat:35.32, lng:139.55, emoji:"🏛️", color:"#8e44ad" },
-    { name:"나가사키", lat:32.75, lng:129.88, emoji:"⛪", color:"#e74c3c" },
-    { name:"센다이", lat:38.27, lng:140.87, emoji:"🌿", color:"#2ecc71" },
-    { name:"요코하마", lat:35.44, lng:139.64, emoji:"🎡", color:"#3498db" },
-    { name:"니가타", lat:37.92, lng:139.04, emoji:"🌾", color:"#f39c12" },
-    { name:"아오모리", lat:40.82, lng:140.74, emoji:"🍎", color:"#e67e22" },
-    { name:"미야자키", lat:31.91, lng:131.42, emoji:"🌴", color:"#1abc9c" },
-    { name:"마츠야마", lat:33.84, lng:132.77, emoji:"♨️", color:"#9b59b6" },
-    { name:"시코쿠", lat:33.78, lng:133.57, emoji:"🌉", color:"#c0392b" },
-    { name:"교토시", lat:34.68, lng:135.52, emoji:"🏯", color:"#2980b9" },
-    { name:"나가노", lat:36.65, lng:138.18, emoji:"⛷️", color:"#16a085" },
-    { name:"다카마쓰", lat:34.34, lng:134.05, emoji:"🍜", color:"#d35400" },
-    { name:"가고시마", lat:31.6, lng:130.56, emoji:"🌋", color:"#c0392b" },
-    { name:"아키타", lat:39.72, lng:140.1, emoji:"🌾", color:"#9b59b6" }
+    { name:"요코하마", lat:35.44, lng:139.64, emoji:"🌉", color:"#3498db" },
+    { name:"닛코", lat:36.72, lng:139.70, emoji:"⛩️", color:"#f39c12" },
+    { name:"가마쿠라", lat:35.32, lng:139.55, emoji:"🗿", color:"#9b59b6" },
+    { name:"다카야마", lat:36.14, lng:137.25, emoji:"🏘️", color:"#e67e22" },
+    { name:"나가사키", lat:32.75, lng:129.88, emoji:"🌸", color:"#c0392b" },
+    { name:"구마모토", lat:32.80, lng:130.71, emoji:"🐻", color:"#16a085" },
+    { name:"벳푸", lat:33.28, lng:131.50, emoji:"♨️", color:"#e74c3c" },
+    { name:"센다이", lat:38.27, lng:140.87, emoji:"🌿", color:"#27ae60" },
   ],
   "China": [
-    { name:"베이징", lat:39.9, lng:116.41, emoji:"🏯", color:"#e74c3c" },
+    { name:"베이징", lat:39.90, lng:116.41, emoji:"🏯", color:"#e74c3c" },
     { name:"상하이", lat:31.23, lng:121.47, emoji:"🌆", color:"#3498db" },
     { name:"시안", lat:34.34, lng:108.94, emoji:"🏺", color:"#f39c12" },
     { name:"구이린", lat:25.27, lng:110.29, emoji:"⛰️", color:"#2ecc71" },
@@ -64,109 +55,63 @@ export const COUNTRY_CITIES = {
     { name:"리장", lat:26.87, lng:100.22, emoji:"🌸", color:"#c0392b" },
     { name:"황산", lat:30.13, lng:118.17, emoji:"🌄", color:"#e67e22" },
     { name:"홍콩", lat:22.35, lng:114.15, emoji:"🌃", color:"#2980b9" },
-    { name:"마카오", lat:22.2, lng:113.56, emoji:"🎲", color:"#f39c12" },
-    { name:"쑤저우", lat:31.3, lng:120.62, emoji:"🏮", color:"#8e44ad" },
+    { name:"마카오", lat:22.20, lng:113.56, emoji:"🎲", color:"#f39c12" },
+    { name:"쑤저우", lat:31.30, lng:120.62, emoji:"🏮", color:"#8e44ad" },
+    { name:"광저우", lat:23.13, lng:113.26, emoji:"🌃", color:"#c0392b" },
     { name:"선전", lat:22.54, lng:114.06, emoji:"🏙️", color:"#3498db" },
-    { name:"광저우", lat:23.13, lng:113.26, emoji:"🍜", color:"#e74c3c" },
-    { name:"충칭", lat:29.56, lng:106.55, emoji:"🌶️", color:"#e67e22" },
-    { name:"난징", lat:32.06, lng:118.8, emoji:"🏛️", color:"#8e44ad" },
-    { name:"우한", lat:30.59, lng:114.3, emoji:"🌉", color:"#2ecc71" },
-    { name:"다롄", lat:38.91, lng:121.6, emoji:"🌊", color:"#2980b9" },
-    { name:"쿤밍", lat:25.04, lng:102.71, emoji:"🌸", color:"#9b59b6" },
-    { name:"하얼빈", lat:45.8, lng:126.53, emoji:"❄️", color:"#1abc9c" },
-    { name:"라싸", lat:29.65, lng:91.17, emoji:"🏔️", color:"#f39c12" }
+    { name:"충칭", lat:29.56, lng:106.55, emoji:"🌶️", color:"#e74c3c" },
+    { name:"우한", lat:30.59, lng:114.31, emoji:"🌉", color:"#9b59b6" },
+    { name:"칭다오", lat:36.07, lng:120.38, emoji:"🍺", color:"#2ecc71" },
+    { name:"다롄", lat:38.91, lng:121.61, emoji:"🌊", color:"#2980b9" },
+    { name:"하얼빈", lat:45.80, lng:126.54, emoji:"🧊", color:"#16a085" },
+    { name:"톈진", lat:39.34, lng:117.36, emoji:"🥟", color:"#f39c12" },
   ],
   "France": [
     { name:"파리", lat:48.86, lng:2.35, emoji:"🗼", color:"#2ecc71" },
-    { name:"니스", lat:43.72, lng:7.2, emoji:"🌊", color:"#3498db" },
+    { name:"니스", lat:43.72, lng:7.20, emoji:"🌊", color:"#3498db" },
     { name:"리옹", lat:45.75, lng:4.83, emoji:"🍷", color:"#9b59b6" },
     { name:"보르도", lat:44.84, lng:-0.58, emoji:"🍇", color:"#e74c3c" },
-    { name:"마르세유", lat:43.3, lng:5.37, emoji:"⛵", color:"#e67e22" },
+    { name:"마르세유", lat:43.30, lng:5.37, emoji:"⛵", color:"#e67e22" },
     { name:"몽생미셸", lat:48.62, lng:-1.48, emoji:"🏰", color:"#8e44ad" },
     { name:"스트라스부르", lat:48.57, lng:7.65, emoji:"🥨", color:"#16a085" },
     { name:"앙시", lat:45.92, lng:6.08, emoji:"🏔️", color:"#2980b9" },
-    { name:"툴루즈", lat:43.6, lng:1.44, emoji:"✈️", color:"#c0392b" },
-    { name:"낭트", lat:47.22, lng:-1.55, emoji:"🏰", color:"#2ecc71" },
-    { name:"칸", lat:43.55, lng:7.02, emoji:"🎬", color:"#e74c3c" },
-    { name:"릴", lat:50.63, lng:3.06, emoji:"🏛️", color:"#3498db" },
-    { name:"디종", lat:47.32, lng:5.04, emoji:"🍷", color:"#8e44ad" },
-    { name:"아비뇽", lat:43.95, lng:4.81, emoji:"🎭", color:"#f39c12" },
-    { name:"렌", lat:48.11, lng:-1.68, emoji:"🏠", color:"#e67e22" },
-    { name:"콜마르", lat:48.08, lng:7.36, emoji:"🏘️", color:"#9b59b6" },
-    { name:"카르카손", lat:43.21, lng:2.35, emoji:"🏰", color:"#c0392b" },
-    { name:"샤모니", lat:45.92, lng:6.87, emoji:"⛷️", color:"#1abc9c" },
-    { name:"생말로", lat:48.65, lng:-2, emoji:"⛵", color:"#2980b9" },
-    { name:"엑상프로방스", lat:43.53, lng:5.45, emoji:"🎨", color:"#f1c40f" },
-    { name:"몽펠리에", lat:43.61, lng:3.88, emoji:"☀️", color:"#e67e22" }
+    { name:"툴루즈", lat:43.60, lng:1.44, emoji:"✈️", color:"#c0392b" },
   ],
   "Italy": [
-    { name:"로마", lat:41.9, lng:12.5, emoji:"🏛️", color:"#9b59b6" },
+    { name:"로마", lat:41.90, lng:12.50, emoji:"🏛️", color:"#9b59b6" },
     { name:"베네치아", lat:45.44, lng:12.32, emoji:"🚤", color:"#3498db" },
     { name:"피렌체", lat:43.77, lng:11.25, emoji:"🎨", color:"#e74c3c" },
     { name:"밀라노", lat:45.47, lng:9.19, emoji:"👗", color:"#2ecc71" },
     { name:"나폴리", lat:40.85, lng:14.27, emoji:"🍕", color:"#f39c12" },
-    { name:"아말피", lat:40.63, lng:14.6, emoji:"🌊", color:"#16a085" },
-    { name:"시칠리아", lat:37.6, lng:14.02, emoji:"🍋", color:"#e67e22" },
+    { name:"아말피", lat:40.63, lng:14.60, emoji:"🌊", color:"#16a085" },
+    { name:"시칠리아", lat:37.60, lng:14.02, emoji:"🍋", color:"#e67e22" },
     { name:"친퀘테레", lat:44.13, lng:9.67, emoji:"🎨", color:"#8e44ad" },
-    { name:"볼로냐", lat:44.5, lng:11.34, emoji:"🍝", color:"#c0392b" },
+    { name:"볼로냐", lat:44.50, lng:11.34, emoji:"🍝", color:"#c0392b" },
     { name:"시에나", lat:43.32, lng:11.33, emoji:"🏰", color:"#f39c12" },
     { name:"폼페이", lat:40.75, lng:14.49, emoji:"🌋", color:"#7f8c8d" },
-    { name:"토리노", lat:45.07, lng:7.69, emoji:"☕", color:"#8e44ad" },
-    { name:"제노바", lat:44.41, lng:8.93, emoji:"⛵", color:"#3498db" },
-    { name:"팔레르모", lat:38.12, lng:13.36, emoji:"🏛️", color:"#e74c3c" },
-    { name:"바리", lat:41.13, lng:16.87, emoji:"🌊", color:"#2980b9" },
-    { name:"베로나", lat:45.44, lng:10.99, emoji:"💕", color:"#e67e22" },
-    { name:"피사", lat:43.72, lng:10.4, emoji:"🏛️", color:"#f39c12" },
-    { name:"페루자", lat:43.11, lng:12.39, emoji:"🍫", color:"#9b59b6" },
-    { name:"루카", lat:43.84, lng:10.51, emoji:"🏰", color:"#2ecc71" },
-    { name:"마테라", lat:40.67, lng:16.6, emoji:"🏚️", color:"#c0392b" },
-    { name:"트리에스테", lat:45.65, lng:13.77, emoji:"☕", color:"#16a085" }
   ],
   "Spain": [
     { name:"바르셀로나", lat:41.39, lng:2.17, emoji:"🏟️", color:"#3498db" },
-    { name:"마드리드", lat:40.42, lng:-3.7, emoji:"🎨", color:"#e74c3c" },
+    { name:"마드리드", lat:40.42, lng:-3.70, emoji:"🎨", color:"#e74c3c" },
     { name:"세비야", lat:37.39, lng:-5.99, emoji:"💃", color:"#f39c12" },
-    { name:"그라나다", lat:37.18, lng:-3.6, emoji:"🏰", color:"#9b59b6" },
+    { name:"그라나다", lat:37.18, lng:-3.60, emoji:"🏰", color:"#9b59b6" },
     { name:"발렌시아", lat:39.47, lng:-0.38, emoji:"🥘", color:"#e67e22" },
     { name:"빌바오", lat:43.26, lng:-2.93, emoji:"🎭", color:"#16a085" },
     { name:"산세바스티안", lat:43.32, lng:-1.98, emoji:"🍽️", color:"#27ae60" },
     { name:"말라가", lat:36.72, lng:-4.42, emoji:"☀️", color:"#c0392b" },
     { name:"톨레도", lat:39.86, lng:-4.02, emoji:"🗡️", color:"#2980b9" },
-    { name:"산티아고데콤포스텔라", lat:42.87, lng:-8.5, emoji:"⛪", color:"#8e44ad" },
-    { name:"사라고사", lat:41.65, lng:-0.88, emoji:"🏛️", color:"#8e44ad" },
-    { name:"코르도바", lat:37.88, lng:-4.78, emoji:"🕌", color:"#e74c3c" },
-    { name:"세고비아", lat:40.95, lng:-4.12, emoji:"🏰", color:"#f39c12" },
-    { name:"팔마데마요르카", lat:39.57, lng:2.65, emoji:"🏖️", color:"#3498db" },
-    { name:"론다", lat:36.74, lng:-5.17, emoji:"🌉", color:"#e67e22" },
-    { name:"살라만카", lat:40.97, lng:-5.66, emoji:"🏛️", color:"#9b59b6" },
-    { name:"히혼", lat:43.54, lng:-5.66, emoji:"🌊", color:"#2ecc71" },
-    { name:"이비자", lat:38.91, lng:1.43, emoji:"🎶", color:"#1abc9c" },
-    { name:"알리칸테", lat:38.35, lng:-0.48, emoji:"🏖️", color:"#c0392b" },
-    { name:"부르고스", lat:42.34, lng:-3.7, emoji:"⛪", color:"#2980b9" }
+    { name:"산티아고데콤포스텔라", lat:42.87, lng:-8.50, emoji:"⛪", color:"#8e44ad" },
   ],
   "Germany": [
-    { name:"베를린", lat:52.52, lng:13.4, emoji:"🏛️", color:"#3498db" },
+    { name:"베를린", lat:52.52, lng:13.40, emoji:"🏛️", color:"#3498db" },
     { name:"뮌헨", lat:48.14, lng:11.58, emoji:"🍺", color:"#e74c3c" },
     { name:"함부르크", lat:53.55, lng:9.99, emoji:"⚓", color:"#2ecc71" },
     { name:"로텐부르크", lat:49.38, lng:10.18, emoji:"🏰", color:"#f39c12" },
-    { name:"프랑크푸르트", lat:50.11, lng:8.7, emoji:"🏦", color:"#9b59b6" },
+    { name:"프랑크푸르트", lat:50.11, lng:8.70, emoji:"🏦", color:"#9b59b6" },
     { name:"쾰른", lat:50.93, lng:6.96, emoji:"⛪", color:"#e67e22" },
     { name:"드레스덴", lat:51.05, lng:13.74, emoji:"🎭", color:"#8e44ad" },
-    { name:"하이델베르크", lat:49.4, lng:8.69, emoji:"🏰", color:"#16a085" },
-    { name:"퓌센", lat:47.6, lng:10.7, emoji:"🏰", color:"#c0392b" },
-    { name:"슈투트가르트", lat:48.78, lng:9.18, emoji:"🚗", color:"#e74c3c" },
-    { name:"뉘른베르크", lat:49.45, lng:11.08, emoji:"🏰", color:"#f39c12" },
-    { name:"뒤셀도르프", lat:51.23, lng:6.78, emoji:"🎨", color:"#3498db" },
-    { name:"라이프치히", lat:51.34, lng:12.37, emoji:"🎵", color:"#8e44ad" },
-    { name:"하노버", lat:52.37, lng:9.74, emoji:"🏛️", color:"#2ecc71" },
-    { name:"브레멘", lat:53.08, lng:8.8, emoji:"🎭", color:"#e67e22" },
-    { name:"포츠담", lat:52.4, lng:13.07, emoji:"🏰", color:"#9b59b6" },
-    { name:"본", lat:50.73, lng:7.1, emoji:"🎼", color:"#1abc9c" },
-    { name:"바덴바덴", lat:48.76, lng:8.24, emoji:"♨️", color:"#c0392b" },
-    { name:"도르트문트", lat:51.51, lng:7.47, emoji:"⚽", color:"#f1c40f" },
-    { name:"에센", lat:51.46, lng:7.01, emoji:"🏭", color:"#95a5a6" },
-    { name:"프라이부르크", lat:47.99, lng:7.85, emoji:"🌿", color:"#27ae60" },
-    { name:"로스토크", lat:54.09, lng:12.13, emoji:"🚢", color:"#2980b9" }
+    { name:"하이델베르크", lat:49.40, lng:8.69, emoji:"🏰", color:"#16a085" },
+    { name:"퓌센", lat:47.60, lng:10.70, emoji:"🏰", color:"#c0392b" },
   ],
   "United Kingdom": [
     { name:"런던", lat:51.51, lng:-0.13, emoji:"👑", color:"#7c3aed" },
@@ -174,24 +119,11 @@ export const COUNTRY_CITIES = {
     { name:"맨체스터", lat:53.48, lng:-2.24, emoji:"⚽", color:"#e74c3c" },
     { name:"바스", lat:51.38, lng:-2.36, emoji:"🛁", color:"#2ecc71" },
     { name:"옥스퍼드", lat:51.75, lng:-1.26, emoji:"📚", color:"#9b59b6" },
-    { name:"케임브리지", lat:52.2, lng:0.12, emoji:"🎓", color:"#e67e22" },
+    { name:"케임브리지", lat:52.20, lng:0.12, emoji:"🎓", color:"#e67e22" },
     { name:"요크", lat:53.96, lng:-1.08, emoji:"🏛️", color:"#8e44ad" },
     { name:"리버풀", lat:53.41, lng:-2.98, emoji:"🎸", color:"#16a085" },
-    { name:"코츠월즈", lat:51.83, lng:-1.8, emoji:"🌿", color:"#27ae60" },
+    { name:"코츠월즈", lat:51.83, lng:-1.80, emoji:"🌿", color:"#27ae60" },
     { name:"글래스고", lat:55.86, lng:-4.25, emoji:"🏙️", color:"#2980b9" },
-    { name:"브라이턴", lat:50.82, lng:-0.14, emoji:"🏖️", color:"#3498db" },
-    { name:"브리스톨", lat:51.45, lng:-2.59, emoji:"🎨", color:"#e74c3c" },
-    { name:"카디프", lat:51.48, lng:-3.18, emoji:"🏴", color:"#2ecc71" },
-    { name:"벨파스트", lat:54.6, lng:-5.93, emoji:"🍀", color:"#27ae60" },
-    { name:"셰필드", lat:53.38, lng:-1.47, emoji:"🔧", color:"#95a5a6" },
-    { name:"리즈", lat:53.8, lng:-1.55, emoji:"🎭", color:"#8e44ad" },
-    { name:"스트랫퍼드어폰에이번", lat:52.19, lng:-1.71, emoji:"🎭", color:"#9b59b6" },
-    { name:"윈저", lat:51.48, lng:-0.6, emoji:"🏰", color:"#f39c12" },
-    { name:"인버네스", lat:57.48, lng:-4.22, emoji:"🏔️", color:"#1abc9c" },
-    { name:"노팅엄", lat:52.95, lng:-1.15, emoji:"🏹", color:"#e67e22" },
-    { name:"버밍엄", lat:52.49, lng:-1.9, emoji:"🏭", color:"#3498db" },
-    { name:"캔터베리", lat:51.28, lng:1.08, emoji:"⛪", color:"#9b59b6" },
-    { name:"뉴캐슬", lat:54.98, lng:-1.61, emoji:"🌉", color:"#2980b9" }
   ],
   "United States of America": [
     { name:"뉴욕", lat:40.71, lng:-74.01, emoji:"🗽", color:"#3498db" },
@@ -205,7 +137,7 @@ export const COUNTRY_CITIES = {
     { name:"뉴올리언스", lat:29.95, lng:-90.07, emoji:"🎷", color:"#e67e22" },
     { name:"시애틀", lat:47.61, lng:-122.33, emoji:"☕", color:"#2980b9" },
     { name:"하와이", lat:21.31, lng:-157.85, emoji:"🌺", color:"#16a085" },
-    { name:"그랜드캐니언", lat:36.1, lng:-112.11, emoji:"🏜️", color:"#e67e22" },
+    { name:"그랜드캐니언", lat:36.10, lng:-112.11, emoji:"🏜️", color:"#e67e22" },
     { name:"옐로스톤", lat:44.43, lng:-110.59, emoji:"🌋", color:"#27ae60" },
     { name:"샌디에이고", lat:32.72, lng:-117.16, emoji:"🌞", color:"#f39c12" },
     { name:"덴버", lat:39.74, lng:-104.98, emoji:"🏔️", color:"#8B4513" },
@@ -213,7 +145,7 @@ export const COUNTRY_CITIES = {
     { name:"포틀랜드", lat:45.52, lng:-122.68, emoji:"🌲", color:"#27ae60" },
     { name:"피닉스", lat:33.45, lng:-112.07, emoji:"🌵", color:"#e67e22" },
     { name:"올랜도", lat:28.54, lng:-81.38, emoji:"🎡", color:"#9b59b6" },
-    { name:"나이아가라폭포", lat:43.08, lng:-79.07, emoji:"💧", color:"#3498db" }
+    { name:"나이아가라폭포", lat:43.08, lng:-79.07, emoji:"💧", color:"#3498db" },
   ],
   "Australia": [
     { name:"시드니", lat:-33.87, lng:151.21, emoji:"🎭", color:"#1abc9c" },
@@ -223,105 +155,66 @@ export const COUNTRY_CITIES = {
     { name:"브리즈번", lat:-27.47, lng:153.02, emoji:"☀️", color:"#e74c3c" },
     { name:"퍼스", lat:-31.95, lng:115.86, emoji:"🌅", color:"#9b59b6" },
     { name:"골드코스트", lat:-28.02, lng:153.43, emoji:"🏄", color:"#f39c12" },
-    { name:"그레이트배리어리프", lat:-18.29, lng:147.7, emoji:"🐠", color:"#16a085" },
+    { name:"그레이트배리어리프", lat:-18.29, lng:147.70, emoji:"🐠", color:"#16a085" },
     { name:"태즈메이니아", lat:-41.46, lng:145.97, emoji:"🌿", color:"#27ae60" },
-    { name:"애들레이드", lat:-34.93, lng:138.6, emoji:"🍷", color:"#8e44ad" },
-    { name:"캔버라", lat:-35.28, lng:149.13, emoji:"🏛️", color:"#e74c3c" },
-    { name:"다윈", lat:-12.46, lng:130.84, emoji:"🐊", color:"#2ecc71" },
-    { name:"호바트", lat:-42.88, lng:147.33, emoji:"🏔️", color:"#3498db" },
-    { name:"뉴캐슬", lat:-32.93, lng:151.78, emoji:"🏖️", color:"#f39c12" },
-    { name:"바이런베이", lat:-28.64, lng:153.62, emoji:"🏄", color:"#1abc9c" },
-    { name:"앨리스스프링스", lat:-23.7, lng:133.87, emoji:"🏜️", color:"#e67e22" },
-    { name:"블루마운틴", lat:-33.72, lng:150.31, emoji:"🌿", color:"#27ae60" },
-    { name:"선샤인코스트", lat:-26.65, lng:153.07, emoji:"☀️", color:"#f1c40f" },
-    { name:"프레이저섬", lat:-25.24, lng:153.13, emoji:"🏝️", color:"#2980b9" },
-    { name:"필립아일랜드", lat:-38.49, lng:145.23, emoji:"🐧", color:"#9b59b6" },
-    { name:"케언스", lat:-16.92, lng:145.77, emoji:"🤿", color:"#2ecc71" },
-    { name:"태즈매니아", lat:-42.05, lng:146.6, emoji:"🌿", color:"#2980b9" },
-    { name:"브룸", lat:-17.96, lng:122.24, emoji:"🐪", color:"#f39c12" }
   ],
   "Thailand": [
-    { name:"방콕", lat:13.76, lng:100.5, emoji:"🛕", color:"#00bcd4" },
+    { name:"방콕", lat:13.76, lng:100.50, emoji:"🛕", color:"#00bcd4" },
     { name:"치앙마이", lat:18.79, lng:98.98, emoji:"🐘", color:"#2ecc71" },
-    { name:"푸켓", lat:7.89, lng:98.4, emoji:"🏖️", color:"#3498db" },
+    { name:"푸켓", lat:7.89, lng:98.40, emoji:"🏖️", color:"#3498db" },
     { name:"파타야", lat:12.93, lng:100.88, emoji:"🌊", color:"#e74c3c" },
     { name:"코사무이", lat:9.51, lng:100.06, emoji:"🌴", color:"#f39c12" },
     { name:"아유타야", lat:14.35, lng:100.56, emoji:"🏛️", color:"#9b59b6" },
     { name:"크라비", lat:8.09, lng:98.91, emoji:"🏝️", color:"#16a085" },
     { name:"치앙라이", lat:19.91, lng:99.83, emoji:"⛩️", color:"#9b59b6" },
     { name:"코피피", lat:7.74, lng:98.77, emoji:"🐚", color:"#8e44ad" },
-    { name:"코팡안", lat:9.76, lng:100.04, emoji:"🌙", color:"#8e44ad" },
-    { name:"수코타이", lat:17.01, lng:99.82, emoji:"🏛️", color:"#e74c3c" },
-    { name:"카오락", lat:8.67, lng:98.25, emoji:"🏖️", color:"#3498db" },
-    { name:"후아힌", lat:12.57, lng:99.96, emoji:"🏖️", color:"#2ecc71" },
-    { name:"코창", lat:12.07, lng:102.36, emoji:"🐘", color:"#f39c12" },
-    { name:"매홍손", lat:19.3, lng:97.97, emoji:"🌄", color:"#e67e22" },
-    { name:"파이", lat:19.36, lng:98.44, emoji:"🏕️", color:"#1abc9c" },
-    { name:"남차뭄", lat:15.7, lng:100.13, emoji:"🏛️", color:"#9b59b6" },
-    { name:"나콘랏차시마", lat:14.97, lng:102.1, emoji:"🐘", color:"#c0392b" },
-    { name:"칸차나부리", lat:14.02, lng:99.53, emoji:"🌉", color:"#2980b9" },
-    { name:"랑카위", lat:8.1, lng:98.31, emoji:"🏝️", color:"#27ae60" },
-    { name:"끄라비", lat:8.07, lng:98.91, emoji:"🪨", color:"#27ae60" },
-    { name:"나콘라차시마", lat:14.97, lng:102.1, emoji:"🐘", color:"#e67e22" },
-    { name:"깐짜나부리", lat:14.02, lng:99.53, emoji:"🌉", color:"#8e44ad" },
-    { name:"핫야이", lat:7, lng:100.47, emoji:"🛒", color:"#e74c3c" },
-    { name:"수랏타니", lat:9.14, lng:99.33, emoji:"🌴", color:"#2980b9" },
-    { name:"우본랏차타니", lat:15.25, lng:104.85, emoji:"🕯️", color:"#c0392b" },
-    { name:"람빵", lat:18.29, lng:99.51, emoji:"🏮", color:"#2ecc71" }
+    { name:"수코타이", lat:17.02, lng:99.82, emoji:"🏛️", color:"#d35400" },
+    { name:"깐차나부리", lat:14.02, lng:99.53, emoji:"🚂", color:"#16a085" },
+    { name:"후아힌", lat:12.57, lng:99.96, emoji:"🏖️", color:"#2980b9" },
+    { name:"코타오", lat:10.10, lng:99.83, emoji:"🐢", color:"#2ecc71" },
+    { name:"코팡안", lat:9.72, lng:100.01, emoji:"🌕", color:"#f39c12" },
+    { name:"코창", lat:12.05, lng:102.33, emoji:"🏝️", color:"#27ae60" },
+    { name:"코란타", lat:7.65, lng:99.08, emoji:"🌴", color:"#e67e22" },
+    { name:"람빵", lat:18.29, lng:99.49, emoji:"🐎", color:"#9b59b6" },
+    { name:"핏사눌로크", lat:16.83, lng:100.26, emoji:"🙏", color:"#e74c3c" },
+    { name:"부리람", lat:14.99, lng:103.10, emoji:"⚽", color:"#c0392b" },
+    { name:"매홍손", lat:19.30, lng:97.98, emoji:"🏔️", color:"#16a085" },
   ],
   "India": [
     { name:"뭄바이", lat:19.08, lng:72.88, emoji:"🌆", color:"#b45309" },
     { name:"뉴델리", lat:28.61, lng:77.21, emoji:"🕌", color:"#e74c3c" },
     { name:"아그라", lat:27.18, lng:78.02, emoji:"🕌", color:"#f39c12" },
     { name:"바라나시", lat:25.32, lng:83.01, emoji:"🙏", color:"#9b59b6" },
-    { name:"고아", lat:15.3, lng:74.09, emoji:"🏖️", color:"#2ecc71" },
+    { name:"고아", lat:15.30, lng:74.09, emoji:"🏖️", color:"#2ecc71" },
     { name:"자이푸르", lat:26.91, lng:75.79, emoji:"🏰", color:"#e67e22" },
     { name:"우다이푸르", lat:24.57, lng:73.68, emoji:"🏯", color:"#8e44ad" },
     { name:"콜카타", lat:22.57, lng:88.36, emoji:"🌸", color:"#16a085" },
     { name:"케랄라", lat:10.85, lng:76.27, emoji:"🌴", color:"#27ae60" },
     { name:"암리차르", lat:31.63, lng:74.87, emoji:"🛕", color:"#f39c12" },
-    { name:"첸나이", lat:13.08, lng:80.27, emoji:"🏛️", color:"#e74c3c" },
-    { name:"방갈로르", lat:12.97, lng:77.59, emoji:"💻", color:"#3498db" },
-    { name:"하이데라바드", lat:17.38, lng:78.49, emoji:"🕌", color:"#8e44ad" },
-    { name:"조드푸르", lat:26.29, lng:73.02, emoji:"🏰", color:"#2980b9" },
-    { name:"다르질링", lat:27.04, lng:88.26, emoji:"🍵", color:"#2ecc71" },
-    { name:"리시케시", lat:30.09, lng:78.27, emoji:"🧘", color:"#f39c12" },
-    { name:"코친", lat:9.93, lng:76.27, emoji:"🌴", color:"#1abc9c" },
-    { name:"마이소르", lat:12.3, lng:76.66, emoji:"🏛️", color:"#9b59b6" },
-    { name:"푸네", lat:18.52, lng:73.86, emoji:"🎓", color:"#e67e22" },
-    { name:"시킴", lat:27.33, lng:88.62, emoji:"🏔️", color:"#27ae60" },
-    { name:"코치", lat:9.97, lng:76.27, emoji:"🚢", color:"#8e44ad" },
-    { name:"럭나우", lat:26.85, lng:80.95, emoji:"🏛️", color:"#c0392b" }
+    { name:"벵갈루루", lat:12.97, lng:77.59, emoji:"💻", color:"#3498db" },
+    { name:"첸나이", lat:13.08, lng:80.27, emoji:"🏖️", color:"#e67e22" },
+    { name:"하이데라바드", lat:17.39, lng:78.49, emoji:"💎", color:"#9b59b6" },
+    { name:"다르질링", lat:27.04, lng:88.26, emoji:"🍵", color:"#16a085" },
+    { name:"시믈라", lat:31.10, lng:77.17, emoji:"🏔️", color:"#2980b9" },
+    { name:"리시케시", lat:30.09, lng:78.27, emoji:"🧘", color:"#27ae60" },
+    { name:"함피", lat:15.33, lng:76.46, emoji:"🗿", color:"#c0392b" },
+    { name:"조드푸르", lat:26.24, lng:73.02, emoji:"💙", color:"#2980b9" },
+    { name:"푸시카르", lat:26.49, lng:74.55, emoji:"🐫", color:"#f39c12" },
+    { name:"다람살라", lat:32.22, lng:76.32, emoji:"☸️", color:"#e74c3c" },
   ],
   "United Arab Emirates": [
-    { name:"두바이", lat:25.2, lng:55.27, emoji:"🏗️", color:"#f39c12" },
+    { name:"두바이", lat:25.20, lng:55.27, emoji:"🏗️", color:"#f39c12" },
     { name:"아부다비", lat:24.47, lng:54.37, emoji:"🕌", color:"#3498db" },
-    { name:"샤르자", lat:25.36, lng:55.42, emoji:"🏺", color:"#2ecc71" }
+    { name:"샤르자", lat:25.36, lng:55.42, emoji:"🏺", color:"#2ecc71" },
   ],
   "Turkey": [
     { name:"이스탄불", lat:41.01, lng:28.98, emoji:"🕌", color:"#b45309" },
     { name:"카파도키아", lat:38.64, lng:34.83, emoji:"🎈", color:"#e74c3c" },
     { name:"파묵칼레", lat:37.92, lng:29.12, emoji:"💎", color:"#3498db" },
-    { name:"안탈리아", lat:36.9, lng:30.7, emoji:"🌊", color:"#2ecc71" },
+    { name:"안탈리아", lat:36.90, lng:30.70, emoji:"🌊", color:"#2ecc71" },
     { name:"에페소", lat:37.94, lng:27.34, emoji:"🏛️", color:"#9b59b6" },
     { name:"보드룸", lat:37.03, lng:27.43, emoji:"⛵", color:"#8e44ad" },
-    { name:"트라브존", lat:41, lng:39.72, emoji:"🌿", color:"#16a085" },
-    { name:"앙카라", lat:39.93, lng:32.85, emoji:"🏛️", color:"#e74c3c" },
-    { name:"이즈미르", lat:38.42, lng:27.14, emoji:"🌊", color:"#3498db" },
-    { name:"부르사", lat:40.18, lng:29.06, emoji:"🌿", color:"#2ecc71" },
-    { name:"안카라", lat:36.88, lng:30.69, emoji:"🏖️", color:"#f39c12" },
-    { name:"페티예", lat:36.62, lng:29.12, emoji:"🪂", color:"#1abc9c" },
-    { name:"마르딘", lat:37.31, lng:40.73, emoji:"🏛️", color:"#8e44ad" },
-    { name:"가지안테프", lat:37.07, lng:37.38, emoji:"🍖", color:"#e67e22" },
-    { name:"사프란볼루", lat:41.25, lng:32.69, emoji:"🏘️", color:"#9b59b6" },
-    { name:"콘야", lat:37.87, lng:32.48, emoji:"🕌", color:"#c0392b" },
-    { name:"시바스", lat:39.75, lng:37.01, emoji:"🏔️", color:"#2980b9" },
-    { name:"아다나", lat:37, lng:35.33, emoji:"🌶️", color:"#d35400" },
-    { name:"디야르바크르", lat:37.91, lng:40.22, emoji:"🏰", color:"#27ae60" },
-    { name:"샨르우르파", lat:37.16, lng:38.79, emoji:"🕌", color:"#f1c40f" },
-    { name:"가지안텝", lat:37.07, lng:37.38, emoji:"🍢", color:"#e67e22" },
-    { name:"에페소스", lat:37.94, lng:27.34, emoji:"🏛️", color:"#c0392b" },
-    { name:"반", lat:38.49, lng:43.38, emoji:"🏔️", color:"#c0392b" }
+    { name:"트라브존", lat:41.00, lng:39.72, emoji:"🌿", color:"#16a085" },
   ],
   "Greece": [
     { name:"산토리니", lat:36.39, lng:25.46, emoji:"🏛️", color:"#1e40af" },
@@ -331,44 +224,22 @@ export const COUNTRY_CITIES = {
     { name:"로도스", lat:36.43, lng:28.22, emoji:"🌹", color:"#f39c12" },
     { name:"코르푸", lat:39.62, lng:19.92, emoji:"🏝️", color:"#9b59b6" },
     { name:"메테오라", lat:39.72, lng:21.63, emoji:"🏔️", color:"#8e44ad" },
-    { name:"테살로니키", lat:40.64, lng:22.94, emoji:"🏛️", color:"#e74c3c" },
-    { name:"델피", lat:38.48, lng:22.5, emoji:"⛰️", color:"#8e44ad" },
-    { name:"파트라", lat:38.25, lng:21.73, emoji:"🏛️", color:"#3498db" },
-    { name:"나프플리오", lat:37.57, lng:22.8, emoji:"🏰", color:"#f39c12" },
-    { name:"자킨토스", lat:37.79, lng:20.9, emoji:"🏖️", color:"#2ecc71" },
-    { name:"케팔로니아", lat:38.18, lng:20.49, emoji:"🏝️", color:"#1abc9c" },
-    { name:"요안니나", lat:39.66, lng:20.85, emoji:"🏔️", color:"#e67e22" },
-    { name:"낙소스", lat:37.11, lng:25.38, emoji:"🌊", color:"#2980b9" },
-    { name:"히오스", lat:38.37, lng:26.14, emoji:"🏝️", color:"#9b59b6" },
-    { name:"미스트라스", lat:37.08, lng:22.37, emoji:"🏛️", color:"#c0392b" },
-    { name:"올림피아", lat:37.64, lng:21.63, emoji:"🏛️", color:"#f1c40f" },
-    { name:"할키디키", lat:40.3, lng:23.5, emoji:"🏖️", color:"#27ae60" },
-    { name:"파로스", lat:37.02, lng:25.15, emoji:"🌅", color:"#d35400" },
-    { name:"이라클리온", lat:35.34, lng:25.13, emoji:"🏛️", color:"#e74c3c" },
-    { name:"나플리오", lat:37.57, lng:22.8, emoji:"🏰", color:"#9b59b6" },
-    { name:"칼람바카", lat:39.71, lng:21.63, emoji:"⛰️", color:"#27ae60" },
-    { name:"하니아", lat:35.51, lng:24.02, emoji:"⚓", color:"#2980b9" },
-    { name:"카바라", lat:40.94, lng:24.41, emoji:"🏖️", color:"#16a085" },
-    { name:"볼로스", lat:39.36, lng:22.94, emoji:"⛵", color:"#8e44ad" },
-    { name:"코스", lat:36.89, lng:27.09, emoji:"🏛️", color:"#c0392b" },
-    { name:"스파르타", lat:37.07, lng:22.43, emoji:"⚔️", color:"#1abc9c" },
-    { name:"이오아니나", lat:39.67, lng:20.85, emoji:"🏔️", color:"#e74c3c" }
   ],
   "Egypt": [
     { name:"카이로", lat:30.04, lng:31.24, emoji:"🔺", color:"#e67e22" },
     { name:"룩소르", lat:25.69, lng:32.64, emoji:"🏺", color:"#f39c12" },
-    { name:"아스완", lat:24.09, lng:32.9, emoji:"⛵", color:"#e74c3c" },
-    { name:"알렉산드리아", lat:31.2, lng:29.92, emoji:"📚", color:"#3498db" },
+    { name:"아스완", lat:24.09, lng:32.90, emoji:"⛵", color:"#e74c3c" },
+    { name:"알렉산드리아", lat:31.20, lng:29.92, emoji:"📚", color:"#3498db" },
     { name:"후르가다", lat:27.26, lng:33.81, emoji:"🐠", color:"#2ecc71" },
-    { name:"샤름엘셰이크", lat:27.91, lng:34.33, emoji:"🤿", color:"#9b59b6" }
+    { name:"샤름엘셰이크", lat:27.91, lng:34.33, emoji:"🤿", color:"#9b59b6" },
   ],
   "Morocco": [
     { name:"마라케시", lat:31.63, lng:-7.99, emoji:"🕌", color:"#e74c3c" },
-    { name:"페스", lat:34.04, lng:-5, emoji:"🏺", color:"#f39c12" },
+    { name:"페스", lat:34.04, lng:-5.00, emoji:"🏺", color:"#f39c12" },
     { name:"카사블랑카", lat:33.59, lng:-7.62, emoji:"🌆", color:"#3498db" },
     { name:"셰프샤우엔", lat:35.17, lng:-5.27, emoji:"💙", color:"#2980b9" },
     { name:"에사우이라", lat:31.51, lng:-9.77, emoji:"⛵", color:"#2ecc71" },
-    { name:"메르주가", lat:31.1, lng:-4.01, emoji:"🐪", color:"#e67e22" }
+    { name:"메르주가", lat:31.10, lng:-4.01, emoji:"🐪", color:"#e67e22" },
   ],
   "Vietnam": [
     { name:"하노이", lat:21.03, lng:105.85, emoji:"🏛️", color:"#e74c3c" },
@@ -376,149 +247,99 @@ export const COUNTRY_CITIES = {
     { name:"하롱베이", lat:20.91, lng:107.18, emoji:"⛵", color:"#2ecc71" },
     { name:"호이안", lat:15.88, lng:108.33, emoji:"🏮", color:"#f39c12" },
     { name:"다낭", lat:16.07, lng:108.22, emoji:"🌊", color:"#9b59b6" },
-    { name:"후에", lat:16.46, lng:107.6, emoji:"🏯", color:"#e67e22" },
+    { name:"후에", lat:16.46, lng:107.60, emoji:"🏯", color:"#e67e22" },
     { name:"사파", lat:22.34, lng:103.84, emoji:"🏔️", color:"#27ae60" },
     { name:"푸꾸옥", lat:10.29, lng:103.97, emoji:"🏝️", color:"#16a085" },
     { name:"나트랑", lat:12.24, lng:109.19, emoji:"🏖️", color:"#3498db" },
     { name:"닌빈", lat:20.25, lng:105.97, emoji:"⛵", color:"#2ecc71" },
-    { name:"달랏", lat:11.94, lng:108.44, emoji:"🌸", color:"#9b59b6" },
-    { name:"하이퐁", lat:20.86, lng:106.68, emoji:"⚓", color:"#c0392b" },
-    { name:"칸토", lat:10.04, lng:105.79, emoji:"🚣", color:"#8e44ad" },
-    { name:"퀴논", lat:13.77, lng:109.22, emoji:"🏖️", color:"#f39c12" },
-    { name:"빈증", lat:11.33, lng:106.6, emoji:"🏭", color:"#e67e22" },
-    { name:"붕따우", lat:10.35, lng:107.08, emoji:"🌅", color:"#2980b9" },
-    { name:"꽝빈", lat:17.47, lng:106.6, emoji:"🏞️", color:"#27ae60" },
-    { name:"떠이닌", lat:11.31, lng:106.1, emoji:"🏛️", color:"#e74c3c" },
-    { name:"하띤", lat:18.34, lng:105.91, emoji:"🌿", color:"#f39c12" },
-    { name:"쯔엉미", lat:15.53, lng:108.02, emoji:"🎨", color:"#8e44ad" }
+    { name:"달랏", lat:11.94, lng:108.44, emoji:"🌸", color:"#e91e63" },
+    { name:"판티엣", lat:10.93, lng:108.10, emoji:"🏖️", color:"#f39c12" },
+    { name:"무이네", lat:10.93, lng:108.29, emoji:"🏜️", color:"#e67e22" },
+    { name:"꼰다오", lat:8.69, lng:106.61, emoji:"🐢", color:"#16a085" },
+    { name:"하이퐁", lat:20.84, lng:106.68, emoji:"⚓", color:"#2980b9" },
+    { name:"깐터", lat:10.04, lng:105.78, emoji:"🛶", color:"#27ae60" },
+    { name:"동호이", lat:17.47, lng:106.60, emoji:"🪨", color:"#8e44ad" },
+    { name:"붕따우", lat:10.35, lng:107.08, emoji:"🌊", color:"#c0392b" },
+    { name:"반메투옷", lat:12.67, lng:108.04, emoji:"☕", color:"#795548" },
+    { name:"꾸이년", lat:13.77, lng:109.22, emoji:"🏖️", color:"#3498db" },
   ],
   "Indonesia": [
     { name:"발리", lat:-8.34, lng:115.09, emoji:"🌴", color:"#2ecc71" },
     { name:"자카르타", lat:-6.21, lng:106.85, emoji:"🏙️", color:"#3498db" },
-    { name:"족자카르타", lat:-7.8, lng:110.36, emoji:"🏛️", color:"#f39c12" },
+    { name:"족자카르타", lat:-7.80, lng:110.36, emoji:"🏛️", color:"#f39c12" },
     { name:"코모도", lat:-8.55, lng:119.49, emoji:"🦎", color:"#2ecc71" },
     { name:"롬복", lat:-8.57, lng:116.36, emoji:"🌋", color:"#e74c3c" },
-    { name:"보로부두르", lat:-7.61, lng:110.2, emoji:"🕌", color:"#e67e22" },
+    { name:"보로부두르", lat:-7.61, lng:110.20, emoji:"🕌", color:"#e67e22" },
     { name:"라자암팟", lat:-1.08, lng:130.87, emoji:"🐠", color:"#16a085" },
-    { name:"수라바야", lat:-7.25, lng:112.75, emoji:"🏙️", color:"#e74c3c" },
-    { name:"반둥", lat:-6.91, lng:107.61, emoji:"🌋", color:"#3498db" },
-    { name:"메단", lat:3.6, lng:98.67, emoji:"🌿", color:"#2ecc71" },
-    { name:"우붓", lat:-8.51, lng:115.26, emoji:"🌾", color:"#f39c12" },
-    { name:"기리트라왕안", lat:-8.35, lng:116.04, emoji:"🏝️", color:"#1abc9c" },
-    { name:"세마랑", lat:-6.97, lng:110.42, emoji:"🏛️", color:"#8e44ad" },
-    { name:"마카사르", lat:-5.14, lng:119.43, emoji:"🌊", color:"#2980b9" },
-    { name:"토바호수", lat:2.62, lng:98.83, emoji:"🏞️", color:"#e67e22" },
-    { name:"플로레스", lat:-8.46, lng:121.38, emoji:"🏔️", color:"#9b59b6" },
-    { name:"부킷라왕", lat:-0.3, lng:100.37, emoji:"🌿", color:"#27ae60" },
-    { name:"마날도", lat:1.47, lng:124.84, emoji:"🤿", color:"#c0392b" },
-    { name:"솔로", lat:-7.58, lng:110.82, emoji:"🏛️", color:"#f1c40f" },
-    { name:"빈탄", lat:1.07, lng:104.52, emoji:"🏖️", color:"#d35400" },
-    { name:"만도", lat:1.47, lng:124.84, emoji:"🤿", color:"#2980b9" },
-    { name:"라부안바조", lat:-8.49, lng:119.89, emoji:"🐉", color:"#e67e22" },
-    { name:"부킷팅기", lat:-0.31, lng:100.37, emoji:"🏔️", color:"#16a085" },
-    { name:"토라자", lat:-3.07, lng:119.85, emoji:"🏘️", color:"#9b59b6" },
-    { name:"팔렘방", lat:-2.99, lng:104.76, emoji:"🏯", color:"#2ecc71" },
-    { name:"말랑", lat:-7.98, lng:112.63, emoji:"🍎", color:"#1abc9c" }
   ],
   "Malaysia": [
-    { name:"쿠알라룸푸르", lat:3.15, lng:101.7, emoji:"🏙️", color:"#3498db" },
+    { name:"쿠알라룸푸르", lat:3.15, lng:101.70, emoji:"🏙️", color:"#3498db" },
     { name:"페낭", lat:5.41, lng:100.33, emoji:"🍜", color:"#e74c3c" },
     { name:"코타키나발루", lat:5.98, lng:116.07, emoji:"🏔️", color:"#2ecc71" },
-    { name:"랑카위", lat:6.35, lng:99.8, emoji:"🏝️", color:"#f39c12" },
-    { name:"말라카", lat:2.19, lng:102.25, emoji:"🏛️", color:"#9b59b6" }
+    { name:"랑카위", lat:6.35, lng:99.80, emoji:"🏝️", color:"#f39c12" },
+    { name:"말라카", lat:2.19, lng:102.25, emoji:"🏛️", color:"#9b59b6" },
   ],
   "Singapore": [
-    { name:"싱가포르", lat:1.36, lng:103.82, emoji:"🦁", color:"#991b1b" }
+    { name:"싱가포르", lat:1.36, lng:103.82, emoji:"🦁", color:"#991b1b" },
   ],
   "Cambodia": [
     { name:"씨엠립", lat:13.37, lng:103.87, emoji:"🏛️", color:"#e74c3c" },
     { name:"프놈펜", lat:11.56, lng:104.93, emoji:"🏙️", color:"#3498db" },
-    { name:"시아누크빌", lat:10.63, lng:103.5, emoji:"🏖️", color:"#2ecc71" }
+    { name:"시아누크빌", lat:10.63, lng:103.50, emoji:"🏖️", color:"#2ecc71" },
   ],
   "Myanmar": [
     { name:"양곤", lat:16.87, lng:96.19, emoji:"🛕", color:"#f39c12" },
     { name:"바간", lat:21.17, lng:94.86, emoji:"🏯", color:"#e74c3c" },
     { name:"만달레이", lat:21.97, lng:96.08, emoji:"🌉", color:"#9b59b6" },
-    { name:"인레호수", lat:20.53, lng:96.9, emoji:"🚣", color:"#3498db" }
+    { name:"인레호수", lat:20.53, lng:96.90, emoji:"🚣", color:"#3498db" },
   ],
   "Nepal": [
-    { name:"카트만두", lat:27.7, lng:85.32, emoji:"🕌", color:"#e74c3c" },
+    { name:"카트만두", lat:27.70, lng:85.32, emoji:"🕌", color:"#e74c3c" },
     { name:"포카라", lat:28.21, lng:83.99, emoji:"🏔️", color:"#3498db" },
     { name:"치트완", lat:27.52, lng:84.35, emoji:"🦏", color:"#2ecc71" },
-    { name:"룸비니", lat:27.48, lng:83.28, emoji:"🙏", color:"#f39c12" }
+    { name:"룸비니", lat:27.48, lng:83.28, emoji:"🙏", color:"#f39c12" },
   ],
   "Sri Lanka": [
     { name:"콜롬보", lat:6.93, lng:79.85, emoji:"🌿", color:"#2ecc71" },
     { name:"캔디", lat:7.29, lng:80.63, emoji:"🐘", color:"#e74c3c" },
     { name:"갈레", lat:6.03, lng:80.22, emoji:"🏰", color:"#3498db" },
     { name:"시기리야", lat:7.96, lng:80.76, emoji:"🦁", color:"#f39c12" },
-    { name:"누와라엘리야", lat:6.97, lng:80.78, emoji:"🍵", color:"#9b59b6" }
+    { name:"누와라엘리야", lat:6.97, lng:80.78, emoji:"🍵", color:"#9b59b6" },
   ],
   "Philippines": [
-    { name:"마닐라", lat:14.6, lng:120.98, emoji:"🏙️", color:"#e74c3c" },
+    { name:"마닐라", lat:14.60, lng:120.98, emoji:"🏙️", color:"#e74c3c" },
     { name:"팔라완", lat:9.84, lng:118.74, emoji:"🏝️", color:"#3498db" },
     { name:"보라카이", lat:11.97, lng:121.92, emoji:"🌴", color:"#f39c12" },
     { name:"세부", lat:10.32, lng:123.89, emoji:"🐬", color:"#2ecc71" },
-    { name:"시아르가오", lat:9.85, lng:126.05, emoji:"🏄", color:"#9b59b6" }
+    { name:"시아르가오", lat:9.85, lng:126.05, emoji:"🏄", color:"#9b59b6" },
   ],
   "Portugal": [
     { name:"리스본", lat:38.72, lng:-9.14, emoji:"🏙️", color:"#92400e" },
     { name:"포르투", lat:41.15, lng:-8.61, emoji:"🍷", color:"#e74c3c" },
-    { name:"신트라", lat:38.8, lng:-9.39, emoji:"🏰", color:"#2ecc71" },
+    { name:"신트라", lat:38.80, lng:-9.39, emoji:"🏰", color:"#2ecc71" },
     { name:"알가르브", lat:37.09, lng:-8.23, emoji:"🌊", color:"#3498db" },
-    { name:"코임브라", lat:40.2, lng:-8.41, emoji:"📚", color:"#e67e22" },
+    { name:"코임브라", lat:40.20, lng:-8.41, emoji:"📚", color:"#e67e22" },
     { name:"마데이라", lat:32.65, lng:-16.91, emoji:"🌺", color:"#8e44ad" },
-    { name:"에보라", lat:38.57, lng:-7.91, emoji:"🏛️", color:"#f39c12" },
-    { name:"브라가", lat:41.55, lng:-8.43, emoji:"⛪", color:"#27ae60" },
-    { name:"파로", lat:37.02, lng:-7.94, emoji:"🏖️", color:"#3498db" },
-    { name:"기마랑이스", lat:41.44, lng:-8.29, emoji:"🏰", color:"#9b59b6" },
-    { name:"아베이루", lat:40.64, lng:-8.65, emoji:"🚣", color:"#2980b9" },
-    { name:"비제우", lat:40.66, lng:-7.91, emoji:"🌿", color:"#2ecc71" },
-    { name:"라고스", lat:37.1, lng:-8.67, emoji:"🏖️", color:"#e67e22" },
-    { name:"오비두스", lat:39.36, lng:-9.16, emoji:"🏘️", color:"#8e44ad" },
-    { name:"나자레", lat:39.6, lng:-9.07, emoji:"🌊", color:"#c0392b" },
-    { name:"세투발", lat:38.52, lng:-8.89, emoji:"🐬", color:"#16a085" },
-    { name:"토마르", lat:39.6, lng:-8.41, emoji:"⚔️", color:"#1abc9c" },
-    { name:"몬산투", lat:40.04, lng:-7.11, emoji:"🪨", color:"#e74c3c" },
-    { name:"비아나두카스텔루", lat:41.69, lng:-8.83, emoji:"🏰", color:"#3498db" },
-    { name:"레이리아", lat:39.74, lng:-8.81, emoji:"🏛️", color:"#e74c3c" }
   ],
   "Netherlands": [
-    { name:"암스테르담", lat:52.37, lng:4.9, emoji:"🚲", color:"#c2410c" },
+    { name:"암스테르담", lat:52.37, lng:4.90, emoji:"🚲", color:"#c2410c" },
     { name:"로테르담", lat:51.92, lng:4.48, emoji:"🌉", color:"#3498db" },
     { name:"헤이그", lat:52.08, lng:4.31, emoji:"⚖️", color:"#2ecc71" },
     { name:"위트레흐트", lat:52.09, lng:5.12, emoji:"⛪", color:"#9b59b6" },
-    { name:"마스트리흐트", lat:50.86, lng:5.7, emoji:"🍷", color:"#8e44ad" },
-    { name:"델프트", lat:52.01, lng:4.36, emoji:"🏛️", color:"#3498db" },
-    { name:"하를렘", lat:52.38, lng:4.64, emoji:"🌷", color:"#e74c3c" },
-    { name:"레이든", lat:52.16, lng:4.49, emoji:"🎓", color:"#8e44ad" },
-    { name:"흐로닝언", lat:53.22, lng:6.57, emoji:"🏛️", color:"#2ecc71" },
-    { name:"에인트호번", lat:51.44, lng:5.47, emoji:"💡", color:"#f39c12" },
-    { name:"브레다", lat:51.59, lng:4.78, emoji:"🏰", color:"#e67e22" },
-    { name:"틸뷔르흐", lat:51.56, lng:5.09, emoji:"🏭", color:"#95a5a6" },
-    { name:"잔세스한스", lat:52.47, lng:4.82, emoji:"🌬️", color:"#1abc9c" },
-    { name:"히트호른", lat:52.72, lng:6.08, emoji:"🚣", color:"#2980b9" },
-    { name:"아른헴", lat:51.98, lng:5.91, emoji:"🌳", color:"#27ae60" },
-    { name:"도르드레흐트", lat:51.81, lng:4.67, emoji:"⛵", color:"#9b59b6" },
-    { name:"미들뷔르흐", lat:51.5, lng:3.61, emoji:"🏛️", color:"#c0392b" },
-    { name:"알크마르", lat:52.63, lng:4.75, emoji:"🧀", color:"#f1c40f" },
-    { name:"아메르스포르트", lat:52.16, lng:5.39, emoji:"🏰", color:"#d35400" },
-    { name:"캄펜", lat:52.55, lng:5.91, emoji:"🏘️", color:"#16a085" },
-    { name:"잔세스칸스", lat:52.47, lng:4.77, emoji:"🌬️", color:"#1abc9c" },
-    { name:"킨더다이크", lat:51.88, lng:4.63, emoji:"💨", color:"#3498db" }
+    { name:"마스트리흐트", lat:50.86, lng:5.70, emoji:"🍷", color:"#8e44ad" },
   ],
   "Czechia": [
     { name:"프라하", lat:50.08, lng:14.44, emoji:"🏰", color:"#065f46" },
     { name:"체스키크룸로프", lat:48.82, lng:14.32, emoji:"🏯", color:"#e74c3c" },
     { name:"브르노", lat:49.19, lng:16.61, emoji:"🏙️", color:"#3498db" },
-    { name:"카를로비바리", lat:50.23, lng:12.88, emoji:"♨️", color:"#3498db" }
+    { name:"카를로비바리", lat:50.23, lng:12.88, emoji:"♨️", color:"#3498db" },
   ],
   "Austria": [
     { name:"빈", lat:48.22, lng:16.35, emoji:"🎵", color:"#5b21b6" },
-    { name:"잘츠부르크", lat:47.8, lng:13.04, emoji:"🎶", color:"#3498db" },
+    { name:"잘츠부르크", lat:47.80, lng:13.04, emoji:"🎶", color:"#3498db" },
     { name:"인스브루크", lat:47.27, lng:11.39, emoji:"⛷️", color:"#2ecc71" },
     { name:"할슈타트", lat:47.56, lng:13.65, emoji:"🏔️", color:"#e74c3c" },
-    { name:"그라츠", lat:47.08, lng:15.43, emoji:"🏛️", color:"#f39c12" }
+    { name:"그라츠", lat:47.08, lng:15.43, emoji:"🏛️", color:"#f39c12" },
   ],
   "Switzerland": [
     { name:"취리히", lat:47.38, lng:8.54, emoji:"🏦", color:"#e74c3c" },
@@ -527,41 +348,24 @@ export const COUNTRY_CITIES = {
     { name:"루체른", lat:47.05, lng:8.31, emoji:"🌉", color:"#9b59b6" },
     { name:"체르마트", lat:46.05, lng:7.75, emoji:"⛷️", color:"#e67e22" },
     { name:"베른", lat:46.95, lng:7.44, emoji:"🐻", color:"#8e44ad" },
-    { name:"바젤", lat:47.56, lng:7.59, emoji:"🎨", color:"#e74c3c" },
-    { name:"로잔", lat:46.52, lng:6.63, emoji:"🏛️", color:"#3498db" },
-    { name:"생모리츠", lat:46.5, lng:9.84, emoji:"⛷️", color:"#1abc9c" },
-    { name:"몽트뢰", lat:46.43, lng:6.91, emoji:"🎵", color:"#8e44ad" },
-    { name:"다보스", lat:46.8, lng:9.84, emoji:"🏔️", color:"#2ecc71" },
-    { name:"루가노", lat:46, lng:8.95, emoji:"🌴", color:"#f39c12" },
-    { name:"그린델발트", lat:46.62, lng:8.04, emoji:"🏔️", color:"#e67e22" },
-    { name:"튠", lat:46.75, lng:7.63, emoji:"🏞️", color:"#2980b9" },
-    { name:"샤프하우젠", lat:47.7, lng:8.63, emoji:"🌊", color:"#9b59b6" },
-    { name:"뇌샤텔", lat:46.99, lng:6.93, emoji:"⌚", color:"#c0392b" },
-    { name:"아펜첼", lat:47.33, lng:9.41, emoji:"🏘️", color:"#27ae60" },
-    { name:"빈터투어", lat:47.5, lng:8.72, emoji:"🏛️", color:"#f1c40f" },
-    { name:"시옹", lat:46.23, lng:7.36, emoji:"🏰", color:"#d35400" },
-    { name:"프리부르", lat:46.81, lng:7.15, emoji:"🏰", color:"#16a085" },
-    { name:"툰", lat:46.76, lng:7.63, emoji:"🌊", color:"#8e44ad" },
-    { name:"브리엔츠", lat:46.75, lng:8.04, emoji:"🪵", color:"#1abc9c" },
-    { name:"솔로투른", lat:47.21, lng:7.54, emoji:"⛪", color:"#3498db" }
   ],
   "Hungary": [
-    { name:"부다페스트", lat:47.5, lng:19.04, emoji:"🏰", color:"#e74c3c" },
-    { name:"에게르", lat:47.9, lng:20.38, emoji:"🍷", color:"#9b59b6" },
-    { name:"페치", lat:46.07, lng:18.23, emoji:"🕌", color:"#f39c12" }
+    { name:"부다페스트", lat:47.50, lng:19.04, emoji:"🏰", color:"#e74c3c" },
+    { name:"에게르", lat:47.90, lng:20.38, emoji:"🍷", color:"#9b59b6" },
+    { name:"페치", lat:46.07, lng:18.23, emoji:"🕌", color:"#f39c12" },
   ],
   "Slovenia": [
     { name:"류블랴나", lat:46.05, lng:14.51, emoji:"🏰", color:"#3498db" },
     { name:"블레드", lat:46.37, lng:14.11, emoji:"🏔️", color:"#2ecc71" },
     { name:"피란", lat:45.53, lng:13.57, emoji:"⛵", color:"#e74c3c" },
-    { name:"마리보르", lat:46.56, lng:15.65, emoji:"🍷", color:"#9b59b6" }
+    { name:"마리보르", lat:46.56, lng:15.65, emoji:"🍷", color:"#9b59b6" },
   ],
   "Croatia": [
     { name:"두브로브니크", lat:42.66, lng:18.05, emoji:"🌊", color:"#3498db" },
     { name:"자그레브", lat:45.81, lng:15.98, emoji:"🏙️", color:"#e74c3c" },
     { name:"플리트비체", lat:44.88, lng:15.62, emoji:"💧", color:"#2ecc71" },
     { name:"스플리트", lat:43.51, lng:16.44, emoji:"🏛️", color:"#f39c12" },
-    { name:"흐바르", lat:43.17, lng:16.44, emoji:"🌞", color:"#9b59b6" }
+    { name:"흐바르", lat:43.17, lng:16.44, emoji:"🌞", color:"#9b59b6" },
   ],
   "Norway": [
     { name:"오슬로", lat:59.91, lng:10.75, emoji:"🏙️", color:"#3498db" },
@@ -569,144 +373,111 @@ export const COUNTRY_CITIES = {
     { name:"플롬", lat:60.86, lng:7.11, emoji:"🌊", color:"#e74c3c" },
     { name:"트롬쇠", lat:69.65, lng:18.96, emoji:"🌌", color:"#9b59b6" },
     { name:"로포텐", lat:68.23, lng:13.99, emoji:"🎣", color:"#8e44ad" },
-    { name:"게이랑에르", lat:62.1, lng:7.21, emoji:"🏔️", color:"#16a085" }
+    { name:"게이랑에르", lat:62.10, lng:7.21, emoji:"🏔️", color:"#16a085" },
   ],
   "Sweden": [
     { name:"스톡홀름", lat:59.33, lng:18.07, emoji:"👑", color:"#2980b9" },
     { name:"예테보리", lat:57.71, lng:11.97, emoji:"🚢", color:"#e74c3c" },
-    { name:"말뫼", lat:55.6, lng:13, emoji:"🌉", color:"#2ecc71" },
-    { name:"아비스코", lat:68.35, lng:18.83, emoji:"🌌", color:"#9b59b6" }
+    { name:"말뫼", lat:55.60, lng:13.00, emoji:"🌉", color:"#2ecc71" },
+    { name:"아비스코", lat:68.35, lng:18.83, emoji:"🌌", color:"#9b59b6" },
   ],
   "Denmark": [
     { name:"코펜하겐", lat:55.68, lng:12.57, emoji:"🧜", color:"#3498db" },
     { name:"오르후스", lat:56.15, lng:10.21, emoji:"🎨", color:"#2ecc71" },
-    { name:"오덴세", lat:55.4, lng:10.38, emoji:"📖", color:"#e74c3c" },
-    { name:"빌룬드", lat:55.73, lng:9.13, emoji:"🧱", color:"#f1c40f" }
+    { name:"오덴세", lat:55.40, lng:10.38, emoji:"📖", color:"#e74c3c" },
+    { name:"빌룬드", lat:55.73, lng:9.13, emoji:"🧱", color:"#f1c40f" },
   ],
   "Finland": [
     { name:"헬싱키", lat:60.17, lng:24.94, emoji:"🏛️", color:"#2980b9" },
-    { name:"로바니에미", lat:66.5, lng:25.72, emoji:"🎅", color:"#3498db" },
-    { name:"탐페레", lat:61.5, lng:23.77, emoji:"🏭", color:"#e74c3c" },
-    { name:"투르쿠", lat:60.45, lng:22.27, emoji:"🏛️", color:"#3498db" }
+    { name:"로바니에미", lat:66.50, lng:25.72, emoji:"🎅", color:"#3498db" },
+    { name:"탐페레", lat:61.50, lng:23.77, emoji:"🏭", color:"#e74c3c" },
+    { name:"투르쿠", lat:60.45, lng:22.27, emoji:"🏛️", color:"#3498db" },
   ],
   "Iceland": [
     { name:"레이캬비크", lat:64.13, lng:-21.82, emoji:"🌋", color:"#1e3a8a" },
-    { name:"아퀴레이리", lat:65.68, lng:-18.1, emoji:"❄️", color:"#3498db" },
+    { name:"아퀴레이리", lat:65.68, lng:-18.10, emoji:"❄️", color:"#3498db" },
     { name:"블루라군", lat:63.88, lng:-22.45, emoji:"💙", color:"#2ecc71" },
     { name:"요쿨살론", lat:64.05, lng:-16.18, emoji:"🧊", color:"#9b59b6" },
-    { name:"골든서클", lat:64.31, lng:-20.12, emoji:"♨️", color:"#e74c3c" }
+    { name:"골든서클", lat:64.31, lng:-20.12, emoji:"♨️", color:"#e74c3c" },
   ],
   "Poland": [
     { name:"크라쿠프", lat:50.06, lng:19.94, emoji:"🏰", color:"#e74c3c" },
     { name:"바르샤바", lat:52.23, lng:21.01, emoji:"🏙️", color:"#3498db" },
     { name:"브로츠와프", lat:51.11, lng:17.04, emoji:"🌉", color:"#2ecc71" },
     { name:"그단스크", lat:54.35, lng:18.65, emoji:"⚓", color:"#f39c12" },
-    { name:"자코파네", lat:49.3, lng:19.95, emoji:"⛷️", color:"#9b59b6" }
+    { name:"자코파네", lat:49.30, lng:19.95, emoji:"⛷️", color:"#9b59b6" },
   ],
   "Russia": [
     { name:"모스크바", lat:55.75, lng:37.62, emoji:"🕌", color:"#e74c3c" },
     { name:"상트페테르부르크", lat:59.95, lng:30.32, emoji:"🏛️", color:"#3498db" },
-    { name:"바이칼호", lat:53.5, lng:108.17, emoji:"🌊", color:"#2ecc71" },
-    { name:"소치", lat:43.6, lng:39.73, emoji:"🏖️", color:"#f39c12" },
-    { name:"블라디보스토크", lat:43.12, lng:131.89, emoji:"⚓", color:"#9b59b6" }
+    { name:"바이칼호", lat:53.50, lng:108.17, emoji:"🌊", color:"#2ecc71" },
+    { name:"소치", lat:43.60, lng:39.73, emoji:"🏖️", color:"#f39c12" },
+    { name:"블라디보스토크", lat:43.12, lng:131.89, emoji:"⚓", color:"#9b59b6" },
   ],
   "South Africa": [
     { name:"케이프타운", lat:-33.92, lng:18.42, emoji:"🏔️", color:"#2ecc71" },
-    { name:"요하네스버그", lat:-26.2, lng:28.04, emoji:"🏙️", color:"#3498db" },
+    { name:"요하네스버그", lat:-26.20, lng:28.04, emoji:"🏙️", color:"#3498db" },
     { name:"더반", lat:-29.86, lng:31.02, emoji:"🌊", color:"#e74c3c" },
     { name:"크루거국립공원", lat:-23.99, lng:31.55, emoji:"🦁", color:"#f39c12" },
-    { name:"드라켄즈버그", lat:-29.3, lng:29.42, emoji:"🏔️", color:"#16a085" }
+    { name:"드라켄즈버그", lat:-29.30, lng:29.42, emoji:"🏔️", color:"#16a085" },
   ],
   "Kenya": [
     { name:"나이로비", lat:-1.29, lng:36.82, emoji:"🦁", color:"#14532d" },
     { name:"마사이마라", lat:-1.49, lng:35.15, emoji:"🐘", color:"#2ecc71" },
     { name:"몸바사", lat:-4.05, lng:39.67, emoji:"🌊", color:"#3498db" },
     { name:"암보셀리", lat:-2.65, lng:37.26, emoji:"🐘", color:"#e67e22" },
-    { name:"라무", lat:-2.27, lng:40.9, emoji:"⛵", color:"#f39c12" }
+    { name:"라무", lat:-2.27, lng:40.90, emoji:"⛵", color:"#f39c12" },
   ],
   "Tanzania": [
-    { name:"잔지바르", lat:-6.16, lng:39.2, emoji:"🏖️", color:"#3498db" },
+    { name:"잔지바르", lat:-6.16, lng:39.20, emoji:"🏖️", color:"#3498db" },
     { name:"세렝게티", lat:-2.33, lng:34.83, emoji:"🦁", color:"#2ecc71" },
     { name:"킬리만자로", lat:-3.07, lng:37.35, emoji:"🏔️", color:"#e74c3c" },
-    { name:"응고롱고로", lat:-3.26, lng:35.52, emoji:"🦏", color:"#9b59b6" }
+    { name:"응고롱고로", lat:-3.26, lng:35.52, emoji:"🦏", color:"#9b59b6" },
   ],
   "Jordan": [
     { name:"페트라", lat:30.33, lng:35.44, emoji:"🏺", color:"#b45309" },
     { name:"암만", lat:31.95, lng:35.93, emoji:"🕌", color:"#3498db" },
     { name:"와디럼", lat:29.58, lng:35.42, emoji:"🏜️", color:"#e67e22" },
-    { name:"아카바", lat:29.53, lng:35.01, emoji:"🤿", color:"#2ecc71" }
+    { name:"아카바", lat:29.53, lng:35.01, emoji:"🤿", color:"#2ecc71" },
   ],
   "Israel": [
     { name:"예루살렘", lat:31.77, lng:35.22, emoji:"✡️", color:"#3498db" },
     { name:"텔아비브", lat:32.09, lng:34.79, emoji:"🌆", color:"#e74c3c" },
     { name:"마사다", lat:31.32, lng:35.35, emoji:"🏔️", color:"#f39c12" },
-    { name:"사해", lat:31.56, lng:35.47, emoji:"🌊", color:"#9b59b6" }
+    { name:"사해", lat:31.56, lng:35.47, emoji:"🌊", color:"#9b59b6" },
   ],
   "Canada": [
     { name:"밴쿠버", lat:49.28, lng:-123.12, emoji:"🏔️", color:"#9f1239" },
     { name:"토론토", lat:43.65, lng:-79.38, emoji:"🏙️", color:"#3498db" },
     { name:"퀘벡시티", lat:46.81, lng:-71.21, emoji:"🏰", color:"#2ecc71" },
     { name:"밴프", lat:51.18, lng:-115.57, emoji:"🏞️", color:"#e67e22" },
-    { name:"몬트리올", lat:45.5, lng:-73.57, emoji:"🎭", color:"#9b59b6" },
-    { name:"오타와", lat:45.42, lng:-75.7, emoji:"🏛️", color:"#16a085" },
+    { name:"몬트리올", lat:45.50, lng:-73.57, emoji:"🎭", color:"#9b59b6" },
+    { name:"오타와", lat:45.42, lng:-75.70, emoji:"🏛️", color:"#16a085" },
     { name:"나이아가라폴스", lat:43.09, lng:-79.07, emoji:"💧", color:"#c0392b" },
     { name:"빅토리아", lat:48.43, lng:-123.37, emoji:"🌸", color:"#27ae60" },
-    { name:"캘거리", lat:51.05, lng:-114.07, emoji:"🤠", color:"#e74c3c" },
-    { name:"에드먼턴", lat:53.55, lng:-113.49, emoji:"🏔️", color:"#3498db" },
-    { name:"위니펙", lat:49.9, lng:-97.14, emoji:"🌾", color:"#f39c12" },
-    { name:"핼리팩스", lat:44.65, lng:-63.57, emoji:"⛵", color:"#2980b9" },
-    { name:"위슬러", lat:50.12, lng:-122.95, emoji:"⛷️", color:"#1abc9c" },
-    { name:"샬럿타운", lat:46.24, lng:-63.13, emoji:"🏠", color:"#e67e22" },
-    { name:"옐로나이프", lat:62.45, lng:-114.37, emoji:"🌌", color:"#8e44ad" },
-    { name:"화이트호스", lat:60.72, lng:-135.06, emoji:"🐻", color:"#2ecc71" },
-    { name:"재스퍼", lat:52.87, lng:-118.08, emoji:"🏔️", color:"#27ae60" },
-    { name:"레이크루이스", lat:51.43, lng:-116.18, emoji:"💎", color:"#9b59b6" },
-    { name:"해밀턴", lat:43.26, lng:-79.87, emoji:"🏛️", color:"#c0392b" },
-    { name:"사스카툰", lat:52.13, lng:-106.67, emoji:"🌻", color:"#f1c40f" },
-    { name:"세인트존스", lat:47.56, lng:-52.71, emoji:"🌊", color:"#1abc9c" },
-    { name:"레지나", lat:50.45, lng:-104.62, emoji:"🌾", color:"#e67e22" },
-    { name:"처칠", lat:58.77, lng:-94.17, emoji:"🐻‍❄️", color:"#2ecc71" }
   ],
   "Cuba": [
     { name:"하바나", lat:23.11, lng:-82.37, emoji:"🚗", color:"#7c2d12" },
-    { name:"트리니다드", lat:21.8, lng:-79.98, emoji:"🎵", color:"#e74c3c" },
+    { name:"트리니다드", lat:21.80, lng:-79.98, emoji:"🎵", color:"#e74c3c" },
     { name:"바라데로", lat:23.15, lng:-81.24, emoji:"🏖️", color:"#3498db" },
-    { name:"비냘레스", lat:22.62, lng:-83.71, emoji:"🌿", color:"#2ecc71" }
+    { name:"비냘레스", lat:22.62, lng:-83.71, emoji:"🌿", color:"#2ecc71" },
   ],
   "Argentina": [
-    { name:"부에노스아이레스", lat:-34.6, lng:-58.38, emoji:"💃", color:"#0369a1" },
+    { name:"부에노스아이레스", lat:-34.60, lng:-58.38, emoji:"💃", color:"#0369a1" },
     { name:"파타고니아", lat:-41.83, lng:-68.91, emoji:"🏔️", color:"#2ecc71" },
     { name:"이과수", lat:-25.69, lng:-54.44, emoji:"💧", color:"#3498db" },
     { name:"멘도사", lat:-32.89, lng:-68.83, emoji:"🍷", color:"#9b59b6" },
-    { name:"우수아이아", lat:-54.8, lng:-68.3, emoji:"🌎", color:"#16a085" },
-    { name:"살타", lat:-24.79, lng:-65.41, emoji:"🌄", color:"#e67e22" }
+    { name:"우수아이아", lat:-54.80, lng:-68.30, emoji:"🌎", color:"#16a085" },
+    { name:"살타", lat:-24.79, lng:-65.41, emoji:"🌄", color:"#e67e22" },
   ],
   "Brazil": [
     { name:"리우데자네이루", lat:-22.91, lng:-43.17, emoji:"🏖️", color:"#27ae60" },
     { name:"상파울루", lat:-23.55, lng:-46.63, emoji:"🏙️", color:"#3498db" },
-    { name:"마나우스", lat:-3.1, lng:-60.02, emoji:"🌿", color:"#2ecc71" },
+    { name:"마나우스", lat:-3.10, lng:-60.02, emoji:"🌿", color:"#2ecc71" },
     { name:"포스두이과수", lat:-25.52, lng:-54.59, emoji:"💧", color:"#00bcd4" },
-    { name:"살바도르", lat:-12.97, lng:-38.5, emoji:"🎭", color:"#e74c3c" },
+    { name:"살바도르", lat:-12.97, lng:-38.50, emoji:"🎭", color:"#e74c3c" },
     { name:"브라질리아", lat:-15.78, lng:-47.93, emoji:"🏛️", color:"#9b59b6" },
     { name:"포르탈레자", lat:-3.72, lng:-38.54, emoji:"🏖️", color:"#f39c12" },
-    { name:"헤시피", lat:-8.05, lng:-34.87, emoji:"🏖️", color:"#3498db" },
-    { name:"쿠리치바", lat:-25.43, lng:-49.27, emoji:"🌿", color:"#2ecc71" },
-    { name:"벨로리존치", lat:-19.92, lng:-43.94, emoji:"🏛️", color:"#8e44ad" },
-    { name:"플로리아노폴리스", lat:-27.6, lng:-48.55, emoji:"🏝️", color:"#1abc9c" },
-    { name:"벨렝", lat:-1.46, lng:-48.5, emoji:"🌴", color:"#e67e22" },
-    { name:"나타우", lat:-5.79, lng:-35.21, emoji:"🏖️", color:"#f39c12" },
-    { name:"마세이오", lat:-9.67, lng:-35.74, emoji:"🌊", color:"#2980b9" },
-    { name:"그라마두", lat:-29.38, lng:-50.87, emoji:"🏔️", color:"#9b59b6" },
-    { name:"파라치", lat:-23.22, lng:-44.71, emoji:"⛵", color:"#e74c3c" },
-    { name:"페르난두지노로냐", lat:-3.85, lng:-32.42, emoji:"🐢", color:"#27ae60" },
-    { name:"포르투알레그리", lat:-30.03, lng:-51.23, emoji:"🏙️", color:"#c0392b" },
-    { name:"캄피나스", lat:-22.91, lng:-47.06, emoji:"🎓", color:"#f1c40f" },
-    { name:"오우루프레투", lat:-20.39, lng:-43.5, emoji:"🏛️", color:"#d35400" },
-    { name:"레시페", lat:-8.05, lng:-34.87, emoji:"🏖️", color:"#3498db" },
-    { name:"벨로오리존치", lat:-19.92, lng:-43.94, emoji:"🏙️", color:"#e74c3c" },
-    { name:"나탈", lat:-5.8, lng:-35.21, emoji:"🌊", color:"#2980b9" },
-    { name:"벨렘", lat:-1.46, lng:-48.5, emoji:"🌴", color:"#e67e22" },
-    { name:"올린다", lat:-8.01, lng:-34.85, emoji:"🎨", color:"#c0392b" }
   ],
   "Mexico": [
     { name:"멕시코시티", lat:19.43, lng:-99.13, emoji:"🏛️", color:"#166534" },
@@ -716,31 +487,12 @@ export const COUNTRY_CITIES = {
     { name:"툴룸", lat:20.21, lng:-87.46, emoji:"🌴", color:"#f39c12" },
     { name:"과나후아토", lat:21.02, lng:-101.26, emoji:"🎭", color:"#e67e22" },
     { name:"치첸이트사", lat:20.68, lng:-88.57, emoji:"🏛️", color:"#8e44ad" },
-    { name:"푸에블라", lat:19.04, lng:-98.2, emoji:"🏛️", color:"#e74c3c" },
-    { name:"메리다", lat:20.97, lng:-89.59, emoji:"🏛️", color:"#3498db" },
-    { name:"몬테레이", lat:25.69, lng:-100.32, emoji:"🏔️", color:"#8e44ad" },
-    { name:"산미겔데아옌데", lat:20.91, lng:-100.74, emoji:"🎨", color:"#f39c12" },
-    { name:"카보산루카스", lat:22.89, lng:-109.91, emoji:"🏖️", color:"#1abc9c" },
-    { name:"플라야델카르멘", lat:20.63, lng:-87.08, emoji:"🌴", color:"#2ecc71" },
-    { name:"발라돌리드", lat:20.69, lng:-88.2, emoji:"🏛️", color:"#e67e22" },
-    { name:"파츠쿠아로", lat:19.52, lng:-101.61, emoji:"🏘️", color:"#9b59b6" },
-    { name:"타스코", lat:18.56, lng:-99.6, emoji:"⛏️", color:"#c0392b" },
-    { name:"이슬라무헤레스", lat:21.23, lng:-86.73, emoji:"🏝️", color:"#2980b9" },
-    { name:"아카풀코", lat:16.86, lng:-99.88, emoji:"🏖️", color:"#f1c40f" },
-    { name:"케레타로", lat:20.59, lng:-100.39, emoji:"🏛️", color:"#27ae60" },
-    { name:"사카테카스", lat:22.77, lng:-102.58, emoji:"⛪", color:"#d35400" },
-    { name:"오아하카", lat:17.07, lng:-96.73, emoji:"🎭", color:"#e67e22" },
-    { name:"푸에르토바야르타", lat:20.65, lng:-105.23, emoji:"🏖️", color:"#2980b9" },
-    { name:"산크리스토발", lat:16.74, lng:-92.64, emoji:"🌿", color:"#2ecc71" },
-    { name:"모렐리아", lat:19.7, lng:-101.19, emoji:"⛪", color:"#c0392b" },
-    { name:"티후아나", lat:32.53, lng:-117.02, emoji:"🌮", color:"#1abc9c" },
-    { name:"치와와", lat:28.63, lng:-106.09, emoji:"🏜️", color:"#e74c3c" }
   ],
   "Colombia": [
     { name:"보고타", lat:4.71, lng:-74.07, emoji:"🏙️", color:"#f39c12" },
-    { name:"카르타헤나", lat:10.4, lng:-75.51, emoji:"🏰", color:"#e74c3c" },
+    { name:"카르타헤나", lat:10.40, lng:-75.51, emoji:"🏰", color:"#e74c3c" },
     { name:"메데인", lat:6.25, lng:-75.56, emoji:"🌸", color:"#2ecc71" },
-    { name:"살렌토", lat:4.63, lng:-75.57, emoji:"☕", color:"#9b59b6" }
+    { name:"살렌토", lat:4.63, lng:-75.57, emoji:"☕", color:"#9b59b6" },
   ],
   "Peru": [
     { name:"마추픽추", lat:-13.16, lng:-72.55, emoji:"🏔️", color:"#15803d" },
@@ -748,14 +500,14 @@ export const COUNTRY_CITIES = {
     { name:"리마", lat:-12.05, lng:-77.04, emoji:"🏙️", color:"#3498db" },
     { name:"나스카", lat:-14.74, lng:-75.13, emoji:"🌀", color:"#e67e22" },
     { name:"티티카카호수", lat:-15.84, lng:-69.33, emoji:"🚣", color:"#2ecc71" },
-    { name:"아레키파", lat:-16.41, lng:-71.54, emoji:"🌋", color:"#9b59b6" }
+    { name:"아레키파", lat:-16.41, lng:-71.54, emoji:"🌋", color:"#9b59b6" },
   ],
   "Chile": [
     { name:"산티아고", lat:-33.45, lng:-70.67, emoji:"🏙️", color:"#e74c3c" },
     { name:"발파라이소", lat:-33.05, lng:-71.62, emoji:"🎨", color:"#3498db" },
-    { name:"아타카마", lat:-22.91, lng:-68.2, emoji:"🏜️", color:"#e67e22" },
+    { name:"아타카마", lat:-22.91, lng:-68.20, emoji:"🏜️", color:"#e67e22" },
     { name:"토레스델파이네", lat:-50.94, lng:-73.41, emoji:"🏔️", color:"#2ecc71" },
-    { name:"이스터섬", lat:-27.11, lng:-109.35, emoji:"🗿", color:"#8e44ad" }
+    { name:"이스터섬", lat:-27.11, lng:-109.35, emoji:"🗿", color:"#8e44ad" },
   ],
   "New Zealand": [
     { name:"퀸스타운", lat:-45.03, lng:168.66, emoji:"🏔️", color:"#065f46" },
@@ -764,507 +516,310 @@ export const COUNTRY_CITIES = {
     { name:"웰링턴", lat:-41.29, lng:174.78, emoji:"🎭", color:"#9b59b6" },
     { name:"밀포드사운드", lat:-44.67, lng:167.93, emoji:"🏔️", color:"#f39c12" },
     { name:"호비튼", lat:-37.86, lng:175.68, emoji:"🧙", color:"#8e44ad" },
-    { name:"크라이스트처치", lat:-43.53, lng:172.64, emoji:"🏙️", color:"#e74c3c" }
+    { name:"크라이스트처치", lat:-43.53, lng:172.64, emoji:"🏙️", color:"#e74c3c" },
   ],
   "Saudi Arabia": [
     { name:"리야드", lat:24.69, lng:46.72, emoji:"🕌", color:"#2ecc71" },
     { name:"제다", lat:21.49, lng:39.19, emoji:"🌊", color:"#3498db" },
     { name:"알울라", lat:26.62, lng:37.92, emoji:"🏔️", color:"#e67e22" },
-    { name:"메카", lat:21.39, lng:39.86, emoji:"🕋", color:"#f39c12" }
+    { name:"메카", lat:21.39, lng:39.86, emoji:"🕋", color:"#f39c12" },
   ],
   "Iran": [
     { name:"테헤란", lat:35.69, lng:51.39, emoji:"🏙️", color:"#e74c3c" },
     { name:"이스파한", lat:32.66, lng:51.68, emoji:"🕌", color:"#3498db" },
     { name:"시라즈", lat:29.59, lng:52.58, emoji:"🌹", color:"#2ecc71" },
-    { name:"페르세폴리스", lat:29.93, lng:52.89, emoji:"🏛️", color:"#f39c12" }
+    { name:"페르세폴리스", lat:29.93, lng:52.89, emoji:"🏛️", color:"#f39c12" },
   ],
   "Uzbekistan": [
     { name:"사마르칸트", lat:39.65, lng:66.96, emoji:"🕌", color:"#e74c3c" },
     { name:"부하라", lat:39.77, lng:64.43, emoji:"🏺", color:"#f39c12" },
     { name:"히바", lat:41.38, lng:60.36, emoji:"🏯", color:"#3498db" },
-    { name:"타슈켄트", lat:41.3, lng:69.24, emoji:"🏙️", color:"#2ecc71" }
+    { name:"타슈켄트", lat:41.30, lng:69.24, emoji:"🏙️", color:"#2ecc71" },
   ],
   "Ethiopia": [
     { name:"아디스아바바", lat:9.03, lng:38.74, emoji:"🏙️", color:"#2ecc71" },
     { name:"랄리벨라", lat:12.03, lng:39.04, emoji:"⛪", color:"#e74c3c" },
     { name:"악숨", lat:14.13, lng:38.73, emoji:"🏛️", color:"#f39c12" },
-    { name:"다나킬사막", lat:14.24, lng:40.3, emoji:"🌋", color:"#e67e22" }
+    { name:"다나킬사막", lat:14.24, lng:40.30, emoji:"🌋", color:"#e67e22" },
   ],
   "Ghana": [
-    { name:"아크라", lat:5.56, lng:-0.2, emoji:"🏙️", color:"#f39c12" },
-    { name:"케이프코스트", lat:5.1, lng:-1.25, emoji:"🏰", color:"#3498db" },
-    { name:"쿠마시", lat:6.69, lng:-1.62, emoji:"👑", color:"#2ecc71" }
+    { name:"아크라", lat:5.56, lng:-0.20, emoji:"🏙️", color:"#f39c12" },
+    { name:"케이프코스트", lat:5.10, lng:-1.25, emoji:"🏰", color:"#3498db" },
+    { name:"쿠마시", lat:6.69, lng:-1.62, emoji:"👑", color:"#2ecc71" },
   ],
   "Ireland": [
     { name:"더블린", lat:53.35, lng:-6.26, emoji:"🍀", color:"#2ecc71" },
     { name:"갈웨이", lat:53.27, lng:-9.06, emoji:"🎵", color:"#e74c3c" },
-    { name:"코크", lat:51.9, lng:-8.47, emoji:"🍺", color:"#f39c12" },
-    { name:"킬라니", lat:52.06, lng:-9.51, emoji:"🌿", color:"#9b59b6" }
+    { name:"코크", lat:51.90, lng:-8.47, emoji:"🍺", color:"#f39c12" },
+    { name:"킬라니", lat:52.06, lng:-9.51, emoji:"🌿", color:"#9b59b6" },
   ],
   "Belgium": [
     { name:"브뤼셀", lat:50.85, lng:4.35, emoji:"🍫", color:"#9b59b6" },
     { name:"브뤼헤", lat:51.21, lng:3.22, emoji:"🏰", color:"#3498db" },
-    { name:"안트베르펜", lat:51.22, lng:4.4, emoji:"💎", color:"#e74c3c" },
-    { name:"겐트", lat:51.05, lng:3.72, emoji:"🎨", color:"#2ecc71" }
+    { name:"안트베르펜", lat:51.22, lng:4.40, emoji:"💎", color:"#e74c3c" },
+    { name:"겐트", lat:51.05, lng:3.72, emoji:"🎨", color:"#2ecc71" },
   ],
   "Taiwan": [
     { name:"타이베이", lat:25.03, lng:121.57, emoji:"🏙️", color:"#e74c3c" },
     { name:"지우펀", lat:25.11, lng:121.84, emoji:"🏮", color:"#f39c12" },
-    { name:"가오슝", lat:22.63, lng:120.3, emoji:"🌊", color:"#3498db" },
-    { name:"타이난", lat:22.99, lng:120.2, emoji:"🏛️", color:"#9b59b6" },
+    { name:"가오슝", lat:22.63, lng:120.30, emoji:"🌊", color:"#3498db" },
+    { name:"타이난", lat:22.99, lng:120.20, emoji:"🏛️", color:"#9b59b6" },
     { name:"타이중", lat:24.16, lng:120.65, emoji:"🌿", color:"#2ecc71" },
-    { name:"화롄", lat:23.99, lng:121.6, emoji:"🏔️", color:"#16a085" },
-    { name:"타로코", lat:24.18, lng:121.62, emoji:"⛰️", color:"#e67e22" }
+    { name:"화롄", lat:23.99, lng:121.60, emoji:"🏔️", color:"#16a085" },
+    { name:"타로코", lat:24.18, lng:121.62, emoji:"⛰️", color:"#e67e22" },
   ],
   "Maldives": [
-    { name:"말레", lat:4.18, lng:73.51, emoji:"🏝️", color:"#3498db" }
+    { name:"말레", lat:4.18, lng:73.51, emoji:"🏝️", color:"#3498db" },
   ],
   "Costa Rica": [
     { name:"산호세", lat:9.93, lng:-84.08, emoji:"🌿", color:"#2ecc71" },
-    { name:"아레날", lat:10.46, lng:-84.7, emoji:"🌋", color:"#e74c3c" },
-    { name:"몬테베르데", lat:10.31, lng:-84.82, emoji:"🌿", color:"#27ae60" }
+    { name:"아레날", lat:10.46, lng:-84.70, emoji:"🌋", color:"#e74c3c" },
+    { name:"몬테베르데", lat:10.31, lng:-84.82, emoji:"🌿", color:"#27ae60" },
   ],
   "Panama": [
     { name:"파나마시티", lat:8.98, lng:-79.52, emoji:"🏙️", color:"#3498db" },
-    { name:"보카스델토로", lat:9.34, lng:-82.24, emoji:"🏝️", color:"#2980b9" }
+    { name:"보카스델토로", lat:9.34, lng:-82.24, emoji:"🏝️", color:"#2980b9" },
   ],
   "Ecuador": [
     { name:"키토", lat:-0.18, lng:-78.47, emoji:"🏔️", color:"#e74c3c" },
     { name:"갈라파고스", lat:-0.95, lng:-90.97, emoji:"🐢", color:"#2ecc71" },
-    { name:"바뇨스", lat:-1.4, lng:-78.42, emoji:"🌋", color:"#e74c3c" },
-    { name:"오타발로", lat:0.23, lng:-78.26, emoji:"🎨", color:"#9b59b6" }
+    { name:"바뇨스", lat:-1.40, lng:-78.42, emoji:"🌋", color:"#e74c3c" },
+    { name:"오타발로", lat:0.23, lng:-78.26, emoji:"🎨", color:"#9b59b6" },
   ],
   "Romania": [
-    { name:"부쿠레슈티", lat:44.43, lng:26.1, emoji:"🏛️", color:"#3498db" },
+    { name:"부쿠레슈티", lat:44.43, lng:26.10, emoji:"🏛️", color:"#3498db" },
     { name:"브라쇼프", lat:45.66, lng:25.61, emoji:"🏰", color:"#e74c3c" },
-    { name:"시비우", lat:45.8, lng:24.15, emoji:"🏘️", color:"#e67e22" }
+    { name:"시비우", lat:45.80, lng:24.15, emoji:"🏘️", color:"#e67e22" },
   ],
   "Georgia": [
-    { name:"트빌리시", lat:41.72, lng:44.8, emoji:"⛪", color:"#9b59b6" },
+    { name:"트빌리시", lat:41.72, lng:44.80, emoji:"⛪", color:"#9b59b6" },
     { name:"카즈베기", lat:42.65, lng:44.66, emoji:"🏔️", color:"#3498db" },
     { name:"메스티아", lat:43.05, lng:42.73, emoji:"🗼", color:"#2ecc71" },
-    { name:"시그나기", lat:41.62, lng:45.92, emoji:"🍷", color:"#e74c3c" }
+    { name:"시그나기", lat:41.62, lng:45.92, emoji:"🍷", color:"#e74c3c" },
   ],
   "Montenegro": [
     { name:"코토르", lat:42.45, lng:18.77, emoji:"🏰", color:"#3498db" },
-    { name:"부드바", lat:42.29, lng:18.84, emoji:"🏖️", color:"#e67e22" }
+    { name:"부드바", lat:42.29, lng:18.84, emoji:"🏖️", color:"#e67e22" },
   ],
   "Mongolia": [
     { name:"울란바토르", lat:47.92, lng:106.91, emoji:"🏙️", color:"#e74c3c" },
-    { name:"테를지", lat:47.8, lng:107.42, emoji:"🏔️", color:"#27ae60" }
+    { name:"테를지", lat:47.80, lng:107.42, emoji:"🏔️", color:"#27ae60" },
   ],
   "Laos": [
     { name:"루앙프라방", lat:19.89, lng:102.14, emoji:"🛕", color:"#f39c12" },
     { name:"비엔티안", lat:17.97, lng:102.63, emoji:"🏙️", color:"#3498db" },
-    { name:"방비엥", lat:18.92, lng:102.45, emoji:"🏔️", color:"#2ecc71" }
+    { name:"방비엥", lat:18.92, lng:102.45, emoji:"🏔️", color:"#2ecc71" },
   ],
   "Tunisia": [
     { name:"튀니스", lat:36.81, lng:10.17, emoji:"🕌", color:"#e74c3c" },
     { name:"카르타고", lat:36.85, lng:10.32, emoji:"🏛️", color:"#e67e22" },
-    { name:"시디부사이드", lat:36.87, lng:10.35, emoji:"🏘️", color:"#3498db" }
+    { name:"시디부사이드", lat:36.87, lng:10.35, emoji:"🏘️", color:"#3498db" },
   ],
   "Oman": [
     { name:"무스카트", lat:23.59, lng:58.38, emoji:"🕌", color:"#f39c12" },
-    { name:"니즈와", lat:22.93, lng:57.53, emoji:"🏰", color:"#e67e22" }
+    { name:"니즈와", lat:22.93, lng:57.53, emoji:"🏰", color:"#e67e22" },
   ],
   "Qatar": [
-    { name:"도하", lat:25.3, lng:51.53, emoji:"🏙️", color:"#3498db" },
-    { name:"알주바라", lat:25.73, lng:50.72, emoji:"🏛️", color:"#c0392b" }
+    { name:"도하", lat:25.30, lng:51.53, emoji:"🏙️", color:"#3498db" },
+    { name:"알주바라", lat:25.73, lng:50.72, emoji:"🏛️", color:"#c0392b" },
   ],
   "Bolivia": [
-    { name:"라파스", lat:-16.5, lng:-68.15, emoji:"🏔️", color:"#e74c3c" },
+    { name:"라파스", lat:-16.50, lng:-68.15, emoji:"🏔️", color:"#e74c3c" },
     { name:"우유니", lat:-20.46, lng:-66.83, emoji:"🪞", color:"#3498db" },
-    { name:"수크레", lat:-19.04, lng:-65.26, emoji:"🏛️", color:"#e74c3c" }
+    { name:"수크레", lat:-19.04, lng:-65.26, emoji:"🏛️", color:"#e74c3c" },
   ],
   "Dominican Republic": [
-    { name:"푼타카나", lat:18.58, lng:-68.4, emoji:"🏖️", color:"#2ecc71" }
+    { name:"푼타카나", lat:18.58, lng:-68.40, emoji:"🏖️", color:"#2ecc71" },
   ],
   "Guatemala": [
-    { name:"안티구아", lat:14.56, lng:-90.73, emoji:"🌋", color:"#e74c3c" }
+    { name:"안티구아", lat:14.56, lng:-90.73, emoji:"🌋", color:"#e74c3c" },
   ],
   "Jamaica": [
-    { name:"킹스턴", lat:18, lng:-76.79, emoji:"🎵", color:"#f39c12" },
+    { name:"킹스턴", lat:18.00, lng:-76.79, emoji:"🎵", color:"#f39c12" },
     { name:"몬테고베이", lat:18.47, lng:-77.92, emoji:"🏖️", color:"#3498db" },
-    { name:"네그릴", lat:18.27, lng:-78.35, emoji:"🏖️", color:"#f39c12" }
+    { name:"네그릴", lat:18.27, lng:-78.35, emoji:"🏖️", color:"#f39c12" },
   ],
   "Latvia": [
     { name:"리가", lat:56.95, lng:24.12, emoji:"🏛️", color:"#9b59b6" },
-    { name:"유르말라", lat:56.97, lng:23.77, emoji:"🏖️", color:"#2980b9" }
+    { name:"유르말라", lat:56.97, lng:23.77, emoji:"🏖️", color:"#2980b9" },
   ],
   "Lithuania": [
     { name:"빌뉴스", lat:54.69, lng:25.28, emoji:"🏰", color:"#e74c3c" },
-    { name:"카우나스", lat:54.9, lng:23.9, emoji:"🏛️", color:"#2ecc71" },
-    { name:"트라카이", lat:54.65, lng:24.93, emoji:"🏰", color:"#e74c3c" }
+    { name:"카우나스", lat:54.90, lng:23.90, emoji:"🏛️", color:"#2ecc71" },
+    { name:"트라카이", lat:54.65, lng:24.93, emoji:"🏰", color:"#e74c3c" },
   ],
   "Estonia": [
     { name:"탈린", lat:59.43, lng:24.75, emoji:"🏰", color:"#3498db" },
-    { name:"타르투", lat:58.38, lng:26.72, emoji:"🎓", color:"#3498db" }
+    { name:"타르투", lat:58.38, lng:26.72, emoji:"🎓", color:"#3498db" },
   ],
   "Cyprus": [
     { name:"파포스", lat:34.77, lng:32.43, emoji:"🏛️", color:"#f39c12" },
-    { name:"리마솔", lat:34.68, lng:33.04, emoji:"🏖️", color:"#3498db" }
+    { name:"리마솔", lat:34.68, lng:33.04, emoji:"🏖️", color:"#3498db" },
   ],
   "Albania": [
     { name:"티라나", lat:41.33, lng:19.82, emoji:"🏙️", color:"#e74c3c" },
     { name:"베라트", lat:40.71, lng:19.95, emoji:"🏘️", color:"#e74c3c" },
-    { name:"사란다", lat:39.87, lng:20.01, emoji:"🏖️", color:"#2980b9" }
+    { name:"사란다", lat:39.87, lng:20.01, emoji:"🏖️", color:"#2980b9" },
   ],
   "Serbia": [
-    { name:"베오그라드", lat:44.8, lng:20.47, emoji:"🏰", color:"#3498db" },
-    { name:"노비사드", lat:45.25, lng:19.85, emoji:"🏰", color:"#9b59b6" }
+    { name:"베오그라드", lat:44.80, lng:20.47, emoji:"🏰", color:"#3498db" },
+    { name:"노비사드", lat:45.25, lng:19.85, emoji:"🏰", color:"#9b59b6" },
   ],
   "Namibia": [
     { name:"빈트후크", lat:-22.56, lng:17.08, emoji:"🏜️", color:"#e67e22" },
-    { name:"소수스블레이", lat:-24.73, lng:15.29, emoji:"🏜️", color:"#e74c3c" }
+    { name:"소수스블레이", lat:-24.73, lng:15.29, emoji:"🏜️", color:"#e74c3c" },
   ],
   "Zimbabwe": [
-    { name:"빅토리아폴스", lat:-17.92, lng:25.86, emoji:"💧", color:"#3498db" }
+    { name:"빅토리아폴스", lat:-17.92, lng:25.86, emoji:"💧", color:"#3498db" },
   ],
   "Fiji": [
     { name:"나디", lat:-17.77, lng:177.95, emoji:"🏝️", color:"#2ecc71" },
-    { name:"마마누카", lat:-17.77, lng:177.1, emoji:"🏝️", color:"#3498db" }
+    { name:"마마누카", lat:-17.77, lng:177.10, emoji:"🏝️", color:"#3498db" },
   ],
   "Madagascar": [
     { name:"안타나나리보", lat:-18.88, lng:47.51, emoji:"🦎", color:"#2ecc71" },
-    { name:"노시베", lat:-13.33, lng:48.27, emoji:"🏝️", color:"#2980b9" }
+    { name:"노시베", lat:-13.33, lng:48.27, emoji:"🏝️", color:"#2980b9" },
   ],
   "Mauritius": [
-    { name:"포트루이스", lat:-20.16, lng:57.5, emoji:"🏝️", color:"#3498db" }
+    { name:"포트루이스", lat:-20.16, lng:57.50, emoji:"🏝️", color:"#3498db" },
   ],
   "Lebanon": [
     { name:"베이루트", lat:33.89, lng:35.51, emoji:"🏙️", color:"#e74c3c" },
     { name:"비블로스", lat:34.12, lng:35.65, emoji:"🏛️", color:"#e67e22" },
-    { name:"바알베크", lat:34.01, lng:36.21, emoji:"🏛️", color:"#c0392b" }
+    { name:"바알베크", lat:34.01, lng:36.21, emoji:"🏛️", color:"#c0392b" },
   ],
   "Ukraine": [
     { name:"키이우", lat:50.45, lng:30.52, emoji:"🏛️", color:"#3498db" },
     { name:"르비우", lat:49.84, lng:24.03, emoji:"🏰", color:"#2ecc71" },
     { name:"오데사", lat:46.48, lng:30.74, emoji:"🏖️", color:"#3498db" },
-    { name:"체르니우치", lat:48.29, lng:25.94, emoji:"🏛️", color:"#9b59b6" }
+    { name:"체르니우치", lat:48.29, lng:25.94, emoji:"🏛️", color:"#9b59b6" },
   ],
   "Pakistan": [
-    { name:"라호르", lat:31.52, lng:74.3, emoji:"🕌", color:"#2ecc71" },
+    { name:"라호르", lat:31.52, lng:74.30, emoji:"🕌", color:"#2ecc71" },
     { name:"이슬라마바드", lat:33.69, lng:73.04, emoji:"🏙️", color:"#3498db" },
-    { name:"훈자", lat:36.32, lng:74.65, emoji:"🏔️", color:"#2ecc71" }
+    { name:"훈자", lat:36.32, lng:74.65, emoji:"🏔️", color:"#2ecc71" },
   ],
   "Luxembourg": [
-    { name:"룩셈부르크시티", lat:49.61, lng:6.13, emoji:"🏰", color:"#9b59b6" }
+    { name:"룩셈부르크시티", lat:49.61, lng:6.13, emoji:"🏰", color:"#9b59b6" },
   ],
   "Slovakia": [
     { name:"브라티슬라바", lat:48.16, lng:17.12, emoji:"🏰", color:"#3498db" },
-    { name:"코시체", lat:48.72, lng:21.26, emoji:"🏛️", color:"#e74c3c" }
+    { name:"코시체", lat:48.72, lng:21.26, emoji:"🏛️", color:"#e74c3c" },
   ],
   "Bulgaria": [
-    { name:"소피아", lat:42.7, lng:23.32, emoji:"⛪", color:"#e74c3c" },
+    { name:"소피아", lat:42.70, lng:23.32, emoji:"⛪", color:"#e74c3c" },
     { name:"플로브디프", lat:42.15, lng:24.75, emoji:"🏛️", color:"#3498db" },
-    { name:"벨리코투르노보", lat:43.08, lng:25.63, emoji:"🏰", color:"#e74c3c" }
+    { name:"벨리코투르노보", lat:43.08, lng:25.63, emoji:"🏰", color:"#e74c3c" },
   ],
   "Rwanda": [
     { name:"키갈리", lat:-1.94, lng:30.06, emoji:"🏙️", color:"#2ecc71" },
-    { name:"무산제", lat:-1.5, lng:29.63, emoji:"🦍", color:"#27ae60" }
+    { name:"무산제", lat:-1.50, lng:29.63, emoji:"🦍", color:"#27ae60" },
   ],
   "Senegal": [
     { name:"다카르", lat:14.72, lng:-17.47, emoji:"🌍", color:"#f39c12" },
-    { name:"생루이", lat:16.02, lng:-16.5, emoji:"🏘️", color:"#f39c12" }
+    { name:"생루이", lat:16.02, lng:-16.50, emoji:"🏘️", color:"#f39c12" },
   ],
   "Kazakhstan": [
-    { name:"알마티", lat:43.24, lng:76.95, emoji:"🏔️", color:"#3498db" }
-  ],
-  "Afghanistan": [
-    { name:"카불", lat:34.53, lng:69.17, emoji:"🏔️", color:"#e67e22" }
-  ],
-  "Algeria": [
-    { name:"알제", lat:36.75, lng:3.04, emoji:"🕌", color:"#e74c3c" }
-  ],
-  "Angola": [
-    { name:"루안다", lat:-8.84, lng:13.23, emoji:"🏙️", color:"#f39c12" }
-  ],
-  "Armenia": [
-    { name:"예레반", lat:40.18, lng:44.51, emoji:"⛪", color:"#9b59b6" }
-  ],
-  "Azerbaijan": [
-    { name:"바쿠", lat:40.41, lng:49.87, emoji:"🔥", color:"#e74c3c" }
-  ],
-  "Bahrain": [
-    { name:"마나마", lat:26.23, lng:50.59, emoji:"🏙️", color:"#3498db" }
-  ],
-  "Bangladesh": [
-    { name:"다카", lat:23.81, lng:90.41, emoji:"🕌", color:"#2ecc71" }
-  ],
-  "Belarus": [
-    { name:"민스크", lat:53.9, lng:27.57, emoji:"🏛️", color:"#3498db" }
-  ],
-  "Belize": [
-    { name:"벨리즈시티", lat:17.5, lng:-88.2, emoji:"🏝️", color:"#2ecc71" }
-  ],
-  "Benin": [
-    { name:"코토누", lat:6.37, lng:2.39, emoji:"🌍", color:"#f39c12" }
-  ],
-  "Bhutan": [
-    { name:"팀부", lat:27.47, lng:89.64, emoji:"🛕", color:"#e67e22" }
-  ],
-  "Bosnia and Herzegovina": [
-    { name:"사라예보", lat:43.86, lng:18.41, emoji:"🏰", color:"#e74c3c" },
-    { name:"모스타르", lat:43.34, lng:17.81, emoji:"🌉", color:"#2ecc71" }
-  ],
-  "Botswana": [
-    { name:"가보로네", lat:-24.65, lng:25.91, emoji:"🐘", color:"#2ecc71" }
-  ],
-  "Brunei": [
-    { name:"반다르스리브가완", lat:4.94, lng:114.95, emoji:"🕌", color:"#f39c12" }
-  ],
-  "Burkina Faso": [
-    { name:"와가두구", lat:12.37, lng:-1.52, emoji:"🌍", color:"#e67e22" }
-  ],
-  "Burundi": [
-    { name:"기테가", lat:-3.43, lng:29.93, emoji:"🌍", color:"#2ecc71" }
-  ],
-  "Cabo Verde": [
-    { name:"프라이아", lat:14.93, lng:-23.51, emoji:"🏝️", color:"#3498db" }
-  ],
-  "Cameroon": [
-    { name:"야운데", lat:3.87, lng:11.52, emoji:"🌍", color:"#2ecc71" }
-  ],
-  "Central African Republic": [
-    { name:"방기", lat:4.36, lng:18.56, emoji:"🌍", color:"#e67e22" }
-  ],
-  "Chad": [
-    { name:"은자메나", lat:12.13, lng:15.05, emoji:"🌍", color:"#f39c12" }
-  ],
-  "Comoros": [
-    { name:"모로니", lat:-11.7, lng:43.26, emoji:"🏝️", color:"#3498db" }
-  ],
-  "Democratic Republic of the Congo": [
-    { name:"킨샤사", lat:-4.44, lng:15.27, emoji:"🌍", color:"#2ecc71" }
-  ],
-  "Djibouti": [
-    { name:"지부티시", lat:11.59, lng:43.15, emoji:"🏙️", color:"#e74c3c" }
-  ],
-  "El Salvador": [
-    { name:"산살바도르", lat:13.69, lng:-89.19, emoji:"🌋", color:"#3498db" }
-  ],
-  "Equatorial Guinea": [
-    { name:"말라보", lat:3.75, lng:8.78, emoji:"🌍", color:"#2ecc71" }
-  ],
-  "Eritrea": [
-    { name:"아스마라", lat:15.34, lng:38.93, emoji:"🏛️", color:"#e74c3c" }
-  ],
-  "Eswatini": [
-    { name:"음바바네", lat:-26.31, lng:31.14, emoji:"🌍", color:"#9b59b6" }
-  ],
-  "Gabon": [
-    { name:"리브르빌", lat:0.39, lng:9.45, emoji:"🌿", color:"#2ecc71" }
-  ],
-  "Gambia": [
-    { name:"반줄", lat:13.45, lng:-16.58, emoji:"🌍", color:"#f39c12" }
-  ],
-  "Guinea": [
-    { name:"코나크리", lat:9.64, lng:-13.58, emoji:"🌍", color:"#e67e22" }
-  ],
-  "Guinea-Bissau": [
-    { name:"비사우", lat:11.86, lng:-15.6, emoji:"🌍", color:"#2ecc71" }
-  ],
-  "Guyana": [
-    { name:"조지타운", lat:6.8, lng:-58.16, emoji:"🌿", color:"#2ecc71" }
-  ],
-  "Haiti": [
-    { name:"포르토프랭스", lat:18.54, lng:-72.34, emoji:"🏙️", color:"#e74c3c" }
-  ],
-  "Honduras": [
-    { name:"테구시갈파", lat:14.07, lng:-87.19, emoji:"🌋", color:"#3498db" }
-  ],
-  "Iraq": [
-    { name:"바그다드", lat:33.31, lng:44.37, emoji:"🕌", color:"#e67e22" }
-  ],
-  "Ivory Coast": [
-    { name:"아비장", lat:5.36, lng:-4.01, emoji:"🌍", color:"#f39c12" }
-  ],
-  "Kosovo": [
-    { name:"프리슈티나", lat:42.66, lng:21.17, emoji:"🏛️", color:"#3498db" }
-  ],
-  "Kuwait": [
-    { name:"쿠웨이트시티", lat:29.38, lng:47.99, emoji:"🏙️", color:"#f39c12" }
-  ],
-  "Kyrgyzstan": [
-    { name:"비슈케크", lat:42.87, lng:74.59, emoji:"🏔️", color:"#3498db" }
-  ],
-  "Lesotho": [
-    { name:"마세루", lat:-29.31, lng:27.48, emoji:"🏔️", color:"#2ecc71" }
-  ],
-  "Liberia": [
-    { name:"몬로비아", lat:6.3, lng:-10.8, emoji:"🌍", color:"#e74c3c" }
-  ],
-  "Libya": [
-    { name:"트리폴리", lat:32.9, lng:13.18, emoji:"🏛️", color:"#e67e22" }
-  ],
-  "Malawi": [
-    { name:"릴롱궤", lat:-13.97, lng:33.79, emoji:"🌍", color:"#2ecc71" }
-  ],
-  "Mali": [
-    { name:"바마코", lat:12.64, lng:-8, emoji:"🌍", color:"#f39c12" }
-  ],
-  "Mauritania": [
-    { name:"누악쇼트", lat:18.09, lng:-15.98, emoji:"🏜️", color:"#e67e22" }
-  ],
-  "Moldova": [
-    { name:"키시나우", lat:47.01, lng:28.86, emoji:"🏛️", color:"#9b59b6" }
-  ],
-  "Mozambique": [
-    { name:"마푸토", lat:-25.97, lng:32.57, emoji:"🌍", color:"#e74c3c" }
-  ],
-  "Nicaragua": [
-    { name:"마나과", lat:12.11, lng:-86.24, emoji:"🌋", color:"#3498db" }
-  ],
-  "Niger": [
-    { name:"니아메", lat:13.51, lng:2.11, emoji:"🌍", color:"#f39c12" }
-  ],
-  "Nigeria": [
-    { name:"라고스", lat:6.52, lng:3.38, emoji:"🏙️", color:"#2ecc71" },
-    { name:"아부자", lat:9.06, lng:7.49, emoji:"🏛️", color:"#e74c3c" }
-  ],
-  "North Korea": [
-    { name:"평양", lat:39.02, lng:125.75, emoji:"🏛️", color:"#e74c3c" }
-  ],
-  "North Macedonia": [
-    { name:"스코페", lat:41.99, lng:21.43, emoji:"🏛️", color:"#e67e22" },
-    { name:"오흐리드", lat:41.12, lng:20.8, emoji:"🏖️", color:"#3498db" }
-  ],
-  "Papua New Guinea": [
-    { name:"포트모르즈비", lat:-6.31, lng:147.15, emoji:"🌿", color:"#2ecc71" }
-  ],
-  "Paraguay": [
-    { name:"아순시온", lat:-25.26, lng:-57.58, emoji:"🏙️", color:"#3498db" }
-  ],
-  "Republic of the Congo": [
-    { name:"브라자빌", lat:-4.27, lng:15.28, emoji:"🌍", color:"#2ecc71" }
-  ],
-  "Sierra Leone": [
-    { name:"프리타운", lat:8.47, lng:-13.23, emoji:"🌍", color:"#f39c12" }
-  ],
-  "Somalia": [
-    { name:"모가디슈", lat:2.05, lng:45.32, emoji:"🌍", color:"#e74c3c" }
-  ],
-  "South Sudan": [
-    { name:"주바", lat:4.85, lng:31.6, emoji:"🌍", color:"#2ecc71" }
-  ],
-  "Sudan": [
-    { name:"하르툼", lat:15.5, lng:32.56, emoji:"🏜️", color:"#e67e22" }
-  ],
-  "Suriname": [
-    { name:"파라마리보", lat:5.85, lng:-55.2, emoji:"🌿", color:"#2ecc71" }
-  ],
-  "Syria": [
-    { name:"다마스쿠스", lat:33.51, lng:36.29, emoji:"🕌", color:"#e67e22" }
-  ],
-  "Tajikistan": [
-    { name:"두샨베", lat:38.56, lng:68.77, emoji:"🏔️", color:"#3498db" }
-  ],
-  "Timor-Leste": [
-    { name:"딜리", lat:-8.56, lng:125.57, emoji:"🏝️", color:"#e74c3c" }
-  ],
-  "Togo": [
-    { name:"로메", lat:6.14, lng:1.21, emoji:"🌍", color:"#f39c12" }
-  ],
-  "Trinidad and Tobago": [
-    { name:"포트오브스페인", lat:10.65, lng:-61.51, emoji:"🎵", color:"#e74c3c" }
-  ],
-  "Turkmenistan": [
-    { name:"아시가바트", lat:37.96, lng:58.38, emoji:"🏛️", color:"#f39c12" }
-  ],
-  "Uganda": [
-    { name:"캄팔라", lat:0.35, lng:32.58, emoji:"🌍", color:"#2ecc71" }
-  ],
-  "Uruguay": [
-    { name:"몬테비데오", lat:-34.88, lng:-56.16, emoji:"🏙️", color:"#3498db" }
-  ],
-  "Venezuela": [
-    { name:"카라카스", lat:10.49, lng:-66.88, emoji:"🏙️", color:"#e74c3c" }
-  ],
-  "Yemen": [
-    { name:"사나", lat:15.35, lng:44.21, emoji:"🕌", color:"#e67e22" }
-  ],
-  "Zambia": [
-    { name:"루사카", lat:-15.39, lng:28.32, emoji:"🌍", color:"#2ecc71" }
-  ],
-  "Andorra": [
-    { name:"안도라라벨랴", lat:42.51, lng:1.52, emoji:"🏔️", color:"#3498db" }
-  ],
-  "Antigua and Barbuda": [
-    { name:"세인트존스", lat:17.12, lng:-61.85, emoji:"🏝️", color:"#e74c3c" }
-  ],
-  "Bahamas": [
-    { name:"나소", lat:25.05, lng:-77.34, emoji:"🏝️", color:"#1abc9c" }
-  ],
-  "Barbados": [
-    { name:"브리지타운", lat:13.1, lng:-59.62, emoji:"🏝️", color:"#3498db" }
-  ],
-  "Dominica": [
-    { name:"로조", lat:15.3, lng:-61.39, emoji:"🏝️", color:"#2ecc71" }
-  ],
-  "Grenada": [
-    { name:"세인트조지스", lat:12.06, lng:-61.75, emoji:"🏝️", color:"#e74c3c" }
-  ],
-  "Kiribati": [
-    { name:"타라와", lat:1.45, lng:173, emoji:"🏝️", color:"#f39c12" }
-  ],
-  "Liechtenstein": [
-    { name:"파두츠", lat:47.14, lng:9.52, emoji:"🏔️", color:"#3498db" }
-  ],
-  "Malta": [
-    { name:"발레타", lat:35.9, lng:14.51, emoji:"🏛️", color:"#e67e22" }
-  ],
-  "Marshall Islands": [
-    { name:"마주로", lat:7.09, lng:171.38, emoji:"🏝️", color:"#1abc9c" }
-  ],
-  "Micronesia": [
-    { name:"팔리키르", lat:6.91, lng:158.16, emoji:"🏝️", color:"#3498db" }
-  ],
-  "Monaco": [
-    { name:"모나코", lat:43.73, lng:7.42, emoji:"🏙️", color:"#e74c3c" }
-  ],
-  "Nauru": [
-    { name:"야렌", lat:-0.55, lng:166.92, emoji:"🏝️", color:"#f39c12" }
-  ],
-  "Palau": [
-    { name:"응에룰무드", lat:7.5, lng:134.62, emoji:"🏝️", color:"#1abc9c" }
-  ],
-  "Palestine": [
-    { name:"라말라", lat:31.9, lng:35.2, emoji:"🕌", color:"#2ecc71" }
-  ],
-  "Saint Kitts and Nevis": [
-    { name:"바스테르", lat:17.3, lng:-62.72, emoji:"🏝️", color:"#9b59b6" }
-  ],
-  "Saint Lucia": [
-    { name:"캐스트리스", lat:14.01, lng:-60.99, emoji:"🏝️", color:"#e74c3c" }
-  ],
-  "Saint Vincent and the Grenadines": [
-    { name:"킹스타운", lat:13.16, lng:-61.23, emoji:"🏝️", color:"#3498db" }
-  ],
-  "Samoa": [
-    { name:"아피아", lat:-13.83, lng:-171.76, emoji:"🏝️", color:"#2ecc71" }
-  ],
-  "San Marino": [
-    { name:"산마리노", lat:43.94, lng:12.45, emoji:"🏰", color:"#3498db" }
-  ],
-  "Sao Tome and Principe": [
-    { name:"상투메", lat:0.34, lng:6.73, emoji:"🏝️", color:"#f39c12" }
-  ],
-  "Seychelles": [
-    { name:"빅토리아", lat:-4.62, lng:55.45, emoji:"🏝️", color:"#1abc9c" }
-  ],
-  "Solomon Islands": [
-    { name:"호니아라", lat:-9.43, lng:159.95, emoji:"🏝️", color:"#2ecc71" }
-  ],
-  "Tonga": [
-    { name:"누쿠알로파", lat:-21.21, lng:-175.15, emoji:"🏝️", color:"#e74c3c" }
-  ],
-  "Tuvalu": [
-    { name:"푸나푸티", lat:-8.52, lng:179.2, emoji:"🏝️", color:"#f39c12" }
-  ],
-  "Vanuatu": [
-    { name:"포트빌라", lat:-17.73, lng:168.32, emoji:"🏝️", color:"#2ecc71" }
-  ],
-  "Vatican": [
-    { name:"바티칸시티", lat:41.9, lng:12.45, emoji:"⛪", color:"#f1c40f" }
-  ]
+    { name:"알마티", lat:43.24, lng:76.95, emoji:"🏔️", color:"#3498db" },
+  ],
+  // ── 나머지 국가 (수도) ──
+  "Afghanistan": [{ name:"카불", lat:34.53, lng:69.17, emoji:"🏔️", color:"#e67e22" }],
+  "Algeria": [{ name:"알제", lat:36.75, lng:3.04, emoji:"🕌", color:"#e74c3c" }],
+  "Angola": [{ name:"루안다", lat:-8.84, lng:13.23, emoji:"🏙️", color:"#f39c12" }],
+  "Armenia": [{ name:"예레반", lat:40.18, lng:44.51, emoji:"⛪", color:"#9b59b6" }],
+  "Azerbaijan": [{ name:"바쿠", lat:40.41, lng:49.87, emoji:"🔥", color:"#e74c3c" }],
+  "Bahrain": [{ name:"마나마", lat:26.23, lng:50.59, emoji:"🏙️", color:"#3498db" }],
+  "Bangladesh": [{ name:"다카", lat:23.81, lng:90.41, emoji:"🕌", color:"#2ecc71" }],
+  "Belarus": [{ name:"민스크", lat:53.90, lng:27.57, emoji:"🏛️", color:"#3498db" }],
+  "Belize": [{ name:"벨리즈시티", lat:17.50, lng:-88.20, emoji:"🏝️", color:"#2ecc71" }],
+  "Benin": [{ name:"코토누", lat:6.37, lng:2.39, emoji:"🌍", color:"#f39c12" }],
+  "Bhutan": [{ name:"팀부", lat:27.47, lng:89.64, emoji:"🛕", color:"#e67e22" }],
+  "Bosnia and Herzegovina": [{ name:"사라예보", lat:43.86, lng:18.41, emoji:"🏰", color:"#e74c3c" }, { name:"모스타르", lat:43.34, lng:17.81, emoji:"🌉", color:"#2ecc71" }],
+  "Botswana": [{ name:"가보로네", lat:-24.65, lng:25.91, emoji:"🐘", color:"#2ecc71" }],
+  "Brunei": [{ name:"반다르스리브가완", lat:4.94, lng:114.95, emoji:"🕌", color:"#f39c12" }],
+  "Burkina Faso": [{ name:"와가두구", lat:12.37, lng:-1.52, emoji:"🌍", color:"#e67e22" }],
+  "Burundi": [{ name:"기테가", lat:-3.43, lng:29.93, emoji:"🌍", color:"#2ecc71" }],
+  "Cabo Verde": [{ name:"프라이아", lat:14.93, lng:-23.51, emoji:"🏝️", color:"#3498db" }],
+  "Cameroon": [{ name:"야운데", lat:3.87, lng:11.52, emoji:"🌍", color:"#2ecc71" }],
+  "Central African Republic": [{ name:"방기", lat:4.36, lng:18.56, emoji:"🌍", color:"#e67e22" }],
+  "Chad": [{ name:"은자메나", lat:12.13, lng:15.05, emoji:"🌍", color:"#f39c12" }],
+  "Comoros": [{ name:"모로니", lat:-11.70, lng:43.26, emoji:"🏝️", color:"#3498db" }],
+  "Democratic Republic of the Congo": [{ name:"킨샤사", lat:-4.44, lng:15.27, emoji:"🌍", color:"#2ecc71" }],
+  "Djibouti": [{ name:"지부티시", lat:11.59, lng:43.15, emoji:"🏙️", color:"#e74c3c" }],
+  "El Salvador": [{ name:"산살바도르", lat:13.69, lng:-89.19, emoji:"🌋", color:"#3498db" }],
+  "Equatorial Guinea": [{ name:"말라보", lat:3.75, lng:8.78, emoji:"🌍", color:"#2ecc71" }],
+  "Eritrea": [{ name:"아스마라", lat:15.34, lng:38.93, emoji:"🏛️", color:"#e74c3c" }],
+  "Eswatini": [{ name:"음바바네", lat:-26.31, lng:31.14, emoji:"🌍", color:"#9b59b6" }],
+  "Gabon": [{ name:"리브르빌", lat:0.39, lng:9.45, emoji:"🌿", color:"#2ecc71" }],
+  "Gambia": [{ name:"반줄", lat:13.45, lng:-16.58, emoji:"🌍", color:"#f39c12" }],
+  "Guinea": [{ name:"코나크리", lat:9.64, lng:-13.58, emoji:"🌍", color:"#e67e22" }],
+  "Guinea-Bissau": [{ name:"비사우", lat:11.86, lng:-15.60, emoji:"🌍", color:"#2ecc71" }],
+  "Guyana": [{ name:"조지타운", lat:6.80, lng:-58.16, emoji:"🌿", color:"#2ecc71" }],
+  "Haiti": [{ name:"포르토프랭스", lat:18.54, lng:-72.34, emoji:"🏙️", color:"#e74c3c" }],
+  "Honduras": [{ name:"테구시갈파", lat:14.07, lng:-87.19, emoji:"🌋", color:"#3498db" }],
+  "Iraq": [{ name:"바그다드", lat:33.31, lng:44.37, emoji:"🕌", color:"#e67e22" }],
+  "Ivory Coast": [{ name:"아비장", lat:5.36, lng:-4.01, emoji:"🌍", color:"#f39c12" }],
+  "Kosovo": [{ name:"프리슈티나", lat:42.66, lng:21.17, emoji:"🏛️", color:"#3498db" }],
+  "Kuwait": [{ name:"쿠웨이트시티", lat:29.38, lng:47.99, emoji:"🏙️", color:"#f39c12" }],
+  "Kyrgyzstan": [{ name:"비슈케크", lat:42.87, lng:74.59, emoji:"🏔️", color:"#3498db" }],
+  "Lesotho": [{ name:"마세루", lat:-29.31, lng:27.48, emoji:"🏔️", color:"#2ecc71" }],
+  "Liberia": [{ name:"몬로비아", lat:6.30, lng:-10.80, emoji:"🌍", color:"#e74c3c" }],
+  "Libya": [{ name:"트리폴리", lat:32.90, lng:13.18, emoji:"🏛️", color:"#e67e22" }],
+  "Malawi": [{ name:"릴롱궤", lat:-13.97, lng:33.79, emoji:"🌍", color:"#2ecc71" }],
+  "Mali": [{ name:"바마코", lat:12.64, lng:-8.00, emoji:"🌍", color:"#f39c12" }],
+  "Mauritania": [{ name:"누악쇼트", lat:18.09, lng:-15.98, emoji:"🏜️", color:"#e67e22" }],
+  "Moldova": [{ name:"키시나우", lat:47.01, lng:28.86, emoji:"🏛️", color:"#9b59b6" }],
+  "Mozambique": [{ name:"마푸토", lat:-25.97, lng:32.57, emoji:"🌍", color:"#e74c3c" }],
+  "Nicaragua": [{ name:"마나과", lat:12.11, lng:-86.24, emoji:"🌋", color:"#3498db" }],
+  "Niger": [{ name:"니아메", lat:13.51, lng:2.11, emoji:"🌍", color:"#f39c12" }],
+  "Nigeria": [{ name:"라고스", lat:6.52, lng:3.38, emoji:"🏙️", color:"#2ecc71" }, { name:"아부자", lat:9.06, lng:7.49, emoji:"🏛️", color:"#e74c3c" }],
+  "North Korea": [{ name:"평양", lat:39.02, lng:125.75, emoji:"🏛️", color:"#e74c3c" }],
+  "North Macedonia": [{ name:"스코페", lat:41.99, lng:21.43, emoji:"🏛️", color:"#e67e22" }, { name:"오흐리드", lat:41.12, lng:20.80, emoji:"🏖️", color:"#3498db" }],
+  "Papua New Guinea": [{ name:"포트모르즈비", lat:-6.31, lng:147.15, emoji:"🌿", color:"#2ecc71" }],
+  "Paraguay": [{ name:"아순시온", lat:-25.26, lng:-57.58, emoji:"🏙️", color:"#3498db" }],
+  "Republic of the Congo": [{ name:"브라자빌", lat:-4.27, lng:15.28, emoji:"🌍", color:"#2ecc71" }],
+  "Sierra Leone": [{ name:"프리타운", lat:8.47, lng:-13.23, emoji:"🌍", color:"#f39c12" }],
+  "Somalia": [{ name:"모가디슈", lat:2.05, lng:45.32, emoji:"🌍", color:"#e74c3c" }],
+  "South Sudan": [{ name:"주바", lat:4.85, lng:31.60, emoji:"🌍", color:"#2ecc71" }],
+  "Sudan": [{ name:"하르툼", lat:15.50, lng:32.56, emoji:"🏜️", color:"#e67e22" }],
+  "Suriname": [{ name:"파라마리보", lat:5.85, lng:-55.20, emoji:"🌿", color:"#2ecc71" }],
+  "Syria": [{ name:"다마스쿠스", lat:33.51, lng:36.29, emoji:"🕌", color:"#e67e22" }],
+  "Tajikistan": [{ name:"두샨베", lat:38.56, lng:68.77, emoji:"🏔️", color:"#3498db" }],
+  "Timor-Leste": [{ name:"딜리", lat:-8.56, lng:125.57, emoji:"🏝️", color:"#e74c3c" }],
+  "Togo": [{ name:"로메", lat:6.14, lng:1.21, emoji:"🌍", color:"#f39c12" }],
+  "Trinidad and Tobago": [{ name:"포트오브스페인", lat:10.65, lng:-61.51, emoji:"🎵", color:"#e74c3c" }],
+  "Turkmenistan": [{ name:"아시가바트", lat:37.96, lng:58.38, emoji:"🏛️", color:"#f39c12" }],
+  "Uganda": [{ name:"캄팔라", lat:0.35, lng:32.58, emoji:"🌍", color:"#2ecc71" }],
+  "Uruguay": [{ name:"몬테비데오", lat:-34.88, lng:-56.16, emoji:"🏙️", color:"#3498db" }],
+  "Venezuela": [{ name:"카라카스", lat:10.49, lng:-66.88, emoji:"🏙️", color:"#e74c3c" }],
+  "Yemen": [{ name:"사나", lat:15.35, lng:44.21, emoji:"🕌", color:"#e67e22" }],
+  "Zambia": [{ name:"루사카", lat:-15.39, lng:28.32, emoji:"🌍", color:"#2ecc71" }],
+  // ── 소규모 국가 ──
+  "Andorra": [{ name:"안도라라벨랴", lat:42.51, lng:1.52, emoji:"🏔️", color:"#3498db" }],
+  "Antigua and Barbuda": [{ name:"세인트존스", lat:17.12, lng:-61.85, emoji:"🏝️", color:"#e74c3c" }],
+  "Bahamas": [{ name:"나소", lat:25.05, lng:-77.34, emoji:"🏝️", color:"#1abc9c" }],
+  "Barbados": [{ name:"브리지타운", lat:13.10, lng:-59.62, emoji:"🏝️", color:"#3498db" }],
+  "Dominica": [{ name:"로조", lat:15.30, lng:-61.39, emoji:"🏝️", color:"#2ecc71" }],
+  "Grenada": [{ name:"세인트조지스", lat:12.06, lng:-61.75, emoji:"🏝️", color:"#e74c3c" }],
+  "Kiribati": [{ name:"타라와", lat:1.45, lng:173.00, emoji:"🏝️", color:"#f39c12" }],
+  "Liechtenstein": [{ name:"파두츠", lat:47.14, lng:9.52, emoji:"🏔️", color:"#3498db" }],
+  "Malta": [{ name:"발레타", lat:35.90, lng:14.51, emoji:"🏛️", color:"#e67e22" }],
+  "Marshall Islands": [{ name:"마주로", lat:7.09, lng:171.38, emoji:"🏝️", color:"#1abc9c" }],
+  "Micronesia": [{ name:"팔리키르", lat:6.91, lng:158.16, emoji:"🏝️", color:"#3498db" }],
+  "Monaco": [{ name:"모나코", lat:43.73, lng:7.42, emoji:"🏙️", color:"#e74c3c" }],
+  "Nauru": [{ name:"야렌", lat:-0.55, lng:166.92, emoji:"🏝️", color:"#f39c12" }],
+  "Palau": [{ name:"응에룰무드", lat:7.50, lng:134.62, emoji:"🏝️", color:"#1abc9c" }],
+  "Palestine": [{ name:"라말라", lat:31.90, lng:35.20, emoji:"🕌", color:"#2ecc71" }],
+  "Saint Kitts and Nevis": [{ name:"바스테르", lat:17.30, lng:-62.72, emoji:"🏝️", color:"#9b59b6" }],
+  "Saint Lucia": [{ name:"캐스트리스", lat:14.01, lng:-60.99, emoji:"🏝️", color:"#e74c3c" }],
+  "Saint Vincent and the Grenadines": [{ name:"킹스타운", lat:13.16, lng:-61.23, emoji:"🏝️", color:"#3498db" }],
+  "Samoa": [{ name:"아피아", lat:-13.83, lng:-171.76, emoji:"🏝️", color:"#2ecc71" }],
+  "San Marino": [{ name:"산마리노", lat:43.94, lng:12.45, emoji:"🏰", color:"#3498db" }],
+  "Sao Tome and Principe": [{ name:"상투메", lat:0.34, lng:6.73, emoji:"🏝️", color:"#f39c12" }],
+  "Seychelles": [{ name:"빅토리아", lat:-4.62, lng:55.45, emoji:"🏝️", color:"#1abc9c" }],
+  "Solomon Islands": [{ name:"호니아라", lat:-9.43, lng:159.95, emoji:"🏝️", color:"#2ecc71" }],
+  "Tonga": [{ name:"누쿠알로파", lat:-21.21, lng:-175.15, emoji:"🏝️", color:"#e74c3c" }],
+  "Tuvalu": [{ name:"푸나푸티", lat:-8.52, lng:179.20, emoji:"🏝️", color:"#f39c12" }],
+  "Vanuatu": [{ name:"포트빌라", lat:-17.73, lng:168.32, emoji:"🏝️", color:"#2ecc71" }],
+  "Vatican": [{ name:"바티칸시티", lat:41.90, lng:12.45, emoji:"⛪", color:"#f1c40f" }],
 }
