@@ -11,6 +11,23 @@ import { AUTO_I18N } from './auto-i18n'
 import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile } from './firebase'
 
 // ── 실제 관광지 사진 (Wikipedia + Wikimedia Commons 검색) ─────────────
+// 전역 중복 회피: 이미 사용된 이미지 URL을 패널 단위로 추적
+// key = `${cityName}:${spotName}` → 해당 스팟이 점유한 이미지 URL
+const SPOT_IMAGE_USED = new Map() // url → ownerKey
+const SPOT_IMAGE_OWNED = new Map() // ownerKey → url
+
+const claimImage = (url, ownerKey) => {
+  if (!url) return false
+  const prevOwner = SPOT_IMAGE_USED.get(url)
+  if (prevOwner && prevOwner !== ownerKey) return false // 이미 다른 스팟이 사용 중
+  // 기존에 이 스팟이 다른 이미지를 쓰고 있었다면 해제
+  const prevUrl = SPOT_IMAGE_OWNED.get(ownerKey)
+  if (prevUrl && prevUrl !== url) SPOT_IMAGE_USED.delete(prevUrl)
+  SPOT_IMAGE_USED.set(url, ownerKey)
+  SPOT_IMAGE_OWNED.set(ownerKey, url)
+  return true
+}
+
 function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, alt }) {
   const [src, setSrc] = useState(null)
 
@@ -18,7 +35,19 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
     setSrc(null)
     let cancelled = false
     const keyword = wikiTitle || spotName || ''
+    const ownerKey = `${cityName || ''}:${spotName || keyword}`
     if (!keyword) { setSrc(fallback); return }
+
+    // 패널 전환 시 이전 소유 이미지 해제
+    const prevUrl = SPOT_IMAGE_OWNED.get(ownerKey)
+    if (prevUrl) { SPOT_IMAGE_USED.delete(prevUrl); SPOT_IMAGE_OWNED.delete(ownerKey) }
+
+    const trySet = (url) => {
+      if (cancelled || !url) return false
+      if (!claimImage(url, ownerKey)) return false // 중복이면 skip
+      setSrc(url)
+      return true
+    }
 
     const tryWiki = async (title) => {
       try {
@@ -34,37 +63,39 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
         const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=5&prop=pageimages&format=json&pithumbsize=600&origin=*`)
         const data = await res.json()
         const pages = Object.values(data?.query?.pages || {})
+        const urls = []
         for (const page of pages) {
-          if (page?.thumbnail?.source) return page.thumbnail.source
+          if (page?.thumbnail?.source) urls.push(page.thumbnail.source)
         }
-        return null
-      } catch { return null }
+        return urls
+      } catch { return [] }
     }
 
-    // Wikimedia Commons에서 실사진 검색
+    // Wikimedia Commons에서 실사진 검색 (복수 후보 반환)
     const searchCommons = async (query) => {
       try {
         const res = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&gsrlimit=5&prop=imageinfo&iiprop=url|mime&iiurlwidth=600&format=json&origin=*`)
         const data = await res.json()
         const pages = Object.values(data?.query?.pages || {})
+        const urls = []
         for (const p of pages) {
           const info = p?.imageinfo?.[0]
-          if (info?.thumburl && info.mime?.startsWith('image/jpeg')) return info.thumburl
+          if (info?.thumburl && info.mime?.startsWith('image/jpeg')) urls.push(info.thumburl)
         }
-        return null
-      } catch { return null }
+        return urls
+      } catch { return [] }
     }
 
     const loadImage = async () => {
       // 1차: wikiTitle 정확 매칭
       let img = await tryWiki(keyword)
-      if (!cancelled && img) { setSrc(img); return }
+      if (trySet(img)) return
 
       // 2차: 영어만 추출
       const enKeyword = keyword.replace(/[가-힣]+/g, '').trim()
       if (enKeyword && enKeyword !== keyword) {
         img = await tryWiki(enKeyword)
-        if (!cancelled && img) { setSrc(img); return }
+        if (trySet(img)) return
       }
 
       // 3차: spotName
@@ -72,26 +103,29 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
         const enSpot = spotName.replace(/[가-힣]+/g, '').trim()
         if (enSpot) {
           img = await tryWiki(enSpot)
-          if (!cancelled && img) { setSrc(img); return }
+          if (trySet(img)) return
         }
       }
 
-      // 4차: Wikipedia 검색 (도시명 포함)
+      // 4차: Wikipedia 검색 (도시명 포함, 복수 후보 중 미사용 선택)
       const searchQuery = keyword + (cityName ? ' ' + cityName : '')
-      img = await searchWiki(searchQuery)
-      if (!cancelled && img) { setSrc(img); return }
+      const wikiResults = await searchWiki(searchQuery)
+      for (const url of wikiResults) if (trySet(url)) return
 
-      // 5차: Wikimedia Commons 실사진 검색
-      img = await searchCommons(keyword + ' photo')
-      if (!cancelled && img) { setSrc(img); return }
+      // 5차: Wikimedia Commons 실사진 검색 (복수 후보)
+      const commonsResults = await searchCommons(keyword + ' photo')
+      for (const url of commonsResults) if (trySet(url)) return
 
       // 6차: 도시명 + spotName으로 Commons 재검색
       if (cityName) {
-        img = await searchCommons(spotName + ' ' + cityName)
-        if (!cancelled && img) { setSrc(img); return }
+        const commonsResults2 = await searchCommons(spotName + ' ' + cityName)
+        for (const url of commonsResults2) if (trySet(url)) return
       }
 
-      // 최종 fallback
+      // 최종: 모든 후보가 중복이면 그래도 1차 결과 표시 (빈 화면보단 중복이 나음)
+      if (!cancelled && wikiResults[0]) { setSrc(wikiResults[0]); return }
+      if (!cancelled && commonsResults[0]) { setSrc(commonsResults[0]); return }
+
       if (!cancelled) setSrc(fallback)
     }
 
