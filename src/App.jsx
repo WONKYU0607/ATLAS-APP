@@ -1216,16 +1216,8 @@ function App() {
   }
 
 
-  // Load world GeoJSON (커스텀 간소화 50m 우선 → 110m fallback)
+  // Load world GeoJSON (110m 기본, 렉 최소화 우선)
   useEffect(() => {
-    const loadCustom = () => fetch('/countries.json').then(r => {
-      if (!r.ok) throw new Error('custom not found')
-      return r.json()
-    })
-    const load110m = () => fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
-      .then(r => r.json())
-
-    // 개별 링 단위로 유효성 검증 (날짜변경선 통과 ring 제거)
     const isValidRing = (ring) => {
       if (!ring || ring.length < 4) return false
       const lngs = ring.map(c => c[0])
@@ -1238,7 +1230,6 @@ function App() {
         if (!geom) return feat
         if (geom.type === 'Polygon') {
           const validRings = geom.coordinates.filter(isValidRing)
-          // 유효 링이 없으면 빈 coordinates로 (원본 feature 유지 시 전 지구 덮는 버그 발생)
           if (!validRings.length) return { ...feat, geometry: { ...geom, coordinates: [] } }
           return { ...feat, geometry: { ...geom, coordinates: validRings } }
         }
@@ -1251,19 +1242,14 @@ function App() {
         }
         return feat
       })
-      console.log('[ATLAS] Loaded', fixed.length, 'country polygons')
+      console.log('[ATLAS] Loaded', fixed.length, 'country polygons (110m)')
       setCountries(fixed)
     }
 
-    // 커스텀 파일 우선 시도, 없으면 110m fallback
-    loadCustom()
-      .then(data => { console.log('[ATLAS] /countries.json loaded'); processGeo(data) })
-      .catch(err => {
-        console.warn('[ATLAS] /countries.json failed, trying 110m fallback:', err.message)
-        load110m()
-          .then(data => { console.log('[ATLAS] 110m fallback loaded'); processGeo(data) })
-          .catch(err2 => console.error('[ATLAS] Both polygon sources failed:', err2))
-      })
+    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
+      .then(r => r.json())
+      .then(processGeo)
+      .catch(err => console.error('[ATLAS] Polygon load failed:', err))
   }, [])
 
   // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
