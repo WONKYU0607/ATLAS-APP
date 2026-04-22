@@ -37,6 +37,14 @@ export const COUNTRY_ISO = {
 "Suriname":"SR","Syria":"SY","Tajikistan":"TJ","Timor-Leste":"TL","Togo":"TG",
 "Trinidad and Tobago":"TT","Turkmenistan":"TM","Andorra":"AD","Antigua and Barbuda":"AG","Bahamas":"BS","Barbados":"BB","Dominica":"DM","Grenada":"GD","Kiribati":"KI","Liechtenstein":"LI","Malta":"MT","Marshall Islands":"MH","Micronesia":"FM","Monaco":"MC","Nauru":"NR","Palau":"PW","Palestine":"PS","Saint Kitts and Nevis":"KN","Saint Lucia":"LC","Saint Vincent and the Grenadines":"VC","Samoa":"WS","San Marino":"SM","Sao Tome and Principe":"ST","Seychelles":"SC","Solomon Islands":"SB","Tonga":"TO","Tuvalu":"TV","Vanuatu":"VU","Vatican":"VA","Uganda":"UG","Uruguay":"UY",
 "Venezuela":"VE","Yemen":"YE","Zambia":"ZM",
+// 해외 영토·속령 ISO 코드 (Intl.DisplayNames 자동 번역용)
+"Greenland":"GL","Puerto Rico":"PR","New Caledonia":"NC","Fr. Polynesia":"PF","Cook Is.":"CK",
+"Aruba":"AW","Curaçao":"CW","Cayman Is.":"KY","Bermuda":"BM","Faeroe Is.":"FO",
+"Somaliland":"SO","W. Sahara":"EH","Niue":"NU","Hong Kong":"HK","Macao":"MO",
+"Anguilla":"AI","Falkland Is.":"FK","Turks and Caicos Is.":"TC","British Virgin Is.":"VG",
+"U.S. Virgin Is.":"VI","Guam":"GU","N. Mariana Is.":"MP","American Samoa":"AS",
+"Jersey":"JE","Guernsey":"GG","Isle of Man":"IM","Montserrat":"MS","N. Cyprus":"CY",
+"Sint Maarten":"SX","St-Martin":"MF","St-Barthélemy":"BL","Saint Helena":"SH",
 }
 
 // 관용명 오버라이드
@@ -277,6 +285,29 @@ export const COUNTRY_INFO = {
   "Vanuatu": { capital:"포트빌라", population:"31만", area:"12,189 km²", lang:"비슬라마·영어·프랑스어", currency:"바투 (VUV)", timezone:"UTC+11", bestSeason:"Apr–Oct", visa:"30일 무비자", voltage:"220V / 50Hz", callCode:"+678", drive:"우측", tagline:"남태평양 화산 섬의 모험", continent:"오세아니아", emoji:"🇻🇺" },
   "Vatican": { capital:"바티칸시티", population:"800", area:"0.44 km²", lang:"이탈리아어·라틴어", currency:"유로 (EUR)", timezone:"UTC+1", bestSeason:"Apr–Jun, Sep–Nov", visa:"무비자", voltage:"230V / 50Hz", callCode:"+39-06", drive:"우측", tagline:"세계 가톨릭의 중심", continent:"유럽", emoji:"🇻🇦" },
   "Zambia": { capital:"루사카", population:"2,000만", area:"752,618 km²", lang:"영어", currency:"콰차 (ZMW)", timezone:"UTC+2", bestSeason:"May–Oct", visa:"e-비자", voltage:"230V / 50Hz", callCode:"+260", drive:"좌측", tagline:"빅토리아 폭포의 또 다른 관문", continent:"아프리카", emoji:"🇿🇲" },
+}
+
+// Natural Earth geojson 축약형 국가명 → 정식 키 별칭 (COUNTRY_INFO/COUNTRY_ISO/COUNTRY_NAME_OVERRIDE 동시 적용)
+const GEO_NAME_ALIASES = {
+  "Dem. Rep. Congo": "Democratic Republic of the Congo",
+  "Congo": "Republic of the Congo",
+  "S. Sudan": "South Sudan",
+  "Central African Rep.": "Central African Republic",
+  "Dominican Rep.": "Dominican Republic",
+  "Bosnia and Herz.": "Bosnia and Herzegovina",
+  "Eq. Guinea": "Equatorial Guinea",
+  "eSwatini": "Eswatini",
+  "Côte d'Ivoire": "Ivory Coast",
+  "São Tomé and Principe": "Sao Tome and Principe",
+  "Antigua and Barb.": "Antigua and Barbuda",
+  "Marshall Is.": "Marshall Islands",
+  "St. Kitts and Nevis": "Saint Kitts and Nevis",
+  "St. Vin. and Gren.": "Saint Vincent and the Grenadines",
+  "Solomon Is.": "Solomon Islands",
+}
+for (const [alias, canonical] of Object.entries(GEO_NAME_ALIASES)) {
+  if (COUNTRY_INFO[canonical]) COUNTRY_INFO[alias] = COUNTRY_INFO[canonical]
+  if (COUNTRY_ISO[canonical]) COUNTRY_ISO[alias] = COUNTRY_ISO[canonical]
 }
 
 // ── 국가별 긴급연락처 ─────────────────────────────────────────────
