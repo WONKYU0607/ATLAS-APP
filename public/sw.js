@@ -1,27 +1,24 @@
-// ATLAS Service Worker — 오프라인 캐싱
-const CACHE_NAME = 'atlas-v1'
-const STATIC_CACHE = 'atlas-static-v1'
-const IMG_CACHE = 'atlas-images-v1'
+// ATLAS Service Worker — 오프라인 캐싱 (v2: 네트워크 우선으로 변경)
+const CACHE_NAME = 'atlas-v2'
+const STATIC_CACHE = 'atlas-static-v2'
+const IMG_CACHE = 'atlas-images-v2'
 
-// 앱 셸 (빌드 후 index.html만 확실히 캐시)
-const PRECACHE = ['/', '/index.html']
-
-// 설치: 앱 셸 프리캐시
+// 설치: skip waiting으로 즉시 활성화
 self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(STATIC_CACHE).then(cache => cache.addAll(PRECACHE))
-  )
   self.skipWaiting()
 })
 
-// 활성화: 오래된 캐시 정리
+// 활성화: 이전 버전(v1 포함) 캐시 모두 삭제
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== STATIC_CACHE && k !== IMG_CACHE && k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
+      Promise.all(
+        keys
+          .filter(k => k !== STATIC_CACHE && k !== IMG_CACHE && k !== CACHE_NAME)
+          .map(k => caches.delete(k))
+      )
+    ).then(() => self.clients.claim())
   )
-  self.clients.claim()
 })
 
 // 요청 인터셉트
@@ -43,7 +40,7 @@ self.addEventListener('fetch', (e) => {
     return
   }
 
-  // 이미지 (국기, 지도 타일 등) → 캐시 우선, 없으면 네트워크
+  // 이미지 (국기, 지도 타일 등) → 캐시 우선, 없으면 네트워크 (이미지는 변경 드묾)
   if (e.request.destination === 'image' || url.hostname.includes('flagcdn.com') || url.hostname.includes('unpkg.com')) {
     e.respondWith(
       caches.match(e.request).then(cached => {
@@ -51,7 +48,6 @@ self.addEventListener('fetch', (e) => {
         return fetch(e.request).then(res => {
           const clone = res.clone()
           caches.open(IMG_CACHE).then(cache => {
-            // 이미지 캐시 크기 제한 (최대 200개)
             cache.keys().then(keys => { if (keys.length > 200) cache.delete(keys[0]) })
             cache.put(e.request, clone)
           })
@@ -62,16 +58,12 @@ self.addEventListener('fetch', (e) => {
     return
   }
 
-  // 정적 자산 (JS/CSS/HTML) → 캐시 우선 + 백그라운드 업데이트
+  // JS/CSS/HTML 등 정적 자산 → 네트워크 우선, 실패 시 캐시 (신규 배포 즉시 반영)
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      const fetchPromise = fetch(e.request).then(res => {
-        const clone = res.clone()
-        caches.open(STATIC_CACHE).then(cache => cache.put(e.request, clone))
-        return res
-      }).catch(() => cached)
-
-      return cached || fetchPromise
-    })
+    fetch(e.request).then(res => {
+      const clone = res.clone()
+      caches.open(STATIC_CACHE).then(cache => cache.put(e.request, clone))
+      return res
+    }).catch(() => caches.match(e.request))
   )
 })
