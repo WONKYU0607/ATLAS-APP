@@ -330,10 +330,7 @@ function App() {
   const [showDrop, setShowDrop] = useState(false)
   const [hoveredCountry, setHoveredCountry] = useState(null)
   const [showCountryInfo, setShowCountryInfo] = useState(false)
-  const [lang, setLang] = useState(() => {
-    if (typeof window === 'undefined') return 'en'
-    try { return localStorage.getItem('atlas_lang') || 'en' } catch { return 'en' }
-  })
+  const [lang, setLang] = useState('en')
   const [showLangMenu, setShowLangMenu] = useState(false)
   const [showSharePopup, setShowSharePopup] = useState(false)
   const [sidePanel, setSidePanel] = useState(null) // 'hotspots' | 'restaurants' | null
@@ -727,22 +724,6 @@ function App() {
 
   // 언어 변경 시 경로 캐시 초기화 (Directions API 응답 언어가 다름)
   useEffect(() => { setRouteCache({}) }, [lang])
-
-  // 언어 변경 시 localStorage 자동 동기화 (리로드 후 복원 보장)
-  useEffect(() => {
-    try { localStorage.setItem('atlas_lang', lang) } catch {}
-  }, [lang])
-
-  // lang 변경 시 폴백 도시 데이터 재생성 (DEFAULT_CITY_DATA 사용 중이면)
-  useEffect(() => {
-    if (!selectedCity || !cityData) return
-    const cityKey = selectedCity._koName || selectedCity.name
-    // CITY_DATA에 있는 도시는 재생성 불필요 (CITY_DATA_I18N/AUTO_I18N로 번역됨)
-    if (CITY_DATA[cityKey]) return
-    // 폴백 도시만 현재 언어로 재생성
-    const fallback = DEFAULT_CITY_DATA(cityKey, lang)
-    setCityData(prev => prev ? { ...fallback, weather: prev.weather } : fallback)
-  }, [lang])
 
   // 모바일 감지
   useEffect(() => {
@@ -1216,8 +1197,12 @@ function App() {
   }
 
 
-  // Load world GeoJSON (110m 기본, 렉 최소화 우선)
+  // Load world GeoJSON (110m, 남극 날짜변경선 ring 제거)
   useEffect(() => {
+    const load110m = () => fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
+      .then(r => r.json())
+
+    // 경도 180도 이상 span 하는 ring은 렌더링 시 지구 전체 덮음 (남극 등)
     const isValidRing = (ring) => {
       if (!ring || ring.length < 4) return false
       const lngs = ring.map(c => c[0])
@@ -1246,10 +1231,7 @@ function App() {
       setCountries(fixed)
     }
 
-    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
-      .then(r => r.json())
-      .then(processGeo)
-      .catch(err => console.error('[ATLAS] Polygon load failed:', err))
+    load110m().then(processGeo).catch(err => console.error('[ATLAS] Polygon load failed:', err))
   }, [])
 
   // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
@@ -1647,15 +1629,15 @@ function App() {
   }, [])
 
   // Update polygons — effect 분리로 렉 해결
-  // Effect A: countries 변경 시에만 polygonsData 재바인딩 (무거움 - 최소 실행)
+  // A: countries 변경 시에만 polygonsData 호출 (무거움, 1회만)
   useEffect(() => {
     if (!globeRef.current || countries.length === 0) return
     globeRef.current
       .polygonsData(countries)
-      .polygonsTransitionDuration(0) // 호버 애니메이션 제거 → 재렌더 최소화
+      .polygonsTransitionDuration(0)
   }, [countries])
 
-  // Effect B: hover/select/lang 변경 시 accessor만 재설정 (가벼움)
+  // B: hover/select 변경 시 accessor만 재설정 (가벼움)
   useEffect(() => {
     if (!globeRef.current || countries.length === 0) return
     const globe = globeRef.current
@@ -2119,7 +2101,7 @@ function App() {
       }
 
       // 2. 사전 데이터 없는 경우 기본 데이터 사용
-      const fallback = DEFAULT_CITY_DATA(cityKey, lang)
+      const fallback = DEFAULT_CITY_DATA(cityKey)
       setCityData(fallback)
       setLoading(false)
       fetchWeather(city.lat, city.lng).then(w => {
@@ -2131,7 +2113,7 @@ function App() {
       setCityData({
         weather: { temp: '—', condition: '—', icon: '🌤️', humidity: '—' },
         description: `${cityKey2}`,
-        spots: DEFAULT_CITY_DATA(cityKey2, lang).spots,
+        spots: DEFAULT_CITY_DATA(cityKey2).spots,
       })
       setLoading(false)
     }
