@@ -1231,12 +1231,8 @@ function App() {
   }
 
 
-  // Load world GeoJSON (50m 커스텀 우선 → 110m fallback, 남극 날짜변경선 ring 제거)
+  // Load world GeoJSON (110m, 남극 날짜변경선 ring 제거)
   useEffect(() => {
-    const loadCustom = () => fetch('/countries.json').then(r => {
-      if (!r.ok) throw new Error('custom not found')
-      return r.json()
-    })
     const load110m = () => fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
       .then(r => r.json())
 
@@ -1247,7 +1243,7 @@ function App() {
       return (Math.max(...lngs) - Math.min(...lngs)) <= 180
     }
 
-    const processGeo = (data, source) => {
+    const processGeo = (data) => {
       const fixed = data.features.map(feat => {
         const geom = feat.geometry
         if (!geom) return feat
@@ -1265,18 +1261,11 @@ function App() {
         }
         return feat
       })
-      console.log('[ATLAS] Loaded', fixed.length, 'country polygons (' + source + ')')
+      console.log('[ATLAS] Loaded', fixed.length, 'country polygons (110m)')
       setCountries(fixed)
     }
 
-    loadCustom()
-      .then(data => processGeo(data, '50m'))
-      .catch(err => {
-        console.warn('[ATLAS] /countries.json failed, using 110m:', err.message)
-        load110m()
-          .then(data => processGeo(data, '110m'))
-          .catch(err2 => console.error('[ATLAS] Polygon load failed:', err2))
-      })
+    load110m().then(processGeo).catch(err => console.error('[ATLAS] Polygon load failed:', err))
   }, [])
 
   // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
