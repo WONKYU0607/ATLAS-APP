@@ -144,6 +144,24 @@ export const T = {
   courseLoad:{ko:'불러오기',en:'Load',ja:'読込',zh:'加载'},
   courseTypeManual:{ko:'수동',en:'Manual',ja:'手動',zh:'手动'},
   courseTypeAi:{ko:'AI',en:'AI',ja:'AI',zh:'AI'},
+  // ── 커뮤니티 ──
+  community:{ko:'커뮤니티',en:'Community',ja:'コミュニティ',zh:'社区'},
+  communityDesc:{ko:'다른 여행자들의 코스를 둘러보세요',en:'Explore courses from other travelers',ja:'他の旅行者のコースを見る',zh:'浏览其他旅行者的路线'},
+  communityEmpty:{ko:'아직 공유된 코스가 없습니다',en:'No shared courses yet',ja:'まだ共有されたコースはありません',zh:'还没有分享的路线'},
+  communityEmptyHint:{ko:'첫 번째 코스를 공유해보세요!',en:'Be the first to share a course!',ja:'最初のコースを共有してみましょう！',zh:'成为第一个分享路线的人！'},
+  communityLoad:{ko:'이 코스 불러오기',en:'Load this course',ja:'このコースを読み込む',zh:'加载此路线'},
+  communityDays:{ko:'일',en:'d',ja:'日',zh:'天'},
+  communityPlaces:{ko:'곳',en:' places',ja:'ヶ所',zh:'个地点'},
+  communityShared:{ko:'✅ 코스가 공유되었습니다!',en:'✅ Course shared!',ja:'✅ コースを共有しました！',zh:'✅ 路线已分享！'},
+  commentPlaceholder:{ko:'댓글 입력…',en:'Write a comment…',ja:'コメントを入力…',zh:'写评论…'},
+  commentPost:{ko:'게시',en:'Post',ja:'投稿',zh:'发布'},
+  commentDelete:{ko:'삭제',en:'Delete',ja:'削除',zh:'删除'},
+  commentLogin:{ko:'댓글을 작성하려면 로그인하세요',en:'Login to write a comment',ja:'コメントするにはログインしてください',zh:'登录以发表评论'},
+  // ── 공유 ──
+  shareBtn:{ko:'공유하기',en:'Share',ja:'共有',zh:'分享'},
+  shareCancel:{ko:'취소',en:'Cancel',ja:'キャンセル',zh:'取消'},
+  sharePhotos:{ko:'사진 (최대 5장)',en:'Photos (max 5)',ja:'写真（最大5枚）',zh:'照片（最多5张）'},
+  uploading:{ko:'업로드 중…',en:'Uploading…',ja:'アップロード中…',zh:'上传中…'},
 }
 
 // 관광지 유형 번역
