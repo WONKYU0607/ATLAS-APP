@@ -1,8 +1,8 @@
 // ── Firebase 초기화 + Auth/Firestore/Storage 헬퍼 ──
 import { initializeApp } from 'firebase/app'
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from 'firebase/auth'
-import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, orderBy, limit, deleteDoc } from 'firebase/firestore'
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, deleteDoc, query, orderBy, arrayUnion, arrayRemove, serverTimestamp } from 'firebase/firestore'
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 const firebaseConfig = {
   apiKey: "AIzaSyACm8gKlsLdho0YIU-M0CKOwG1RWaXS4EU",
@@ -40,54 +40,73 @@ export const saveUserData = async (uid, data) => {
 
 export const updateUserProfile = (user, data) => updateProfile(user, data)
 
-// ── 사진 업로드 (Storage) ──
-export const uploadPhoto = async (file, path) => {
-  const storageRef = ref(storage, path)
-  await uploadBytes(storageRef, file)
-  return await getDownloadURL(storageRef)
+// ── 커뮤니티: 공유 코스 ──
+const sharedCoursesRef = collection(db, 'sharedCourses')
+
+// 코스 공유 (업로드)
+export const shareCourse = async (uid, courseI18n, userName, photos = []) => {
+  const data = {
+    uid,
+    userName: userName || 'Anonymous',
+    course: courseI18n,
+    photos,
+    comments: [],
+    likes: [],
+    createdAt: Date.now(),
+    createdAtServer: serverTimestamp(),
+  }
+  const ref = await addDoc(sharedCoursesRef, data)
+  return { id: ref.id, ...data }
 }
 
-// ── 공유 코스 (소셜) ──
-export const shareCourse = async (uid, course, userName, photos) => {
-  const id = `${uid}_${Date.now()}`
-  await setDoc(doc(db, 'shared_courses', id), {
-    ...course, id, uid, userName: userName || 'Anonymous',
-    sharedAt: Date.now(), likes: 0, photos: photos || [], comments: []
-  })
-  return id
-}
-
+// 전체 공유 코스 로드 (최신순)
 export const loadSharedCourses = async () => {
-  const q = query(collection(db, 'shared_courses'), orderBy('sharedAt', 'desc'), limit(50))
+  const q = query(sharedCoursesRef, orderBy('createdAt', 'desc'))
   const snap = await getDocs(q)
-  return snap.docs.map(d => d.data())
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
 }
 
-export const deleteSharedCourse = async (id) => {
-  await deleteDoc(doc(db, 'shared_courses', id))
+// 공유 코스 삭제 (본인만)
+export const deleteSharedCourse = async (courseId) => {
+  await deleteDoc(doc(db, 'sharedCourses', courseId))
 }
 
-// ── 댓글 ──
+// 사진 업로드 → Firebase Storage → URL 반환
+export const uploadPhoto = async (file, path) => {
+  const ref = storageRef(storage, path)
+  await uploadBytes(ref, file)
+  return await getDownloadURL(ref)
+}
+
+// 댓글 추가
 export const addComment = async (courseId, comment) => {
-  const courseRef = doc(db, 'shared_courses', courseId)
+  const courseRef = doc(db, 'sharedCourses', courseId)
   const snap = await getDoc(courseRef)
-  if (snap.exists()) {
-    const data = snap.data()
-    const comments = [...(data.comments || []), { ...comment, id: Date.now().toString(), createdAt: Date.now() }]
-    await updateDoc(courseRef, { comments })
-    return comments
-  }
-  return []
+  if (!snap.exists()) return []
+  const current = snap.data().comments || []
+  const newComment = { ...comment, id: Date.now() + '_' + Math.random().toString(36).slice(2, 8), createdAt: Date.now() }
+  const updated = [...current, newComment]
+  await updateDoc(courseRef, { comments: updated })
+  return updated
 }
 
+// 댓글 삭제
 export const deleteComment = async (courseId, commentId) => {
-  const courseRef = doc(db, 'shared_courses', courseId)
+  const courseRef = doc(db, 'sharedCourses', courseId)
   const snap = await getDoc(courseRef)
-  if (snap.exists()) {
-    const data = snap.data()
-    const comments = (data.comments || []).filter(c => c.id !== commentId)
-    await updateDoc(courseRef, { comments })
-    return comments
-  }
-  return []
+  if (!snap.exists()) return []
+  const filtered = (snap.data().comments || []).filter(c => c.id !== commentId)
+  await updateDoc(courseRef, { comments: filtered })
+  return filtered
+}
+
+// 좋아요 토글
+export const toggleLike = async (courseId, uid) => {
+  const courseRef = doc(db, 'sharedCourses', courseId)
+  const snap = await getDoc(courseRef)
+  if (!snap.exists()) return []
+  const current = snap.data().likes || []
+  const has = current.includes(uid)
+  await updateDoc(courseRef, { likes: has ? arrayRemove(uid) : arrayUnion(uid) })
+  return has ? current.filter(x => x !== uid) : [...current, uid]
 }
