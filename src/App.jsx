@@ -8,7 +8,7 @@ import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
 import { AUTO_I18N } from './auto-i18n'
-import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, toggleLike } from './firebase'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, toggleLike, createJournal, loadJournals, loadJournal, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto } from './firebase'
 
 // ── 실제 관광지 사진 (Wikipedia + Wikimedia Commons 검색) ─────────────
 // 전역 중복 회피: 이미 사용된 이미지 URL을 패널 단위로 추적
@@ -313,6 +313,22 @@ function App() {
   const [shareModalCourse, setShareModalCourse] = useState(null)
   const [sharePhotos, setSharePhotos] = useState([])
   const [shareUploading, setShareUploading] = useState(false)
+
+  // ── 트래블 피드 (Phase 1) ──
+  const [showFeed, setShowFeed] = useState(false)
+  const [feedMainTab, setFeedMainTab] = useState('journals') // 'journals' | 'courses'
+  const [feedSubTab, setFeedSubTab] = useState('all') // 'all' | 'mine'
+  const [feedJournals, setFeedJournals] = useState([])
+  const [feedJournalsLoading, setFeedJournalsLoading] = useState(false)
+  const [showJournalEditor, setShowJournalEditor] = useState(false)
+  const [editingJournal, setEditingJournal] = useState(null) // null=new, object=edit
+  const [viewingJournal, setViewingJournal] = useState(null) // 상세 보기
+  const [journalForm, setJournalForm] = useState({ title:'', body:'', cities:[], days:1, rating:0, visibility:'public', photos:[] })
+  const [journalNewPhotos, setJournalNewPhotos] = useState([]) // File 객체 (업로드 대기)
+  const [journalSaving, setJournalSaving] = useState(false)
+  const [journalCommentText, setJournalCommentText] = useState('')
+  const [journalCitySelectOpen, setJournalCitySelectOpen] = useState(false)
+  const [journalCitySearchQ, setJournalCitySearchQ] = useState('')
 
   const globeContainerRef = useRef(null)
   const globeRef = useRef(null)
@@ -923,7 +939,7 @@ function App() {
 
   // 모바일 뒤로가기 = 닫기 (refs for latest state in event handler)
   const backStateRef = useRef({})
-  backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo, lang, showAiModal, showCoursePlanner, showCourseBasket, showCurrencyCalc, showLoginModal, showCommunity, shareModalCourse }
+  backStateRef.current = { showMyTravels, showHamburger, selectedSpot, sidePanel, selectedCity, selectedCountry, showCountryInfo, lang, showAiModal, showCoursePlanner, showCourseBasket, showCurrencyCalc, showLoginModal, showCommunity, shareModalCourse, showFeed, showJournalEditor, viewingJournal }
   useEffect(() => {
     // 충분한 history 스택 확보 (모바일 브라우저 호환)
     window.history.replaceState({ atlas: true }, '')
@@ -931,6 +947,21 @@ function App() {
     const handlePop = (e) => {
       const s = backStateRef.current
       // 모달/오버레이 먼저 닫기
+      if (s.viewingJournal) {
+        setViewingJournal(null)
+        backStateRef.current = { ...s, viewingJournal: null }
+        return
+      }
+      if (s.showJournalEditor) {
+        setShowJournalEditor(false); setEditingJournal(null)
+        backStateRef.current = { ...s, showJournalEditor: false }
+        return
+      }
+      if (s.showFeed) {
+        setShowFeed(false)
+        backStateRef.current = { ...s, showFeed: false }
+        return
+      }
       if (s.showLoginModal) {
         setShowLoginModal(false)
         backStateRef.current = { ...s, showLoginModal: false }
@@ -2476,21 +2507,26 @@ function App() {
                   )}
                 </div>
 
-                {/* 커뮤니티 */}
+                {/* 트래블 피드 */}
                 <div style={{padding:'12px 16px 14px',borderTop:'1px solid rgba(255,255,255,.08)'}}>
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
                     onClick={async()=>{
-                      setShowCommunity(true);setShowHamburger(false);setCommunityLoading(true);setCommunityContinent(null);setCommunityCountry(null);setCommunityExpanded(null)
-                      try{const data=await loadSharedCourses();setCommunityCoursesData(data)}catch(e){console.error('[ATLAS] loadSharedCourses failed:',e)}
-                      setCommunityLoading(false)
+                      setShowFeed(true);setShowHamburger(false);setFeedMainTab('journals');setFeedSubTab('all');setFeedJournalsLoading(true)
+                      try{
+                        const data=await loadJournals({ limitN: 30 })
+                        setFeedJournals(data)
+                      }catch(e){console.error('[ATLAS] loadJournals failed:',e)}
+                      setFeedJournalsLoading(false)
+                      // 코스 데이터도 미리 로드 (탭 전환 시 즉시 표시)
+                      try{const cd=await loadSharedCourses();setCommunityCoursesData(cd)}catch(e){}
                     }}
                     onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
                     onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,191,36,.1))',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
                       <div>
-                        <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('community')}</div>
-                        <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{t('communityDesc')}</div>
+                        <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('travelFeed')}</div>
+                        <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{t('travelFeedDesc')}</div>
                       </div>
                     </div>
                     <span style={{fontSize:14,color:'#64748b'}}>→</span>
@@ -2685,32 +2721,32 @@ function App() {
           <>
             {/* Bottom bar */}
             <div style={{
-              position:'absolute',bottom:isMobile?12:24,
+              position:'absolute',bottom:isMobile?'calc(12px + env(safe-area-inset-bottom))':24,
               left:'50%',transform:'translateX(-50%)',
               zIndex:1001,background:'rgba(255,255,255,.96)',backdropFilter:'blur(14px)',
-              border:'1.5px solid #e2e8f0',borderRadius:isMobile?20:40,
-              padding:isMobile?'8px 14px':'10px 20px',fontSize:isMobile?11:13,color:'#1e293b',
+              border:'1.5px solid #e2e8f0',borderRadius:isMobile?16:40,
+              padding:isMobile?'7px 10px':'10px 20px',fontSize:isMobile?11:13,color:'#1e293b',
               boxShadow:'0 4px 24px rgba(0,0,0,.18)',
-              display:'flex',alignItems:'center',gap:isMobile?6:12,
-              whiteSpace:isMobile?'normal':'nowrap',
-              maxWidth:isMobile?'92vw':'none',
-              flexWrap:isMobile?'wrap':'nowrap',
-              justifyContent:isMobile?'center':'flex-start',
+              display:'flex',alignItems:'center',gap:isMobile?5:12,
+              whiteSpace:'nowrap',
+              maxWidth:isMobile?'96vw':'none',
+              flexWrap:'nowrap',
+              justifyContent:'flex-start',
             }}>
-              {info && <span style={{fontSize:isMobile?16:20}}>{info.emoji}</span>}
-              <span style={{fontWeight:700,fontSize:isMobile?13:15}}>{countryKo}</span>
+              {info && <span style={{fontSize:isMobile?15:20,flexShrink:0}}>{info.emoji}</span>}
+              <span style={{fontWeight:700,fontSize:isMobile?12:15,flexShrink:0}}>{countryKo}</span>
               {info && !isMobile && <span style={{fontSize:11,color:'#64748b',fontWeight:500}}>{info.tagline}</span>}
-              <span style={{color:'#94a3b8',fontSize:12}}>
+              <span style={{color:'#94a3b8',fontSize:isMobile?10:12,flexShrink:0}}>
                 {cities ? `${cities.length}${t('nCities')}` : ''}
               </span>
               {info && (
                 <button onClick={()=>setShowCountryInfo(v=>!v)}
-                  style={{background: showCountryInfo ? '#3b82f6' : '#f0f9ff',border: showCountryInfo ? '1.5px solid #3b82f6' : '1.5px solid #bae6fd',borderRadius:20,padding:'5px 14px',cursor:'pointer',fontSize:11.5,color: showCountryInfo ? 'white' : '#0369a1',fontWeight:700,transition:'all .2s',display:'flex',alignItems:'center',gap:4}}>
-                  📋 {t('countryInfo')} {showCountryInfo ? '▾' : '▸'}
+                  style={{background: showCountryInfo ? '#3b82f6' : '#f0f9ff',border: showCountryInfo ? '1.5px solid #3b82f6' : '1.5px solid #bae6fd',borderRadius:20,padding:isMobile?'4px 9px':'5px 14px',cursor:'pointer',fontSize:isMobile?10.5:11.5,color: showCountryInfo ? 'white' : '#0369a1',fontWeight:700,transition:'all .2s',display:'flex',alignItems:'center',gap:3,flexShrink:0}}>
+                  📋{isMobile?'':' '+t('countryInfo')} {showCountryInfo ? '▾' : '▸'}
                 </button>
               )}
               <button onClick={closeCountry}
-                style={{background:'#f1f5f9',border:'none',borderRadius:20,padding:'5px 12px',cursor:'pointer',fontSize:12,color:'#64748b',fontWeight:600}}>
+                style={{background:'#f1f5f9',border:'none',borderRadius:20,padding:isMobile?'4px 8px':'5px 12px',cursor:'pointer',fontSize:isMobile?11:12,color:'#64748b',fontWeight:600,flexShrink:0}}>
                 ✕
               </button>
             </div>
@@ -2718,9 +2754,9 @@ function App() {
             {/* Country Info Panel */}
             {showCountryInfo && info && (
               <div className="countryInfoPanel" style={{
-                position:'absolute',bottom:isMobile?90:68,left:'50%',transform:'translateX(-50%)',
+                position:'absolute',bottom:isMobile?'calc(72px + env(safe-area-inset-bottom))':68,left:'50%',transform:'translateX(-50%)',
                 zIndex:1000,width:isMobile?'95vw':480,maxWidth:'95vw',
-                maxHeight:isMobile?'65vh':'none',overflowY:isMobile?'auto':'hidden',
+                maxHeight:isMobile?'60vh':'none',overflowY:isMobile?'auto':'hidden',
                 background:'rgba(255,255,255,.97)',backdropFilter:'blur(16px)',
                 border:'1.5px solid #e2e8f0',borderRadius:18,
                 boxShadow:'0 12px 48px rgba(0,0,0,.22)',
@@ -3941,6 +3977,481 @@ function App() {
                   )
                 })
               })()}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Travel Feed Modal (Phase 1) */}
+      {showFeed && (
+        <>
+          <div onClick={()=>setShowFeed(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
+          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'96vw':620,height:isMobile?'92vh':'85vh',background:'white',borderRadius:isMobile?16:22,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden',display:'flex',flexDirection:'column'}}>
+            {/* Header */}
+            <div style={{background:'linear-gradient(135deg,#f59e0b,#ef4444)',padding:isMobile?'14px 16px':'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
+              <div>
+                <div style={{fontSize:isMobile?16:19,fontWeight:800,color:'white'}}>{t('travelFeed')}</div>
+                <div style={{fontSize:11,color:'rgba(255,255,255,.75)',marginTop:2}}>{t('travelFeedDesc')}</div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                {feedMainTab === 'journals' && (
+                  <button onClick={()=>{
+                    if (!currentUser) { setShowLoginModal(true); return }
+                    setEditingJournal(null)
+                    setJournalForm({ title:'', body:'', cities:[], days:1, rating:0, visibility:'public', photos:[] })
+                    setJournalNewPhotos([])
+                    setShowJournalEditor(true)
+                  }} title={t('journalNew')} style={{background:'rgba(255,255,255,.25)',border:'none',color:'white',width:34,height:34,borderRadius:10,fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✏️</button>
+                )}
+                <button onClick={()=>setShowFeed(false)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:34,height:34,borderRadius:10,fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+              </div>
+            </div>
+
+            {/* Main Tabs (여행기 / 코스) */}
+            <div style={{display:'flex',borderBottom:'1.5px solid #e2e8f0',flexShrink:0,background:'#f8fafc'}}>
+              {[{k:'journals',label:t('feedTabJournals'),icon:'📔'},{k:'courses',label:t('feedTabCourses'),icon:'🗺️'}].map(tab => (
+                <button key={tab.k} onClick={()=>setFeedMainTab(tab.k)}
+                  style={{flex:1,padding:isMobile?'12px 0':'14px 0',background:'transparent',border:'none',borderBottom:feedMainTab===tab.k?'3px solid #f59e0b':'3px solid transparent',cursor:'pointer',fontSize:isMobile?13:14,fontWeight:700,color:feedMainTab===tab.k?'#0f172a':'#94a3b8',transition:'all .15s'}}>
+                  {tab.icon} {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Sub Tabs (전체 / 내 글) — 여행기 탭에서만 */}
+            {feedMainTab === 'journals' && (
+              <div style={{display:'flex',gap:6,padding:'10px 16px 0',flexShrink:0,background:'#f8fafc'}}>
+                {[{k:'all',label:t('feedTabAll')},{k:'mine',label:t('feedTabMine')}].map(st => (
+                  <button key={st.k} onClick={async()=>{
+                    setFeedSubTab(st.k);setFeedJournalsLoading(true)
+                    try {
+                      const opts = st.k==='mine' && currentUser ? { byUid: currentUser.uid, limitN: 30 } : { limitN: 30 }
+                      const data = await loadJournals(opts)
+                      setFeedJournals(data)
+                    } catch(e) { console.error(e) }
+                    setFeedJournalsLoading(false)
+                  }} style={{padding:'5px 14px',borderRadius:14,border:'none',background:feedSubTab===st.k?'#0f172a':'#e2e8f0',color:feedSubTab===st.k?'white':'#475569',fontSize:11,fontWeight:600,cursor:'pointer',transition:'all .15s'}}>
+                    {st.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Content */}
+            <div style={{flex:1,overflowY:'auto',padding:'14px 16px',background:'#f8fafc'}}>
+              {feedMainTab === 'journals' ? (
+                feedJournalsLoading ? (
+                  <div style={{textAlign:'center',padding:'50px 0',color:'#94a3b8',fontSize:14}}>{lang==='ko'?'불러오는 중...':'Loading...'}</div>
+                ) : feedJournals.length === 0 ? (
+                  <div style={{textAlign:'center',padding:'60px 0'}}>
+                    <div style={{fontSize:48,marginBottom:14}}>📔</div>
+                    <div style={{color:'#64748b',fontSize:14,fontWeight:600}}>{t('feedEmpty')}</div>
+                    <div style={{color:'#94a3b8',fontSize:12,marginTop:6}}>{t('feedEmptyHint')}</div>
+                  </div>
+                ) : (
+                  <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:12}}>
+                    {feedJournals.map(j => {
+                      const liked = currentUser && (j.likes||[]).includes(currentUser.uid)
+                      const cityNames = (j.cities||[]).map(c=>getCityName(c.name)).join(' · ')
+                      return (
+                        <div key={j.id} onClick={()=>setViewingJournal(j)}
+                          style={{borderRadius:14,background:'white',overflow:'hidden',cursor:'pointer',boxShadow:'0 2px 8px rgba(0,0,0,.06)',border:'1px solid #e2e8f0',transition:'all .15s'}}
+                          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 8px 20px rgba(0,0,0,.12)'}}
+                          onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='0 2px 8px rgba(0,0,0,.06)'}}>
+                          {(j.photos||[]).length > 0 && (
+                            <div style={{width:'100%',height:isMobile?180:160,background:'#f1f5f9',overflow:'hidden'}}>
+                              <img src={j.photos[0]} alt="" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />
+                            </div>
+                          )}
+                          <div style={{padding:'12px 14px'}}>
+                            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                              <div style={{width:24,height:24,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'white'}}>{(j.userName||'?')[0]?.toUpperCase()}</div>
+                              <span style={{fontSize:11,color:'#64748b',fontWeight:600}}>{j.userName}</span>
+                              <span style={{fontSize:10,color:'#cbd5e1'}}>·</span>
+                              <span style={{fontSize:10,color:'#94a3b8'}}>{j.days}{t('journalDaysSeparator')}</span>
+                              {j.rating > 0 && <span style={{fontSize:10,color:'#f59e0b',fontWeight:700,marginLeft:'auto'}}>★ {j.rating}</span>}
+                            </div>
+                            <div style={{fontSize:14,fontWeight:700,color:'#0f172a',marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{j.title || t('journalNoTitle')}</div>
+                            {cityNames && <div style={{fontSize:11,color:'#3b82f6',marginBottom:6,fontWeight:600}}>📍 {cityNames}</div>}
+                            <div style={{fontSize:11,color:'#64748b',lineHeight:1.5,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{j.body}</div>
+                            <div style={{display:'flex',alignItems:'center',gap:12,marginTop:10,paddingTop:8,borderTop:'1px solid #f1f5f9'}}>
+                              <span style={{fontSize:11,color:liked?'#ef4444':'#94a3b8',display:'flex',alignItems:'center',gap:3}}>{liked?'❤️':'🤍'} {j.likeCount||0}</span>
+                              <span style={{fontSize:11,color:'#94a3b8',display:'flex',alignItems:'center',gap:3}}>💬 {j.commentCount||0}</span>
+                              <span style={{fontSize:10,color:'#cbd5e1',marginLeft:'auto'}}>{j.createdAt?new Date(j.createdAt).toLocaleDateString():''}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              ) : (
+                /* 코스 탭 — 기존 sharedCourses 데이터를 단순 리스트로 표시 */
+                communityCoursesData.length === 0 ? (
+                  <div style={{textAlign:'center',padding:'60px 0'}}>
+                    <div style={{fontSize:48,marginBottom:14}}>🗺️</div>
+                    <div style={{color:'#64748b',fontSize:14,fontWeight:600}}>{t('communityEmpty')}</div>
+                    <div style={{color:'#94a3b8',fontSize:12,marginTop:6}}>{t('communityEmptyHint')}</div>
+                  </div>
+                ) : (
+                  <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                    {communityCoursesData.map((sc,idx) => {
+                      const days = sc.course?.days || sc.days || []
+                      const cities = [...new Set(days.flatMap(d=>(d.items||[]).map(it=>it.cityI18n?.[lang] || getCityName(it.cityName||it.name))).filter(Boolean))]
+                      const totalPlaces = days.reduce((a,d)=>a+(d.items||[]).length,0)
+                      const photos = sc.photos || []
+                      const dateStr = sc.createdAt ? new Date(sc.createdAt).toLocaleDateString() : ''
+                      return (
+                        <div key={sc.id||idx} style={{borderRadius:14,border:'1px solid #e2e8f0',background:'white',overflow:'hidden',padding:'14px 16px'}}>
+                          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:10}}>
+                            <div>
+                              <div style={{fontSize:15,fontWeight:800,color:'#0f172a'}}>{cities.join(' · ') || 'Course'}</div>
+                              <div style={{fontSize:11,color:'#64748b',marginTop:3}}>
+                                {totalPlaces}{t('communityPlaces')} · {days.length}{t('communityDays')}
+                                {(sc.course?.type||sc.type)==='ai' && <span style={{marginLeft:6,padding:'1px 6px',borderRadius:4,background:'#f3e8ff',color:'#7c3aed',fontSize:9,fontWeight:700}}>AI</span>}
+                              </div>
+                            </div>
+                            <span style={{fontSize:10,color:'#94a3b8'}}>{sc.userName||'?'} · {dateStr}</span>
+                          </div>
+                          {photos.length > 0 && (
+                            <div style={{display:'flex',gap:6,marginBottom:10,overflowX:'auto',paddingBottom:2}}>
+                              {photos.map((url,i)=>(
+                                <img key={i} src={url} style={{width:90,height:64,borderRadius:8,objectFit:'cover',flexShrink:0,border:'1px solid #e2e8f0'}} alt="" />
+                              ))}
+                            </div>
+                          )}
+                          <div style={{display:'flex',justifyContent:'flex-end'}}>
+                            <button onClick={()=>{
+                              setCourseDays(days);localStorage.setItem('atlas_course_days',JSON.stringify(days))
+                              const flat=days.flatMap(d=>d.items||[]);saveCourse(flat)
+                              setCourseTransport(sc.course?.transport||sc.transport||'transit')
+                              setActiveDayTab(0);setShowCoursePlanner(true);setShowFeed(false)
+                              setCourseSource(sc.course?.type||sc.type||'manual')
+                            }} style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',color:'white',padding:'7px 16px',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                              {t('communityLoad')}
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Journal Editor Modal (작성/수정) */}
+      {showJournalEditor && (
+        <>
+          <div onClick={()=>{setShowJournalEditor(false);setEditingJournal(null)}} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.55)',zIndex:3100}} />
+          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3101,width:isMobile?'96vw':560,height:isMobile?'92vh':'88vh',background:'white',borderRadius:isMobile?16:20,boxShadow:'0 24px 64px rgba(0,0,0,.35)',overflow:'hidden',display:'flex',flexDirection:'column'}}>
+            {/* Header */}
+            <div style={{padding:isMobile?'14px 16px':'16px 22px',borderBottom:'1.5px solid #e2e8f0',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0,background:'white'}}>
+              <button onClick={()=>{setShowJournalEditor(false);setEditingJournal(null)}} style={{background:'none',border:'none',fontSize:20,cursor:'pointer',color:'#64748b'}}>←</button>
+              <span style={{fontSize:isMobile?14:16,fontWeight:800,color:'#0f172a'}}>{editingJournal ? t('journalEdit') : t('journalNew')}</span>
+              <button disabled={journalSaving} onClick={async()=>{
+                if (!journalForm.title.trim()) { alert(t('journalRequiredTitle')); return }
+                if (!journalForm.body.trim()) { alert(t('journalRequiredBody')); return }
+                if (!currentUser) { alert(lang==='ko'?'로그인이 필요합니다':'Login required'); return }
+                setJournalSaving(true)
+                try {
+                  // 사진 업로드
+                  let photoUrls = [...(journalForm.photos||[])]
+                  for (const f of journalNewPhotos) {
+                    const url = await uploadJournalPhoto(f, currentUser.uid, editingJournal?.id || 'new')
+                    photoUrls.push(url)
+                  }
+                  if (editingJournal) {
+                    await updateJournal(editingJournal.id, { ...journalForm, photos: photoUrls })
+                  } else {
+                    await createJournal(currentUser.uid, { ...journalForm, photos: photoUrls }, currentUser.displayName||currentUser.email, currentUser.photoURL)
+                  }
+                  alert(t('journalSaved'))
+                  setShowJournalEditor(false);setEditingJournal(null);setJournalNewPhotos([])
+                  // 피드 새로고침
+                  setFeedJournalsLoading(true)
+                  const fresh = await loadJournals({ limitN: 30, ...(feedSubTab==='mine'&&currentUser?{byUid:currentUser.uid}:{}) })
+                  setFeedJournals(fresh);setFeedJournalsLoading(false)
+                } catch(e) { alert(e.message) }
+                setJournalSaving(false)
+              }} style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',color:'white',padding:'7px 16px',borderRadius:9,fontSize:12,fontWeight:700,cursor:'pointer',opacity:journalSaving?.6:1}}>
+                {journalSaving ? t('uploading') : t('journalSave')}
+              </button>
+            </div>
+
+            {/* Form Body */}
+            <div style={{flex:1,overflowY:'auto',padding:'16px 18px'}}>
+              {/* Title */}
+              <div style={{marginBottom:16}}>
+                <label style={{fontSize:11,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>{t('journalTitle')}</label>
+                <input value={journalForm.title} onChange={e=>setJournalForm({...journalForm,title:e.target.value})}
+                  placeholder={t('journalTitlePh')} maxLength={60}
+                  style={{width:'100%',padding:'10px 12px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,outline:'none',boxSizing:'border-box'}} />
+              </div>
+
+              {/* Cities */}
+              <div style={{marginBottom:16}}>
+                <label style={{fontSize:11,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>{t('journalCities')}</label>
+                <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:6}}>
+                  {(journalForm.cities||[]).map((c,i) => (
+                    <span key={i} style={{padding:'5px 10px',borderRadius:14,background:'#3b82f6',color:'white',fontSize:11,fontWeight:600,display:'flex',alignItems:'center',gap:5}}>
+                      {getCityName(c.name)}
+                      <button onClick={()=>setJournalForm({...journalForm,cities:journalForm.cities.filter((_,idx)=>idx!==i)})} style={{background:'rgba(255,255,255,.3)',border:'none',color:'white',width:14,height:14,borderRadius:'50%',fontSize:9,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+                    </span>
+                  ))}
+                  <button onClick={()=>{setJournalCitySelectOpen(true);setJournalCitySearchQ('')}}
+                    style={{padding:'5px 12px',borderRadius:14,background:'#f1f5f9',border:'1px dashed #cbd5e1',color:'#3b82f6',fontSize:11,fontWeight:600,cursor:'pointer'}}>
+                    {t('journalCityAdd')}
+                  </button>
+                </div>
+                {journalCitySelectOpen && (
+                  <div style={{padding:10,background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0',marginTop:6}}>
+                    <input autoFocus value={journalCitySearchQ} onChange={e=>setJournalCitySearchQ(e.target.value)}
+                      placeholder={t('journalSelectCity')}
+                      style={{width:'100%',padding:'8px 12px',border:'1.5px solid #e2e8f0',borderRadius:8,fontSize:13,outline:'none',boxSizing:'border-box',marginBottom:8}} />
+                    <div style={{maxHeight:160,overflowY:'auto'}}>
+                      {(()=>{
+                        const q = journalCitySearchQ.trim().toLowerCase()
+                        if (!q) return <div style={{fontSize:11,color:'#94a3b8',textAlign:'center',padding:'8px 0'}}>{lang==='ko'?'도시 이름을 입력하세요':'Type city name'}</div>
+                        const matches = []
+                        for (const [country, cs] of Object.entries(COUNTRY_CITIES)) {
+                          for (const c of (cs||[])) {
+                            const ko = c.name; const local = getCityName(ko)
+                            if (ko.toLowerCase().includes(q) || local.toLowerCase().includes(q)) {
+                              if (!journalForm.cities.find(x=>x.name===ko)) matches.push({name:ko,country,display:local})
+                              if (matches.length >= 12) break
+                            }
+                          }
+                          if (matches.length >= 12) break
+                        }
+                        if (matches.length === 0) return <div style={{fontSize:11,color:'#94a3b8',textAlign:'center',padding:'8px 0'}}>{lang==='ko'?'결과가 없습니다':'No matches'}</div>
+                        return matches.map((m,i) => (
+                          <div key={i} onClick={()=>{
+                            setJournalForm({...journalForm,cities:[...(journalForm.cities||[]),{name:m.name,country:m.country}]})
+                            setJournalCitySelectOpen(false);setJournalCitySearchQ('')
+                          }} style={{padding:'8px 10px',borderRadius:6,cursor:'pointer',display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:12}}
+                            onMouseEnter={e=>e.currentTarget.style.background='#e0e7ff'}
+                            onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                            <span style={{color:'#0f172a',fontWeight:600}}>{m.display}</span>
+                            <span style={{color:'#94a3b8',fontSize:10}}>{getCountryName(m.country)}</span>
+                          </div>
+                        ))
+                      })()}
+                    </div>
+                    <button onClick={()=>setJournalCitySelectOpen(false)} style={{width:'100%',marginTop:8,padding:6,borderRadius:6,border:'1px solid #e2e8f0',background:'white',fontSize:11,color:'#64748b',cursor:'pointer'}}>{t('shareCancel')}</button>
+                  </div>
+                )}
+              </div>
+
+              {/* Days + Rating */}
+              <div style={{display:'flex',gap:12,marginBottom:16}}>
+                <div style={{flex:1}}>
+                  <label style={{fontSize:11,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>{t('journalDays')}</label>
+                  <select value={journalForm.days} onChange={e=>setJournalForm({...journalForm,days:Number(e.target.value)})}
+                    style={{width:'100%',padding:'9px 10px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',background:'white'}}>
+                    {[1,2,3,4,5,6,7,8,10,14,21,30].map(n => (
+                      <option key={n} value={n}>{n>1?(n-1)+t('journalDaysUnit')+n+t('journalDaysSeparator'):n+t('journalDaysSeparator')}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{flex:1}}>
+                  <label style={{fontSize:11,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>{t('journalRating')}</label>
+                  <div style={{display:'flex',gap:3,padding:'8px 4px'}}>
+                    {[1,2,3,4,5].map(n => (
+                      <span key={n} onClick={()=>setJournalForm({...journalForm,rating:n})}
+                        style={{fontSize:22,cursor:'pointer',color:journalForm.rating>=n?'#f59e0b':'#cbd5e1',transition:'all .1s',userSelect:'none'}}>★</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Photos */}
+              <div style={{marginBottom:16}}>
+                <label style={{fontSize:11,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>{t('journalPhotos')}</label>
+                <input type="file" accept="image/*" multiple onChange={e=>{
+                  const files = [...e.target.files]
+                  const total = (journalForm.photos?.length||0) + journalNewPhotos.length + files.length
+                  if (total > 10) { alert(lang==='ko'?'최대 10장까지':'Max 10 photos'); return }
+                  setJournalNewPhotos([...journalNewPhotos, ...files])
+                }} style={{fontSize:11,color:'#64748b'}} />
+                {(journalForm.photos?.length > 0 || journalNewPhotos.length > 0) && (
+                  <div style={{display:'flex',flexWrap:'wrap',gap:6,marginTop:8}}>
+                    {(journalForm.photos||[]).map((url,i)=>(
+                      <div key={'old-'+i} style={{position:'relative',width:60,height:60,borderRadius:8,overflow:'hidden',border:'1px solid #e2e8f0'}}>
+                        <img src={url} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="" />
+                        <button onClick={()=>setJournalForm({...journalForm,photos:journalForm.photos.filter((_,idx)=>idx!==i)})}
+                          style={{position:'absolute',top:2,right:2,width:18,height:18,borderRadius:'50%',background:'rgba(0,0,0,.6)',border:'none',color:'white',fontSize:10,cursor:'pointer'}}>✕</button>
+                      </div>
+                    ))}
+                    {journalNewPhotos.map((f,i)=>(
+                      <div key={'new-'+i} style={{position:'relative',width:60,height:60,borderRadius:8,overflow:'hidden',border:'1px solid #e2e8f0'}}>
+                        <img src={URL.createObjectURL(f)} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="" />
+                        <button onClick={()=>setJournalNewPhotos(journalNewPhotos.filter((_,idx)=>idx!==i))}
+                          style={{position:'absolute',top:2,right:2,width:18,height:18,borderRadius:'50%',background:'rgba(0,0,0,.6)',border:'none',color:'white',fontSize:10,cursor:'pointer'}}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Body */}
+              <div style={{marginBottom:16}}>
+                <label style={{fontSize:11,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>{t('journalBody')}</label>
+                <textarea value={journalForm.body} onChange={e=>setJournalForm({...journalForm,body:e.target.value})}
+                  placeholder={t('journalBodyPh')} rows={8}
+                  style={{width:'100%',padding:'10px 12px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box',resize:'vertical',fontFamily:'inherit',lineHeight:1.6}} />
+              </div>
+
+              {/* Visibility */}
+              <div style={{marginBottom:16}}>
+                <label style={{fontSize:11,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>{t('journalVisibility')}</label>
+                <div style={{display:'flex',gap:6}}>
+                  {[{k:'public',label:t('visPublic'),icon:'🌐'},{k:'private',label:t('visPrivate'),icon:'🔒'}].map(v => (
+                    <button key={v.k} onClick={()=>setJournalForm({...journalForm,visibility:v.k})}
+                      style={{flex:1,padding:'9px',borderRadius:9,border:journalForm.visibility===v.k?'1.5px solid #3b82f6':'1.5px solid #e2e8f0',background:journalForm.visibility===v.k?'#eff6ff':'white',color:journalForm.visibility===v.k?'#1e40af':'#64748b',fontSize:12,fontWeight:600,cursor:'pointer'}}>
+                      {v.icon} {v.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Journal Detail Modal (상세 보기) */}
+      {viewingJournal && (
+        <>
+          <div onClick={()=>setViewingJournal(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.6)',zIndex:3050}} />
+          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3051,width:isMobile?'96vw':580,height:isMobile?'94vh':'90vh',background:'white',borderRadius:isMobile?16:20,boxShadow:'0 24px 64px rgba(0,0,0,.4)',overflow:'hidden',display:'flex',flexDirection:'column'}}>
+            {/* Header */}
+            <div style={{padding:isMobile?'14px 16px':'16px 22px',borderBottom:'1px solid #e2e8f0',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
+              <button onClick={()=>setViewingJournal(null)} style={{background:'none',border:'none',fontSize:20,cursor:'pointer',color:'#64748b'}}>←</button>
+              <span style={{fontSize:13,color:'#64748b',fontWeight:600}}>{viewingJournal.userName}</span>
+              {currentUser && viewingJournal.uid === currentUser.uid ? (
+                <div style={{display:'flex',gap:6}}>
+                  <button onClick={()=>{
+                    setEditingJournal(viewingJournal)
+                    setJournalForm({
+                      title: viewingJournal.title||'', body: viewingJournal.body||'',
+                      cities: viewingJournal.cities||[], days: viewingJournal.days||1,
+                      rating: viewingJournal.rating||0, visibility: viewingJournal.visibility||'public',
+                      photos: viewingJournal.photos||[]
+                    })
+                    setJournalNewPhotos([]);setShowJournalEditor(true);setViewingJournal(null)
+                  }} style={{background:'#f1f5f9',border:'none',color:'#475569',padding:'5px 10px',borderRadius:7,fontSize:11,fontWeight:600,cursor:'pointer'}}>✏️</button>
+                  <button onClick={async()=>{
+                    if (confirm(t('journalDeleteConfirm'))) {
+                      await deleteJournal(viewingJournal.id)
+                      setFeedJournals(feedJournals.filter(j=>j.id!==viewingJournal.id))
+                      setViewingJournal(null)
+                    }
+                  }} style={{background:'#fef2f2',border:'none',color:'#ef4444',padding:'5px 10px',borderRadius:7,fontSize:11,fontWeight:600,cursor:'pointer'}}>🗑</button>
+                </div>
+              ) : <div style={{width:30}} />}
+            </div>
+
+            {/* Body */}
+            <div style={{flex:1,overflowY:'auto',padding:'18px 22px'}}>
+              {/* Title */}
+              <div style={{fontSize:isMobile?20:24,fontWeight:800,color:'#0f172a',marginBottom:10,lineHeight:1.3}}>{viewingJournal.title || t('journalNoTitle')}</div>
+
+              {/* Meta */}
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:18,flexWrap:'wrap'}}>
+                {(viewingJournal.cities||[]).length > 0 && (
+                  <span style={{fontSize:12,color:'#3b82f6',fontWeight:600}}>📍 {(viewingJournal.cities||[]).map(c=>getCityName(c.name)).join(' · ')}</span>
+                )}
+                <span style={{fontSize:11,color:'#94a3b8'}}>·</span>
+                <span style={{fontSize:11,color:'#64748b'}}>{viewingJournal.days}{t('journalDaysSeparator')}</span>
+                {viewingJournal.rating > 0 && (
+                  <>
+                    <span style={{fontSize:11,color:'#94a3b8'}}>·</span>
+                    <span style={{fontSize:11,color:'#f59e0b',fontWeight:700}}>{'★'.repeat(Math.floor(viewingJournal.rating))} {viewingJournal.rating}</span>
+                  </>
+                )}
+                <span style={{fontSize:11,color:'#94a3b8',marginLeft:'auto'}}>{viewingJournal.createdAt?new Date(viewingJournal.createdAt).toLocaleDateString():''}</span>
+              </div>
+
+              {/* Photos */}
+              {(viewingJournal.photos||[]).length > 0 && (
+                <div style={{marginBottom:18}}>
+                  <img src={viewingJournal.photos[0]} style={{width:'100%',borderRadius:12,marginBottom:8,maxHeight:isMobile?280:380,objectFit:'cover'}} alt="" />
+                  {viewingJournal.photos.length > 1 && (
+                    <div style={{display:'flex',gap:6,overflowX:'auto'}}>
+                      {viewingJournal.photos.slice(1).map((url,i)=>(
+                        <img key={i} src={url} onClick={()=>window.open(url,'_blank')}
+                          style={{width:90,height:70,objectFit:'cover',borderRadius:8,cursor:'pointer',flexShrink:0,border:'1px solid #e2e8f0'}} alt="" />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Body */}
+              <div style={{fontSize:14,color:'#334155',lineHeight:1.75,whiteSpace:'pre-wrap',marginBottom:20}}>{viewingJournal.body}</div>
+
+              {/* Like button */}
+              <div style={{display:'flex',alignItems:'center',gap:14,paddingTop:14,borderTop:'1px solid #e2e8f0',marginBottom:18}}>
+                <button onClick={async()=>{
+                  if (!currentUser) { setShowLoginModal(true); return }
+                  const result = await toggleJournalLike(viewingJournal.id, currentUser.uid)
+                  setViewingJournal({...viewingJournal, likes:result.likes, likeCount:result.likeCount})
+                  setFeedJournals(feedJournals.map(j => j.id===viewingJournal.id ? {...j,likes:result.likes,likeCount:result.likeCount} : j))
+                }} style={{background:'transparent',border:'none',display:'flex',alignItems:'center',gap:5,cursor:'pointer',fontSize:14,color:(currentUser&&(viewingJournal.likes||[]).includes(currentUser.uid))?'#ef4444':'#64748b',fontWeight:700}}>
+                  {currentUser && (viewingJournal.likes||[]).includes(currentUser.uid) ? '❤️' : '🤍'} {viewingJournal.likeCount||0}
+                </button>
+                <span style={{fontSize:14,color:'#64748b',fontWeight:700,display:'flex',alignItems:'center',gap:5}}>💬 {(viewingJournal.comments||[]).length}</span>
+              </div>
+
+              {/* Comments */}
+              <div>
+                {(viewingJournal.comments||[]).length === 0 && <div style={{fontSize:12,color:'#94a3b8',textAlign:'center',padding:'10px 0'}}>{lang==='ko'?'아직 댓글이 없습니다':'No comments yet'}</div>}
+                {(viewingJournal.comments||[]).map((cm,ci) => (
+                  <div key={cm.id||ci} style={{display:'flex',gap:10,marginBottom:12}}>
+                    <div style={{width:28,height:28,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'white',flexShrink:0}}>{(cm.userName||'?')[0]?.toUpperCase()}</div>
+                    <div style={{flex:1,background:'#f8fafc',padding:'8px 12px',borderRadius:10}}>
+                      <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:2}}>
+                        <span style={{fontSize:11,fontWeight:700,color:'#1e293b'}}>{cm.userName}</span>
+                        <span style={{fontSize:10,color:'#94a3b8'}}>{cm.createdAt?new Date(cm.createdAt).toLocaleDateString():''}</span>
+                        {currentUser && cm.uid === currentUser.uid && (
+                          <button onClick={async()=>{
+                            const updated = await deleteJournalComment(viewingJournal.id, cm.id)
+                            setViewingJournal({...viewingJournal,comments:updated,commentCount:updated.length})
+                            setFeedJournals(feedJournals.map(j => j.id===viewingJournal.id ? {...j,comments:updated,commentCount:updated.length} : j))
+                          }} style={{background:'none',border:'none',color:'#ef4444',fontSize:10,cursor:'pointer',marginLeft:'auto'}}>{t('commentDelete')}</button>
+                        )}
+                      </div>
+                      <div style={{fontSize:13,color:'#334155',lineHeight:1.5}}>{cm.text}</div>
+                    </div>
+                  </div>
+                ))}
+
+                {currentUser ? (
+                  <div style={{display:'flex',gap:8,marginTop:12}}>
+                    <input value={journalCommentText} onChange={e=>setJournalCommentText(e.target.value)} placeholder={t('commentPlaceholder')}
+                      onKeyDown={async e=>{
+                        if(e.key==='Enter'&&journalCommentText.trim()){
+                          const updated = await addJournalComment(viewingJournal.id,{text:journalCommentText.trim(),uid:currentUser.uid,userName:currentUser.displayName||currentUser.email})
+                          setViewingJournal({...viewingJournal,comments:updated,commentCount:updated.length})
+                          setFeedJournals(feedJournals.map(j => j.id===viewingJournal.id ? {...j,comments:updated,commentCount:updated.length} : j))
+                          setJournalCommentText('')
+                        }
+                      }}
+                      style={{flex:1,padding:'9px 12px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box'}} />
+                    <button onClick={async()=>{
+                      if(journalCommentText.trim()){
+                        const updated = await addJournalComment(viewingJournal.id,{text:journalCommentText.trim(),uid:currentUser.uid,userName:currentUser.displayName||currentUser.email})
+                        setViewingJournal({...viewingJournal,comments:updated,commentCount:updated.length})
+                        setFeedJournals(feedJournals.map(j => j.id===viewingJournal.id ? {...j,comments:updated,commentCount:updated.length} : j))
+                        setJournalCommentText('')
+                      }
+                    }} style={{background:'#3b82f6',border:'none',color:'white',padding:'9px 16px',borderRadius:10,fontSize:12,fontWeight:600,cursor:'pointer'}}>{t('commentPost')}</button>
+                  </div>
+                ) : (
+                  <div style={{fontSize:12,color:'#94a3b8',textAlign:'center',marginTop:10}}>{t('commentLogin')}</div>
+                )}
+              </div>
             </div>
           </div>
         </>
