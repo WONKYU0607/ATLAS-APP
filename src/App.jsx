@@ -2363,6 +2363,11 @@ function App() {
                             <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
                           <button onClick={()=>loadSavedCourse(sc)} style={{background:'#7c3aed',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
+                          <button onClick={()=>{
+                            if (!currentUser) { setShowLoginModal(true); setShowHamburger(false); return }
+                            setShareModalCourse({ days: sc.days||[], transport: sc.transport||'transit', type: 'ai' })
+                            setShowHamburger(false)
+                          }} title={t('shareBtn')} style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',color:'white',padding:'4px 8px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>🌍</button>
                           <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
                         </div>
                       ))}
@@ -2388,6 +2393,11 @@ function App() {
                             <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
                           <button onClick={()=>loadSavedCourse(sc)} style={{background:'#3b82f6',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
+                          <button onClick={()=>{
+                            if (!currentUser) { setShowLoginModal(true); setShowHamburger(false); return }
+                            setShareModalCourse({ days: sc.days||[], transport: sc.transport||'transit', type: 'manual' })
+                            setShowHamburger(false)
+                          }} title={t('shareBtn')} style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',color:'white',padding:'4px 8px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>🌍</button>
                           <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
                         </div>
                       ))}
@@ -2466,8 +2476,29 @@ function App() {
                   )}
                 </div>
 
-                {/* 내 여행 기록 */}
+                {/* 커뮤니티 */}
                 <div style={{padding:'12px 16px 14px',borderTop:'1px solid rgba(255,255,255,.08)'}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
+                    onClick={async()=>{
+                      setShowCommunity(true);setShowHamburger(false);setCommunityLoading(true);setCommunityContinent(null);setCommunityCountry(null);setCommunityExpanded(null)
+                      try{const data=await loadSharedCourses();setCommunityCoursesData(data)}catch(e){console.error('[ATLAS] loadSharedCourses failed:',e)}
+                      setCommunityLoading(false)
+                    }}
+                    onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
+                    onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,191,36,.1))',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('community')}</div>
+                        <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{t('communityDesc')}</div>
+                      </div>
+                    </div>
+                    <span style={{fontSize:14,color:'#64748b'}}>→</span>
+                  </div>
+                </div>
+
+                {/* 내 여행 기록 */}
+                <div style={{padding:'0 16px 14px'}}>
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
                     onClick={()=>{setShowMyTravels(true);setShowHamburger(false)}}
                     onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
@@ -2549,27 +2580,6 @@ function App() {
                       <span style={{fontSize:14,color:'#64748b'}}>→</span>
                     </div>
                   )}
-                </div>
-
-                {/* 커뮤니티 */}
-                <div style={{padding:'0 16px 14px'}}>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
-                    onClick={async()=>{
-                      setShowCommunity(true);setShowHamburger(false);setCommunityLoading(true);setCommunityContinent(null);setCommunityCountry(null);setCommunityExpanded(null)
-                      try{const data=await loadSharedCourses();setCommunityCoursesData(data)}catch(e){console.error('[ATLAS] loadSharedCourses failed:',e)}
-                      setCommunityLoading(false)
-                    }}
-                    onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
-                    onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
-                    <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,191,36,.1))',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-                      <div>
-                        <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('community')}</div>
-                        <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{t('communityDesc')}</div>
-                      </div>
-                    </div>
-                    <span style={{fontSize:14,color:'#64748b'}}>→</span>
-                  </div>
                 </div>
               </div>
             )}
