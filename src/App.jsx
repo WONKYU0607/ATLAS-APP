@@ -3993,6 +3993,132 @@ function App() {
         }))
         const popularCities = Object.entries(cityFreq).sort((a,b) => b[1]-a[1]).slice(0, 12).map(([name, count]) => ({ name, count }))
 
+        // ── 큐레이션 콘텐츠 (하드코딩, 봄 테마 4월) ──
+        // 패널 E: 시즌 배너
+        const seasonBanner = {
+          emoji: '🌸',
+          title: { ko:'벚꽃 만개, 봄의 도시로', en:'Cherry Blossom Season', ja:'桜満開、春の都市へ', zh:'樱花盛开，前往春日之城' },
+          subtitle: { ko:'4월에만 만날 수 있는 풍경', en:'Once-a-year spring views', ja:'4月だけの絶景', zh:'仅四月可见的美景' },
+          cities: ['교토','도쿄','파리','워싱턴DC','암스테르담','서울'],
+          gradient: 'linear-gradient(135deg,#fda4af,#fbcfe8,#a5b4fc)'
+        }
+
+        // 패널 A: 히어로 카드 2개
+        const heroCards = [
+          {
+            emoji: '💕',
+            title: { ko:'허니문 추천 도시', en:'Honeymoon Destinations', ja:'ハネムーンおすすめ', zh:'蜜月推荐城市' },
+            subtitle: { ko:'로맨틱한 봄날의 여행', en:'Romantic spring escapes', ja:'ロマンチックな春旅', zh:'浪漫的春日旅行' },
+            cta: { ko:'둘러보기 →', en:'Explore →', ja:'見る →', zh:'探索 →' },
+            cities: ['파리','바르셀로나','산토리니','발리','몰디브','베네치아'],
+            gradient: 'linear-gradient(135deg,#ec4899,#f97316)'
+          },
+          {
+            emoji: '✨',
+            title: { ko:'AI가 짜주는 여행 코스', en:'AI Travel Planner', ja:'AIが作る旅行プラン', zh:'AI 智能行程' },
+            subtitle: { ko:'3분만에 완성되는 일정', en:'Complete plan in 3 min', ja:'3分で完成', zh:'3分钟生成行程' },
+            cta: { ko:'지금 시작 →', en:'Start now →', ja:'今すぐ →', zh:'立即开始 →' },
+            action: 'openAI',
+            gradient: 'linear-gradient(135deg,#8b5cf6,#3b82f6)'
+          }
+        ]
+
+        // 패널 B: 큐레이션 매거진
+        const magazines = [
+          {
+            emoji: '🌸',
+            tag: { ko:'SPRING', en:'SPRING', ja:'SPRING', zh:'SPRING' },
+            title: { ko:'벚꽃 명소 BEST 7', en:'Cherry Blossom Top 7', ja:'桜の名所 BEST 7', zh:'樱花名所 BEST 7' },
+            subtitle: { ko:'4월에 꼭 가야 할 곳', en:'Must-visit in April', ja:'4月の必訪地', zh:'四月必访' },
+            cities: ['교토','도쿄','워싱턴DC','파리','암스테르담','서울','요코하마'],
+            color: '#fce7f3'
+          },
+          {
+            emoji: '🌃',
+            tag: { ko:'NIGHT', en:'NIGHT', ja:'NIGHT', zh:'NIGHT' },
+            title: { ko:'야경의 도시 BEST 5', en:'City Lights Top 5', ja:'夜景の街 BEST 5', zh:'夜景之城 BEST 5' },
+            subtitle: { ko:'밤이 더 아름다운', en:'Beautiful by night', ja:'夜が美しい', zh:'夜更美' },
+            cities: ['홍콩','뉴욕','상하이','파리','도쿄'],
+            color: '#1e293b'
+          },
+          {
+            emoji: '🍣',
+            tag: { ko:'FOODIE', en:'FOODIE', ja:'FOODIE', zh:'FOODIE' },
+            title: { ko:'미식 여행 도시 10', en:'Foodie Cities Top 10', ja:'美食の都市 10', zh:'美食之城 10' },
+            subtitle: { ko:'먹기 위해 떠나는 여행', en:'Travel for food', ja:'食のための旅', zh:'为美食而行' },
+            cities: ['도쿄','오사카','방콕','로마','이스탄불','홍콩','파리','바르셀로나','상하이','싱가포르'],
+            color: '#fef3c7'
+          },
+          {
+            emoji: '🏖️',
+            tag: { ko:'BEACH', en:'BEACH', ja:'BEACH', zh:'BEACH' },
+            title: { ko:'휴양지 BEST 8', en:'Beach Getaway Top 8', ja:'リゾート BEST 8', zh:'度假胜地 BEST 8' },
+            subtitle: { ko:'바다와 함께하는 휴식', en:'Relax by the sea', ja:'海でのんびり', zh:'海边度假' },
+            cities: ['발리','몰디브','산토리니','푸켓','세부','오키나와','이비자','테네리페'],
+            color: '#cffafe'
+          },
+          {
+            emoji: '🏛️',
+            tag: { ko:'HISTORY', en:'HISTORY', ja:'HISTORY', zh:'HISTORY' },
+            title: { ko:'역사 도시 BEST 6', en:'Historic Cities Top 6', ja:'歴史都市 BEST 6', zh:'历史名城 BEST 6' },
+            subtitle: { ko:'천 년의 시간을 걷다', en:'Walk through millennia', ja:'千年の時を歩く', zh:'千年时光漫步' },
+            cities: ['로마','이스탄불','아테네','쿄토','시안','카이로'],
+            color: '#fef3c7'
+          },
+          {
+            emoji: '🏔️',
+            tag: { ko:'NATURE', en:'NATURE', ja:'NATURE', zh:'NATURE' },
+            title: { ko:'자연이 살아있는 도시', en:'Nature Escapes', ja:'自然が生きる街', zh:'自然之城' },
+            subtitle: { ko:'도시에서 만나는 대자연', en:'Wild beauty in cities', ja:'都市で出会う大自然', zh:'城市中的大自然' },
+            cities: ['밴쿠버','케이프타운','퀸스타운','쮜리히','오슬로','레이캬비크'],
+            color: '#dcfce7'
+          }
+        ]
+
+        // 패널 C: 카테고리 칩
+        const categoryChips = [
+          { key:'beach', emoji:'🏖️', label:{ko:'휴양',en:'Beach',ja:'リゾート',zh:'度假'}, cities:['발리','몰디브','푸켓','세부','오키나와','이비자','산토리니','테네리페'] },
+          { key:'food', emoji:'🍣', label:{ko:'미식',en:'Foodie',ja:'美食',zh:'美食'}, cities:['도쿄','오사카','방콕','로마','이스탄불','홍콩','파리','바르셀로나'] },
+          { key:'history', emoji:'🏛️', label:{ko:'역사',en:'History',ja:'歴史',zh:'历史'}, cities:['로마','이스탄불','아테네','교토','시안','카이로','폼페이','앙코르와트'] },
+          { key:'night', emoji:'🌃', label:{ko:'야경',en:'Night',ja:'夜景',zh:'夜景'}, cities:['홍콩','뉴욕','상하이','파리','도쿄','두바이','싱가포르'] },
+          { key:'shopping', emoji:'🛍️', label:{ko:'쇼핑',en:'Shopping',ja:'ショッピング',zh:'购物'}, cities:['뉴욕','파리','밀라노','도쿄','홍콩','두바이','런던'] },
+          { key:'nature', emoji:'🏔️', label:{ko:'자연',en:'Nature',ja:'自然',zh:'自然'}, cities:['밴쿠버','퀸스타운','오슬로','레이캬비크','케이프타운'] },
+          { key:'culture', emoji:'🎭', label:{ko:'문화',en:'Culture',ja:'文化',zh:'文化'}, cities:['파리','로마','런던','베를린','빈','상트페테르부르크'] },
+          { key:'romantic', emoji:'💕', label:{ko:'로맨틱',en:'Romantic',ja:'ロマンチック',zh:'浪漫'}, cities:['파리','베네치아','산토리니','프라하','잘츠부르크','바르셀로나'] }
+        ]
+
+        // 패널 D: 추천 코스 (큐레이션)
+        const featuredCourses = [
+          {
+            emoji: '🌸',
+            title: { ko:'도쿄 벚꽃 3박4일', en:'Tokyo Cherry Blossom 4D', ja:'東京桜 3泊4日', zh:'东京樱花 4日' },
+            subtitle: { ko:'우에노→신주쿠→메구로→아사쿠사', en:'Ueno→Shinjuku→Meguro→Asakusa', ja:'上野→新宿→目黒→浅草', zh:'上野→新宿→目黒→浅草' },
+            tags: ['벚꽃','봄','문화'],
+            color: 'linear-gradient(135deg,#fda4af,#fbcfe8)'
+          },
+          {
+            emoji: '💕',
+            title: { ko:'파리 로맨틱 5일', en:'Paris Romantic 5D', ja:'パリ ロマンチック 5日', zh:'巴黎浪漫 5日' },
+            subtitle: { ko:'에펠탑→루브르→몽마르트→베르사유', en:'Eiffel→Louvre→Montmartre→Versailles', ja:'エッフェル→ルーブル→モンマルトル→ベルサイユ', zh:'埃菲尔→卢浮宫→蒙马特→凡尔赛' },
+            tags: ['허니문','로맨틱','유럽'],
+            color: 'linear-gradient(135deg,#ec4899,#f97316)'
+          },
+          {
+            emoji: '🍣',
+            title: { ko:'오사카 미식 3일', en:'Osaka Foodie 3D', ja:'大阪 美食 3日', zh:'大阪美食 3日' },
+            subtitle: { ko:'도톤보리→쿠로몬→신세카이→우메다', en:'Dotonbori→Kuromon→Shinsekai→Umeda', ja:'道頓堀→黒門→新世界→梅田', zh:'道顿堀→黑门→新世界→梅田' },
+            tags: ['미식','일본','3일'],
+            color: 'linear-gradient(135deg,#fbbf24,#f59e0b)'
+          },
+          {
+            emoji: '🏖️',
+            title: { ko:'발리 힐링 6일', en:'Bali Healing 6D', ja:'バリ癒し 6日', zh:'巴厘岛疗愈 6日' },
+            subtitle: { ko:'우붓→스미냑→꾸따→누사두아', en:'Ubud→Seminyak→Kuta→Nusa Dua', ja:'ウブド→スミニャック→クタ→ヌサドゥア', zh:'乌布→水明漾→库塔→努沙杜瓦' },
+            tags: ['휴양','힐링','동남아'],
+            color: 'linear-gradient(135deg,#10b981,#06b6d4)'
+          }
+        ]
+
         return (
         <div style={{
           position:'fixed',inset:0,zIndex:3000,background:'#ffffff',
@@ -4065,6 +4191,147 @@ function App() {
                 </div>
               ) : (
                 <>
+                  {/* Panel E: 시즌 배너 (4월 봄) */}
+                  <div style={{padding:isMobile?'14px 16px 0':'18px 22px 0',animation:'feedFadeIn .25s'}}>
+                    <div className="feed-card" onClick={()=>{
+                      const firstCity = seasonBanner.cities[0]
+                      const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===firstCity))
+                      if (entry) { setShowFeed(false); setSelectedCountry(entry[0]); setSelectedCity(firstCity) }
+                    }} style={{
+                      borderRadius:18,padding:isMobile?'18px 18px':'22px 24px',cursor:'pointer',
+                      background:seasonBanner.gradient,
+                      display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,
+                      boxShadow:'0 6px 18px rgba(252,164,175,.25)',position:'relative',overflow:'hidden',
+                    }}>
+                      <div style={{position:'absolute',top:-20,right:-10,fontSize:140,opacity:.18,lineHeight:1}}>{seasonBanner.emoji}</div>
+                      <div style={{flex:1,position:'relative',zIndex:1}}>
+                        <div style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,.9)',background:'rgba(0,0,0,.15)',padding:'3px 10px',borderRadius:12,display:'inline-block',marginBottom:8,letterSpacing:.5}}>APR · {(lang==='ko'?'봄':lang==='ja'?'春':lang==='zh'?'春':'SPRING')}</div>
+                        <div style={{fontSize:isMobile?17:20,fontWeight:800,color:'white',lineHeight:1.25,letterSpacing:-0.3,marginBottom:5,textShadow:'0 1px 8px rgba(0,0,0,.1)'}}>{seasonBanner.title[lang]||seasonBanner.title.ko}</div>
+                        <div style={{fontSize:isMobile?12:13,color:'rgba(255,255,255,.95)',fontWeight:500}}>{seasonBanner.subtitle[lang]||seasonBanner.subtitle.ko}</div>
+                      </div>
+                      <div style={{fontSize:48,position:'relative',zIndex:1}}>{seasonBanner.emoji}</div>
+                    </div>
+                  </div>
+
+                  {/* Panel A: 히어로 카드 2개 */}
+                  <div style={{padding:isMobile?'14px 16px 0':'16px 22px 0',display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'1fr 1fr',gap:10,animation:'feedFadeIn .3s'}}>
+                    {heroCards.map((c,i) => (
+                      <div key={i} className="feed-card" onClick={()=>{
+                        if (c.action === 'openAI') { setShowFeed(false); setShowAiModal(true); return }
+                        if (c.cities && c.cities.length > 0) {
+                          const firstCity = c.cities[0]
+                          const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===firstCity))
+                          if (entry) { setShowFeed(false); setSelectedCountry(entry[0]); setSelectedCity(firstCity) }
+                        }
+                      }} style={{
+                        borderRadius:16,padding:isMobile?'14px 14px':'16px 18px',cursor:'pointer',
+                        background:c.gradient,minHeight:isMobile?140:160,
+                        display:'flex',flexDirection:'column',justifyContent:'space-between',
+                        boxShadow:'0 4px 14px rgba(0,0,0,.06)',position:'relative',overflow:'hidden',
+                      }}>
+                        <div style={{position:'absolute',top:-15,right:-10,fontSize:90,opacity:.18,lineHeight:1}}>{c.emoji}</div>
+                        <div style={{position:'relative',zIndex:1}}>
+                          <div style={{fontSize:30,marginBottom:4}}>{c.emoji}</div>
+                          <div style={{fontSize:isMobile?13:15,fontWeight:800,color:'white',lineHeight:1.25,letterSpacing:-0.2,marginBottom:4}}>{c.title[lang]||c.title.ko}</div>
+                          <div style={{fontSize:isMobile?10:11,color:'rgba(255,255,255,.9)',lineHeight:1.4,fontWeight:500}}>{c.subtitle[lang]||c.subtitle.ko}</div>
+                        </div>
+                        <div style={{fontSize:11,fontWeight:700,color:'white',marginTop:8,position:'relative',zIndex:1}}>{c.cta[lang]||c.cta.ko}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Panel B: 매거진 (가로 슬라이더) */}
+                  <div style={{padding:isMobile?'18px 0 6px':'22px 0 8px',animation:'feedFadeIn .35s'}}>
+                    <div style={{padding:isMobile?'0 16px 12px':'0 22px 14px'}}>
+                      <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#262626',letterSpacing:-0.3}}>📖 {lang==='ko'?'이번 주 여행 매거진':lang==='ja'?'今週の旅行マガジン':lang==='zh'?'本周旅行杂志':'Travel Magazine'}</div>
+                      <div style={{fontSize:11,color:'#a3a3a3',marginTop:3}}>{lang==='ko'?'테마별로 큐레이션된 도시들':'Curated by theme'}</div>
+                    </div>
+                    <div className="feed-section-scroll" style={{display:'flex',gap:12,overflowX:'auto',padding:isMobile?'0 16px 8px':'0 22px 8px',scrollSnapType:'x mandatory'}}>
+                      {magazines.map((m,i) => {
+                        const isDark = m.color === '#1e293b'
+                        return (
+                          <div key={i} className="feed-trend-card" onClick={()=>{
+                            const firstCity = m.cities[0]
+                            const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===firstCity))
+                            if (entry) { setShowFeed(false); setSelectedCountry(entry[0]); setSelectedCity(firstCity) }
+                          }} style={{
+                            minWidth:isMobile?180:210,maxWidth:isMobile?180:210,height:isMobile?240:260,
+                            borderRadius:16,overflow:'hidden',cursor:'pointer',scrollSnapAlign:'start',flexShrink:0,
+                            background:m.color,
+                            display:'flex',flexDirection:'column',justifyContent:'space-between',
+                            padding:isMobile?'14px 14px':'16px 16px',position:'relative',
+                            boxShadow:'0 4px 14px rgba(0,0,0,.05)',
+                          }}>
+                            <div style={{position:'absolute',top:-15,right:-15,fontSize:130,opacity:isDark?.15:.25,lineHeight:1}}>{m.emoji}</div>
+                            <div style={{position:'relative',zIndex:1}}>
+                              <div style={{fontSize:9,fontWeight:800,color:isDark?'rgba(255,255,255,.7)':'#737373',letterSpacing:1.2,marginBottom:8}}>{m.tag[lang]||m.tag.ko}</div>
+                              <div style={{fontSize:42,marginBottom:8,lineHeight:1}}>{m.emoji}</div>
+                            </div>
+                            <div style={{position:'relative',zIndex:1}}>
+                              <div style={{fontSize:isMobile?14:15,fontWeight:800,color:isDark?'white':'#262626',lineHeight:1.3,letterSpacing:-0.2,marginBottom:5}}>{m.title[lang]||m.title.ko}</div>
+                              <div style={{fontSize:11,color:isDark?'rgba(255,255,255,.75)':'#737373',fontWeight:500,lineHeight:1.4}}>{m.subtitle[lang]||m.subtitle.ko}</div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Panel C: 카테고리 칩 */}
+                  <div style={{padding:isMobile?'14px 0 6px':'18px 0 8px',animation:'feedFadeIn .4s'}}>
+                    <div style={{padding:isMobile?'0 16px 10px':'0 22px 12px'}}>
+                      <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#262626',letterSpacing:-0.3}}>🏷️ {lang==='ko'?'카테고리별 추천':lang==='ja'?'カテゴリ別':lang==='zh'?'分类推荐':'Browse by Category'}</div>
+                    </div>
+                    <div className="feed-section-scroll" style={{display:'flex',gap:8,overflowX:'auto',padding:isMobile?'0 16px 8px':'0 22px 8px'}}>
+                      {categoryChips.map((c,i) => (
+                        <div key={c.key} className="feed-city-chip" onClick={()=>{
+                          const firstCity = c.cities[0]
+                          const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===firstCity))
+                          if (entry) { setShowFeed(false); setSelectedCountry(entry[0]); setSelectedCity(firstCity) }
+                        }} style={{
+                          padding:'10px 16px',borderRadius:22,cursor:'pointer',flexShrink:0,
+                          background:'#f5f5f5',border:'1px solid #f0f0f0',
+                          display:'flex',alignItems:'center',gap:6,whiteSpace:'nowrap',
+                        }}>
+                          <span style={{fontSize:16}}>{c.emoji}</span>
+                          <span style={{fontSize:13,fontWeight:700,color:'#262626'}}>{c.label[lang]||c.label.ko}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Panel D: 추천 코스 */}
+                  <div style={{padding:isMobile?'14px 0 0':'18px 0 0',animation:'feedFadeIn .45s'}}>
+                    <div style={{padding:isMobile?'0 16px 12px':'0 22px 14px'}}>
+                      <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#262626',letterSpacing:-0.3}}>🗺️ {lang==='ko'?'에디터 추천 코스':lang==='ja'?'編集者おすすめコース':lang==='zh'?'编辑推荐路线':'Editor\u2019s Picks'}</div>
+                      <div style={{fontSize:11,color:'#a3a3a3',marginTop:3}}>{lang==='ko'?'전문가가 직접 짠 여행 코스':'Hand-picked itineraries'}</div>
+                    </div>
+                    <div className="feed-section-scroll" style={{display:'flex',gap:12,overflowX:'auto',padding:isMobile?'0 16px 8px':'0 22px 8px',scrollSnapType:'x mandatory'}}>
+                      {featuredCourses.map((c,i) => (
+                        <div key={i} className="feed-trend-card" style={{
+                          minWidth:isMobile?260:300,maxWidth:isMobile?260:300,
+                          borderRadius:16,overflow:'hidden',scrollSnapAlign:'start',flexShrink:0,
+                          background:'white',border:'1px solid #f0f0f0',
+                          boxShadow:'0 2px 8px rgba(0,0,0,.04)',
+                        }}>
+                          <div style={{height:isMobile?100:110,background:c.color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:48,position:'relative'}}>
+                            <div style={{position:'absolute',top:-20,right:-10,fontSize:130,opacity:.15,lineHeight:1}}>{c.emoji}</div>
+                            <span style={{position:'relative',zIndex:1}}>{c.emoji}</span>
+                          </div>
+                          <div style={{padding:'14px 16px'}}>
+                            <div style={{fontSize:isMobile?14:15,fontWeight:800,color:'#262626',marginBottom:5,letterSpacing:-0.2,lineHeight:1.3}}>{c.title[lang]||c.title.ko}</div>
+                            <div style={{fontSize:11,color:'#737373',marginBottom:10,lineHeight:1.5,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{c.subtitle[lang]||c.subtitle.ko}</div>
+                            <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+                              {c.tags.map((tag,ti) => (
+                                <span key={ti} style={{padding:'3px 8px',borderRadius:10,background:'#f5f5f5',fontSize:10,color:'#525252',fontWeight:600}}>#{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Section 1: 이번 주 인기 여행기 (가로 슬라이더) */}
                   {trendingJournals.length > 0 && (
                     <div style={{padding:isMobile?'18px 0 14px':'24px 0 18px',animation:'feedFadeIn .3s'}}>
