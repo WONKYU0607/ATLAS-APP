@@ -3982,164 +3982,285 @@ function App() {
         </>
       )}
 
-      {/* Travel Feed Modal (Phase 1) */}
-      {showFeed && (
-        <>
-          <div onClick={()=>setShowFeed(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
-          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'96vw':620,height:isMobile?'92vh':'85vh',background:'white',borderRadius:isMobile?16:22,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden',display:'flex',flexDirection:'column'}}>
-            {/* Header */}
-            <div style={{background:'linear-gradient(135deg,#f59e0b,#ef4444)',padding:isMobile?'14px 16px':'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
-              <div>
-                <div style={{fontSize:isMobile?16:19,fontWeight:800,color:'white'}}>{t('travelFeed')}</div>
-                <div style={{fontSize:11,color:'rgba(255,255,255,.75)',marginTop:2}}>{t('travelFeedDesc')}</div>
-              </div>
-              <div style={{display:'flex',gap:8}}>
-                {feedMainTab === 'journals' && (
-                  <button onClick={()=>{
-                    if (!currentUser) { setShowLoginModal(true); return }
-                    setEditingJournal(null)
-                    setJournalForm({ title:'', body:'', cities:[], days:1, rating:0, visibility:'public', photos:[] })
-                    setJournalNewPhotos([])
-                    setShowJournalEditor(true)
-                  }} title={t('journalNew')} style={{background:'rgba(255,255,255,.25)',border:'none',color:'white',width:34,height:34,borderRadius:10,fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✏️</button>
-                )}
-                <button onClick={()=>setShowFeed(false)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:34,height:34,borderRadius:10,fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
-              </div>
+      {/* Travel Feed Modal (Phase 1.5 - Fullscreen Modern Light) */}
+      {showFeed && (() => {
+        // 인기 여행기 (좋아요 많은 순 5개)
+        const trendingJournals = [...feedJournals].sort((a,b) => (b.likeCount||0) - (a.likeCount||0)).slice(0, 5)
+        // 인기 도시 (모든 여행기 cities 빈도 집계)
+        const cityFreq = {}
+        feedJournals.forEach(j => (j.cities||[]).forEach(c => {
+          if (c.name) cityFreq[c.name] = (cityFreq[c.name]||0) + 1
+        }))
+        const popularCities = Object.entries(cityFreq).sort((a,b) => b[1]-a[1]).slice(0, 12).map(([name, count]) => ({ name, count }))
+
+        return (
+        <div style={{
+          position:'fixed',inset:0,zIndex:3000,background:'#ffffff',
+          display:'flex',flexDirection:'column',
+          animation:'feedSlideUp .28s cubic-bezier(.22,.9,.32,1)',
+        }}>
+          <style>{`
+            @keyframes feedSlideUp {
+              from { transform: translateY(100%); opacity: 0; }
+              to { transform: translateY(0); opacity: 1; }
+            }
+            @keyframes feedFadeIn {
+              from { opacity: 0; transform: translateY(10px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            .feed-card { transition: all .2s cubic-bezier(.22,.9,.32,1); }
+            .feed-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0,0,0,.08); }
+            .feed-trend-card { transition: transform .2s; }
+            .feed-trend-card:hover { transform: scale(1.02); }
+            .feed-city-chip { transition: all .15s; }
+            .feed-city-chip:hover { transform: scale(1.06); }
+            .feed-fab { transition: all .2s; }
+            .feed-fab:hover { transform: scale(1.08); box-shadow: 0 12px 32px rgba(236,72,153,.45); }
+            .feed-header-shadow { box-shadow: 0 1px 0 rgba(0,0,0,.04); }
+            .feed-section-scroll::-webkit-scrollbar { height: 6px; }
+            .feed-section-scroll::-webkit-scrollbar-track { background: transparent; }
+            .feed-section-scroll::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 3px; }
+          `}</style>
+
+          {/* Header */}
+          <div className="feed-header-shadow" style={{
+            position:'sticky',top:0,zIndex:10,background:'rgba(255,255,255,.92)',backdropFilter:'blur(12px)',
+            padding:isMobile?'12px 14px':'14px 22px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0,
+            paddingTop: isMobile ? 'calc(12px + env(safe-area-inset-top))' : '14px',
+          }}>
+            <button onClick={()=>setShowFeed(false)} style={{
+              background:'transparent',border:'none',width:36,height:36,borderRadius:10,cursor:'pointer',
+              display:'flex',alignItems:'center',justifyContent:'center',color:'#262626',fontSize:22,
+            }}>←</button>
+            <div style={{display:'flex',alignItems:'center',gap:6}}>
+              <span style={{fontSize:isMobile?17:20,fontWeight:800,color:'#262626',letterSpacing:-0.4,fontFamily:'system-ui,-apple-system,sans-serif'}}>Travel Feed</span>
+              <span style={{fontSize:11,color:'#a3a3a3',fontWeight:500,marginLeft:2}}>by ATLAS</span>
             </div>
+            <div style={{width:36}}></div>
+          </div>
 
-            {/* Main Tabs (여행기 / 코스) */}
-            <div style={{display:'flex',borderBottom:'1.5px solid #e2e8f0',flexShrink:0,background:'#f8fafc'}}>
-              {[{k:'journals',label:t('feedTabJournals'),icon:'📔'},{k:'courses',label:t('feedTabCourses'),icon:'🗺️'}].map(tab => (
-                <button key={tab.k} onClick={()=>setFeedMainTab(tab.k)}
-                  style={{flex:1,padding:isMobile?'12px 0':'14px 0',background:'transparent',border:'none',borderBottom:feedMainTab===tab.k?'3px solid #f59e0b':'3px solid transparent',cursor:'pointer',fontSize:isMobile?13:14,fontWeight:700,color:feedMainTab===tab.k?'#0f172a':'#94a3b8',transition:'all .15s'}}>
-                  {tab.icon} {tab.label}
-                </button>
-              ))}
-            </div>
+          {/* Main Tabs */}
+          <div style={{display:'flex',borderBottom:'1px solid #f0f0f0',flexShrink:0,background:'#ffffff',position:'sticky',top:isMobile?60:62,zIndex:9}}>
+            {[{k:'journals',label:t('feedTabJournals'),icon:'📔'},{k:'courses',label:t('feedTabCourses'),icon:'🗺️'}].map(tab => (
+              <button key={tab.k} onClick={()=>setFeedMainTab(tab.k)}
+                style={{flex:1,padding:isMobile?'13px 0':'15px 0',background:'transparent',border:'none',
+                  borderBottom:feedMainTab===tab.k?'2.5px solid #262626':'2.5px solid transparent',
+                  cursor:'pointer',fontSize:isMobile?13:14,fontWeight:feedMainTab===tab.k?700:500,
+                  color:feedMainTab===tab.k?'#262626':'#a3a3a3',transition:'all .15s'}}>
+                {tab.icon} {tab.label}
+              </button>
+            ))}
+          </div>
 
-            {/* Sub Tabs (전체 / 내 글) — 여행기 탭에서만 */}
-            {feedMainTab === 'journals' && (
-              <div style={{display:'flex',gap:6,padding:'10px 16px 0',flexShrink:0,background:'#f8fafc'}}>
-                {[{k:'all',label:t('feedTabAll')},{k:'mine',label:t('feedTabMine')}].map(st => (
-                  <button key={st.k} onClick={async()=>{
-                    setFeedSubTab(st.k);setFeedJournalsLoading(true)
-                    try {
-                      const opts = st.k==='mine' && currentUser ? { byUid: currentUser.uid, limitN: 30 } : { limitN: 30 }
-                      const data = await loadJournals(opts)
-                      setFeedJournals(data)
-                    } catch(e) { console.error(e) }
-                    setFeedJournalsLoading(false)
-                  }} style={{padding:'5px 14px',borderRadius:14,border:'none',background:feedSubTab===st.k?'#0f172a':'#e2e8f0',color:feedSubTab===st.k?'white':'#475569',fontSize:11,fontWeight:600,cursor:'pointer',transition:'all .15s'}}>
-                    {st.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Content */}
-            <div style={{flex:1,overflowY:'auto',padding:'14px 16px',background:'#f8fafc'}}>
-              {feedMainTab === 'journals' ? (
-                feedJournalsLoading ? (
-                  <div style={{textAlign:'center',padding:'50px 0',color:'#94a3b8',fontSize:14}}>{lang==='ko'?'불러오는 중...':'Loading...'}</div>
-                ) : feedJournals.length === 0 ? (
-                  <div style={{textAlign:'center',padding:'60px 0'}}>
-                    <div style={{fontSize:48,marginBottom:14}}>📔</div>
-                    <div style={{color:'#64748b',fontSize:14,fontWeight:600}}>{t('feedEmpty')}</div>
-                    <div style={{color:'#94a3b8',fontSize:12,marginTop:6}}>{t('feedEmptyHint')}</div>
-                  </div>
-                ) : (
-                  <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:12}}>
-                    {feedJournals.map(j => {
-                      const liked = currentUser && (j.likes||[]).includes(currentUser.uid)
-                      const cityNames = (j.cities||[]).map(c=>getCityName(c.name)).join(' · ')
-                      return (
-                        <div key={j.id} onClick={()=>setViewingJournal(j)}
-                          style={{borderRadius:14,background:'white',overflow:'hidden',cursor:'pointer',boxShadow:'0 2px 8px rgba(0,0,0,.06)',border:'1px solid #e2e8f0',transition:'all .15s'}}
-                          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 8px 20px rgba(0,0,0,.12)'}}
-                          onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='0 2px 8px rgba(0,0,0,.06)'}}>
-                          {(j.photos||[]).length > 0 && (
-                            <div style={{width:'100%',height:isMobile?180:160,background:'#f1f5f9',overflow:'hidden'}}>
-                              <img src={j.photos[0]} alt="" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />
-                            </div>
-                          )}
-                          <div style={{padding:'12px 14px'}}>
-                            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
-                              <div style={{width:24,height:24,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'white'}}>{(j.userName||'?')[0]?.toUpperCase()}</div>
-                              <span style={{fontSize:11,color:'#64748b',fontWeight:600}}>{j.userName}</span>
-                              <span style={{fontSize:10,color:'#cbd5e1'}}>·</span>
-                              <span style={{fontSize:10,color:'#94a3b8'}}>{j.days}{t('journalDaysSeparator')}</span>
-                              {j.rating > 0 && <span style={{fontSize:10,color:'#f59e0b',fontWeight:700,marginLeft:'auto'}}>★ {j.rating}</span>}
-                            </div>
-                            <div style={{fontSize:14,fontWeight:700,color:'#0f172a',marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{j.title || t('journalNoTitle')}</div>
-                            {cityNames && <div style={{fontSize:11,color:'#3b82f6',marginBottom:6,fontWeight:600}}>📍 {cityNames}</div>}
-                            <div style={{fontSize:11,color:'#64748b',lineHeight:1.5,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{j.body}</div>
-                            <div style={{display:'flex',alignItems:'center',gap:12,marginTop:10,paddingTop:8,borderTop:'1px solid #f1f5f9'}}>
-                              <span style={{fontSize:11,color:liked?'#ef4444':'#94a3b8',display:'flex',alignItems:'center',gap:3}}>{liked?'❤️':'🤍'} {j.likeCount||0}</span>
-                              <span style={{fontSize:11,color:'#94a3b8',display:'flex',alignItems:'center',gap:3}}>💬 {j.commentCount||0}</span>
-                              <span style={{fontSize:10,color:'#cbd5e1',marginLeft:'auto'}}>{j.createdAt?new Date(j.createdAt).toLocaleDateString():''}</span>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )
+          {/* Content */}
+          <div className="feed-section-scroll" style={{flex:1,overflowY:'auto',background:'#ffffff'}}>
+            {feedMainTab === 'journals' ? (
+              feedJournalsLoading ? (
+                <div style={{textAlign:'center',padding:'80px 0',color:'#a3a3a3',fontSize:14}}>{lang==='ko'?'불러오는 중...':'Loading...'}</div>
+              ) : feedJournals.length === 0 ? (
+                <div style={{textAlign:'center',padding:'100px 20px',animation:'feedFadeIn .4s'}}>
+                  <div style={{fontSize:64,marginBottom:18}}>📔</div>
+                  <div style={{color:'#262626',fontSize:16,fontWeight:700,marginBottom:6}}>{t('feedEmpty')}</div>
+                  <div style={{color:'#a3a3a3',fontSize:13}}>{t('feedEmptyHint')}</div>
+                </div>
               ) : (
-                /* 코스 탭 — 기존 sharedCourses 데이터를 단순 리스트로 표시 */
-                communityCoursesData.length === 0 ? (
-                  <div style={{textAlign:'center',padding:'60px 0'}}>
-                    <div style={{fontSize:48,marginBottom:14}}>🗺️</div>
-                    <div style={{color:'#64748b',fontSize:14,fontWeight:600}}>{t('communityEmpty')}</div>
-                    <div style={{color:'#94a3b8',fontSize:12,marginTop:6}}>{t('communityEmptyHint')}</div>
-                  </div>
-                ) : (
-                  <div style={{display:'flex',flexDirection:'column',gap:12}}>
-                    {communityCoursesData.map((sc,idx) => {
-                      const days = sc.course?.days || sc.days || []
-                      const cities = [...new Set(days.flatMap(d=>(d.items||[]).map(it=>it.cityI18n?.[lang] || getCityName(it.cityName||it.name))).filter(Boolean))]
-                      const totalPlaces = days.reduce((a,d)=>a+(d.items||[]).length,0)
-                      const photos = sc.photos || []
-                      const dateStr = sc.createdAt ? new Date(sc.createdAt).toLocaleDateString() : ''
-                      return (
-                        <div key={sc.id||idx} style={{borderRadius:14,border:'1px solid #e2e8f0',background:'white',overflow:'hidden',padding:'14px 16px'}}>
-                          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:10}}>
-                            <div>
-                              <div style={{fontSize:15,fontWeight:800,color:'#0f172a'}}>{cities.join(' · ') || 'Course'}</div>
-                              <div style={{fontSize:11,color:'#64748b',marginTop:3}}>
-                                {totalPlaces}{t('communityPlaces')} · {days.length}{t('communityDays')}
-                                {(sc.course?.type||sc.type)==='ai' && <span style={{marginLeft:6,padding:'1px 6px',borderRadius:4,background:'#f3e8ff',color:'#7c3aed',fontSize:9,fontWeight:700}}>AI</span>}
+                <>
+                  {/* Section 1: 이번 주 인기 여행기 (가로 슬라이더) */}
+                  {trendingJournals.length > 0 && (
+                    <div style={{padding:isMobile?'18px 0 14px':'24px 0 18px',animation:'feedFadeIn .3s'}}>
+                      <div style={{padding:isMobile?'0 16px':'0 22px',marginBottom:12,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                        <div>
+                          <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#262626',letterSpacing:-0.3}}>✨ {lang==='ko'?'이번 주 인기 여행기':lang==='ja'?'今週の人気旅行記':lang==='zh'?'本周热门游记':'Trending This Week'}</div>
+                          <div style={{fontSize:11,color:'#a3a3a3',marginTop:3}}>{lang==='ko'?'좋아요가 많은 여행기':'Most loved journals'}</div>
+                        </div>
+                      </div>
+                      <div className="feed-section-scroll" style={{display:'flex',gap:12,overflowX:'auto',padding:isMobile?'0 16px 8px':'0 22px 8px',scrollSnapType:'x mandatory'}}>
+                        {trendingJournals.map(j => {
+                          const cityNames = (j.cities||[]).map(c=>getCityName(c.name)).join(' · ')
+                          return (
+                            <div key={j.id} className="feed-trend-card" onClick={()=>setViewingJournal(j)}
+                              style={{minWidth:isMobile?260:300,maxWidth:isMobile?260:300,height:isMobile?320:360,borderRadius:18,overflow:'hidden',cursor:'pointer',position:'relative',scrollSnapAlign:'start',background:'#1f1f1f',flexShrink:0}}>
+                              {(j.photos||[]).length > 0 ? (
+                                <img src={j.photos[0]} alt="" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />
+                              ) : (
+                                <div style={{width:'100%',height:'100%',background:'linear-gradient(135deg,#f59e0b,#ec4899)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:48}}>📔</div>
+                              )}
+                              <div style={{position:'absolute',inset:0,background:'linear-gradient(to top, rgba(0,0,0,.85) 0%, rgba(0,0,0,.2) 50%, transparent 100%)'}}></div>
+                              <div style={{position:'absolute',top:12,left:12,background:'rgba(255,255,255,.95)',color:'#262626',padding:'4px 10px',borderRadius:14,fontSize:10,fontWeight:700,display:'flex',alignItems:'center',gap:4}}>
+                                ❤️ {j.likeCount||0}
+                              </div>
+                              <div style={{position:'absolute',bottom:0,left:0,right:0,padding:isMobile?'14px 16px':'18px 20px',color:'white'}}>
+                                {cityNames && <div style={{fontSize:11,opacity:.85,marginBottom:6,fontWeight:600}}>📍 {cityNames}</div>}
+                                <div style={{fontSize:isMobile?17:19,fontWeight:800,marginBottom:6,lineHeight:1.25,letterSpacing:-0.3,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{j.title || t('journalNoTitle')}</div>
+                                <div style={{display:'flex',alignItems:'center',gap:8,fontSize:11,opacity:.9}}>
+                                  <div style={{width:22,height:22,borderRadius:'50%',background:'linear-gradient(135deg,#f59e0b,#ec4899)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800}}>{(j.userName||'?')[0]?.toUpperCase()}</div>
+                                  <span style={{fontWeight:600}}>{j.userName}</span>
+                                  <span>·</span>
+                                  <span>{j.days}{t('journalDaysSeparator')}</span>
+                                </div>
                               </div>
                             </div>
-                            <span style={{fontSize:10,color:'#94a3b8'}}>{sc.userName||'?'} · {dateStr}</span>
-                          </div>
-                          {photos.length > 0 && (
-                            <div style={{display:'flex',gap:6,marginBottom:10,overflowX:'auto',paddingBottom:2}}>
-                              {photos.map((url,i)=>(
-                                <img key={i} src={url} style={{width:90,height:64,borderRadius:8,objectFit:'cover',flexShrink:0,border:'1px solid #e2e8f0'}} alt="" />
-                              ))}
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Section 2: 인기 도시 (원형 칩 슬라이더) */}
+                  {popularCities.length > 0 && (
+                    <div style={{padding:isMobile?'8px 0 18px':'10px 0 24px',borderTop:'1px solid #f5f5f5',marginTop:6,animation:'feedFadeIn .35s'}}>
+                      <div style={{padding:isMobile?'14px 16px 12px':'18px 22px 14px'}}>
+                        <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#262626',letterSpacing:-0.3}}>🔥 {lang==='ko'?'지금 인기 도시':lang==='ja'?'今人気の都市':lang==='zh'?'当前热门城市':'Popular Cities'}</div>
+                        <div style={{fontSize:11,color:'#a3a3a3',marginTop:3}}>{lang==='ko'?'여행자들이 가장 많이 다녀온 곳':'Most visited by travelers'}</div>
+                      </div>
+                      <div className="feed-section-scroll" style={{display:'flex',gap:14,overflowX:'auto',padding:isMobile?'0 16px 6px':'0 22px 6px'}}>
+                        {popularCities.map((c, i) => {
+                          const grad = ['linear-gradient(135deg,#f59e0b,#ec4899)','linear-gradient(135deg,#3b82f6,#8b5cf6)','linear-gradient(135deg,#10b981,#3b82f6)','linear-gradient(135deg,#ef4444,#f59e0b)','linear-gradient(135deg,#8b5cf6,#ec4899)','linear-gradient(135deg,#06b6d4,#3b82f6)'][i % 6]
+                          return (
+                            <div key={c.name} className="feed-city-chip" onClick={()=>{
+                              setShowFeed(false)
+                              const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===c.name))
+                              if (entry) { setSelectedCountry(entry[0]); setSelectedCity(c.name) }
+                            }} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:6,cursor:'pointer',minWidth:64,flexShrink:0}}>
+                              <div style={{width:isMobile?60:64,height:isMobile?60:64,borderRadius:'50%',background:grad,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:22,fontWeight:800,boxShadow:'0 4px 12px rgba(0,0,0,.08)'}}>
+                                {getCityName(c.name)[0]}
+                              </div>
+                              <div style={{fontSize:11,fontWeight:700,color:'#262626',textAlign:'center',maxWidth:70,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{getCityName(c.name)}</div>
+                              <div style={{fontSize:9,color:'#a3a3a3'}}>{c.count} {lang==='ko'?'편':'posts'}</div>
                             </div>
-                          )}
-                          <div style={{display:'flex',justifyContent:'flex-end'}}>
-                            <button onClick={()=>{
-                              setCourseDays(days);localStorage.setItem('atlas_course_days',JSON.stringify(days))
-                              const flat=days.flatMap(d=>d.items||[]);saveCourse(flat)
-                              setCourseTransport(sc.course?.transport||sc.transport||'transit')
-                              setActiveDayTab(0);setShowCoursePlanner(true);setShowFeed(false)
-                              setCourseSource(sc.course?.type||sc.type||'manual')
-                            }} style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',color:'white',padding:'7px 16px',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                              {t('communityLoad')}
-                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Section 3: 최신 여행기 (그리드) */}
+                  <div style={{padding:isMobile?'14px 0 80px':'18px 0 100px',borderTop:'1px solid #f5f5f5',animation:'feedFadeIn .4s'}}>
+                    <div style={{padding:isMobile?'0 16px 14px':'0 22px 16px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                      <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#262626',letterSpacing:-0.3}}>📔 {lang==='ko'?'최신 여행기':lang==='ja'?'最新の旅行記':lang==='zh'?'最新游记':'Latest Journals'}</div>
+                      <div style={{display:'flex',gap:6}}>
+                        {[{k:'all',label:t('feedTabAll')},{k:'mine',label:t('feedTabMine')}].map(st => (
+                          <button key={st.k} onClick={async()=>{
+                            setFeedSubTab(st.k);setFeedJournalsLoading(true)
+                            try {
+                              const opts = st.k==='mine' && currentUser ? { byUid: currentUser.uid, limitN: 30 } : { limitN: 30 }
+                              const data = await loadJournals(opts)
+                              setFeedJournals(data)
+                            } catch(e) { console.error(e) }
+                            setFeedJournalsLoading(false)
+                          }} style={{padding:'5px 12px',borderRadius:14,border:'none',background:feedSubTab===st.k?'#262626':'#f5f5f5',color:feedSubTab===st.k?'white':'#737373',fontSize:11,fontWeight:600,cursor:'pointer'}}>
+                            {st.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:12,padding:isMobile?'0 16px':'0 22px'}}>
+                      {feedJournals.map(j => {
+                        const liked = currentUser && (j.likes||[]).includes(currentUser.uid)
+                        const cityNames = (j.cities||[]).map(c=>getCityName(c.name)).join(' · ')
+                        return (
+                          <div key={j.id} className="feed-card" onClick={()=>setViewingJournal(j)}
+                            style={{borderRadius:14,background:'white',overflow:'hidden',cursor:'pointer',boxShadow:'0 1px 4px rgba(0,0,0,.04)',border:'1px solid #f0f0f0'}}>
+                            {(j.photos||[]).length > 0 && (
+                              <div style={{width:'100%',aspectRatio:'1',background:'#f5f5f5',overflow:'hidden'}}>
+                                <img src={j.photos[0]} alt="" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />
+                              </div>
+                            )}
+                            <div style={{padding:'12px 14px'}}>
+                              <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
+                                <div style={{width:22,height:22,borderRadius:'50%',background:'linear-gradient(135deg,#f59e0b,#ec4899)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:800,color:'white'}}>{(j.userName||'?')[0]?.toUpperCase()}</div>
+                                <span style={{fontSize:11,color:'#525252',fontWeight:600}}>{j.userName}</span>
+                                {j.rating > 0 && <span style={{fontSize:10,color:'#f59e0b',fontWeight:700,marginLeft:'auto'}}>★ {j.rating}</span>}
+                              </div>
+                              <div style={{fontSize:14,fontWeight:700,color:'#262626',marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',letterSpacing:-0.2}}>{j.title || t('journalNoTitle')}</div>
+                              {cityNames && <div style={{fontSize:11,color:'#737373',marginBottom:6,fontWeight:500}}>📍 {cityNames}</div>}
+                              <div style={{fontSize:11,color:'#737373',lineHeight:1.5,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{j.body}</div>
+                              <div style={{display:'flex',alignItems:'center',gap:14,marginTop:10,paddingTop:8,borderTop:'1px solid #f5f5f5'}}>
+                                <span style={{fontSize:11,color:liked?'#ec4899':'#a3a3a3',display:'flex',alignItems:'center',gap:3,fontWeight:600}}>{liked?'❤️':'🤍'} {j.likeCount||0}</span>
+                                <span style={{fontSize:11,color:'#a3a3a3',display:'flex',alignItems:'center',gap:3}}>💬 {j.commentCount||0}</span>
+                                <span style={{fontSize:10,color:'#d4d4d4',marginLeft:'auto'}}>{j.createdAt?new Date(j.createdAt).toLocaleDateString():''}</span>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      )
-                    })}
+                        )
+                      })}
+                    </div>
                   </div>
-                )
-              )}
-            </div>
+                </>
+              )
+            ) : (
+              /* 코스 탭 */
+              communityCoursesData.length === 0 ? (
+                <div style={{textAlign:'center',padding:'100px 20px',animation:'feedFadeIn .4s'}}>
+                  <div style={{fontSize:64,marginBottom:18}}>🗺️</div>
+                  <div style={{color:'#262626',fontSize:16,fontWeight:700,marginBottom:6}}>{t('communityEmpty')}</div>
+                  <div style={{color:'#a3a3a3',fontSize:13}}>{t('communityEmptyHint')}</div>
+                </div>
+              ) : (
+                <div style={{padding:isMobile?'16px 16px 80px':'20px 22px 100px',display:'flex',flexDirection:'column',gap:14,animation:'feedFadeIn .3s'}}>
+                  {communityCoursesData.map((sc,idx) => {
+                    const days = sc.course?.days || sc.days || []
+                    const cities = [...new Set(days.flatMap(d=>(d.items||[]).map(it=>it.cityI18n?.[lang] || getCityName(it.cityName||it.name))).filter(Boolean))]
+                    const totalPlaces = days.reduce((a,d)=>a+(d.items||[]).length,0)
+                    const photos = sc.photos || []
+                    const dateStr = sc.createdAt ? new Date(sc.createdAt).toLocaleDateString() : ''
+                    return (
+                      <div key={sc.id||idx} className="feed-card" style={{borderRadius:14,border:'1px solid #f0f0f0',background:'white',overflow:'hidden',padding:'14px 16px'}}>
+                        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:10}}>
+                          <div>
+                            <div style={{fontSize:15,fontWeight:800,color:'#262626',letterSpacing:-0.2}}>{cities.join(' · ') || 'Course'}</div>
+                            <div style={{fontSize:11,color:'#737373',marginTop:3}}>
+                              {totalPlaces}{t('communityPlaces')} · {days.length}{t('communityDays')}
+                              {(sc.course?.type||sc.type)==='ai' && <span style={{marginLeft:6,padding:'1px 6px',borderRadius:4,background:'linear-gradient(135deg,#f3e8ff,#fce7f3)',color:'#7c3aed',fontSize:9,fontWeight:700}}>AI</span>}
+                            </div>
+                          </div>
+                          <span style={{fontSize:10,color:'#a3a3a3'}}>{sc.userName||'?'} · {dateStr}</span>
+                        </div>
+                        {photos.length > 0 && (
+                          <div className="feed-section-scroll" style={{display:'flex',gap:6,marginBottom:10,overflowX:'auto',paddingBottom:2}}>
+                            {photos.map((url,i)=>(
+                              <img key={i} src={url} style={{width:90,height:64,borderRadius:8,objectFit:'cover',flexShrink:0,border:'1px solid #f0f0f0'}} alt="" />
+                            ))}
+                          </div>
+                        )}
+                        <div style={{display:'flex',justifyContent:'flex-end'}}>
+                          <button onClick={()=>{
+                            setCourseDays(days);localStorage.setItem('atlas_course_days',JSON.stringify(days))
+                            const flat=days.flatMap(d=>d.items||[]);saveCourse(flat)
+                            setCourseTransport(sc.course?.transport||sc.transport||'transit')
+                            setActiveDayTab(0);setShowCoursePlanner(true);setShowFeed(false)
+                            setCourseSource(sc.course?.type||sc.type||'manual')
+                          }} style={{background:'linear-gradient(135deg,#f59e0b,#ec4899)',border:'none',color:'white',padding:'8px 18px',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                            {t('communityLoad')}
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            )}
           </div>
-        </>
-      )}
+
+          {/* Floating Action Button (여행기 작성) */}
+          {feedMainTab === 'journals' && (
+            <button className="feed-fab" onClick={()=>{
+              if (!currentUser) { setShowLoginModal(true); return }
+              setEditingJournal(null)
+              setJournalForm({ title:'', body:'', cities:[], days:1, rating:0, visibility:'public', photos:[] })
+              setJournalNewPhotos([])
+              setShowJournalEditor(true)
+            }} style={{
+              position:'fixed',bottom:isMobile?'calc(20px + env(safe-area-inset-bottom))':28,right:isMobile?20:32,zIndex:11,
+              width:isMobile?56:60,height:isMobile?56:60,borderRadius:'50%',
+              background:'linear-gradient(135deg,#f59e0b,#ec4899)',border:'none',color:'white',
+              fontSize:24,cursor:'pointer',boxShadow:'0 8px 24px rgba(236,72,153,.35)',
+              display:'flex',alignItems:'center',justifyContent:'center',
+            }}>✏️</button>
+          )}
+        </div>
+        )
+      })()}
 
       {/* Journal Editor Modal (작성/수정) */}
       {showJournalEditor && (
