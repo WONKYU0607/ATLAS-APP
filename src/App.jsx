@@ -4183,12 +4183,6 @@ function App() {
             {feedMainTab === 'journals' ? (
               feedJournalsLoading ? (
                 <div style={{textAlign:'center',padding:'80px 0',color:'#a3a3a3',fontSize:14}}>{lang==='ko'?'불러오는 중...':'Loading...'}</div>
-              ) : feedJournals.length === 0 ? (
-                <div style={{textAlign:'center',padding:'100px 20px',animation:'feedFadeIn .4s'}}>
-                  <div style={{fontSize:64,marginBottom:18}}>📔</div>
-                  <div style={{color:'#262626',fontSize:16,fontWeight:700,marginBottom:6}}>{t('feedEmpty')}</div>
-                  <div style={{color:'#a3a3a3',fontSize:13}}>{t('feedEmptyHint')}</div>
-                </div>
               ) : (
                 <>
                   {/* Panel E: 시즌 배너 (4월 봄) */}
@@ -4421,6 +4415,13 @@ function App() {
                         ))}
                       </div>
                     </div>
+                    {feedJournals.length === 0 ? (
+                      <div style={{textAlign:'center',padding:'40px 20px',margin:isMobile?'0 16px':'0 22px',background:'#fafafa',borderRadius:14,border:'1px dashed #e5e5e5'}}>
+                        <div style={{fontSize:40,marginBottom:10,opacity:.7}}>📔</div>
+                        <div style={{color:'#525252',fontSize:14,fontWeight:700,marginBottom:4}}>{t('feedEmpty')}</div>
+                        <div style={{color:'#a3a3a3',fontSize:12}}>{t('feedEmptyHint')}</div>
+                      </div>
+                    ) : (
                     <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:12,padding:isMobile?'0 16px':'0 22px'}}>
                       {feedJournals.map(j => {
                         const liked = currentUser && (j.likes||[]).includes(currentUser.uid)
@@ -4452,6 +4453,7 @@ function App() {
                         )
                       })}
                     </div>
+                    )}
                   </div>
                 </>
               )
