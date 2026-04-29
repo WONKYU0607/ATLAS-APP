@@ -3994,14 +3994,94 @@ function App() {
         const popularCities = Object.entries(cityFreq).sort((a,b) => b[1]-a[1]).slice(0, 12).map(([name, count]) => ({ name, count }))
 
         // ── 큐레이션 콘텐츠 (하드코딩, 봄 테마 4월) ──
-        // 패널 E: 시즌 배너
-        const seasonBanner = {
-          emoji: '🌸',
-          title: { ko:'벚꽃 만개, 봄의 도시로', en:'Cherry Blossom Season', ja:'桜満開、春の都市へ', zh:'樱花盛开，前往春日之城' },
-          subtitle: { ko:'4월에만 만날 수 있는 풍경', en:'Once-a-year spring views', ja:'4月だけの絶景', zh:'仅四月可见的美景' },
-          cities: ['교토','도쿄','파리','워싱턴DC','암스테르담','서울'],
-          gradient: 'linear-gradient(135deg,#fda4af,#fbcfe8,#a5b4fc)'
+        // 패널 E: 시즌 배너 (월마다 자동 전환)
+        const SEASON_BANNERS = {
+          1: {
+            emoji: '❄️',
+            title: { ko:'겨울의 절정, 눈과 온천', en:'Snow & Hot Springs', ja:'冬の絶頂、雪と温泉', zh:'冬日巅峰，雪与温泉' },
+            subtitle: { ko:'1월에 즐기는 가장 따뜻한 추위', en:'Warmest cold of the year', ja:'1月の暖かな寒さ', zh:'一月最暖的寒冷' },
+            cities: ['삿포로','다낭','방콕'],
+            gradient: 'linear-gradient(135deg,#bae6fd,#e0e7ff,#ffffff)'
+          },
+          2: {
+            emoji: '🏮',
+            title: { ko:'따뜻한 도시로 떠나는 2월', en:'Escape to Warmer Cities', ja:'暖かい街への2月', zh:'前往温暖之城的二月' },
+            subtitle: { ko:'추위를 피해 가는 단거리 여행', en:'Short trips from the cold', ja:'寒さを避ける近場旅行', zh:'避寒短途旅行' },
+            cities: ['호이안','도쿄','오사카'],
+            gradient: 'linear-gradient(135deg,#fde68a,#fbcfe8,#fca5a5)'
+          },
+          3: {
+            emoji: '🌷',
+            title: { ko:'봄의 시작, 유채꽃 피는 계절', en:'Spring Awakening', ja:'春の始まり、菜の花の季節', zh:'春日序曲，油菜花盛开' },
+            subtitle: { ko:'3월의 첫 봄 기운을 만나러', en:'First breath of spring', ja:'3月の春の息吹', zh:'三月初春气息' },
+            cities: ['제주','오키나와','후쿠오카','다낭'],
+            gradient: 'linear-gradient(135deg,#fef08a,#fde68a,#fb923c)'
+          },
+          4: {
+            emoji: '🌸',
+            title: { ko:'벚꽃 만개, 봄의 도시로', en:'Cherry Blossom Season', ja:'桜満開、春の都市へ', zh:'樱花盛开，前往春日之城' },
+            subtitle: { ko:'4월에만 만날 수 있는 풍경', en:'Once-a-year spring views', ja:'4月だけの絶景', zh:'仅四月可见的美景' },
+            cities: ['교토','도쿄','오사카'],
+            gradient: 'linear-gradient(135deg,#fda4af,#fbcfe8,#a5b4fc)'
+          },
+          5: {
+            emoji: '🌿',
+            title: { ko:'신록의 계절, 자연이 깨어나는 5월', en:'Lush Green Awakens', ja:'新緑の季節、自然が目覚める5月', zh:'新绿之季，自然苏醒' },
+            subtitle: { ko:'가족과 함께 떠나기 좋은 시기', en:'Perfect for family trips', ja:'家族旅行に最適', zh:'最适合家庭出游' },
+            cities: ['밴쿠버','다낭','발리'],
+            gradient: 'linear-gradient(135deg,#86efac,#a7f3d0,#5eead4)'
+          },
+          6: {
+            emoji: '🌊',
+            title: { ko:'지중해의 여름이 시작된다', en:'Mediterranean Summer Begins', ja:'地中海の夏が始まる', zh:'地中海的夏天开始了' },
+            subtitle: { ko:'6월, 가장 푸른 바다를 만나는 달', en:'The bluest seas of June', ja:'6月、最も青い海', zh:'六月，最蓝的大海' },
+            cities: ['산토리니','푸켓','세부'],
+            gradient: 'linear-gradient(135deg,#67e8f9,#7dd3fc,#818cf8)'
+          },
+          7: {
+            emoji: '🏖️',
+            title: { ko:'한여름, 휴양지로 떠나는 시간', en:'Peak Summer, Beach Time', ja:'真夏、リゾートへ', zh:'盛夏，度假时光' },
+            subtitle: { ko:'7월의 태양과 바다가 부르는 곳', en:'Sun, sand, and sea await', ja:'7月の太陽と海', zh:'七月的阳光与大海' },
+            cities: ['발리','푸켓','오사카','도쿄'],
+            gradient: 'linear-gradient(135deg,#5eead4,#fbbf24,#fb923c)'
+          },
+          8: {
+            emoji: '🏔️',
+            title: { ko:'더위를 피해 알프스로', en:'Escape to the Alps', ja:'暑さを逃れアルプスへ', zh:'避暑前往阿尔卑斯' },
+            subtitle: { ko:'8월에도 시원한 고산 여행지', en:'Cool mountain getaways', ja:'8月でも涼しい山岳地', zh:'八月依然清凉的高山' },
+            cities: ['인터라켄','사이판','괌'],
+            gradient: 'linear-gradient(135deg,#dbeafe,#bfdbfe,#93c5fd)'
+          },
+          9: {
+            emoji: '🍂',
+            title: { ko:'예술과 가을이 머무는 도시', en:'Where Art Meets Autumn', ja:'芸術と秋が宿る街', zh:'艺术与秋意栖息的城市' },
+            subtitle: { ko:'9월의 시작, 새 계절을 여는 여행', en:'Open a new season', ja:'9月、新しい季節へ', zh:'九月，开启新季节' },
+            cities: ['파리','도쿄','오사카'],
+            gradient: 'linear-gradient(135deg,#fbbf24,#f59e0b,#b45309)'
+          },
+          10: {
+            emoji: '🍁',
+            title: { ko:'단풍 절정, 가장 붉은 가을', en:'Peak Foliage Season', ja:'紅葉の絶頂、最も赤い秋', zh:'红叶巅峰，最红的秋天' },
+            subtitle: { ko:'10월에만 펼쳐지는 단풍 풍경', en:'Crimson views of October', ja:'10月だけの紅葉', zh:'仅十月可见的红叶' },
+            cities: ['교토','밴쿠버','후쿠오카','다낭'],
+            gradient: 'linear-gradient(135deg,#fb923c,#ef4444,#b91c1c)'
+          },
+          11: {
+            emoji: '🌅',
+            title: { ko:'사막과 황금빛 일몰의 계절', en:'Desert & Golden Sunsets', ja:'砂漠と黄金の夕日', zh:'沙漠与金色日落' },
+            subtitle: { ko:'11월, 사막 여행의 베스트 시즌', en:'Best season for the desert', ja:'11月、砂漠ベストシーズン', zh:'十一月，沙漠最佳季节' },
+            cities: ['두바이','방콕','치앙마이'],
+            gradient: 'linear-gradient(135deg,#fde047,#f97316,#9a3412)'
+          },
+          12: {
+            emoji: '🎄',
+            title: { ko:'오로라와 산타의 겨울 동화', en:'Aurora & Christmas Magic', ja:'オーロラとサンタの冬', zh:'极光与圣诞奇迹' },
+            subtitle: { ko:'12월, 한 해를 마무리하는 특별한 여행', en:'A magical year-end trip', ja:'12月、特別な締めくくり', zh:'十二月，特别的年末旅行' },
+            cities: ['로바니에미','도쿄','다낭'],
+            gradient: 'linear-gradient(135deg,#1e1b4b,#5b21b6,#7c3aed)'
+          }
         }
+        const seasonBanner = SEASON_BANNERS[new Date().getMonth() + 1] || SEASON_BANNERS[4]
 
         // 패널 A: 히어로 카드 2개
         const heroCards = [
@@ -4199,7 +4279,15 @@ function App() {
                     }}>
                       <div style={{position:'absolute',top:-20,right:-10,fontSize:140,opacity:.18,lineHeight:1}}>{seasonBanner.emoji}</div>
                       <div style={{flex:1,position:'relative',zIndex:1}}>
-                        <div style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,.9)',background:'rgba(0,0,0,.15)',padding:'3px 10px',borderRadius:12,display:'inline-block',marginBottom:8,letterSpacing:.5}}>APR · {(lang==='ko'?'봄':lang==='ja'?'春':lang==='zh'?'春':'SPRING')}</div>
+                        <div style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,.9)',background:'rgba(0,0,0,.15)',padding:'3px 10px',borderRadius:12,display:'inline-block',marginBottom:8,letterSpacing:.5}}>{(()=>{
+                          const m = new Date().getMonth() + 1
+                          const monthLabel = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][m-1]
+                          const season = m>=3&&m<=5 ? (lang==='ko'?'봄':lang==='ja'?'春':lang==='zh'?'春':'SPRING')
+                            : m>=6&&m<=8 ? (lang==='ko'?'여름':lang==='ja'?'夏':lang==='zh'?'夏':'SUMMER')
+                            : m>=9&&m<=11 ? (lang==='ko'?'가을':lang==='ja'?'秋':lang==='zh'?'秋':'AUTUMN')
+                            : (lang==='ko'?'겨울':lang==='ja'?'冬':lang==='zh'?'冬':'WINTER')
+                          return monthLabel + ' · ' + season
+                        })()}</div>
                         <div style={{fontSize:isMobile?17:20,fontWeight:800,color:'white',lineHeight:1.25,letterSpacing:-0.3,marginBottom:5,textShadow:'0 1px 8px rgba(0,0,0,.1)'}}>{seasonBanner.title[lang]||seasonBanner.title.ko}</div>
                         <div style={{fontSize:isMobile?12:13,color:'rgba(255,255,255,.95)',fontWeight:500}}>{seasonBanner.subtitle[lang]||seasonBanner.subtitle.ko}</div>
                       </div>
