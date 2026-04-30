@@ -283,6 +283,7 @@ export const COUNTRY_CITIES = {
     { name:"알렉산드리아", lat:31.20, lng:29.92, emoji:"📚", color:"#3498db" },
     { name:"후르가다", lat:27.26, lng:33.81, emoji:"🐠", color:"#2ecc71" },
     { name:"샤름엘셰이크", lat:27.91, lng:34.33, emoji:"🤿", color:"#9b59b6" },
+    { name:"다합", lat:28.51, lng:34.51, emoji:"🐬", color:"#1abc9c" },
   ],
   "Morocco": [
     { name:"마라케시", lat:31.63, lng:-7.99, emoji:"🕌", color:"#e74c3c" },
@@ -334,7 +335,7 @@ export const COUNTRY_CITIES = {
     { name:"싱가포르", lat:1.36, lng:103.82, emoji:"🦁", color:"#991b1b" },
   ],
   "Cambodia": [
-    { name:"씨엠립", lat:13.37, lng:103.87, emoji:"🏛️", color:"#e74c3c" },
+    { name:"시엠립", lat:13.37, lng:103.87, emoji:"🏛️", color:"#e74c3c" },
     { name:"프놈펜", lat:11.56, lng:104.93, emoji:"🏙️", color:"#3498db" },
     { name:"시아누크빌", lat:10.63, lng:103.50, emoji:"🏖️", color:"#2ecc71" },
   ],
@@ -632,7 +633,13 @@ export const COUNTRY_CITIES = {
     { name:"타로코", lat:24.18, lng:121.62, emoji:"⛰️", color:"#e67e22" },
   ],
   "Maldives": [
-    { name:"말레", lat:4.18, lng:73.51, emoji:"🏝️", color:"#3498db" },
+    { name:"몰디브", lat:4.18, lng:73.51, emoji:"🏝️", color:"#3498db" },
+  ],
+  "Guam": [
+    { name:"괌", lat:13.47, lng:144.75, emoji:"🌴", color:"#2ecc71" },
+  ],
+  "Northern Mariana Islands": [
+    { name:"사이판", lat:15.19, lng:145.75, emoji:"🏖️", color:"#3498db" },
   ],
   "Costa Rica": [
     { name:"산호세", lat:9.93, lng:-84.08, emoji:"🌿", color:"#2ecc71" },

@@ -950,11 +950,11 @@ export const CITY_DATA = {
 ]},
 
 // ────────────────────────── 캄보디아 ──────────────────────────
-"씨엠립": { description:"씨엠립은 세계 최대의 종교 유적 앙코르와트의 관문 도시입니다. 크메르 제국의 영화를 간직한 수백 개의 사원이 밀림 속에 펼쳐져 있습니다.", spots:[
+"시엠립": { description:"시엠립은 세계 최대의 종교 유적 앙코르와트의 관문 도시입니다. 크메르 제국의 영화를 간직한 수백 개의 사원이 밀림 속에 펼쳐져 있습니다.", spots:[
   {name:"앙코르와트", wikiTitle:"Angkor Wat", type:"역사", desc:"12세기에 건설된 세계 최대의 종교 건축물로 캄보디아 국기에도 그려져 있습니다. 일출이 특히 장관입니다.", rating:4.9, openTime:"05:00~17:30", price:"$37(1일권)", website:"https://www.angkorenterprise.gov.kh"},
   {name:"앙코르 톰", wikiTitle:"Angkor Thom", type:"역사", desc:"바이욘 사원의 216개 거대한 미소 짓는 얼굴이 있는 크메르 제국의 마지막 수도입니다.", rating:4.8, openTime:"07:30~17:30", price:"앙코르 패스 포함", website:"https://www.angkorenterprise.gov.kh"},
   {name:"따프롬 사원", wikiTitle:"Ta Prohm", type:"역사", desc:"거대한 나무뿌리가 사원을 감싸고 있는 신비로운 유적으로 영화 '툼레이더' 촬영지입니다.", rating:4.7, openTime:"07:30~17:30", price:"앙코르 패스 포함", website:"https://en.wikipedia.org/wiki/Ta_Prohm"},
-  {name:"펍스트리트", wikiTitle:"Pub Street, Siem Reap", type:"도시", desc:"씨엠립의 번화가로 레스토랑, 바, 야시장이 모여있는 활기찬 거리입니다.", rating:4.2, openTime:"17:00~02:00", price:"무료", website:"https://en.wikipedia.org/wiki/Pub_Street,_Siem_Reap"},
+  {name:"펍스트리트", wikiTitle:"Pub Street, Siem Reap", type:"도시", desc:"시엠립의 번화가로 레스토랑, 바, 야시장이 모여있는 활기찬 거리입니다.", rating:4.2, openTime:"17:00~02:00", price:"무료", website:"https://en.wikipedia.org/wiki/Pub_Street,_Siem_Reap"},
 ]},
 "프놈펜": { description:"프놈펜은 캄보디아의 수도로 왕궁의 황금빛 지붕과 메콩강이 어우러진 도시입니다. 크메르 루즈의 아픈 역사도 함께 간직하고 있습니다.", spots:[
   {name:"왕궁과 은사원", wikiTitle:"Royal Palace, Phnom Penh", type:"역사", desc:"1866년에 건설된 캄보디아 국왕의 공식 거주지로 에메랄드 불상이 모셔진 은사원이 유명합니다.", rating:4.5, openTime:"08:00~17:00", price:"$10", website:"https://en.wikipedia.org/wiki/Royal_Palace,_Phnom_Penh"},
@@ -1078,6 +1078,12 @@ export const CITY_DATA = {
 "샤름엘셰이크": { description:"샤름엘셰이크는 시나이 반도 끝자락에 위치한 고급 리조트 도시로 홍해 최고의 다이빙 포인트와 시나이 산이 인근에 있습니다.", spots:[
   {name:"라스 무함마드 국립공원", wikiTitle:"Ras Muhammad", type:"자연", desc:"세계 최고의 다이빙 스폿 중 하나로 맹그로브 숲과 산호초가 만나는 독특한 생태계를 자랑합니다.", rating:4.7, openTime:"08:00~17:00", price:"$10", website:"https://en.wikipedia.org/wiki/Ras_Muhammad"},
   {name:"나마 베이", wikiTitle:"Naama Bay", type:"도시", desc:"샤름엘셰이크의 중심 해변으로 레스토랑, 쇼핑, 수상 스포츠를 모두 즐길 수 있습니다.", rating:4.3, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Naama_Bay"},
+]},
+"다합": { description:"다합은 시나이 반도 동쪽의 작은 어촌 마을로 세계적인 다이빙·스노클링 명소이자 배낭여행자들의 천국입니다. 블루홀 다이브 스폿과 자유로운 분위기로 유명합니다.", spots:[
+  {name:"블루홀", wikiTitle:"Blue Hole, Egypt", type:"자연", desc:"세계적으로 유명한 다이빙 명소로 100m 깊이의 수직 구멍이 산호초로 둘러싸인 신비로운 다이브 스폿입니다.", rating:4.8, openTime:"24시간", price:"다이빙 €30", website:"https://en.wikipedia.org/wiki/Blue_Hole_(Red_Sea)"},
+  {name:"라이트하우스 리프", wikiTitle:"Dahab", type:"자연", desc:"해변에서 바로 입수 가능한 산호초 지대로 초보 다이버에게 적합하며 알록달록한 열대어를 만날 수 있습니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Dahab"},
+  {name:"시나이 산", wikiTitle:"Mount Sinai", type:"자연", desc:"모세가 십계명을 받았다는 성서의 산으로 다합에서 1시간 거리이며 정상에서 보는 일출이 장관입니다.", rating:4.7, openTime:"24시간", price:"$5", website:"https://en.wikipedia.org/wiki/Mount_Sinai"},
+  {name:"다합 해안 산책로", wikiTitle:"Dahab", type:"도시", desc:"베두인 카페와 자유로운 분위기의 해변 산책로로 일몰을 보며 쉬샤를 즐길 수 있는 다합의 매력입니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Dahab"},
 ]},
 
 // ────────────────────────── 모로코 ──────────────────────────
@@ -1973,8 +1979,23 @@ export const CITY_DATA = {
   {name:"타로코 협곡", wikiTitle:"Taroko Gorge", type:"자연", desc:"19km에 걸쳐 펼쳐진 순백의 대리석 협곡. 입곡 터널, 연자구 폭포 등 절경이 이어집니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Taroko_Gorge"},
   {name:"청수단애", wikiTitle:"Qingshui Cliffs", type:"자연", desc:"태평양을 향해 1,000m 직벽으로 깎아지른 절벽. 세계 10대 절경 중 하나로 꼽힙니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Qingshui_Cliffs"},
 ]},
-"말레": { description:"몰디브의 수도 말레는 1,200개 산호섬으로 이루어진 인도양의 열대 낙원으로 가는 관문입니다.", spots:[
-  {name:"수상 빌라 리조트", wikiTitle:"Maldives", type:"자연", desc:"투명한 바다 위 수상 빌라에서 산호초 스노클링과 돌고래를 만나는 꿈의 휴양지입니다.", rating:4.9, openTime:"연중", price:"리조트별", website:"https://en.wikipedia.org/wiki/Maldives"},
+"몰디브": { description:"몰디브는 1,200개의 산호섬으로 이루어진 인도양의 열대 낙원으로 수상 빌라와 투명한 바다, 세계 최고의 다이빙으로 신혼여행 1순위 목적지입니다.", spots:[
+  {name:"수상 빌라 리조트", wikiTitle:"Maldives", type:"자연", desc:"투명한 바다 위 수상 빌라에서 산호초 스노클링과 돌고래를 만나는 꿈의 휴양지로 신혼여행 메카입니다.", rating:4.9, openTime:"연중", price:"리조트별", website:"https://en.wikipedia.org/wiki/Maldives"},
+  {name:"바이올런 산호초", wikiTitle:"Coral reefs of Maldives", type:"자연", desc:"세계 7번째로 큰 산호초 군락으로 멘타가오리, 고래상어, 형광 플랑크톤을 만날 수 있는 다이빙 천국입니다.", rating:4.8, openTime:"24시간", price:"투어별", website:"https://en.wikipedia.org/wiki/Maldives"},
+  {name:"말레 후크루 미스키이 사원", wikiTitle:"Hukuru Miskiy", type:"역사", desc:"1656년 산호로 지어진 몰디브 최고의 사원으로 정교한 라카 조각과 코란 비문이 유네스코 등재 후보입니다.", rating:4.4, openTime:"06:00~18:00", price:"무료", website:"https://en.wikipedia.org/wiki/Hukuru_Miskiy"},
+  {name:"바두 바닷속 레스토랑", wikiTitle:"Ithaa Undersea Restaurant", type:"음식", desc:"수심 5m 아래 유리 터널 안에 자리한 세계 최초의 수중 레스토랑으로 360도 산호초 뷰를 즐깁니다.", rating:4.7, openTime:"11:00~23:00", price:"$300+", website:"https://en.wikipedia.org/wiki/Ithaa"},
+]},
+"괌": { description:"괌은 미크로네시아 최대 섬이자 미국령 휴양지로 투몬베이의 산호초 해변과 차모로 문화, 면세 쇼핑이 어우러진 태평양 휴양 천국입니다.", spots:[
+  {name:"투몬 베이", wikiTitle:"Tumon Bay", type:"자연", desc:"괌의 대표 해변으로 산호초로 둘러싸인 잔잔한 바다와 호텔 리조트가 늘어선 괌 관광의 중심입니다.", rating:4.7, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Tumon"},
+  {name:"두 사랑의 절벽", wikiTitle:"Two Lovers Point", type:"랜드마크", desc:"차모로 전설 속 사랑하는 연인이 떨어졌다는 122m 절벽으로 괌 최고의 일몰 명소이자 사랑의 자물쇠 명소입니다.", rating:4.5, openTime:"08:00~21:00", price:"$3", website:"https://en.wikipedia.org/wiki/Two_Lovers_Point"},
+  {name:"괌 태평양 전쟁박물관", wikiTitle:"War in the Pacific National Historical Park", type:"역사", desc:"태평양 전쟁의 격전지였던 괌의 역사를 보존한 국립역사공원으로 미군 상륙 해변과 전쟁 유적을 전시합니다.", rating:4.6, openTime:"09:00~16:30", price:"무료", website:"https://www.nps.gov/wapa"},
+  {name:"리티디안 비치", wikiTitle:"Ritidian Point", type:"자연", desc:"괌 북쪽 끝의 야생보호구역 해변으로 인적 드문 흰 모래사장과 투명한 바다, 거북이 산란지로 유명합니다.", rating:4.6, openTime:"07:30~16:00", price:"무료", website:"https://en.wikipedia.org/wiki/Ritidian_Point"},
+]},
+"사이판": { description:"사이판은 북마리아나 제도의 주도이자 미국령 휴양지로 마이크로 비치의 흰 모래와 만세 절벽의 역사, 정글 투어가 어우러진 태평양의 보석입니다.", spots:[
+  {name:"마이크로 비치", wikiTitle:"Micro Beach", type:"자연", desc:"사이판 서해안의 대표 해변으로 부드러운 흰 모래와 옥색 바다가 1.5km 펼쳐지는 세계 최고의 해변 중 하나입니다.", rating:4.8, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Micro_Beach"},
+  {name:"만세 절벽", wikiTitle:"Banzai Cliff", type:"역사", desc:"태평양 전쟁 당시 일본군과 민간인이 투신했던 250m 절벽으로 평화 기념비와 추모 공원이 조성되어 있습니다.", rating:4.5, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Banzai_Cliff"},
+  {name:"그로토", wikiTitle:"The Grotto (Saipan)", type:"자연", desc:"천연 석회암 동굴 안에 형성된 다이빙 명소로 세계 5대 다이브 스폿 중 하나이며 청량한 바다 동굴 빛이 환상적입니다.", rating:4.8, openTime:"24시간", price:"다이빙 $80", website:"https://en.wikipedia.org/wiki/The_Grotto_(Saipan)"},
+  {name:"버드 아일랜드", wikiTitle:"Bird Island, Saipan", type:"자연", desc:"사이판 북동쪽 해안의 작은 무인도로 거북이 산란지이자 옥색 바다와 절벽이 어우러진 인생샷 스팟입니다.", rating:4.6, openTime:"24시간", price:"무료", website:"https://en.wikipedia.org/wiki/Bird_Island,_Northern_Mariana_Islands"},
 ]},
 "산호세": { description:"산호세는 코스타리카의 수도로 열대우림과 화산, 야생동물의 보고인 에코투어리즘의 메카입니다.", spots:[
   {name:"마누엘 안토니오 국립공원", wikiTitle:"Manuel Antonio National Park", type:"자연", desc:"열대우림과 백사장이 만나는 곳으로 원숭이, 나무늘보를 야생에서 만납니다.", rating:4.7, openTime:"07:00~16:00", price:"$18", website:"https://en.wikipedia.org/wiki/Manuel_Antonio_National_Park"},

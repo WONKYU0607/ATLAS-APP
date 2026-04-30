@@ -4083,6 +4083,15 @@ function App() {
         }
         const seasonBanner = SEASON_BANNERS[new Date().getMonth() + 1] || SEASON_BANNERS[4]
 
+        // 시즌 라벨 (월 + 계절) 미리 계산
+        const _curMonth = new Date().getMonth() + 1
+        const _monthLabel = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][_curMonth-1]
+        const _seasonLabel = _curMonth>=3&&_curMonth<=5 ? (lang==='ko'?'봄':lang==='ja'?'春':lang==='zh'?'春':'SPRING')
+          : _curMonth>=6&&_curMonth<=8 ? (lang==='ko'?'여름':lang==='ja'?'夏':lang==='zh'?'夏':'SUMMER')
+          : _curMonth>=9&&_curMonth<=11 ? (lang==='ko'?'가을':lang==='ja'?'秋':lang==='zh'?'秋':'AUTUMN')
+          : (lang==='ko'?'겨울':lang==='ja'?'冬':lang==='zh'?'冬':'WINTER')
+        const seasonBannerLabel = _monthLabel + ' · ' + _seasonLabel
+
         // 패널 A: 히어로 카드 2개
         const heroCards = [
           {
@@ -4090,7 +4099,7 @@ function App() {
             title: { ko:'허니문 추천 도시', en:'Honeymoon Destinations', ja:'ハネムーンおすすめ', zh:'蜜月推荐城市' },
             subtitle: { ko:'로맨틱한 봄날의 여행', en:'Romantic spring escapes', ja:'ロマンチックな春旅', zh:'浪漫的春日旅行' },
             cta: { ko:'둘러보기 →', en:'Explore →', ja:'見る →', zh:'探索 →' },
-            cities: ['파리','바르셀로나','산토리니','발리','몰디브','베네치아'],
+            cities: ['파리','바르셀로나','산토리니','발리','몰디브','베네치아','두브로브니크'],
             gradient: 'linear-gradient(135deg,#ec4899,#f97316)'
           },
           {
@@ -4134,7 +4143,7 @@ function App() {
             tag: { ko:'BEACH', en:'BEACH', ja:'BEACH', zh:'BEACH' },
             title: { ko:'휴양지 BEST 8', en:'Beach Getaway Top 8', ja:'リゾート BEST 8', zh:'度假胜地 BEST 8' },
             subtitle: { ko:'바다와 함께하는 휴식', en:'Relax by the sea', ja:'海でのんびり', zh:'海边度假' },
-            cities: ['발리','몰디브','산토리니','푸켓','세부','오키나와','이비자','테네리페'],
+            cities: ['발리','몰디브','사이판','괌','산토리니','푸켓','세부','오키나와','이비자','테네리페'],
             color: '#cffafe'
           },
           {
@@ -4142,7 +4151,7 @@ function App() {
             tag: { ko:'HISTORY', en:'HISTORY', ja:'HISTORY', zh:'HISTORY' },
             title: { ko:'역사 도시 BEST 6', en:'Historic Cities Top 6', ja:'歴史都市 BEST 6', zh:'历史名城 BEST 6' },
             subtitle: { ko:'천 년의 시간을 걷다', en:'Walk through millennia', ja:'千年の時を歩く', zh:'千年时光漫步' },
-            cities: ['로마','이스탄불','아테네','쿄토','시안','카이로'],
+            cities: ['로마','이스탄불','아테네','교토','시안','카이로'],
             color: '#fef3c7'
           },
           {
@@ -4150,16 +4159,16 @@ function App() {
             tag: { ko:'NATURE', en:'NATURE', ja:'NATURE', zh:'NATURE' },
             title: { ko:'자연이 살아있는 도시', en:'Nature Escapes', ja:'自然が生きる街', zh:'自然之城' },
             subtitle: { ko:'도시에서 만나는 대자연', en:'Wild beauty in cities', ja:'都市で出会う大自然', zh:'城市中的大自然' },
-            cities: ['밴쿠버','케이프타운','퀸스타운','쮜리히','오슬로','레이캬비크'],
+            cities: ['밴쿠버','케이프타운','퀸스타운','취리히','오슬로','레이캬비크'],
             color: '#dcfce7'
           }
         ]
 
         // 패널 C: 카테고리 칩
         const categoryChips = [
-          { key:'beach', emoji:'🏖️', label:{ko:'휴양',en:'Beach',ja:'リゾート',zh:'度假'}, cities:['발리','몰디브','푸켓','세부','오키나와','이비자','산토리니','테네리페'] },
+          { key:'beach', emoji:'🏖️', label:{ko:'휴양',en:'Beach',ja:'リゾート',zh:'度假'}, cities:['발리','몰디브','사이판','괌','푸켓','세부','오키나와','이비자','산토리니','테네리페','다합'] },
           { key:'food', emoji:'🍣', label:{ko:'미식',en:'Foodie',ja:'美食',zh:'美食'}, cities:['도쿄','오사카','방콕','로마','이스탄불','홍콩','파리','바르셀로나'] },
-          { key:'history', emoji:'🏛️', label:{ko:'역사',en:'History',ja:'歴史',zh:'历史'}, cities:['로마','이스탄불','아테네','교토','시안','카이로','폼페이','앙코르와트'] },
+          { key:'history', emoji:'🏛️', label:{ko:'역사',en:'History',ja:'歴史',zh:'历史'}, cities:['로마','이스탄불','아테네','교토','시안','카이로','프라하','두브로브니크'] },
           { key:'night', emoji:'🌃', label:{ko:'야경',en:'Night',ja:'夜景',zh:'夜景'}, cities:['홍콩','뉴욕','상하이','파리','도쿄','두바이','싱가포르'] },
           { key:'shopping', emoji:'🛍️', label:{ko:'쇼핑',en:'Shopping',ja:'ショッピング',zh:'购物'}, cities:['뉴욕','파리','밀라노','도쿄','홍콩','두바이','런던'] },
           { key:'nature', emoji:'🏔️', label:{ko:'자연',en:'Nature',ja:'自然',zh:'自然'}, cities:['밴쿠버','퀸스타운','오슬로','레이캬비크','케이프타운'] },
@@ -4279,15 +4288,7 @@ function App() {
                     }}>
                       <div style={{position:'absolute',top:-20,right:-10,fontSize:140,opacity:.18,lineHeight:1}}>{seasonBanner.emoji}</div>
                       <div style={{flex:1,position:'relative',zIndex:1}}>
-                        <div style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,.9)',background:'rgba(0,0,0,.15)',padding:'3px 10px',borderRadius:12,display:'inline-block',marginBottom:8,letterSpacing:.5}}>{(()=>{
-                          const m = new Date().getMonth() + 1
-                          const monthLabel = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][m-1]
-                          const season = m>=3&&m<=5 ? (lang==='ko'?'봄':lang==='ja'?'春':lang==='zh'?'春':'SPRING')
-                            : m>=6&&m<=8 ? (lang==='ko'?'여름':lang==='ja'?'夏':lang==='zh'?'夏':'SUMMER')
-                            : m>=9&&m<=11 ? (lang==='ko'?'가을':lang==='ja'?'秋':lang==='zh'?'秋':'AUTUMN')
-                            : (lang==='ko'?'겨울':lang==='ja'?'冬':lang==='zh'?'冬':'WINTER')
-                          return monthLabel + ' · ' + season
-                        })()}</div>
+                        <div style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,.9)',background:'rgba(0,0,0,.15)',padding:'3px 10px',borderRadius:12,display:'inline-block',marginBottom:8,letterSpacing:.5}}>{seasonBannerLabel}</div>
                         <div style={{fontSize:isMobile?17:20,fontWeight:800,color:'white',lineHeight:1.25,letterSpacing:-0.3,marginBottom:5,textShadow:'0 1px 8px rgba(0,0,0,.1)'}}>{seasonBanner.title[lang]||seasonBanner.title.ko}</div>
                         <div style={{fontSize:isMobile?12:13,color:'rgba(255,255,255,.95)',fontWeight:500}}>{seasonBanner.subtitle[lang]||seasonBanner.subtitle.ko}</div>
                       </div>
