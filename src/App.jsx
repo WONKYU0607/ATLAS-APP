@@ -5,6 +5,13 @@ import { CITY_DATA, DEFAULT_CITY_DATA, TYPE_EMOJI, getImg, TYPE_COLORS } from '.
 import { COUNTRY_ISO, COUNTRY_NAME_OVERRIDE, getCountryDisplayName, LANG_OPTIONS, getFlagImg, COUNTRY_INFO, EMERGENCY_CONTACTS, extractCurrencyCode } from './data/countryInfo'
 import { COUNTRY_CITIES } from './data/countryCities'
 import ISLAND_POLYGONS from './data/islandPolygons.json'
+
+// 작은 섬나라 NAME 집합 (라벨 클릭 활성화 대상)
+const ISLAND_NAMES = new Set(
+  ((ISLAND_POLYGONS && ISLAND_POLYGONS.features) || [])
+    .map(f => f && f.properties && f.properties.NAME)
+    .filter(Boolean)
+)
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
@@ -334,6 +341,7 @@ function App() {
   const globeContainerRef = useRef(null)
   const globeRef = useRef(null)
   const handleCityClickRef = useRef(null)  // ref to always-fresh click handler
+  const handleCountryClickRef = useRef(null)  // ref for label click on small island countries
   const justClickedCityRef = useRef(false) // 도시 클릭 직후 polygon 클릭 무시용
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState(null)
@@ -1360,7 +1368,6 @@ function App() {
       console.log('[ATLAS] Loaded', fixed.length, 'country polygons (110m)')
 
       // 50m 섬 폴리곤 병합: 110m에서 동일 NAME 국가 제거 후 50m 폴리곤 추가
-      // (110m에서 너무 작아 클릭 어려운 소도서국을 50m 정밀도로 대체)
       const islandFeatures = (ISLAND_POLYGONS && ISLAND_POLYGONS.features) || []
       const overrideNames = new Set(islandFeatures.map(f => f.properties && f.properties.NAME).filter(Boolean))
       const without110mDuplicates = fixed.filter(f => !overrideNames.has(f.properties && f.properties.NAME))
@@ -1694,17 +1701,54 @@ function App() {
           }
         } else {
           const hasCities = COUNTRY_CITIES[d.nameEn]
-          el.style.cssText = 'pointer-events:none;'
-          el.innerHTML = `<div style="
-            transform:translate(-50%,-50%);
-            font-family:Pretendard,Inter,sans-serif;
-            font-size:${hasCities ? '13px' : '10px'};
-            font-weight:${hasCities ? '700' : '400'};
-            color:${hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'};
-            text-shadow:0 1px 4px rgba(0,0,0,1),0 0 10px rgba(0,0,0,0.8);
-            white-space:nowrap;
-            user-select:none;
-          ">${d.name}</div>`
+          const isIsland = ISLAND_NAMES.has(d.nameEn)
+          if (isIsland) {
+            // 작은 섬나라: 라벨 자체를 클릭 가능 영역으로 (50m 폴리곤이 작아서 클릭 어려움 보강)
+            el.style.cssText = 'cursor:pointer;pointer-events:all;'
+            const inner = document.createElement('div')
+            inner.style.cssText = `
+              transform:translate(-50%,-50%);
+              font-family:Pretendard,Inter,sans-serif;
+              font-size:${hasCities ? '13px' : '11px'};
+              font-weight:${hasCities ? '700' : '600'};
+              color:${hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.75)'};
+              text-shadow:0 1px 4px rgba(0,0,0,1),0 0 10px rgba(0,0,0,0.85);
+              white-space:nowrap;
+              user-select:none;
+              padding:6px 12px;
+              border-radius:6px;
+              transition:all 0.15s ease;
+            `
+            inner.textContent = d.name
+            el.appendChild(inner)
+            el.onmouseenter = () => {
+              inner.style.color = '#fde047'
+              inner.style.fontSize = hasCities ? '14px' : '12px'
+            }
+            el.onmouseleave = () => {
+              inner.style.color = hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.75)'
+              inner.style.fontSize = hasCities ? '13px' : '11px'
+            }
+            el.onclick = (ev) => {
+              ev.stopPropagation()
+              const feat = countries.find(f => f.properties && f.properties.NAME === d.nameEn)
+              if (feat && handleCountryClickRef.current) {
+                handleCountryClickRef.current(feat)
+              }
+            }
+          } else {
+            el.style.cssText = 'pointer-events:none;'
+            el.innerHTML = `<div style="
+              transform:translate(-50%,-50%);
+              font-family:Pretendard,Inter,sans-serif;
+              font-size:${hasCities ? '13px' : '10px'};
+              font-weight:${hasCities ? '700' : '400'};
+              color:${hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'};
+              text-shadow:0 1px 4px rgba(0,0,0,1),0 0 10px rgba(0,0,0,0.8);
+              white-space:nowrap;
+              user-select:none;
+            ">${d.name}</div>`
+          }
         }
         return el
       })
@@ -2028,6 +2072,7 @@ function App() {
   }
 
   handleCityClickRef.current = handleCityClick
+  handleCountryClickRef.current = handleCountryClick
 
   // ── 도시 관광 데이터 로드 (사전 데이터 기반, AI 불필요) ──────────────────
 
