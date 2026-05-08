@@ -289,57 +289,6 @@ class ErrorBoundary extends Component {
   }
 }
 
-// ── 소도서국 클릭 핫스팟 ──────────────────────────────────────────
-// 110m Natural Earth 폴리곤에서 작아서 클릭 어려운 국가용 보이지 않는 클릭 영역
-// nameEn은 NE 데이터의 NAME 속성과 정확히 일치해야 함
-const ISLAND_HOTSPOT_COUNTRIES = [
-  // 인도양
-  { nameEn: 'Maldives',    lat: 3.2,    lng: 73.2 },
-  { nameEn: 'Seychelles',  lat: -4.7,   lng: 55.5 },
-  { nameEn: 'Mauritius',   lat: -20.3,  lng: 57.6 },
-  { nameEn: 'Comoros',     lat: -11.7,  lng: 43.3 },
-  // 대서양
-  { nameEn: 'Cape Verde',  lat: 16.0,   lng: -24.0 },
-  { nameEn: 'São Tomé and Principe', lat: 0.3, lng: 6.7 },
-  // 카리브
-  { nameEn: 'Bahamas',     lat: 25.0,   lng: -77.4 },
-  { nameEn: 'Barbados',    lat: 13.2,   lng: -59.5 },
-  { nameEn: 'Trinidad and Tobago', lat: 10.7, lng: -61.2 },
-  { nameEn: 'Grenada',     lat: 12.1,   lng: -61.7 },
-  { nameEn: 'Saint Lucia', lat: 13.9,   lng: -60.9 },
-  { nameEn: 'Saint Vincent and the Grenadines', lat: 13.2, lng: -61.2 },
-  { nameEn: 'Antigua and Barbuda', lat: 17.1, lng: -61.8 },
-  { nameEn: 'Dominica',    lat: 15.4,   lng: -61.4 },
-  { nameEn: 'Saint Kitts and Nevis', lat: 17.3, lng: -62.7 },
-  { nameEn: 'Jamaica',     lat: 18.1,   lng: -77.3 },
-  // 유럽 미니국가
-  { nameEn: 'Malta',       lat: 35.9,   lng: 14.5 },
-  { nameEn: 'Monaco',      lat: 43.7,   lng: 7.4 },
-  { nameEn: 'San Marino',  lat: 43.9,   lng: 12.5 },
-  { nameEn: 'Vatican',     lat: 41.9,   lng: 12.45 },
-  { nameEn: 'Liechtenstein', lat: 47.2, lng: 9.5 },
-  { nameEn: 'Andorra',     lat: 42.5,   lng: 1.5 },
-  // 태평양
-  { nameEn: 'Fiji',        lat: -17.7,  lng: 178.0 },
-  { nameEn: 'Samoa',       lat: -13.6,  lng: -172.4 },
-  { nameEn: 'Tonga',       lat: -21.2,  lng: -175.2 },
-  { nameEn: 'Vanuatu',     lat: -16.0,  lng: 167.0 },
-  { nameEn: 'Solomon Islands', lat: -9.6, lng: 160.0 },
-  { nameEn: 'Palau',       lat: 7.5,    lng: 134.6 },
-  { nameEn: 'Federated States of Micronesia', lat: 6.9, lng: 158.2 },
-  { nameEn: 'Marshall Islands', lat: 7.1, lng: 171.2 },
-  { nameEn: 'Kiribati',    lat: -3.4,   lng: -168.7 },
-  { nameEn: 'Tuvalu',      lat: -7.5,   lng: 178.7 },
-  { nameEn: 'Nauru',       lat: -0.5,   lng: 166.9 },
-  // 중동/아시아 작은 섬·도시국가
-  { nameEn: 'Singapore',   lat: 1.35,   lng: 103.82 },
-  { nameEn: 'Bahrain',     lat: 26.0,   lng: 50.5 },
-  { nameEn: 'Brunei',      lat: 4.5,    lng: 114.7 },
-  // 아프리카 작은 섬
-  { nameEn: 'Equatorial Guinea', lat: 1.6, lng: 10.3 },
-]
-const ISLAND_HOTSPOT_NAMES = new Set(ISLAND_HOTSPOT_COUNTRIES.map(c => c.nameEn))
-
 function App() {
   // ── Auth 상태 ──
   const [currentUser, setCurrentUser] = useState(null)
@@ -384,7 +333,6 @@ function App() {
   const globeContainerRef = useRef(null)
   const globeRef = useRef(null)
   const handleCityClickRef = useRef(null)  // ref to always-fresh click handler
-  const handleCountryClickRef = useRef(null)  // ref for island hotspot clicks
   const justClickedCityRef = useRef(false) // 도시 클릭 직후 polygon 클릭 무시용
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState(null)
@@ -1601,14 +1549,8 @@ function App() {
         name: getCountryName(feat.properties.NAME),
         nameEn: feat.properties.NAME,
         _type: 'country',
-      })).filter(d => (d.lat !== 0 || d.lng !== 0) && !ISLAND_HOTSPOT_NAMES.has(d.nameEn))
-      const hotspots = ISLAND_HOTSPOT_COUNTRIES.map(c => ({
-        lat: c.lat, lng: c.lng,
-        name: getCountryName(c.nameEn),
-        nameEn: c.nameEn,
-        _type: 'island_hotspot',
-      }))
-      globe.htmlElementsData([...labelItems, ...hotspots, ...OCEAN_LABELS])
+      })).filter(d => d.lat !== 0 || d.lng !== 0)
+      globe.htmlElementsData([...labelItems, ...OCEAN_LABELS])
       return
     }
 
@@ -1620,17 +1562,9 @@ function App() {
       name: getCountryName(feat.properties.NAME),
       nameEn: feat.properties.NAME,
       _type: 'country',
-    })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn && !ISLAND_HOTSPOT_NAMES.has(d.nameEn))
-    const otherHotspots = ISLAND_HOTSPOT_COUNTRIES
-      .filter(c => c.nameEn !== countryEn)
-      .map(c => ({
-        lat: c.lat, lng: c.lng,
-        name: getCountryName(c.nameEn),
-        nameEn: c.nameEn,
-        _type: 'island_hotspot',
-      }))
+    })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn)
 
-    globe.htmlElementsData([...countryLabels, ...otherHotspots, ...cities, ...OCEAN_LABELS])
+    globe.htmlElementsData([...countryLabels, ...cities, ...OCEAN_LABELS])
   }, [selectedCountry, selectedCity, countries, lang])
 
 
@@ -1748,50 +1682,6 @@ function App() {
             justClickedCityRef.current = true
             setTimeout(() => { justClickedCityRef.current = false }, 400)
             handleCityClickRef.current?.(d)
-          }
-        } else if (d._type === 'island_hotspot') {
-          // 110m 폴리곤이 작아 클릭 어려운 소도서국 - 보이는 라벨 + 큰 클릭 영역
-          const hasCities = COUNTRY_CITIES[d.nameEn]
-          el.style.cssText = 'cursor:pointer;pointer-events:all;'
-          const wrap = document.createElement('div')
-          wrap.style.cssText = `
-            transform:translate(-50%,-50%);
-            width:54px;height:54px;
-            border-radius:50%;
-            display:flex;align-items:center;justify-content:center;
-            background:rgba(0,0,0,0);
-          `
-          const label = document.createElement('div')
-          label.style.cssText = `
-            font-family:Pretendard,Inter,sans-serif;
-            font-size:${hasCities ? '11px' : '9px'};
-            font-weight:${hasCities ? '700' : '500'};
-            color:${hasCities ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.65)'};
-            text-shadow:0 1px 4px rgba(0,0,0,1),0 0 10px rgba(0,0,0,0.85);
-            white-space:nowrap;
-            user-select:none;
-            pointer-events:none;
-            transition:all 0.15s ease;
-          `
-          label.textContent = '◆ ' + d.name
-          wrap.appendChild(label)
-          el.appendChild(wrap)
-          el.onmouseenter = () => {
-            label.style.color = '#fde047'
-            label.style.fontSize = hasCities ? '13px' : '11px'
-            wrap.style.background = 'rgba(253,224,71,0.08)'
-          }
-          el.onmouseleave = () => {
-            label.style.color = hasCities ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.65)'
-            label.style.fontSize = hasCities ? '11px' : '9px'
-            wrap.style.background = 'rgba(0,0,0,0)'
-          }
-          el.onclick = (ev) => {
-            ev.stopPropagation()
-            const feat = countries.find(f => f.properties?.NAME === d.nameEn)
-            if (feat && handleCountryClickRef.current) {
-              handleCountryClickRef.current(feat)
-            }
           }
         } else {
           const hasCities = COUNTRY_CITIES[d.nameEn]
@@ -2122,31 +2012,13 @@ function App() {
       const countryName = city.countryEn || selectedCountry?.properties?.NAME
       const cz = countryName && COUNTRY_ZOOM[countryName]
       const baseAlt = cz ? cz.alt : 0.3
-
-      // 본토 중심에서 도시까지 각거리 계산 - 원거리 영토(하와이/괌/오키나와/카나리아 등) 감지
-      let isRemoteTerritory = false
-      if (cz && city.lat != null && city.lng != null) {
-        const dLat = Math.abs(cz.lat - city.lat)
-        let dLng = Math.abs(cz.lng - city.lng)
-        if (dLng > 180) dLng = 360 - dLng  // 경도 wrap 보정
-        const angDist = Math.sqrt(dLat * dLat + dLng * dLng)
-        if (angDist > 12) isRemoteTerritory = true
-      }
-
-      let cityAlt
-      if (isRemoteTerritory) {
-        // 원거리 섬은 본토와 함께 보이지 않게 강제로 가까이 줌인
-        cityAlt = 0.07
-      } else {
-        cityAlt = Math.max(Math.min(baseAlt * 0.45, 0.15), 0.06)
-      }
+      const cityAlt = Math.max(Math.min(baseAlt * 0.45, 0.15), 0.06)
       const finalCityAlt = window.innerWidth <= 768 ? cityAlt * 1.4 : cityAlt
       globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: finalCityAlt }, 900)
     } catch(e) { console.error('city click error:', e) }
   }
 
   handleCityClickRef.current = handleCityClick
-  handleCountryClickRef.current = handleCountryClick
 
   // ── 도시 관광 데이터 로드 (사전 데이터 기반, AI 불필요) ──────────────────
 
