@@ -4,6 +4,7 @@ import { T, SPOT_TYPE_I18N, CITY_I18N, LANG_CODE, CONTINENT_I18N, DRIVE_I18N, tr
 import { CITY_DATA, DEFAULT_CITY_DATA, TYPE_EMOJI, getImg, TYPE_COLORS } from './data/cityData'
 import { COUNTRY_ISO, COUNTRY_NAME_OVERRIDE, getCountryDisplayName, LANG_OPTIONS, getFlagImg, COUNTRY_INFO, EMERGENCY_CONTACTS, extractCurrencyCode } from './data/countryInfo'
 import { COUNTRY_CITIES } from './data/countryCities'
+import ISLAND_POLYGONS from './data/islandPolygons.json'
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
@@ -1357,7 +1358,15 @@ function App() {
         return feat
       })
       console.log('[ATLAS] Loaded', fixed.length, 'country polygons (110m)')
-      setCountries(fixed)
+
+      // 50m 섬 폴리곤 병합: 110m에서 동일 NAME 국가 제거 후 50m 폴리곤 추가
+      // (110m에서 너무 작아 클릭 어려운 소도서국을 50m 정밀도로 대체)
+      const islandFeatures = (ISLAND_POLYGONS && ISLAND_POLYGONS.features) || []
+      const overrideNames = new Set(islandFeatures.map(f => f.properties && f.properties.NAME).filter(Boolean))
+      const without110mDuplicates = fixed.filter(f => !overrideNames.has(f.properties && f.properties.NAME))
+      const merged = [...without110mDuplicates, ...islandFeatures]
+      console.log('[ATLAS] Merged', islandFeatures.length, '50m island polygons → total:', merged.length)
+      setCountries(merged)
     }
 
     load110m().then(processGeo).catch(err => console.error('[ATLAS] Polygon load failed:', err))
