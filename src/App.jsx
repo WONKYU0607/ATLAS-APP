@@ -6,12 +6,15 @@ import { COUNTRY_ISO, COUNTRY_NAME_OVERRIDE, getCountryDisplayName, LANG_OPTIONS
 import { COUNTRY_CITIES } from './data/countryCities'
 import ISLAND_POLYGONS from './data/islandPolygons.json'
 
-// 작은 섬나라 NAME 집합 (라벨 클릭 활성화 대상)
-const ISLAND_NAMES = new Set(
-  ((ISLAND_POLYGONS && ISLAND_POLYGONS.features) || [])
-    .map(f => f && f.properties && f.properties.NAME)
-    .filter(Boolean)
-)
+// 작은 섬나라 라벨 데이터 (폴리곤 없이 라벨 좌표만 사용 — 클릭 시 진입)
+const ISLAND_LABEL_DATA = ((ISLAND_POLYGONS && ISLAND_POLYGONS.features) || [])
+  .map(f => ({
+    nameEn: f && f.properties && f.properties.NAME,
+    lat: f && f.properties && f.properties.LABEL_Y,
+    lng: f && f.properties && f.properties.LABEL_X,
+  }))
+  .filter(d => d.nameEn && typeof d.lat === 'number' && typeof d.lng === 'number')
+const ISLAND_NAMES = new Set(ISLAND_LABEL_DATA.map(d => d.nameEn))
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
@@ -1366,14 +1369,7 @@ function App() {
         return feat
       })
       console.log('[ATLAS] Loaded', fixed.length, 'country polygons (110m)')
-
-      // 50m 섬 폴리곤 병합: 110m에서 동일 NAME 국가 제거 후 50m 폴리곤 추가
-      const islandFeatures = (ISLAND_POLYGONS && ISLAND_POLYGONS.features) || []
-      const overrideNames = new Set(islandFeatures.map(f => f.properties && f.properties.NAME).filter(Boolean))
-      const without110mDuplicates = fixed.filter(f => !overrideNames.has(f.properties && f.properties.NAME))
-      const merged = [...without110mDuplicates, ...islandFeatures]
-      console.log('[ATLAS] Merged', islandFeatures.length, '50m island polygons → total:', merged.length)
-      setCountries(merged)
+      setCountries(fixed)
     }
 
     load110m().then(processGeo).catch(err => console.error('[ATLAS] Polygon load failed:', err))
@@ -1565,8 +1561,15 @@ function App() {
         name: getCountryName(feat.properties.NAME),
         nameEn: feat.properties.NAME,
         _type: 'country',
-      })).filter(d => d.lat !== 0 || d.lng !== 0)
-      globe.htmlElementsData([...labelItems, ...OCEAN_LABELS])
+      })).filter(d => (d.lat !== 0 || d.lng !== 0) && !ISLAND_NAMES.has(d.nameEn))
+      const islandLabels = ISLAND_LABEL_DATA.map(d => ({
+        lat: d.lat,
+        lng: d.lng,
+        name: getCountryName(d.nameEn),
+        nameEn: d.nameEn,
+        _type: 'country',
+      }))
+      globe.htmlElementsData([...labelItems, ...islandLabels, ...OCEAN_LABELS])
       return
     }
 
@@ -1578,9 +1581,18 @@ function App() {
       name: getCountryName(feat.properties.NAME),
       nameEn: feat.properties.NAME,
       _type: 'country',
-    })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn)
+    })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn && !ISLAND_NAMES.has(d.nameEn))
+    const otherIslandLabels = ISLAND_LABEL_DATA
+      .filter(d => d.nameEn !== countryEn)
+      .map(d => ({
+        lat: d.lat,
+        lng: d.lng,
+        name: getCountryName(d.nameEn),
+        nameEn: d.nameEn,
+        _type: 'country',
+      }))
 
-    globe.htmlElementsData([...countryLabels, ...cities, ...OCEAN_LABELS])
+    globe.htmlElementsData([...countryLabels, ...otherIslandLabels, ...cities, ...OCEAN_LABELS])
   }, [selectedCountry, selectedCity, countries, lang])
 
 
@@ -1703,7 +1715,7 @@ function App() {
           const hasCities = COUNTRY_CITIES[d.nameEn]
           const isIsland = ISLAND_NAMES.has(d.nameEn)
           if (isIsland) {
-            // 작은 섬나라: 라벨 자체를 클릭 가능 영역으로 (50m 폴리곤이 작아서 클릭 어려움 보강)
+            // 작은 섬나라: 라벨 자체를 클릭 가능 영역으로 (폴리곤이 작거나 없어서 클릭 어려움 보강)
             el.style.cssText = 'cursor:pointer;pointer-events:all;'
             const inner = document.createElement('div')
             inner.style.cssText = `
@@ -1711,7 +1723,7 @@ function App() {
               font-family:Pretendard,Inter,sans-serif;
               font-size:${hasCities ? '13px' : '11px'};
               font-weight:${hasCities ? '700' : '600'};
-              color:${hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.75)'};
+              color:${hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.78)'};
               text-shadow:0 1px 4px rgba(0,0,0,1),0 0 10px rgba(0,0,0,0.85);
               white-space:nowrap;
               user-select:none;
@@ -1726,13 +1738,21 @@ function App() {
               inner.style.fontSize = hasCities ? '14px' : '12px'
             }
             el.onmouseleave = () => {
-              inner.style.color = hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.75)'
+              inner.style.color = hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.78)'
               inner.style.fontSize = hasCities ? '13px' : '11px'
             }
             el.onclick = (ev) => {
               ev.stopPropagation()
-              const feat = countries.find(f => f.properties && f.properties.NAME === d.nameEn)
-              if (feat && handleCountryClickRef.current) {
+              let feat = countries.find(f => f.properties && f.properties.NAME === d.nameEn)
+              if (!feat) {
+                // 110m에 폴리곤 없는 작은 섬은 가짜 feat 생성 (LABEL 좌표만으로 진입 가능)
+                feat = {
+                  type: 'Feature',
+                  properties: { NAME: d.nameEn, LABEL_X: d.lng, LABEL_Y: d.lat },
+                  geometry: null,
+                }
+              }
+              if (handleCountryClickRef.current) {
                 handleCountryClickRef.current(feat)
               }
             }
