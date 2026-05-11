@@ -346,6 +346,12 @@ function App() {
   const [feedCityDetail, setFeedCityDetail] = useState(null) // { name, lat, lng, emoji, countryEn }
   const [feedCityDetailData, setFeedCityDetailData] = useState(null) // cityData (weather/spots/desc)
   const [feedCityDetailLoading, setFeedCityDetailLoading] = useState(false)
+  // 관광지 상세 풀스크린 (cityDetail 위에 오버레이)
+  const [feedSpotDetail, setFeedSpotDetail] = useState(null) // spot object
+  const [feedSpotWikiSummary, setFeedSpotWikiSummary] = useState(null) // wikipedia summary text
+  const [feedSpotWikiLoading, setFeedSpotWikiLoading] = useState(false)
+  // 사진 라이트박스 (갤러리 확대)
+  const [lightbox, setLightbox] = useState(null) // { titles: string[], index: number }
   const [journalForm, setJournalForm] = useState({ title:'', body:'', cities:[], days:1, rating:0, visibility:'public', photos:[] })
   const [journalNewPhotos, setJournalNewPhotos] = useState([]) // File 객체 (업로드 대기)
   const [journalSaving, setJournalSaving] = useState(false)
@@ -2094,6 +2100,21 @@ function App() {
     setFeedView('cityDetail')
   }
 
+  // 관광지 클릭 → 관광지 상세 풀스크린 진입 (cityDetail 위 오버레이)
+  const openFeedSpotDetail = (spot) => {
+    if (!spot) return
+    setFeedSpotDetail(spot)
+    setFeedSpotWikiSummary(null)
+  }
+
+  // 라이트박스 열기
+  const openLightbox = (titles, index) => {
+    if (!titles || titles.length === 0) return
+    setLightbox({ titles, index: index || 0 })
+  }
+  const lightboxNext = () => setLightbox(l => l ? { ...l, index: (l.index + 1) % l.titles.length } : l)
+  const lightboxPrev = () => setLightbox(l => l ? { ...l, index: (l.index - 1 + l.titles.length) % l.titles.length } : l)
+
   // 피드 풀스크린 뒤로가기
   const feedGoBack = () => {
     if (feedView === 'cityDetail') {
@@ -2111,8 +2132,59 @@ function App() {
       setFeedView('main')
       setFeedCityList(null)
       setFeedCityDetail(null)
+      setFeedSpotDetail(null)
+      setLightbox(null)
     }
   }, [showFeed])
+
+  // 관광지 wikipedia summary 로드 (한국어 → 영어 fallback)
+  useEffect(() => {
+    if (!feedSpotDetail) { setFeedSpotWikiSummary(null); return }
+    const title = feedSpotDetail.wikiTitle || feedSpotDetail.name
+    if (!title) return
+    setFeedSpotWikiLoading(true)
+    let cancelled = false
+    const tryFetch = async (langCode, q) => {
+      try {
+        const url = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}`
+        const res = await fetch(url)
+        if (!res.ok) return null
+        const data = await res.json()
+        if (data.type === 'standard' && data.extract && data.extract.length > 30) return data.extract
+        return null
+      } catch { return null }
+    }
+    const loadSummary = async () => {
+      let summary = null
+      // 한국어 위키 시도 (한국어 사용자 우선)
+      if (lang === 'ko') summary = await tryFetch('ko', title)
+      // 영어 위키 시도
+      if (!summary) summary = await tryFetch('en', title)
+      // wikiTitle 안 통하면 spot 이름으로 재시도
+      if (!summary && feedSpotDetail.wikiTitle && feedSpotDetail.name && feedSpotDetail.wikiTitle !== feedSpotDetail.name) {
+        if (lang === 'ko') summary = await tryFetch('ko', feedSpotDetail.name)
+        if (!summary) summary = await tryFetch('en', feedSpotDetail.name)
+      }
+      if (!cancelled) {
+        setFeedSpotWikiSummary(summary)
+        setFeedSpotWikiLoading(false)
+      }
+    }
+    loadSummary()
+    return () => { cancelled = true }
+  }, [feedSpotDetail, lang])
+
+  // 라이트박스 키보드 조작
+  useEffect(() => {
+    if (!lightbox) return
+    const handler = (e) => {
+      if (e.key === 'Escape') setLightbox(null)
+      else if (e.key === 'ArrowRight') lightboxNext()
+      else if (e.key === 'ArrowLeft') lightboxPrev()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [lightbox])
 
   // 피드 도시 상세 데이터 로드 (CITY_DATA + 날씨)
   useEffect(() => {
@@ -4952,11 +5024,14 @@ function App() {
                     </div>
                     <div className="feed-section-scroll" style={{display:'flex',gap:10,overflowX:'auto',paddingBottom:6,scrollSnapType:'x mandatory'}}>
                       {galleryTitles.slice(1).map((title, gi) => (
-                        <div key={title+gi} style={{
+                        <div key={title+gi} onClick={()=>openLightbox(galleryTitles, gi+1)} style={{
                           minWidth:isMobile?220:260,maxWidth:isMobile?220:260,height:isMobile?160:200,
                           borderRadius:14,overflow:'hidden',flexShrink:0,scrollSnapAlign:'start',background:'#e2e8f0',
-                          boxShadow:'0 2px 10px rgba(0,0,0,.06)',position:'relative',
-                        }}>
+                          boxShadow:'0 2px 10px rgba(0,0,0,.06)',position:'relative',cursor:'zoom-in',
+                          transition:'transform .15s',
+                        }}
+                        onMouseEnter={e=>e.currentTarget.style.transform='scale(1.02)'}
+                        onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
                           <SpotImage
                             wikiTitle={title}
                             spotName={title}
@@ -4967,6 +5042,7 @@ function App() {
                           />
                           <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.55) 0%,transparent 50%)',pointerEvents:'none'}}/>
                           <div style={{position:'absolute',bottom:8,left:11,right:11,fontSize:11,fontWeight:700,color:'white',textShadow:'0 1px 4px rgba(0,0,0,.6)'}}>{title}</div>
+                          <div style={{position:'absolute',top:8,right:10,background:'rgba(0,0,0,.5)',backdropFilter:'blur(8px)',borderRadius:6,padding:'3px 7px',fontSize:11,color:'white',fontWeight:700}}>🔍</div>
                         </div>
                       ))}
                     </div>
@@ -4985,10 +5061,12 @@ function App() {
                     </div>
                     <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:12}}>
                       {feedCityDetailData.spots.map((spot, i) => (
-                        <div key={i} style={{
+                        <div key={i} onClick={()=>openFeedSpotDetail(spot)} style={{
                           borderRadius:14,overflow:'hidden',background:'white',border:'1.5px solid #e2e8f0',
-                          boxShadow:'0 2px 8px rgba(0,0,0,.04)',
-                        }}>
+                          boxShadow:'0 2px 8px rgba(0,0,0,.04)',cursor:'pointer',transition:'all .15s',
+                        }}
+                        onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,.08)'}}
+                        onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='0 2px 8px rgba(0,0,0,.04)'}}>
                           <div style={{height:isMobile?160:170,position:'relative',overflow:'hidden',background:'#e2e8f0'}}>
                             <SpotImage
                               wikiTitle={spot.wikiTitle}
@@ -5019,9 +5097,12 @@ function App() {
                 <div style={{marginTop:30,padding:'20px',background:'#f8fafc',borderRadius:14,textAlign:'center'}}>
                   <div style={{fontSize:12,color:'#64748b',marginBottom:10}}>{lang==='ko'?'지구본에서 위치와 주변 도시도 함께 보고 싶다면':'Explore on globe'}</div>
                   <button onClick={()=>{
+                    const target = feedCityDetail
+                    const targetCountry = getCountryFeat(target.countryEn, target.lat, target.lng)
                     setFeedView('main'); setFeedCityList(null); setFeedCityDetail(null); setShowFeed(false)
-                    setSelectedCountry(getCountryFeat(feedCityDetail.countryEn, feedCityDetail.lat, feedCityDetail.lng))
-                    setSelectedCity(feedCityDetail)
+                    setSelectedCountry(targetCountry)
+                    // 카메라 즉시 도시로 이동 + selectedCity 설정 (handleCityClick이 둘 다 처리)
+                    setTimeout(() => handleCityClick(target), 200)
                   }} style={{
                     background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',border:'none',color:'white',
                     padding:'12px 26px',borderRadius:10,fontSize:13,fontWeight:700,cursor:'pointer',
@@ -5032,6 +5113,194 @@ function App() {
             </div>
             )
           })()}
+
+          {/* ===== Phase 2: 관광지 상세 풀스크린 (feedSpotDetail) — cityDetail 위 ===== */}
+          {feedSpotDetail && feedCityDetail && (() => {
+            const koName = feedCityDetail._koName || feedCityDetail.name
+            const enCity = (CITY_I18N[koName]?.[0]) || feedCityDetail.name
+            const trData = trSpot(koName, feedSpotDetail.name)
+            const displayName = trData?.name || feedSpotDetail.name
+            const staticDesc = trData?.desc || (lang === 'ko' ? feedSpotDetail.desc : feedSpotDetail.desc) || ''
+            return (
+            <div style={{
+              position:'absolute',inset:0,background:'#ffffff',zIndex:12,
+              display:'flex',flexDirection:'column',
+              animation:'feedSlideUp .28s cubic-bezier(.22,.9,.32,1)',
+              overflowY:'auto',
+            }}>
+              {/* 히어로 사진 */}
+              <div style={{position:'relative',height:isMobile?300:380,overflow:'hidden',background:'#1e293b',flexShrink:0}}>
+                <SpotImage
+                  wikiTitle={feedSpotDetail.wikiTitle}
+                  spotName={feedSpotDetail.name}
+                  cityName={enCity}
+                  alt={displayName}
+                  fallback={feedSpotDetail.img || getImg(feedSpotDetail.type)}
+                  style={{width:'100%',height:'100%',objectFit:'cover',display:'block',cursor:'zoom-in'}}
+                  onClick={()=>openLightbox([feedSpotDetail.wikiTitle || feedSpotDetail.name], 0)}
+                />
+                <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom, rgba(0,0,0,.4) 0%, rgba(0,0,0,.05) 35%, rgba(0,0,0,.78) 100%)',pointerEvents:'none'}}/>
+                <button onClick={()=>setFeedSpotDetail(null)} style={{
+                  position:'absolute',top:isMobile?'calc(14px + env(safe-area-inset-top))':18,left:16,
+                  background:'rgba(0,0,0,.4)',border:'none',width:38,height:38,borderRadius:10,cursor:'pointer',
+                  display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:20,
+                  backdropFilter:'blur(8px)',
+                }}>←</button>
+                <div style={{position:'absolute',bottom:24,left:22,right:22,color:'white'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+                    <div style={{fontSize:11,padding:'4px 10px',borderRadius:12,background:TYPE_COLORS[feedSpotDetail.type]||'#64748b',fontWeight:700,letterSpacing:.5}}>{getSpotType(feedSpotDetail.type)}</div>
+                    {feedSpotDetail.rating && <div style={{fontSize:13,fontWeight:700}}>★ {feedSpotDetail.rating}</div>}
+                  </div>
+                  <div style={{fontSize:isMobile?26:34,fontWeight:800,letterSpacing:-0.6,lineHeight:1.1,textShadow:'0 2px 12px rgba(0,0,0,.5)',marginBottom:6}}>{displayName}</div>
+                  <div style={{fontSize:12,fontWeight:600,opacity:.92}}>📍 {getCityName(koName)}, {feedCityDetail.countryEn ? getCountryName(feedCityDetail.countryEn) : ''}</div>
+                </div>
+              </div>
+
+              <div style={{padding:isMobile?'22px 18px 40px':'30px 32px 48px'}}>
+                {/* Wikipedia summary (자세한 설명) */}
+                {feedSpotWikiLoading ? (
+                  <div style={{padding:'14px 0',color:'#94a3b8',fontSize:13,textAlign:'center'}}>
+                    {lang==='ko'?'자세한 정보 불러오는 중...':'Loading details...'}
+                  </div>
+                ) : feedSpotWikiSummary ? (
+                  <div style={{
+                    padding:isMobile?'16px 18px':'18px 22px',background:'linear-gradient(135deg,#fff,#fafbff)',
+                    borderRadius:14,border:'1.5px solid #e0e7ff',marginBottom:18,
+                  }}>
+                    <div style={{fontSize:11,color:'#6366f1',fontWeight:800,letterSpacing:1,marginBottom:8}}>📖 {lang==='ko'?'상세 정보':'Details'}</div>
+                    <div style={{fontSize:14,color:'#334155',lineHeight:1.85,whiteSpace:'pre-wrap'}}>{feedSpotWikiSummary}</div>
+                  </div>
+                ) : null}
+
+                {/* 큐레이션 desc (CITY_DATA spot.desc) */}
+                {staticDesc && (
+                  <div style={{
+                    padding:isMobile?'14px 16px':'16px 20px',background:'#f8fafc',borderRadius:12,
+                    borderLeft:`3px solid ${TYPE_COLORS[feedSpotDetail.type]||'#3b82f6'}`,marginBottom:18,
+                    fontSize:13.5,color:'#334155',lineHeight:1.7,
+                  }}>{staticDesc}</div>
+                )}
+
+                {/* 부가 정보 grid */}
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:18}}>
+                  {feedSpotDetail.duration && (
+                    <div style={{padding:'12px 14px',background:'#f1f5f9',borderRadius:11}}>
+                      <div style={{fontSize:10,color:'#64748b',fontWeight:700,marginBottom:3}}>⏱ {lang==='ko'?'예상 소요시간':'Duration'}</div>
+                      <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{feedSpotDetail.duration}</div>
+                    </div>
+                  )}
+                  {feedSpotDetail.price && (
+                    <div style={{padding:'12px 14px',background:'#f1f5f9',borderRadius:11}}>
+                      <div style={{fontSize:10,color:'#64748b',fontWeight:700,marginBottom:3}}>💵 {lang==='ko'?'요금':'Price'}</div>
+                      <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{feedSpotDetail.price}</div>
+                    </div>
+                  )}
+                  {feedSpotDetail.hours && (
+                    <div style={{padding:'12px 14px',background:'#f1f5f9',borderRadius:11,gridColumn:'1/-1'}}>
+                      <div style={{fontSize:10,color:'#64748b',fontWeight:700,marginBottom:3}}>🕒 {lang==='ko'?'운영시간':'Hours'}</div>
+                      <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{feedSpotDetail.hours}</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 위키피디아 출처 링크 */}
+                {feedSpotWikiSummary && (
+                  <div style={{textAlign:'center',padding:'8px 0',marginBottom:18}}>
+                    <a href={`https://${lang==='ko'?'ko':'en'}.wikipedia.org/wiki/${encodeURIComponent(feedSpotDetail.wikiTitle || feedSpotDetail.name)}`} target="_blank" rel="noopener noreferrer" style={{
+                      fontSize:11,color:'#6366f1',textDecoration:'none',fontWeight:600,
+                    }}>{lang==='ko'?'위키피디아에서 더 보기':'View on Wikipedia'} ↗</a>
+                  </div>
+                )}
+
+                {/* 지구본에서 이 관광지 보기 */}
+                {feedSpotDetail.lat != null && feedSpotDetail.lng != null && (
+                  <div style={{marginTop:14,padding:'18px',background:'#f8fafc',borderRadius:14,textAlign:'center'}}>
+                    <div style={{fontSize:12,color:'#64748b',marginBottom:10}}>{lang==='ko'?'지구본에서 이 관광지 위치 보기':'View location on globe'}</div>
+                    <button onClick={()=>{
+                      const target = feedCityDetail
+                      const targetCountry = getCountryFeat(target.countryEn, target.lat, target.lng)
+                      const spotSnapshot = feedSpotDetail
+                      setFeedSpotDetail(null)
+                      setFeedView('main'); setFeedCityList(null); setFeedCityDetail(null); setShowFeed(false)
+                      setSelectedCountry(targetCountry)
+                      setTimeout(() => {
+                        handleCityClick(target)
+                        setTimeout(() => setSelectedSpot(spotSnapshot), 700)
+                      }, 200)
+                    }} style={{
+                      background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',border:'none',color:'white',
+                      padding:'12px 26px',borderRadius:10,fontSize:13,fontWeight:700,cursor:'pointer',
+                      boxShadow:'0 4px 12px rgba(59,130,246,.3)',
+                    }}>🌍 {lang==='ko'?'지구본에서 보기':'View on Globe'}</button>
+                  </div>
+                )}
+              </div>
+            </div>
+            )
+          })()}
+
+          {/* ===== 라이트박스 모달 (사진 확대 + 좌우 넘기기) ===== */}
+          {lightbox && (
+            <div onClick={()=>setLightbox(null)} style={{
+              position:'absolute',inset:0,background:'rgba(0,0,0,.92)',zIndex:20,
+              display:'flex',alignItems:'center',justifyContent:'center',
+              animation:'feedFadeIn .15s',cursor:'zoom-out',
+            }}>
+              {/* 닫기 */}
+              <button onClick={(e)=>{e.stopPropagation();setLightbox(null)}} style={{
+                position:'absolute',top:isMobile?'calc(14px + env(safe-area-inset-top))':18,right:18,
+                background:'rgba(255,255,255,.15)',border:'none',width:42,height:42,borderRadius:'50%',cursor:'pointer',
+                display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:20,
+                backdropFilter:'blur(8px)',zIndex:2,
+              }}>✕</button>
+
+              {/* 카운터 */}
+              {lightbox.titles.length > 1 && (
+                <div style={{
+                  position:'absolute',top:isMobile?'calc(20px + env(safe-area-inset-top))':24,left:'50%',transform:'translateX(-50%)',
+                  background:'rgba(0,0,0,.5)',backdropFilter:'blur(8px)',padding:'6px 14px',borderRadius:14,color:'white',
+                  fontSize:12,fontWeight:700,letterSpacing:.5,
+                }}>{lightbox.index + 1} / {lightbox.titles.length}</div>
+              )}
+
+              {/* 좌측 화살표 */}
+              {lightbox.titles.length > 1 && (
+                <button onClick={(e)=>{e.stopPropagation();lightboxPrev()}} style={{
+                  position:'absolute',left:isMobile?10:24,top:'50%',transform:'translateY(-50%)',
+                  background:'rgba(255,255,255,.12)',border:'none',width:isMobile?44:54,height:isMobile?44:54,borderRadius:'50%',cursor:'pointer',
+                  display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:24,
+                  backdropFilter:'blur(8px)',zIndex:2,
+                }}>‹</button>
+              )}
+
+              {/* 사진 */}
+              <div onClick={(e)=>e.stopPropagation()} style={{maxWidth:'94vw',maxHeight:'88vh',display:'flex',flexDirection:'column',alignItems:'center',gap:14}}>
+                <div style={{maxWidth:'94vw',maxHeight:isMobile?'70vh':'78vh',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  <SpotImage
+                    key={lightbox.titles[lightbox.index] + lightbox.index}
+                    wikiTitle={lightbox.titles[lightbox.index]}
+                    spotName={lightbox.titles[lightbox.index]}
+                    cityName=""
+                    alt={lightbox.titles[lightbox.index]}
+                    fallback={getImg('자연')}
+                    style={{maxWidth:'94vw',maxHeight:isMobile?'70vh':'78vh',objectFit:'contain',display:'block',borderRadius:8,boxShadow:'0 12px 48px rgba(0,0,0,.6)'}}
+                  />
+                </div>
+                {/* 캡션 */}
+                <div style={{color:'white',fontSize:13,fontWeight:700,textShadow:'0 1px 4px rgba(0,0,0,.8)',textAlign:'center',padding:'0 20px'}}>{lightbox.titles[lightbox.index]}</div>
+              </div>
+
+              {/* 우측 화살표 */}
+              {lightbox.titles.length > 1 && (
+                <button onClick={(e)=>{e.stopPropagation();lightboxNext()}} style={{
+                  position:'absolute',right:isMobile?10:24,top:'50%',transform:'translateY(-50%)',
+                  background:'rgba(255,255,255,.12)',border:'none',width:isMobile?44:54,height:isMobile?44:54,borderRadius:'50%',cursor:'pointer',
+                  display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:24,
+                  backdropFilter:'blur(8px)',zIndex:2,
+                }}>›</button>
+              )}
+            </div>
+          )}
 
         </div>
         )
