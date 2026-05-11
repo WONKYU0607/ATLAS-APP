@@ -71,7 +71,7 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
 
     const searchWiki = async (query) => {
       try {
-        const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=5&prop=pageimages&format=json&pithumbsize=600&origin=*`)
+        const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=10&prop=pageimages&format=json&pithumbsize=600&origin=*`)
         const data = await res.json()
         const pages = Object.values(data?.query?.pages || {})
         const urls = []
@@ -85,7 +85,7 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
     // Wikimedia Commons에서 실사진 검색 (복수 후보 반환)
     const searchCommons = async (query) => {
       try {
-        const res = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&gsrlimit=5&prop=imageinfo&iiprop=url|mime&iiurlwidth=600&format=json&origin=*`)
+        const res = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|mime&iiurlwidth=600&format=json&origin=*`)
         const data = await res.json()
         const pages = Object.values(data?.query?.pages || {})
         const urls = []
@@ -133,10 +133,14 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
         for (const url of commonsResults2) if (trySet(url)) return
       }
 
-      // 최종: 모든 후보가 중복이면 그래도 1차 결과 표시 (빈 화면보단 중복이 나음)
-      if (!cancelled && wikiResults[0]) { setSrc(wikiResults[0]); return }
-      if (!cancelled && commonsResults[0]) { setSrc(commonsResults[0]); return }
+      // 7차 (신규): 도시 관광 사진 검색 - 같은 spotName 여러 개일 때도 다른 결과 시도
+      if (cityName) {
+        const commonsResults3 = await searchCommons(cityName + ' tourism landmark photograph')
+        for (const url of commonsResults3) if (trySet(url)) return
+      }
 
+      // 최종: 중복 절대 허용하지 않음 - fallback 이미지 사용
+      // (이전 로직 "빈 화면보단 중복이 나음"은 같은 사진 노출 원인이므로 제거)
       if (!cancelled) setSrc(fallback)
     }
 
