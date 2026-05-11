@@ -2041,6 +2041,19 @@ function App() {
     return { lat: feat.properties.LABEL_Y || 0, lng: feat.properties.LABEL_X || 0 }
   }
 
+  // 문자열 NAME으로 country feat 객체 가져오기 (피드/검색 등에서 사용)
+  // 110m countries에 없으면 가짜 feat 생성 — selectedCountry.properties.NAME 접근 안전 보장
+  const getCountryFeat = (countryName, fallbackLat, fallbackLng) => {
+    if (!countryName) return null
+    const found = countries.find(f => f && f.properties && f.properties.NAME === countryName)
+    if (found) return found
+    return {
+      type: 'Feature',
+      properties: { NAME: countryName, LABEL_X: fallbackLng || 0, LABEL_Y: fallbackLat || 0 },
+      geometry: null,
+    }
+  }
+
   const handleCountryClick = (feat) => {
     if (!feat || !globeRef.current) return
     const globe = globeRef.current
@@ -4357,7 +4370,7 @@ function App() {
                     <div className="feed-card" onClick={()=>{
                       const firstCity = seasonBanner.cities[0]
                       const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===firstCity))
-                      if (entry) { const cityObj = entry[1].find(x=>x.name===firstCity); if (cityObj) { setShowFeed(false); setSelectedCountry(entry[0]); setSelectedCity({...cityObj, _koName:cityObj.name, countryEn:entry[0]}) } }
+                      if (entry) { const cityObj = entry[1].find(x=>x.name===firstCity); if (cityObj) { setShowFeed(false); setSelectedCountry(getCountryFeat(entry[0], cityObj.lat, cityObj.lng)); setSelectedCity({...cityObj, _koName:cityObj.name, countryEn:entry[0]}) } }
                     }} style={{
                       borderRadius:18,padding:isMobile?'18px 18px':'22px 24px',cursor:'pointer',
                       background:seasonBanner.gradient,
@@ -4382,7 +4395,7 @@ function App() {
                         if (c.cities && c.cities.length > 0) {
                           const firstCity = c.cities[0]
                           const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===firstCity))
-                          if (entry) { const cityObj = entry[1].find(x=>x.name===firstCity); if (cityObj) { setShowFeed(false); setSelectedCountry(entry[0]); setSelectedCity({...cityObj, _koName:cityObj.name, countryEn:entry[0]}) } }
+                          if (entry) { const cityObj = entry[1].find(x=>x.name===firstCity); if (cityObj) { setShowFeed(false); setSelectedCountry(getCountryFeat(entry[0], cityObj.lat, cityObj.lng)); setSelectedCity({...cityObj, _koName:cityObj.name, countryEn:entry[0]}) } }
                         }
                       }} style={{
                         borderRadius:16,padding:isMobile?'14px 14px':'16px 18px',cursor:'pointer',
@@ -4414,7 +4427,7 @@ function App() {
                           <div key={i} className="feed-trend-card" onClick={()=>{
                             const firstCity = m.cities[0]
                             const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===firstCity))
-                            if (entry) { const cityObj = entry[1].find(x=>x.name===firstCity); if (cityObj) { setShowFeed(false); setSelectedCountry(entry[0]); setSelectedCity({...cityObj, _koName:cityObj.name, countryEn:entry[0]}) } }
+                            if (entry) { const cityObj = entry[1].find(x=>x.name===firstCity); if (cityObj) { setShowFeed(false); setSelectedCountry(getCountryFeat(entry[0], cityObj.lat, cityObj.lng)); setSelectedCity({...cityObj, _koName:cityObj.name, countryEn:entry[0]}) } }
                           }} style={{
                             minWidth:isMobile?180:210,maxWidth:isMobile?180:210,height:isMobile?240:260,
                             borderRadius:16,overflow:'hidden',cursor:'pointer',scrollSnapAlign:'start',flexShrink:0,
@@ -4448,7 +4461,7 @@ function App() {
                         <div key={c.key} className="feed-city-chip" onClick={()=>{
                           const firstCity = c.cities[0]
                           const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===firstCity))
-                          if (entry) { const cityObj = entry[1].find(x=>x.name===firstCity); if (cityObj) { setShowFeed(false); setSelectedCountry(entry[0]); setSelectedCity({...cityObj, _koName:cityObj.name, countryEn:entry[0]}) } }
+                          if (entry) { const cityObj = entry[1].find(x=>x.name===firstCity); if (cityObj) { setShowFeed(false); setSelectedCountry(getCountryFeat(entry[0], cityObj.lat, cityObj.lng)); setSelectedCity({...cityObj, _koName:cityObj.name, countryEn:entry[0]}) } }
                         }} style={{
                           padding:'10px 16px',borderRadius:22,cursor:'pointer',flexShrink:0,
                           background:'#f5f5f5',border:'1px solid #f0f0f0',
@@ -4548,7 +4561,7 @@ function App() {
                             <div key={c.name} className="feed-city-chip" onClick={()=>{
                               setShowFeed(false)
                               const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===c.name))
-                              if (entry) { const cityObj = entry[1].find(x=>x.name===c.name); if (cityObj) { setSelectedCountry(entry[0]); setSelectedCity({...cityObj, _koName:cityObj.name, countryEn:entry[0]}) } }
+                              if (entry) { const cityObj = entry[1].find(x=>x.name===c.name); if (cityObj) { setSelectedCountry(getCountryFeat(entry[0], cityObj.lat, cityObj.lng)); setSelectedCity({...cityObj, _koName:cityObj.name, countryEn:entry[0]}) } }
                             }} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:6,cursor:'pointer',minWidth:64,flexShrink:0}}>
                               <div style={{width:isMobile?60:64,height:isMobile?60:64,borderRadius:'50%',background:grad,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:22,fontWeight:800,boxShadow:'0 4px 12px rgba(0,0,0,.08)'}}>
                                 {getCityName(c.name)[0]}
