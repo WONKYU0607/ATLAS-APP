@@ -5,6 +5,7 @@ import { CITY_DATA, DEFAULT_CITY_DATA, TYPE_EMOJI, getImg, TYPE_COLORS } from '.
 import { COUNTRY_ISO, COUNTRY_NAME_OVERRIDE, getCountryDisplayName, LANG_OPTIONS, getFlagImg, COUNTRY_INFO, EMERGENCY_CONTACTS, extractCurrencyCode } from './data/countryInfo'
 import { COUNTRY_CITIES } from './data/countryCities'
 import ISLAND_POLYGONS from './data/islandPolygons.json'
+import CITY_PHOTOS from './data/cityPhotos'
 
 // 작은 섬나라 라벨 데이터 (폴리곤 없이 라벨 좌표만 사용 — 클릭 시 진입)
 const ISLAND_LABEL_DATA = ((ISLAND_POLYGONS && ISLAND_POLYGONS.features) || [])
@@ -4811,34 +4812,49 @@ function App() {
                 </div>
               </div>
 
-              {/* 도시 그리드 */}
-              <div style={{padding:isMobile?'18px 16px':'24px 32px',display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'1fr 1fr 1fr',gap:isMobile?12:16}}>
+              {/* 도시 목록 (텍스트 row 형식) */}
+              <div style={{padding:isMobile?'14px 14px 28px':'20px 28px 36px',display:'flex',flexDirection:'column',gap:isMobile?10:12}}>
                 {feedCityList.cities.map((city, i) => {
-                  const enName = (CITY_I18N[city._koName || city.name]?.[0]) || city.name
+                  const koName = city._koName || city.name
+                  const enName = (CITY_I18N[koName]?.[0]) || city.name
+                  const curated = CITY_PHOTOS[koName]
+                  const thumbWiki = curated?.photos?.[0] || enName
+                  const tagline = curated?.tagline || ''
                   return (
                     <div key={city.name + i} onClick={()=>openFeedCityDetail(city)} style={{
-                      borderRadius:14,overflow:'hidden',cursor:'pointer',background:'#f8fafc',
-                      boxShadow:'0 2px 10px rgba(0,0,0,.06)',transition:'transform .15s, box-shadow .15s',
+                      display:'flex',alignItems:'center',gap:isMobile?12:14,padding:isMobile?'10px':'12px',
+                      borderRadius:14,cursor:'pointer',background:'white',border:'1px solid #f1f5f9',
+                      transition:'all .15s cubic-bezier(.22,.9,.32,1)',
                       animation:'feedFadeIn .25s',
                     }}
-                    onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';e.currentTarget.style.boxShadow='0 8px 22px rgba(0,0,0,.1)'}}
-                    onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='0 2px 10px rgba(0,0,0,.06)'}}>
-                      <div style={{height:isMobile?130:160,position:'relative',overflow:'hidden',background:'#e2e8f0'}}>
+                    onMouseEnter={e=>{e.currentTarget.style.background='#f8fafc';e.currentTarget.style.transform='translateX(2px)';e.currentTarget.style.boxShadow='0 4px 14px rgba(0,0,0,.05)'}}
+                    onMouseLeave={e=>{e.currentTarget.style.background='white';e.currentTarget.style.transform='translateX(0)';e.currentTarget.style.boxShadow='none'}}>
+                      {/* 썸네일 */}
+                      <div style={{width:isMobile?72:88,height:isMobile?72:88,borderRadius:12,overflow:'hidden',flexShrink:0,background:'#e2e8f0',position:'relative'}}>
                         <SpotImage
-                          wikiTitle={enName}
+                          wikiTitle={thumbWiki}
                           spotName={enName}
                           cityName=""
-                          alt={getCityName(city._koName || city.name)}
+                          alt={getCityName(koName)}
                           fallback={getImg('도시') || getImg('자연')}
                           style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
                         />
-                        <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.55) 0%,transparent 55%)',pointerEvents:'none'}}/>
-                        <div style={{position:'absolute',bottom:8,left:10,right:10,color:'white',textShadow:'0 1px 4px rgba(0,0,0,.6)'}}>
-                          <div style={{fontSize:isMobile?13:15,fontWeight:800,letterSpacing:-0.2}}>{getCityName(city._koName || city.name)}</div>
-                          <div style={{fontSize:10,opacity:.85,marginTop:1}}>{getCountryName(city.countryEn)}</div>
-                        </div>
-                        {city.emoji && <div style={{position:'absolute',top:8,right:10,fontSize:22}}>{city.emoji}</div>}
+                        {city.emoji && <div style={{position:'absolute',top:4,right:5,fontSize:14,textShadow:'0 1px 3px rgba(0,0,0,.5)'}}>{city.emoji}</div>}
                       </div>
+                      {/* 텍스트 */}
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:isMobile?15:17,fontWeight:800,color:'#1e293b',letterSpacing:-0.3,marginBottom:2}}>
+                          {getCityName(koName)}
+                        </div>
+                        <div style={{fontSize:11,color:'#64748b',fontWeight:600,marginBottom:tagline?4:0}}>
+                          {curated?.country || getCountryName(city.countryEn)}
+                        </div>
+                        {tagline && (
+                          <div style={{fontSize:12,color:'#94a3b8',lineHeight:1.4,overflow:'hidden',textOverflow:'ellipsis',display:'-webkit-box',WebkitLineClamp:isMobile?2:1,WebkitBoxOrient:'vertical'}}>{tagline}</div>
+                        )}
+                      </div>
+                      {/* 화살표 */}
+                      <div style={{fontSize:18,color:'#cbd5e1',flexShrink:0}}>›</div>
                     </div>
                   )
                 })}
@@ -4847,7 +4863,13 @@ function App() {
           )}
 
           {/* ===== Phase 2: 도시 상세 풀스크린 (cityDetail) ===== */}
-          {feedCityDetail && feedView === 'cityDetail' && (
+          {feedCityDetail && feedView === 'cityDetail' && (() => {
+            const koName = feedCityDetail._koName || feedCityDetail.name
+            const enName = (CITY_I18N[koName]?.[0]) || feedCityDetail.name
+            const curated = CITY_PHOTOS[koName]
+            const galleryTitles = (curated?.photos && curated.photos.length > 0) ? curated.photos : [enName]
+            const heroWiki = galleryTitles[0]
+            return (
             <div style={{
               position:'absolute',inset:0,background:'#ffffff',zIndex:11,
               display:'flex',flexDirection:'column',
@@ -4856,121 +4878,160 @@ function App() {
             }}>
               {/* 상단 도시 히어로 */}
               <div style={{
-                position:'relative',height:isMobile?260:340,overflow:'hidden',background:'#1e293b',flexShrink:0,
+                position:'relative',height:isMobile?280:360,overflow:'hidden',background:'#1e293b',flexShrink:0,
               }}>
                 <SpotImage
-                  wikiTitle={(CITY_I18N[feedCityDetail._koName || feedCityDetail.name]?.[0]) || feedCityDetail.name}
-                  spotName={(CITY_I18N[feedCityDetail._koName || feedCityDetail.name]?.[0]) || feedCityDetail.name}
+                  wikiTitle={heroWiki}
+                  spotName={heroWiki}
                   cityName=""
-                  alt={getCityName(feedCityDetail._koName || feedCityDetail.name)}
+                  alt={getCityName(koName)}
                   fallback={getImg('도시') || getImg('자연')}
                   style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
                 />
-                <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom, rgba(0,0,0,.55) 0%, rgba(0,0,0,.15) 35%, rgba(0,0,0,.7) 100%)',pointerEvents:'none'}}/>
+                <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,.1) 35%, rgba(0,0,0,.75) 100%)',pointerEvents:'none'}}/>
                 <button onClick={feedGoBack} style={{
                   position:'absolute',top:isMobile?'calc(14px + env(safe-area-inset-top))':18,left:16,
                   background:'rgba(0,0,0,.4)',border:'none',width:38,height:38,borderRadius:10,cursor:'pointer',
                   display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:20,
                   backdropFilter:'blur(8px)',
                 }}>←</button>
-                <div style={{position:'absolute',bottom:20,left:20,right:20,color:'white'}}>
-                  <div style={{fontSize:11,fontWeight:700,letterSpacing:1,opacity:.9,marginBottom:6}}>{getCountryName(feedCityDetail.countryEn)}</div>
-                  <div style={{fontSize:isMobile?28:36,fontWeight:800,letterSpacing:-0.6,lineHeight:1.1,textShadow:'0 2px 12px rgba(0,0,0,.4)'}}>
-                    {feedCityDetail.emoji} {getCityName(feedCityDetail._koName || feedCityDetail.name)}
+                <div style={{position:'absolute',bottom:22,left:22,right:22,color:'white'}}>
+                  <div style={{fontSize:11,fontWeight:700,letterSpacing:1.5,opacity:.88,marginBottom:8}}>{curated?.country || getCountryName(feedCityDetail.countryEn)}</div>
+                  <div style={{fontSize:isMobile?32:42,fontWeight:800,letterSpacing:-0.8,lineHeight:1.05,textShadow:'0 2px 14px rgba(0,0,0,.5)',marginBottom:curated?.tagline?6:0}}>
+                    {feedCityDetail.emoji} {getCityName(koName)}
                   </div>
+                  {curated?.tagline && (
+                    <div style={{fontSize:isMobile?13:15,fontWeight:500,color:'rgba(255,255,255,.95)',textShadow:'0 1px 6px rgba(0,0,0,.5)'}}>{curated.tagline}</div>
+                  )}
                 </div>
               </div>
 
-              {/* 본문 - 로딩 / 데이터 */}
-              {feedCityDetailLoading || !feedCityDetailData ? (
-                <div style={{padding:'40px 20px',textAlign:'center',color:'#94a3b8',fontSize:13}}>
-                  {lang==='ko'?'정보 불러오는 중...':lang==='ja'?'読み込み中...':lang==='zh'?'加载中...':'Loading...'}
-                </div>
-              ) : (
-                <div style={{padding:isMobile?'18px 18px 40px':'28px 32px 48px'}}>
-                  {/* 날씨 카드 */}
-                  {feedCityDetailData.weather && (
+              <div style={{padding:isMobile?'20px 16px 40px':'28px 32px 48px'}}>
+                {/* 큐레이션 설명 */}
+                {curated?.desc && (
+                  <div style={{
+                    padding:isMobile?'16px 18px':'18px 22px',background:'linear-gradient(135deg,#fef3c7,#fed7aa)',borderRadius:14,
+                    marginBottom:22,fontSize:14,color:'#7c2d12',lineHeight:1.75,fontWeight:500,
+                  }}>{curated.desc}</div>
+                )}
+
+                {/* 날씨 + 추천 시즌 - 가로 카드 */}
+                <div style={{display:'grid',gridTemplateColumns:curated?.bestSeason?'1fr 1fr':'1fr',gap:10,marginBottom:24}}>
+                  {feedCityDetailData?.weather && (
                     <div style={{
-                      background:'linear-gradient(135deg,#dbeafe,#ede9fe)',padding:isMobile?'14px 16px':'16px 22px',
-                      borderRadius:14,display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,
+                      background:'linear-gradient(135deg,#dbeafe,#ede9fe)',padding:isMobile?'13px 14px':'15px 18px',
+                      borderRadius:13,display:'flex',alignItems:'center',gap:12,
                     }}>
-                      <div style={{display:'flex',alignItems:'center',gap:12}}>
-                        <div style={{fontSize:38,lineHeight:1}}>{feedCityDetailData.weather.icon}</div>
-                        <div>
-                          <div style={{fontSize:24,fontWeight:800,color:'#1e293b',letterSpacing:-0.4}}>{feedCityDetailData.weather.temp}{typeof feedCityDetailData.weather.temp === 'number' ? '°C' : ''}</div>
-                          <div style={{fontSize:11,color:'#64748b',marginTop:2}}>{feedCityDetailData.weather.condition}</div>
-                        </div>
-                      </div>
-                      <div style={{textAlign:'right'}}>
-                        <div style={{fontSize:11,color:'#64748b',fontWeight:600}}>💧 {lang==='ko'?'습도':'Humidity'}</div>
-                        <div style={{fontSize:16,fontWeight:800,color:'#1e293b',marginTop:2}}>{feedCityDetailData.weather.humidity}{typeof feedCityDetailData.weather.humidity === 'number' ? '%' : ''}</div>
+                      <div style={{fontSize:32,lineHeight:1}}>{feedCityDetailData.weather.icon}</div>
+                      <div>
+                        <div style={{fontSize:10,color:'#64748b',fontWeight:700,letterSpacing:.5,marginBottom:2}}>{lang==='ko'?'현재 날씨':'Weather'}</div>
+                        <div style={{fontSize:18,fontWeight:800,color:'#1e293b',letterSpacing:-0.3,lineHeight:1.1}}>{feedCityDetailData.weather.temp}{typeof feedCityDetailData.weather.temp === 'number' ? '°C' : ''}</div>
+                        <div style={{fontSize:10,color:'#64748b',marginTop:1}}>{feedCityDetailData.weather.condition}</div>
                       </div>
                     </div>
                   )}
-
-                  {/* 도시 설명 */}
-                  {feedCityDetailData.description && (
+                  {curated?.bestSeason && (
                     <div style={{
-                      padding:isMobile?'14px 16px':'16px 20px',background:'#f8fafc',borderRadius:12,
-                      borderLeft:'3px solid #3b82f6',marginBottom:24,
-                      fontSize:13.5,color:'#334155',lineHeight:1.7,
-                    }}>{feedCityDetailData.description}</div>
-                  )}
-
-                  {/* 추천 관광지 */}
-                  {feedCityDetailData.spots && feedCityDetailData.spots.length > 0 && (
-                    <>
-                      <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#1e293b',letterSpacing:-0.3,marginBottom:14}}>
-                        ✨ {lang==='ko'?'추천 관광지':lang==='ja'?'おすすめスポット':lang==='zh'?'推荐景点':'Top Spots'} · {feedCityDetailData.spots.length}
+                      background:'linear-gradient(135deg,#d1fae5,#a7f3d0)',padding:isMobile?'13px 14px':'15px 18px',
+                      borderRadius:13,display:'flex',alignItems:'center',gap:12,
+                    }}>
+                      <div style={{fontSize:32,lineHeight:1}}>🌸</div>
+                      <div>
+                        <div style={{fontSize:10,color:'#065f46',fontWeight:700,letterSpacing:.5,marginBottom:2}}>{lang==='ko'?'추천 시즌':'Best Season'}</div>
+                        <div style={{fontSize:13,fontWeight:800,color:'#064e3b',letterSpacing:-0.2,lineHeight:1.2}}>{curated.bestSeason}</div>
                       </div>
-                      <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:12}}>
-                        {feedCityDetailData.spots.map((spot, i) => (
-                          <div key={i} style={{
-                            borderRadius:14,overflow:'hidden',background:'white',border:'1.5px solid #e2e8f0',
-                            boxShadow:'0 2px 8px rgba(0,0,0,.04)',
-                          }}>
-                            <div style={{height:isMobile?160:170,position:'relative',overflow:'hidden',background:'#e2e8f0'}}>
-                              <SpotImage
-                                wikiTitle={spot.wikiTitle}
-                                spotName={spot.name}
-                                cityName={(CITY_I18N[feedCityDetail._koName || feedCityDetail.name]?.[0]) || feedCityDetail.name}
-                                alt={spot.name}
-                                fallback={spot.img || getImg(spot.type)}
-                                style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
-                              />
-                              <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.65) 0%,transparent 55%)',pointerEvents:'none'}}/>
-                              <div style={{position:'absolute',bottom:10,left:12,right:12,color:'white'}}>
-                                <div style={{fontSize:14,fontWeight:800,textShadow:'0 1px 4px rgba(0,0,0,.5)',marginBottom:4}}>
-                                  {trSpot(feedCityDetail._koName || feedCityDetail.name, spot.name)?.name || spot.name}
-                                </div>
-                                <div style={{display:'flex',alignItems:'center',gap:6}}>
-                                  <div style={{fontSize:10,padding:'2px 8px',borderRadius:10,background:TYPE_COLORS[spot.type]||'#64748b',fontWeight:700}}>{getSpotType(spot.type)}</div>
-                                  {spot.rating && <div style={{fontSize:11,fontWeight:700}}>★ {spot.rating}</div>}
-                                </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 사진 갤러리 */}
+                {galleryTitles.length > 1 && (
+                  <div style={{marginBottom:24}}>
+                    <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#1e293b',letterSpacing:-0.3,marginBottom:12}}>
+                      📷 {lang==='ko'?'풍경':'Gallery'}
+                    </div>
+                    <div className="feed-section-scroll" style={{display:'flex',gap:10,overflowX:'auto',paddingBottom:6,scrollSnapType:'x mandatory'}}>
+                      {galleryTitles.slice(1).map((title, gi) => (
+                        <div key={title+gi} style={{
+                          minWidth:isMobile?220:260,maxWidth:isMobile?220:260,height:isMobile?160:200,
+                          borderRadius:14,overflow:'hidden',flexShrink:0,scrollSnapAlign:'start',background:'#e2e8f0',
+                          boxShadow:'0 2px 10px rgba(0,0,0,.06)',position:'relative',
+                        }}>
+                          <SpotImage
+                            wikiTitle={title}
+                            spotName={title}
+                            cityName=""
+                            alt={title}
+                            fallback={getImg('자연')}
+                            style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
+                          />
+                          <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.55) 0%,transparent 50%)',pointerEvents:'none'}}/>
+                          <div style={{position:'absolute',bottom:8,left:11,right:11,fontSize:11,fontWeight:700,color:'white',textShadow:'0 1px 4px rgba(0,0,0,.6)'}}>{title}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 본문 - 로딩 / 추천 관광지 */}
+                {feedCityDetailLoading || !feedCityDetailData ? (
+                  <div style={{padding:'24px 0',textAlign:'center',color:'#94a3b8',fontSize:13}}>
+                    {lang==='ko'?'관광지 정보 불러오는 중...':lang==='ja'?'読み込み中...':lang==='zh'?'加载中...':'Loading spots...'}
+                  </div>
+                ) : feedCityDetailData.spots && feedCityDetailData.spots.length > 0 && (
+                  <>
+                    <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#1e293b',letterSpacing:-0.3,marginBottom:14}}>
+                      ✨ {lang==='ko'?'추천 관광지':lang==='ja'?'おすすめスポット':lang==='zh'?'推荐景点':'Top Spots'} · {feedCityDetailData.spots.length}
+                    </div>
+                    <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:12}}>
+                      {feedCityDetailData.spots.map((spot, i) => (
+                        <div key={i} style={{
+                          borderRadius:14,overflow:'hidden',background:'white',border:'1.5px solid #e2e8f0',
+                          boxShadow:'0 2px 8px rgba(0,0,0,.04)',
+                        }}>
+                          <div style={{height:isMobile?160:170,position:'relative',overflow:'hidden',background:'#e2e8f0'}}>
+                            <SpotImage
+                              wikiTitle={spot.wikiTitle}
+                              spotName={spot.name}
+                              cityName={enName}
+                              alt={spot.name}
+                              fallback={spot.img || getImg(spot.type)}
+                              style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
+                            />
+                            <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.65) 0%,transparent 55%)',pointerEvents:'none'}}/>
+                            <div style={{position:'absolute',bottom:10,left:12,right:12,color:'white'}}>
+                              <div style={{fontSize:14,fontWeight:800,textShadow:'0 1px 4px rgba(0,0,0,.5)',marginBottom:4}}>
+                                {trSpot(koName, spot.name)?.name || spot.name}
+                              </div>
+                              <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                <div style={{fontSize:10,padding:'2px 8px',borderRadius:10,background:TYPE_COLORS[spot.type]||'#64748b',fontWeight:700}}>{getSpotType(spot.type)}</div>
+                                {spot.rating && <div style={{fontSize:11,fontWeight:700}}>★ {spot.rating}</div>}
                               </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
 
-                  {/* 지구본 모드에서 보기 (옵션) */}
-                  <div style={{marginTop:28,padding:'18px',background:'#f8fafc',borderRadius:12,textAlign:'center'}}>
-                    <button onClick={()=>{
-                      setFeedView('main'); setFeedCityList(null); setFeedCityDetail(null); setShowFeed(false)
-                      setSelectedCountry(getCountryFeat(feedCityDetail.countryEn, feedCityDetail.lat, feedCityDetail.lng))
-                      setSelectedCity(feedCityDetail)
-                    }} style={{
-                      background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',border:'none',color:'white',
-                      padding:'12px 24px',borderRadius:10,fontSize:13,fontWeight:700,cursor:'pointer',
-                      boxShadow:'0 4px 12px rgba(59,130,246,.3)',
-                    }}>🌍 {lang==='ko'?'지구본에서 보기':lang==='ja'?'地球儀で見る':lang==='zh'?'在地球仪上查看':'View on Globe'}</button>
-                  </div>
+                {/* 지구본 모드로 이동 */}
+                <div style={{marginTop:30,padding:'20px',background:'#f8fafc',borderRadius:14,textAlign:'center'}}>
+                  <div style={{fontSize:12,color:'#64748b',marginBottom:10}}>{lang==='ko'?'지구본에서 위치와 주변 도시도 함께 보고 싶다면':'Explore on globe'}</div>
+                  <button onClick={()=>{
+                    setFeedView('main'); setFeedCityList(null); setFeedCityDetail(null); setShowFeed(false)
+                    setSelectedCountry(getCountryFeat(feedCityDetail.countryEn, feedCityDetail.lat, feedCityDetail.lng))
+                    setSelectedCity(feedCityDetail)
+                  }} style={{
+                    background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',border:'none',color:'white',
+                    padding:'12px 26px',borderRadius:10,fontSize:13,fontWeight:700,cursor:'pointer',
+                    boxShadow:'0 4px 12px rgba(59,130,246,.3)',
+                  }}>🌍 {lang==='ko'?'지구본에서 보기':lang==='ja'?'地球儀で見る':lang==='zh'?'在地球仪上查看':'View on Globe'}</button>
                 </div>
-              )}
+              </div>
             </div>
-          )}
+            )
+          })()}
 
         </div>
         )
