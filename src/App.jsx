@@ -27,6 +27,8 @@ import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, sav
 // key = `${cityName}:${spotName}` → 해당 스팟이 점유한 이미지 URL
 const SPOT_IMAGE_USED = new Map() // url → ownerKey
 const SPOT_IMAGE_OWNED = new Map() // ownerKey → url
+// 성능 최적화: wiki API 응답 캐시 (모듈 스코프, 세션 동안 유지)
+const WIKI_API_CACHE = new Map() // url → response (Promise 또는 resolved value)
 
 const claimImage = (url, ownerKey) => {
   if (!url) return false
@@ -61,10 +63,20 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
       return true
     }
 
+    // 캐시된 fetch (같은 URL 재호출 방지)
+    const cachedFetch = async (url) => {
+      if (WIKI_API_CACHE.has(url)) return WIKI_API_CACHE.get(url)
+      const promise = fetch(url).then(r => r.json()).catch(() => null)
+      WIKI_API_CACHE.set(url, promise)  // Promise 자체를 캐시 → 동시 요청도 1번만
+      const data = await promise
+      WIKI_API_CACHE.set(url, data)  // 해결된 데이터로 교체
+      return data
+    }
+
     const tryWiki = async (title) => {
       try {
-        const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=600&origin=*`)
-        const data = await res.json()
+        const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=600&origin=*`
+        const data = await cachedFetch(url)
         const page = Object.values(data?.query?.pages || {})[0]
         return page?.thumbnail?.source || null
       } catch { return null }
@@ -72,8 +84,8 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
 
     const searchWiki = async (query) => {
       try {
-        const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=10&prop=pageimages&format=json&pithumbsize=600&origin=*`)
-        const data = await res.json()
+        const url = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=10&prop=pageimages&format=json&pithumbsize=600&origin=*`
+        const data = await cachedFetch(url)
         const pages = Object.values(data?.query?.pages || {})
         const urls = []
         for (const page of pages) {
@@ -86,8 +98,8 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
     // Wikimedia Commons에서 실사진 검색 (복수 후보 반환)
     const searchCommons = async (query) => {
       try {
-        const res = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|mime&iiurlwidth=600&format=json&origin=*`)
-        const data = await res.json()
+        const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|mime&iiurlwidth=600&format=json&origin=*`
+        const data = await cachedFetch(url)
         const pages = Object.values(data?.query?.pages || {})
         const urls = []
         for (const p of pages) {
@@ -4521,7 +4533,8 @@ function App() {
             ))}
           </div>
 
-          {/* Content */}
+          {/* Content - 풀스크린 뷰 활성 시 unmount하여 SpotImage 부하 해소 */}
+          {feedView === 'main' && (
           <div className="feed-section-scroll" style={{flex:1,overflowY:'auto',background:'#ffffff'}}>
             {feedMainTab === 'journals' ? (
               feedJournalsLoading ? (
@@ -4836,9 +4849,10 @@ function App() {
               )
             )}
           </div>
+          )}
 
           {/* Floating Action Button (여행기 작성) */}
-          {feedMainTab === 'journals' && (
+          {feedMainTab === 'journals' && feedView === 'main' && (
             <button className="feed-fab" onClick={()=>{
               if (!currentUser) { setShowLoginModal(true); return }
               setEditingJournal(null)
