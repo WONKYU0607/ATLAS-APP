@@ -4525,7 +4525,7 @@ function App() {
           <div className="feed-section-scroll" style={{flex:1,overflowY:'auto',background:'#ffffff'}}>
             {feedMainTab === 'journals' ? (
               feedJournalsLoading ? (
-                <div style={{textAlign:'center',padding:'80px 0',color:'#a3a3a3',fontSize:14}}>{lang==='ko'?'불러오는 중...':'Loading...'}</div>
+                <div style={{textAlign:'center',padding:'80px 0',color:'#a3a3a3',fontSize:14}}>{lang==='ko'?'불러오는 중...':lang==='ja'?'読み込み中...':lang==='zh'?'加载中...':'Loading...'}</div>
               ) : (
                 <>
                   {/* Panel E: 시즌 배너 (4월 봄) */}
@@ -4880,7 +4880,7 @@ function App() {
                   <div style={{fontSize:isMobile?13:14,color:'rgba(255,255,255,.92)',fontWeight:500,position:'relative',zIndex:1}}>{feedCityList.subtitle}</div>
                 )}
                 <div style={{fontSize:11,color:'rgba(255,255,255,.85)',marginTop:14,fontWeight:600,position:'relative',zIndex:1}}>
-                  {feedCityList.cities.length}{lang==='ko'?'개 도시':' cities'}
+                  {feedCityList.cities.length}{lang==='ko'?'개 도시':lang==='ja'?'都市':lang==='zh'?'个城市':' cities'}
                 </div>
               </div>
 
@@ -5119,7 +5119,7 @@ function App() {
             const enCity = (CITY_I18N[koName]?.[0]) || feedCityDetail.name
             const trData = trSpot(koName, feedSpotDetail.name)
             const displayName = trData?.name || feedSpotDetail.name
-            const staticDesc = trData?.desc || (lang === 'ko' ? feedSpotDetail.desc : feedSpotDetail.desc) || ''
+            const staticDesc = trData?.desc || (lang === 'ko' ? feedSpotDetail.desc : '') || ''
             return (
             <div style={{
               position:'absolute',inset:0,background:'#ffffff',zIndex:12,
@@ -5180,27 +5180,29 @@ function App() {
                   }}>{staticDesc}</div>
                 )}
 
-                {/* 부가 정보 grid */}
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:18}}>
-                  {feedSpotDetail.duration && (
-                    <div style={{padding:'12px 14px',background:'#f1f5f9',borderRadius:11}}>
-                      <div style={{fontSize:10,color:'#64748b',fontWeight:700,marginBottom:3}}>⏱ {lang==='ko'?'예상 소요시간':lang==='ja'?'所要時間':lang==='zh'?'预计时长':'Duration'}</div>
-                      <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{feedSpotDetail.duration}</div>
-                    </div>
-                  )}
-                  {feedSpotDetail.price && (
-                    <div style={{padding:'12px 14px',background:'#f1f5f9',borderRadius:11}}>
-                      <div style={{fontSize:10,color:'#64748b',fontWeight:700,marginBottom:3}}>💵 {lang==='ko'?'요금':lang==='ja'?'料金':lang==='zh'?'费用':'Price'}</div>
-                      <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{feedSpotDetail.price}</div>
-                    </div>
-                  )}
-                  {feedSpotDetail.hours && (
-                    <div style={{padding:'12px 14px',background:'#f1f5f9',borderRadius:11,gridColumn:'1/-1'}}>
-                      <div style={{fontSize:10,color:'#64748b',fontWeight:700,marginBottom:3}}>🕒 {lang==='ko'?'운영시간':lang==='ja'?'営業時間':lang==='zh'?'营业时间':'Hours'}</div>
-                      <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{feedSpotDetail.hours}</div>
-                    </div>
-                  )}
-                </div>
+                {/* 부가 정보 grid - 사이드패널과 동일 필드 사용 */}
+                {(feedSpotDetail.openTime || feedSpotDetail.price || feedSpotDetail.duration || feedSpotDetail.hours) && (
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:18}}>
+                    {(feedSpotDetail.duration) && (
+                      <div style={{padding:'12px 14px',background:'#f1f5f9',borderRadius:11}}>
+                        <div style={{fontSize:10,color:'#64748b',fontWeight:700,marginBottom:3}}>⏱ {lang==='ko'?'예상 소요시간':lang==='ja'?'所要時間':lang==='zh'?'预计时长':'Duration'}</div>
+                        <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{translateSpotField(feedSpotDetail.duration, lang)}</div>
+                      </div>
+                    )}
+                    {feedSpotDetail.price && (
+                      <div style={{padding:'12px 14px',background:'#f1f5f9',borderRadius:11}}>
+                        <div style={{fontSize:10,color:'#64748b',fontWeight:700,marginBottom:3}}>💵 {lang==='ko'?'요금':lang==='ja'?'料金':lang==='zh'?'费用':'Price'}</div>
+                        <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{translateSpotField(feedSpotDetail.price, lang)}</div>
+                      </div>
+                    )}
+                    {(feedSpotDetail.openTime || feedSpotDetail.hours) && (
+                      <div style={{padding:'12px 14px',background:'#f1f5f9',borderRadius:11,gridColumn:'1/-1'}}>
+                        <div style={{fontSize:10,color:'#64748b',fontWeight:700,marginBottom:3}}>🕒 {lang==='ko'?'운영시간':lang==='ja'?'営業時間':lang==='zh'?'营业时间':'Hours'}</div>
+                        <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{translateSpotField(feedSpotDetail.openTime || feedSpotDetail.hours, lang)}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* 위키피디아 출처 링크 */}
                 {feedSpotWikiSummary && (
