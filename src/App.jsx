@@ -56,8 +56,23 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
     const prevUrl = SPOT_IMAGE_OWNED.get(ownerKey)
     if (prevUrl) { SPOT_IMAGE_USED.delete(prevUrl); SPOT_IMAGE_OWNED.delete(ownerKey) }
 
+    // 지도/다이어그램/위치 정보 이미지 거부 (도시 자체 페이지의 인포박스가 위치 지도인 경우 회피)
+    const isMapImage = (url) => {
+      if (!url) return false
+      const decoded = decodeURIComponent(url)
+      const lower = decoded.toLowerCase()
+      // SVG는 거의 다이어그램/지도/플래그
+      if (lower.includes('.svg')) return true
+      // 명백한 지도/위치 표시 파일명 패턴
+      if (/(location[_ ]?map|locator|map[_ ]?of[_ ]|topographic|outline[_ ]?of[_ ]|administrative|orthographic|highlighted|in_globe|world[_ ]?map|location[_ ]?in[_ ])/i.test(decoded)) return true
+      // 국기 이미지 (flag in filename)
+      if (/flag[_ ]?of[_ ]/i.test(decoded)) return true
+      return false
+    }
+
     const trySet = (url) => {
       if (cancelled || !url) return false
+      if (isMapImage(url)) return false  // 지도/SVG/국기 자동 거부
       if (!claimImage(url, ownerKey)) return false // 중복이면 skip
       setSrc(url)
       return true
@@ -2149,14 +2164,18 @@ function App() {
     }
   }, [showFeed])
 
-  // 관광지 wikipedia summary 로드 (한국어 → 영어 fallback)
+  // 관광지 wikipedia summary 로드 (사용자 언어 → 영어 fallback)
   useEffect(() => {
     if (!feedSpotDetail) { setFeedSpotWikiSummary(null); return }
-    const title = feedSpotDetail.wikiTitle || feedSpotDetail.name
-    if (!title) return
+    const wikiTitle = feedSpotDetail.wikiTitle
+    const spotName = feedSpotDetail.name
+    const trData = feedCityDetail ? trSpot(feedCityDetail._koName || feedCityDetail.name, spotName) : null
+    const localName = trData?.name  // 사용자 언어 spot 이름 (예: 영어 "Stanley Park")
+    if (!wikiTitle && !spotName && !localName) return
     setFeedSpotWikiLoading(true)
     let cancelled = false
     const tryFetch = async (langCode, q) => {
+      if (!q) return null
       try {
         const url = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}`
         const res = await fetch(url)
@@ -2168,15 +2187,16 @@ function App() {
     }
     const loadSummary = async () => {
       let summary = null
-      // 한국어 위키 시도 (한국어 사용자 우선)
-      if (lang === 'ko') summary = await tryFetch('ko', title)
-      // 영어 위키 시도
-      if (!summary) summary = await tryFetch('en', title)
-      // wikiTitle 안 통하면 spot 이름으로 재시도
-      if (!summary && feedSpotDetail.wikiTitle && feedSpotDetail.name && feedSpotDetail.wikiTitle !== feedSpotDetail.name) {
-        if (lang === 'ko') summary = await tryFetch('ko', feedSpotDetail.name)
-        if (!summary) summary = await tryFetch('en', feedSpotDetail.name)
+      // 1차: 사용자 언어 wiki에서 검색 (ko/ja/zh)
+      // - 한국어 사용자가 "스탠리 파크" 클릭 → ko.wikipedia에서 "스탠리 파크" 또는 "스탠리 공원" 시도
+      if (lang !== 'en') {
+        if (spotName) summary = await tryFetch(lang, spotName)
+        if (!summary && localName && localName !== spotName) summary = await tryFetch(lang, localName)
+        if (!summary && wikiTitle && wikiTitle !== spotName) summary = await tryFetch(lang, wikiTitle)
       }
+      // 2차: 영어 wiki fallback (영문 wikiTitle 우선 - 가장 정확)
+      if (!summary && wikiTitle) summary = await tryFetch('en', wikiTitle)
+      if (!summary && spotName && spotName !== wikiTitle) summary = await tryFetch('en', spotName)
       if (!cancelled) {
         setFeedSpotWikiSummary(summary)
         setFeedSpotWikiLoading(false)
@@ -2184,7 +2204,7 @@ function App() {
     }
     loadSummary()
     return () => { cancelled = true }
-  }, [feedSpotDetail, lang])
+  }, [feedSpotDetail, feedCityDetail, lang])
 
   // 라이트박스 키보드 조작
   useEffect(() => {
@@ -4925,7 +4945,6 @@ function App() {
                           fallback={getImg('도시') || getImg('자연')}
                           style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
                         />
-                        {city.emoji && <div style={{position:'absolute',top:4,right:5,fontSize:14,textShadow:'0 1px 3px rgba(0,0,0,.5)'}}>{city.emoji}</div>}
                       </div>
                       {/* 텍스트 */}
                       <div style={{flex:1,minWidth:0}}>
@@ -4984,7 +5003,7 @@ function App() {
                 <div style={{position:'absolute',bottom:22,left:22,right:22,color:'white'}}>
                   <div style={{fontSize:11,fontWeight:700,letterSpacing:1.5,opacity:.88,marginBottom:8}}>{getCountryName(feedCityDetail.countryEn)}</div>
                   <div style={{fontSize:isMobile?32:42,fontWeight:800,letterSpacing:-0.8,lineHeight:1.05,textShadow:'0 2px 14px rgba(0,0,0,.5)',marginBottom:pickI18n(curated?.tagline,lang)?6:0}}>
-                    {feedCityDetail.emoji} {getCityName(koName)}
+                    {getCityName(koName)}
                   </div>
                   {pickI18n(curated?.tagline, lang) && (
                     <div style={{fontSize:isMobile?13:15,fontWeight:500,color:'rgba(255,255,255,.95)',textShadow:'0 1px 6px rgba(0,0,0,.5)'}}>{pickI18n(curated.tagline, lang)}</div>
