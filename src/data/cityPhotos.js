@@ -140,7 +140,7 @@ const CITY_PHOTOS = {
     en: 'Maldives',
     tagline: { ko: '1,200개 산호섬의 인도양 낙원', en: 'Indian Ocean paradise of 1,200 coral islands', ja: '1,200の珊瑚礁のインド洋の楽園', zh: '1200座珊瑚岛的印度洋天堂' },
     desc: { ko: '수상 빌라에서 바로 뛰어드는 투명한 바다, 세계 최고의 다이빙 포인트, 별빛 아래 디너. 신혼여행 1순위의 이유.', en: 'Crystal seas at the doorstep of overwater villas, world-class dive sites, dinner under starlight. The reason it tops honeymoon lists.', ja: '水上ヴィラから飛び込める透明な海、世界最高のダイビングポイント、星空の下のディナー。新婚旅行1位の理由。', zh: '从水上别墅直接跳入透明的海，世界顶级的潜水点，星空下的晚餐。蜜月旅行首选的理由。' },
-    photos: ['Bioluminescence in the Maldives', 'Banana Reef', 'Whale shark', 'Manta ray'],
+    photos: ['Coral reef', 'Whale shark', 'Manta ray', 'Bioluminescence', 'Underwater photography'],
     bestSeason: { ko: '11~4월', en: 'Nov–Apr', ja: '11~4月', zh: '11~4月' },
   },
   '뉴욕': {
