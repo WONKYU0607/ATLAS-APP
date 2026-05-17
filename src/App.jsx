@@ -65,8 +65,13 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
       if (lower.includes('.svg')) return true
       // 명백한 지도/위치 표시 파일명 패턴
       if (/(location[_ ]?map|locator|map[_ ]?of[_ ]|topographic|outline[_ ]?of[_ ]|administrative|orthographic|highlighted|in_globe|world[_ ]?map|location[_ ]?in[_ ])/i.test(decoded)) return true
-      // 국기 이미지 (flag in filename)
+      // 국기 이미지
       if (/flag[_ ]?of[_ ]/i.test(decoded)) return true
+      // 추가 지도 패턴 ('in_X', 'X_relief', 'X_topo', 'X_dot')
+      if (/_on_(globe|map|earth|world)/i.test(decoded)) return true
+      if (/_(relief|topo|satellite)_map/i.test(decoded)) return true
+      if (/_dot_/i.test(decoded)) return true  // 위치 점 표시
+      if (/(^|_)map($|_|\.)/i.test(decoded)) return true  // 단어 'map'이 단독으로 나오는 파일명
       return false
     }
 
@@ -4940,7 +4945,7 @@ function App() {
                         <SpotImage
                           wikiTitle={thumbWiki}
                           spotName={enName}
-                          cityName=""
+                          cityName={enName}
                           alt={getCityName(koName)}
                           fallback={getImg('도시') || getImg('자연')}
                           style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
@@ -4988,7 +4993,7 @@ function App() {
                 <SpotImage
                   wikiTitle={heroWiki}
                   spotName={heroWiki}
-                  cityName=""
+                  cityName={enName}
                   alt={getCityName(koName)}
                   fallback={getImg('도시') || getImg('자연')}
                   style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
@@ -5068,7 +5073,7 @@ function App() {
                           <SpotImage
                             wikiTitle={title}
                             spotName={title}
-                            cityName=""
+                            cityName={enName}
                             alt={title}
                             fallback={getImg('자연')}
                             style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
@@ -5092,36 +5097,38 @@ function App() {
                     <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#1e293b',letterSpacing:-0.3,marginBottom:14}}>
                       ✨ {lang==='ko'?'추천 관광지':lang==='ja'?'おすすめスポット':lang==='zh'?'推荐景点':'Top Spots'} · {feedCityDetailData.spots.length}
                     </div>
-                    <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:12}}>
-                      {feedCityDetailData.spots.map((spot, i) => (
-                        <div key={i} onClick={()=>openFeedSpotDetail(spot)} style={{
-                          borderRadius:14,overflow:'hidden',background:'white',border:'1.5px solid #e2e8f0',
-                          boxShadow:'0 2px 8px rgba(0,0,0,.04)',cursor:'pointer',transition:'all .15s',
-                        }}
-                        onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,.08)'}}
-                        onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='0 2px 8px rgba(0,0,0,.04)'}}>
-                          <div style={{height:isMobile?160:170,position:'relative',overflow:'hidden',background:'#e2e8f0'}}>
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(3, 1fr)',gap:isMobile?3:5}}>
+                      {feedCityDetailData.spots.map((spot, i) => {
+                        const trData = trSpot(koName, spot.name)
+                        const displayName = trData?.name || spot.name
+                        return (
+                          <div key={i} onClick={()=>openFeedSpotDetail(spot)} style={{
+                            position:'relative',aspectRatio:'1/1',overflow:'hidden',
+                            cursor:'pointer',background:'#e2e8f0',
+                          }}
+                          onMouseEnter={e=>{const im=e.currentTarget.querySelector('img');if(im)im.style.transform='scale(1.08)'}}
+                          onMouseLeave={e=>{const im=e.currentTarget.querySelector('img');if(im)im.style.transform='scale(1)'}}>
                             <SpotImage
                               wikiTitle={spot.wikiTitle}
                               spotName={spot.name}
                               cityName={enName}
-                              alt={spot.name}
+                              alt={displayName}
                               fallback={spot.img || getImg(spot.type)}
-                              style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
+                              style={{width:'100%',height:'100%',objectFit:'cover',display:'block',transition:'transform .3s cubic-bezier(.22,.9,.32,1)'}}
                             />
-                            <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.65) 0%,transparent 55%)',pointerEvents:'none'}}/>
-                            <div style={{position:'absolute',bottom:10,left:12,right:12,color:'white'}}>
-                              <div style={{fontSize:14,fontWeight:800,textShadow:'0 1px 4px rgba(0,0,0,.5)',marginBottom:4}}>
-                                {trSpot(koName, spot.name)?.name || spot.name}
+                            {/* 하단 가는 그라데이션 + 작은 이름 */}
+                            <div style={{position:'absolute',inset:0,background:'linear-gradient(to top, rgba(0,0,0,.78) 0%, rgba(0,0,0,0) 45%)',pointerEvents:'none'}}/>
+                            <div style={{position:'absolute',bottom:6,left:8,right:8,color:'white',pointerEvents:'none'}}>
+                              <div style={{fontSize:isMobile?11:12,fontWeight:800,letterSpacing:-0.2,textShadow:'0 1px 4px rgba(0,0,0,.7)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',lineHeight:1.2}}>
+                                {displayName}
                               </div>
-                              <div style={{display:'flex',alignItems:'center',gap:6}}>
-                                <div style={{fontSize:10,padding:'2px 8px',borderRadius:10,background:TYPE_COLORS[spot.type]||'#64748b',fontWeight:700}}>{getSpotType(spot.type)}</div>
-                                {spot.rating && <div style={{fontSize:11,fontWeight:700}}>★ {spot.rating}</div>}
-                              </div>
+                              {spot.rating && (
+                                <div style={{fontSize:isMobile?9:10,fontWeight:700,marginTop:2,opacity:.95,textShadow:'0 1px 3px rgba(0,0,0,.7)'}}>★ {spot.rating}</div>
+                              )}
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </>
                 )}
