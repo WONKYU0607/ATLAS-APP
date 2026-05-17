@@ -131,11 +131,21 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
     }
 
     const loadImage = async () => {
-      // 1차: wikiTitle 정확 매칭
+      // 1차: wikiTitle 정확 매칭 — 중복 회피 무시 (정확 매칭은 항상 신뢰)
       let img = await tryWiki(keyword)
-      if (trySet(img)) return
+      if (img && !isMapImage(img)) {
+        if (!cancelled) {
+          setSrc(img)
+          // ownership 등록만 (다른 컴포넌트가 fallback 떨어지지 않도록)
+          if (!SPOT_IMAGE_USED.has(img)) {
+            SPOT_IMAGE_USED.set(img, ownerKey)
+            SPOT_IMAGE_OWNED.set(ownerKey, img)
+          }
+        }
+        return
+      }
 
-      // 2차: 영어만 추출
+      // 2차: 영어만 추출 (1차 매칭 실패한 경우, 중복 회피 적용)
       const enKeyword = keyword.replace(/[가-힣]+/g, '').trim()
       if (enKeyword && enKeyword !== keyword) {
         img = await tryWiki(enKeyword)
@@ -2192,16 +2202,33 @@ function App() {
     }
     const loadSummary = async () => {
       let summary = null
-      // 1차: 사용자 언어 wiki에서 검색 (ko/ja/zh)
-      // - 한국어 사용자가 "스탠리 파크" 클릭 → ko.wikipedia에서 "스탠리 파크" 또는 "스탠리 공원" 시도
-      if (lang !== 'en') {
-        if (spotName) summary = await tryFetch(lang, spotName)
-        if (!summary && localName && localName !== spotName) summary = await tryFetch(lang, localName)
-        if (!summary && wikiTitle && wikiTitle !== spotName) summary = await tryFetch(lang, wikiTitle)
+      // 검색 후보 수집 (괄호 제거 버전도 포함)
+      const cleanQ = (q) => q && q.replace(/\s*\([^)]*\)\s*/g, '').trim()
+      const candidates = []
+      const addCand = (q) => {
+        if (!q) return
+        if (!candidates.includes(q)) candidates.push(q)
+        const c = cleanQ(q)
+        if (c && c !== q && !candidates.includes(c)) candidates.push(c)
       }
-      // 2차: 영어 wiki fallback (영문 wikiTitle 우선 - 가장 정확)
+      addCand(spotName)
+      addCand(localName)
+      addCand(wikiTitle)
+      // 1차: 사용자 언어 wiki에서 모든 후보 시도 (한국어 사용자가 "금각사(킨카쿠지)" 클릭 → 괄호 제거된 "금각사"도 시도)
+      if (lang !== 'en') {
+        for (const c of candidates) {
+          summary = await tryFetch(lang, c)
+          if (summary) break
+        }
+      }
+      // 2차: 영어 wiki fallback (영문 wikiTitle 우선, 그 다음 다른 후보)
       if (!summary && wikiTitle) summary = await tryFetch('en', wikiTitle)
-      if (!summary && spotName && spotName !== wikiTitle) summary = await tryFetch('en', spotName)
+      if (!summary) {
+        for (const c of candidates) {
+          summary = await tryFetch('en', c)
+          if (summary) break
+        }
+      }
       if (!cancelled) {
         setFeedSpotWikiSummary(summary)
         setFeedSpotWikiLoading(false)
@@ -4909,9 +4936,9 @@ function App() {
               }}>
                 <div style={{position:'absolute',top:-30,right:-20,fontSize:200,opacity:.15,lineHeight:1,pointerEvents:'none'}}>{feedCityList.emoji}</div>
                 <button onClick={feedGoBack} style={{
-                  background:'rgba(255,255,255,.18)',border:'none',width:38,height:38,borderRadius:10,cursor:'pointer',
+                  background:'rgba(0,0,0,.55)',border:'1px solid rgba(255,255,255,.25)',width:38,height:38,borderRadius:10,cursor:'pointer',
                   display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:20,
-                  backdropFilter:'blur(8px)',marginBottom:18,
+                  backdropFilter:'blur(8px)',marginBottom:18,boxShadow:'0 2px 12px rgba(0,0,0,.4)',
                 }}>←</button>
                 <div style={{fontSize:46,marginBottom:8,lineHeight:1,position:'relative',zIndex:1}}>{feedCityList.emoji}</div>
                 <div style={{fontSize:isMobile?22:28,fontWeight:800,letterSpacing:-0.5,marginBottom:6,lineHeight:1.2,position:'relative',zIndex:1}}>{feedCityList.title}</div>
@@ -5001,7 +5028,7 @@ function App() {
                 <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,.1) 35%, rgba(0,0,0,.75) 100%)',pointerEvents:'none'}}/>
                 <button onClick={feedGoBack} style={{
                   position:'absolute',top:isMobile?'calc(14px + env(safe-area-inset-top))':18,left:16,
-                  background:'rgba(0,0,0,.4)',border:'none',width:38,height:38,borderRadius:10,cursor:'pointer',
+                  background:'rgba(0,0,0,.6)',border:'1px solid rgba(255,255,255,.25)',boxShadow:'0 2px 12px rgba(0,0,0,.4)',width:38,height:38,borderRadius:10,cursor:'pointer',
                   display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:20,
                   backdropFilter:'blur(8px)',
                 }}>←</button>
@@ -5181,7 +5208,7 @@ function App() {
                 <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom, rgba(0,0,0,.4) 0%, rgba(0,0,0,.05) 35%, rgba(0,0,0,.78) 100%)',pointerEvents:'none'}}/>
                 <button onClick={()=>setFeedSpotDetail(null)} style={{
                   position:'absolute',top:isMobile?'calc(14px + env(safe-area-inset-top))':18,left:16,
-                  background:'rgba(0,0,0,.4)',border:'none',width:38,height:38,borderRadius:10,cursor:'pointer',
+                  background:'rgba(0,0,0,.6)',border:'1px solid rgba(255,255,255,.25)',boxShadow:'0 2px 12px rgba(0,0,0,.4)',width:38,height:38,borderRadius:10,cursor:'pointer',
                   display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:20,
                   backdropFilter:'blur(8px)',
                 }}>←</button>
