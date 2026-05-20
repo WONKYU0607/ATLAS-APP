@@ -42,12 +42,14 @@ const claimImage = (url, ownerKey) => {
   return true
 }
 
-function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, alt }) {
+function SpotImage({ imageUrl, wikiTitle, spotName, cityName, fallback, className, style, alt, onClick }) {
   const [src, setSrc] = useState(null)
 
   useEffect(() => {
     setSrc(null)
     let cancelled = false
+    // 정적 URL이 있으면 wiki API 호출 없이 그대로 사용 (사전 큐레이션 사진)
+    if (imageUrl) { setSrc(imageUrl); return }
     const keyword = wikiTitle || spotName || ''
     const ownerKey = `${cityName || ''}:${spotName || keyword}`
     if (!keyword) { setSrc(fallback); return }
@@ -189,7 +191,7 @@ function SpotImage({ wikiTitle, spotName, cityName, fallback, className, style, 
 
     loadImage()
     return () => { cancelled = true }
-  }, [wikiTitle, spotName, cityName, fallback])
+  }, [imageUrl, wikiTitle, spotName, cityName, fallback])
 
   return (
     <img
@@ -858,6 +860,59 @@ function App() {
 
   // 언어 변경 시 경로 캐시 초기화 (Directions API 응답 언어가 다름)
   useEffect(() => { setRouteCache({}) }, [lang])
+
+  // ── Google Places 커버리지 진단 (개발용) ──────────────────────
+  // 콘솔에서 실행:
+  //   await window.__diagnoseGoogle()            → 트래블 피드 인기 도시만 (빠름)
+  //   await window.__diagnoseGoogle({all:true})  → COUNTRY_CITIES 전체 (느림, 비용 주의)
+  //   await window.__diagnoseGoogle({limit:100}) → 앞 100개만
+  useEffect(() => {
+    window.__diagnoseGoogle = async (opts = {}) => {
+      const { all = false, limit = null, minPhotos = 2, delay = 120 } = opts
+      // 도시 수집
+      let allCities = []
+      Object.entries(COUNTRY_CITIES).forEach(([country, cities]) => {
+        (cities || []).forEach(c => { if (c.lat && c.lng) allCities.push({ name: c.name, lat: c.lat, lng: c.lng, country }) })
+      })
+      // 기본: 트래블 피드/큐레이션 인기 도시 우선 (cityPhotos 키 기준)
+      if (!all) {
+        const popular = Object.keys(CITY_PHOTOS)
+        const popularSet = new Set(popular)
+        allCities = allCities.filter(c => popularSet.has(c.name))
+      }
+      if (limit) allCities = allCities.slice(0, limit)
+
+      console.log(`%c🔍 Google Places 진단 시작: ${allCities.length}개 도시`, 'font-weight:bold;color:#3b82f6')
+      const poor = [], ok = [], failed = []
+      for (let i = 0; i < allCities.length; i++) {
+        const c = allCities[i]
+        try {
+          const res = await fetch(`/api/places?lat=${c.lat}&lng=${c.lng}&type=tourist_attraction|museum|park|point_of_interest&language=ko`)
+          const data = await res.json()
+          const total = data.results?.length || 0
+          const withPhotos = (data.results || []).filter(p => p.photos?.length > 0).length
+          const row = { city: c.name, country: c.country, total, withPhotos }
+          if (withPhotos < minPhotos) { poor.push(row); console.warn(`⚠️ ${c.country}/${c.name}: 결과 ${total}개, 사진 ${withPhotos}개`) }
+          else ok.push(row)
+        } catch (e) {
+          failed.push({ city: c.name, country: c.country, error: e.message })
+          console.error(`❌ ${c.country}/${c.name}: ${e.message}`)
+        }
+        if (i % 10 === 0 && i > 0) console.log(`  ...진행 ${i}/${allCities.length}`)
+        await new Promise(r => setTimeout(r, delay))
+      }
+      console.log(`%c\n=== 진단 완료 ===`, 'font-weight:bold;color:#10b981')
+      console.log(`✅ 양호: ${ok.length}개  |  ⚠️ 부족(사진<${minPhotos}): ${poor.length}개  |  ❌ 실패: ${failed.length}개`)
+      if (poor.length) {
+        console.log(`%c\n📋 Google 데이터 부족 도시 (복사해서 전달):`, 'font-weight:bold;color:#f59e0b')
+        console.log(poor.map(p => `${p.country}/${p.city} (사진 ${p.withPhotos}/${p.total})`).join('\n'))
+      }
+      window.__googlePoor = poor
+      window.__googleDiagFull = { ok, poor, failed }
+      return { total: allCities.length, ok: ok.length, poor: poor.length, failed: failed.length, poorList: poor }
+    }
+    console.log('%c💡 사진 진단 사용법: await window.__diagnoseGoogle() — 인기 도시 / await window.__diagnoseGoogle({all:true}) — 전체', 'color:#6366f1')
+  }, [])
 
   // 모바일 감지
   useEffect(() => {
@@ -4957,6 +5012,7 @@ function App() {
                   const enName = (CITY_I18N[koName]?.[0]) || city.name
                   const curated = CITY_PHOTOS[koName]
                   const thumbWiki = curated?.photos?.[0] || enName
+                  const thumbUrl = curated?.photoUrls?.[0]
                   const tagline = pickI18n(curated?.tagline, lang)
                   return (
                     <div key={city.name + i} onClick={()=>openFeedCityDetail(city)} style={{
@@ -4970,6 +5026,7 @@ function App() {
                       {/* 썸네일 */}
                       <div style={{width:isMobile?72:88,height:isMobile?72:88,borderRadius:12,overflow:'hidden',flexShrink:0,background:'#e2e8f0',position:'relative'}}>
                         <SpotImage
+                          imageUrl={thumbUrl}
                           wikiTitle={thumbWiki}
                           spotName={enName}
                           cityName={enName}
@@ -5005,7 +5062,9 @@ function App() {
             const enName = (CITY_I18N[koName]?.[0]) || feedCityDetail.name
             const curated = CITY_PHOTOS[koName]
             const galleryTitles = (curated?.photos && curated.photos.length > 0) ? curated.photos : [enName]
+            const galleryUrls = curated?.photoUrls || []
             const heroWiki = galleryTitles[0]
+            const heroUrl = galleryUrls[0]
             return (
             <div style={{
               position:'absolute',inset:0,background:'#ffffff',zIndex:11,
@@ -5018,6 +5077,7 @@ function App() {
                 position:'relative',height:isMobile?280:360,overflow:'hidden',background:'#1e293b',flexShrink:0,
               }}>
                 <SpotImage
+                  imageUrl={heroUrl}
                   wikiTitle={heroWiki}
                   spotName={heroWiki}
                   cityName={enName}
@@ -5098,6 +5158,7 @@ function App() {
                         onMouseEnter={e=>e.currentTarget.style.transform='scale(1.02)'}
                         onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
                           <SpotImage
+                            imageUrl={galleryUrls[gi+1]}
                             wikiTitle={title}
                             spotName={title}
                             cityName={enName}
