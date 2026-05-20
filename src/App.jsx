@@ -42,14 +42,19 @@ const claimImage = (url, ownerKey) => {
   return true
 }
 
-function SpotImage({ imageUrl, wikiTitle, spotName, cityName, fallback, className, style, alt, onClick }) {
+function SpotImage({ imageUrl, photoRef, wikiTitle, spotName, cityName, fallback, className, style, alt, onClick }) {
   const [src, setSrc] = useState(null)
 
   useEffect(() => {
     setSrc(null)
     let cancelled = false
-    // 정적 URL이 있으면 wiki API 호출 없이 그대로 사용 (사전 큐레이션 사진)
+    // 1순위: 정적 URL (사전 큐레이션)
     if (imageUrl) { setSrc(imageUrl); return }
+    // 2순위: Google Place Photo (place_id 기반 실제 사진)
+    if (photoRef) {
+      setSrc(`https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoRef}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`)
+      return
+    }
     const keyword = wikiTitle || spotName || ''
     const ownerKey = `${cityName || ''}:${spotName || keyword}`
     if (!keyword) { setSrc(fallback); return }
@@ -191,7 +196,7 @@ function SpotImage({ imageUrl, wikiTitle, spotName, cityName, fallback, classNam
 
     loadImage()
     return () => { cancelled = true }
-  }, [imageUrl, wikiTitle, spotName, cityName, fallback])
+  }, [imageUrl, photoRef, wikiTitle, spotName, cityName, fallback])
 
   return (
     <img
@@ -2323,6 +2328,34 @@ function App() {
         if (feedCityDetail.lat != null && feedCityDetail.lng != null) {
           const w = await fetchWeather(feedCityDetail.lat, feedCityDetail.lng).catch(() => null)
           if (!cancelled && w) setFeedCityDetailData(prev => prev ? { ...prev, weather: w } : prev)
+        }
+        // Google Places로 추천 관광지 보강 (실제 사진 + 평점). 실패하면 기존 wiki spots 유지 (폴백 체인)
+        if (feedCityDetail.lat != null && feedCityDetail.lng != null) {
+          try {
+            const res = await fetch(`/api/places?lat=${feedCityDetail.lat}&lng=${feedCityDetail.lng}&type=tourist_attraction|museum|park|point_of_interest&language=${lang==='zh'?'zh-CN':lang}`)
+            const data = await res.json()
+            if (data.results && data.results.length > 0) {
+              const googleSpots = data.results
+                .filter(p => p.rating && p.rating >= 4.0 && p.photos?.length > 0)
+                .sort((a,b) => (b.user_ratings_total||0) - (a.user_ratings_total||0))
+                .slice(0, 9)
+                .map(p => ({
+                  name: p.name,
+                  type: '랜드마크',
+                  rating: p.rating,
+                  place_id: p.place_id,
+                  photo_ref: p.photos[0].photo_reference,
+                  lat: p.geometry?.location?.lat ?? feedCityDetail.lat,
+                  lng: p.geometry?.location?.lng ?? feedCityDetail.lng,
+                  vicinity: p.vicinity,
+                  _google: true,
+                }))
+              // Google이 충분한 결과(사진 포함 3개+)를 주면 추천 관광지를 Google로 교체
+              if (!cancelled && googleSpots.length >= 3) {
+                setFeedCityDetailData(prev => prev ? { ...prev, spots: googleSpots } : prev)
+              }
+            }
+          } catch (e) { /* Google 실패 → 기존 wiki spots 유지 */ }
         }
       } catch(e) {
         console.error('feed city detail load error:', e)
@@ -5187,7 +5220,7 @@ function App() {
                     </div>
                     <div style={{display:'grid',gridTemplateColumns:'repeat(3, 1fr)',gap:isMobile?3:5}}>
                       {feedCityDetailData.spots.map((spot, i) => {
-                        const trData = trSpot(koName, spot.name)
+                        const trData = spot._google ? null : trSpot(koName, spot.name)
                         const displayName = trData?.name || spot.name
                         return (
                           <div key={i} onClick={()=>openFeedSpotDetail(spot)} style={{
@@ -5197,6 +5230,7 @@ function App() {
                           onMouseEnter={e=>{const im=e.currentTarget.querySelector('img');if(im)im.style.transform='scale(1.08)'}}
                           onMouseLeave={e=>{const im=e.currentTarget.querySelector('img');if(im)im.style.transform='scale(1)'}}>
                             <SpotImage
+                              photoRef={spot.photo_ref}
                               wikiTitle={spot.wikiTitle}
                               spotName={spot.name}
                               cityName={enName}
@@ -5258,6 +5292,7 @@ function App() {
               {/* 히어로 사진 */}
               <div style={{position:'relative',height:isMobile?300:380,overflow:'hidden',background:'#1e293b',flexShrink:0}}>
                 <SpotImage
+                  photoRef={feedSpotDetail.photo_ref}
                   wikiTitle={feedSpotDetail.wikiTitle}
                   spotName={feedSpotDetail.name}
                   cityName={enCity}
