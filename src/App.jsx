@@ -210,7 +210,7 @@ function SpotImage({ imageUrl, photoRef, wikiTitle, spotName, cityName, fallback
 }
 
 // ── 관광지 사진 갤러리 (Wikimedia Commons 실사진 + 필터링 강화) ──────────
-function SpotGallery({ wikiTitle, spotName, cityName, fallback, style }) {
+function SpotGallery({ photoRef, wikiTitle, spotName, cityName, fallback, style }) {
   const [images, setImages] = useState([])
   const [idx, setIdx] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -218,6 +218,12 @@ function SpotGallery({ wikiTitle, spotName, cityName, fallback, style }) {
   useEffect(() => {
     setImages([]); setIdx(0); setLoading(true)
     let cancelled = false
+    // Google Place Photo가 있으면 그것만 표시 (wiki 검색 안 함)
+    if (photoRef) {
+      setImages([`https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoRef}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`])
+      setLoading(false)
+      return
+    }
     const keyword = wikiTitle || spotName || ''
     if (!keyword) { setLoading(false); return }
 
@@ -280,7 +286,7 @@ function SpotGallery({ wikiTitle, spotName, cityName, fallback, style }) {
 
     fetchImages()
     return () => { cancelled = true }
-  }, [wikiTitle, spotName, fallback])
+  }, [photoRef, wikiTitle, spotName, fallback])
 
   const goNext = (e) => { e.stopPropagation(); setIdx(i => (i + 1) % images.length) }
   const goPrev = (e) => { e.stopPropagation(); setIdx(i => (i - 1 + images.length) % images.length) }
@@ -2621,27 +2627,44 @@ function App() {
 
   const fetchCityData = async (city) => {
     try {
-      // 1. 사전 데이터 (240개 도시 전체 포함)
+      // 1. 사전 데이터 (정적) 즉시 표시
       const cityKey = city._koName || city.name
       const staticData = CITY_DATA[cityKey]
-      if (staticData) {
-        const base = { ...staticData }
-        if (!base.weather) base.weather = { temp: '—', condition: '...', icon: '🌤️', humidity: '—' }
-        setCityData(base)
-        setLoading(false)
-        fetchWeather(city.lat, city.lng).then(w => {
-          if (w) setCityData(prev => prev ? { ...prev, weather: w } : prev)
-        }).catch(() => {})
-        return
-      }
-
-      // 2. 사전 데이터 없는 경우 기본 데이터 사용
-      const fallback = DEFAULT_CITY_DATA(cityKey)
-      setCityData(fallback)
+      const base = staticData ? { ...staticData } : DEFAULT_CITY_DATA(cityKey)
+      if (!base.weather) base.weather = { temp: '—', condition: '...', icon: '🌤️', humidity: '—' }
+      setCityData(base)
       setLoading(false)
       fetchWeather(city.lat, city.lng).then(w => {
         if (w) setCityData(prev => prev ? { ...prev, weather: w } : prev)
       }).catch(() => {})
+
+      // 2. Google Places로 추천 관광지 보강 (실제 사진 + 평점). 실패/부족 시 정적 spots 유지 (폴백 체인)
+      if (city.lat != null && city.lng != null) {
+        try {
+          const res = await fetch(`/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park|point_of_interest&language=${lang==='zh'?'zh-CN':lang}`)
+          const data = await res.json()
+          if (data.results && data.results.length > 0) {
+            const googleSpots = data.results
+              .filter(p => p.rating && p.rating >= 4.0 && p.photos?.length > 0)
+              .sort((a,b) => (b.user_ratings_total||0) - (a.user_ratings_total||0))
+              .slice(0, 12)
+              .map(p => ({
+                name: p.name,
+                type: '랜드마크',
+                rating: p.rating,
+                place_id: p.place_id,
+                photo_ref: p.photos[0].photo_reference,
+                lat: p.geometry?.location?.lat ?? city.lat,
+                lng: p.geometry?.location?.lng ?? city.lng,
+                vicinity: p.vicinity,
+                _google: true,
+              }))
+            if (googleSpots.length >= 3) {
+              setCityData(prev => prev ? { ...prev, spots: googleSpots } : prev)
+            }
+          }
+        } catch (e) { /* Google 실패 → 정적 spots 유지 */ }
+      }
     } catch(e) {
       console.error('fetchCityData error:', e)
       const cityKey2 = city._koName || city.name
@@ -3648,6 +3671,7 @@ function App() {
                               <div style={{height: selectedSpot?.name===spot.name ? 200 : 142,overflow:'hidden',position:'relative',transition:'height .3s'}}>
                                 {selectedSpot?.name===spot.name ? (
                                   <SpotGallery
+                                    photoRef={spot.photo_ref}
                                     wikiTitle={spot.wikiTitle}
                                     spotName={spot.name}
                                     cityName={CITY_I18N[selectedCity?._koName||selectedCity?.name]?.[0] || selectedCity?.name}
@@ -3657,6 +3681,7 @@ function App() {
                                 ) : (
                                   <SpotImage
                                     className="cimg"
+                                    photoRef={spot.photo_ref}
                                     wikiTitle={spot.wikiTitle}
                                     spotName={spot.name}
                                     cityName={CITY_I18N[selectedCity?._koName||selectedCity?.name]?.[0] || selectedCity?.name}
