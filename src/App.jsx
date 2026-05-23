@@ -2487,31 +2487,8 @@ function App() {
     if (!city?.lat || !city?.lng) return
     
     setLoadingPlaces(true)
-    
-    // 관광 패널 spots 이름 수집 (중복 필터용)
-    const cityKey = city._koName || city.name
-    const staticSpots = CITY_DATA[cityKey]?.spots || []
-    const spotNames = new Set()
-    staticSpots.forEach(s => {
-      if (s.name) spotNames.add(s.name.toLowerCase().replace(/\s+/g, ''))
-      if (s.wikiTitle) spotNames.add(s.wikiTitle.toLowerCase().replace(/\s+/g, ''))
-      if (s.wikiTitle) {
-        s.wikiTitle.split(/[\s_()]+/).forEach(w => {
-          if (w.length >= 4) spotNames.add(w.toLowerCase())
-        })
-      }
-    })
 
-    const isDuplicate = (placeName) => {
-      const normalized = placeName.toLowerCase().replace(/\s+/g, '')
-      if (spotNames.has(normalized)) return true
-      for (const keyword of spotNames) {
-        if (keyword.length >= 4 && normalized.includes(keyword)) return true
-        if (keyword.length >= 4 && keyword.includes(normalized.replace(/\s+/g, ''))) return true
-      }
-      return false
-    }
-
+    // 핫플은 추천 관광지와 중복 허용 (언어 무관 개수 안정성 우선)
     try {
       // 핫플레이스 (관광명소, 박물관, 공원 등)
       const hotspotRes = await fetch(
@@ -2523,7 +2500,6 @@ function App() {
         const filterHotspots = (minReviews) => hotspotData.results
           .filter(p => p.rating && p.rating >= 4.0)
           .filter(p => p.user_ratings_total && p.user_ratings_total >= minReviews)
-          .filter(p => !isDuplicate(p.name))
           .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
 
         let topHotspots = filterHotspots(1000)
