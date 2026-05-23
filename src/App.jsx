@@ -2335,34 +2335,7 @@ function App() {
           const w = await fetchWeather(feedCityDetail.lat, feedCityDetail.lng).catch(() => null)
           if (!cancelled && w) setFeedCityDetailData(prev => prev ? { ...prev, weather: w } : prev)
         }
-        // Google Places로 추천 관광지 보강 (실제 사진 + 평점). 실패하면 기존 wiki spots 유지 (폴백 체인)
-        if (feedCityDetail.lat != null && feedCityDetail.lng != null) {
-          try {
-            const res = await fetch(`/api/places?lat=${feedCityDetail.lat}&lng=${feedCityDetail.lng}&type=tourist_attraction|museum|park|point_of_interest&language=${lang==='zh'?'zh-CN':lang}`)
-            const data = await res.json()
-            if (data.results && data.results.length > 0) {
-              const googleSpots = data.results
-                .filter(p => p.rating && p.rating >= 4.0 && p.photos?.length > 0)
-                .sort((a,b) => (b.user_ratings_total||0) - (a.user_ratings_total||0))
-                .slice(0, 9)
-                .map(p => ({
-                  name: p.name,
-                  type: '랜드마크',
-                  rating: p.rating,
-                  place_id: p.place_id,
-                  photo_ref: p.photos[0].photo_reference,
-                  lat: p.geometry?.location?.lat ?? feedCityDetail.lat,
-                  lng: p.geometry?.location?.lng ?? feedCityDetail.lng,
-                  vicinity: p.vicinity,
-                  _google: true,
-                }))
-              // Google이 충분한 결과(사진 포함 3개+)를 주면 추천 관광지를 Google로 교체
-              if (!cancelled && googleSpots.length >= 3) {
-                setFeedCityDetailData(prev => prev ? { ...prev, spots: googleSpots } : prev)
-              }
-            }
-          } catch (e) { /* Google 실패 → 기존 wiki spots 유지 */ }
-        }
+        // 추천 관광지는 정적 큐레이션 spots(번역됨) 유지 — Google 교체 제거(번역/언어 일관성)
       } catch(e) {
         console.error('feed city detail load error:', e)
         if (!cancelled) {
@@ -2638,33 +2611,7 @@ function App() {
         if (w) setCityData(prev => prev ? { ...prev, weather: w } : prev)
       }).catch(() => {})
 
-      // 2. Google Places로 추천 관광지 보강 (실제 사진 + 평점). 실패/부족 시 정적 spots 유지 (폴백 체인)
-      if (city.lat != null && city.lng != null) {
-        try {
-          const res = await fetch(`/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park|point_of_interest&language=${lang==='zh'?'zh-CN':lang}`)
-          const data = await res.json()
-          if (data.results && data.results.length > 0) {
-            const googleSpots = data.results
-              .filter(p => p.rating && p.rating >= 4.0 && p.photos?.length > 0)
-              .sort((a,b) => (b.user_ratings_total||0) - (a.user_ratings_total||0))
-              .slice(0, 12)
-              .map(p => ({
-                name: p.name,
-                type: '랜드마크',
-                rating: p.rating,
-                place_id: p.place_id,
-                photo_ref: p.photos[0].photo_reference,
-                lat: p.geometry?.location?.lat ?? city.lat,
-                lng: p.geometry?.location?.lng ?? city.lng,
-                vicinity: p.vicinity,
-                _google: true,
-              }))
-            if (googleSpots.length >= 3) {
-              setCityData(prev => prev ? { ...prev, spots: googleSpots } : prev)
-            }
-          }
-        } catch (e) { /* Google 실패 → 정적 spots 유지 */ }
-      }
+      // 추천 관광지는 정적 큐레이션 spots(번역됨) 유지 — Google 교체 제거(번역/언어 일관성)
     } catch(e) {
       console.error('fetchCityData error:', e)
       const cityKey2 = city._koName || city.name
