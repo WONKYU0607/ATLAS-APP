@@ -2532,6 +2532,13 @@ function App() {
       bar: 'bar|night_club'               // 바/펍/이자카야 + 클럽
     }
     const apiType = typeMap[category] || 'restaurant'
+    // keyword로 실제 음식점/카페/바가 결과 상위에 오게 (호텔 점령 방지)
+    const keywordMap = {
+      restaurant: 'restaurant',
+      cafe: 'cafe coffee',
+      bar: 'bar pub'
+    }
+    const apiKeyword = keywordMap[category] || 'restaurant'
     
     // 카테고리별 제외 키워드
     const excludeKeywords = {
@@ -2549,7 +2556,7 @@ function App() {
 
     try {
       const res = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=${apiType}&language=${lang==='zh'?'zh-CN':lang}`
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=${apiType}&keyword=${encodeURIComponent(apiKeyword)}&language=${lang==='zh'?'zh-CN':lang}`
       )
       const data = await res.json()
       
