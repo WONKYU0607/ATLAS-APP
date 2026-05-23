@@ -419,6 +419,7 @@ function App() {
   const handleCityClickRef = useRef(null)  // ref to always-fresh click handler
   const handleCountryClickRef = useRef(null)  // ref for label click on small island countries
   const justClickedCityRef = useRef(false) // 도시 클릭 직후 polygon 클릭 무시용
+  const foodReqRef = useRef(0) // 음식점 fetch 경쟁 상태 방지 (최신 요청만 반영)
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [selectedCity, setSelectedCity] = useState(null)
@@ -2522,6 +2523,7 @@ function App() {
   // 맛집 카테고리별 데이터 로드
   const fetchFoodData = async (city, category) => {
     if (!city?.lat || !city?.lng) return
+    const reqId = ++foodReqRef.current  // 이 요청의 시퀀스 번호
     
     // 동서양 공통으로 잘 잡히도록 넓게 매핑
     const typeMap = {
@@ -2566,7 +2568,8 @@ function App() {
         let results = filterResults(1000)
         if (results.length < 3) results = filterResults(500)
         if (results.length < 3) results = filterResults(300)
-        
+
+        if (reqId !== foodReqRef.current) return  // 더 최신 요청이 시작됨 → 이 응답 폐기
         setRestaurants(results)
       }
     } catch (error) {
