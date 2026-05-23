@@ -2506,6 +2506,7 @@ function App() {
         let topHotspots = filterHotspots(1000)
         if (topHotspots.length < 3) topHotspots = filterHotspots(500)
         if (topHotspots.length < 3) topHotspots = filterHotspots(300)
+        if (topHotspots.length < 3) topHotspots = filterHotspots(100)
         
         setHotspots(topHotspots)
       }
@@ -2575,6 +2576,7 @@ function App() {
         let results = filterResults(1000)
         if (results.length < 3) results = filterResults(500)
         if (results.length < 3) results = filterResults(300)
+        if (results.length < 3) results = filterResults(100)
 
         if (reqId !== foodReqRef.current) return  // 더 최신 요청이 시작됨 → 이 응답 폐기
         setRestaurants(results)
