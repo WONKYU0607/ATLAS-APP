@@ -420,6 +420,7 @@ function App() {
   const handleCountryClickRef = useRef(null)  // ref for label click on small island countries
   const justClickedCityRef = useRef(false) // 도시 클릭 직후 polygon 클릭 무시용
   const foodReqRef = useRef(0) // 음식점 fetch 경쟁 상태 방지 (최신 요청만 반영)
+  const lastPovKeyRef = useRef('') // hideBackLabels idle 스킵용 (라벨 재생성 시 리셋)
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [selectedCity, setSelectedCity] = useState(null)
@@ -1589,14 +1590,13 @@ function App() {
     setTimeout(() => globe.pointOfView({ lat: 36, lng: 127.8, altitude: window.innerWidth <= 768 ? 3.0 : 2.2 }), 300)
 
     // ── 뒷면 라벨 숨기기 (지구 뒤쪽 라벨 안 보이게) ──
-    let lastPovKey = ''
     const hideBackLabels = () => {
       if (!globeRef.current) return
       const pov = globeRef.current.pointOfView()
       // POV가 직전 틱과 동일하면(정지 상태) 통째로 스킵 — idle 비용 0
       const povKey = `${pov.lat.toFixed(3)},${pov.lng.toFixed(3)},${pov.altitude.toFixed(3)}`
-      if (povKey === lastPovKey) return
-      lastPovKey = povKey
+      if (povKey === lastPovKeyRef.current) return
+      lastPovKeyRef.current = povKey
 
       const camLat = pov.lat * Math.PI / 180
       const camLng = pov.lng * Math.PI / 180
@@ -1709,6 +1709,7 @@ function App() {
         _type: 'country',
       }))
       globe.htmlElementsData([...labelItems, ...islandLabels, ...OCEAN_LABELS])
+      lastPovKeyRef.current = '' // 라벨 새로 생성됨 → 다음 틱에 강제 재처리
       return
     }
 
@@ -1732,6 +1733,7 @@ function App() {
       }))
 
     globe.htmlElementsData([...countryLabels, ...otherIslandLabels, ...cities, ...OCEAN_LABELS])
+    lastPovKeyRef.current = '' // 라벨 새로 생성됨 → 다음 틱에 강제 재처리
   }, [selectedCountry, selectedCity, countries, lang])
 
 
@@ -1772,6 +1774,18 @@ function App() {
   useEffect(() => {
     if (!globeRef.current) return
     const globe = globeRef.current
+
+    // 라벨 위에서 휠 줌이 막히는 문제 해결: 휠 이벤트를 globe 캔버스로 전달
+    const forwardWheel = (e) => {
+      const canvas = globeContainerRef.current?.querySelector('canvas')
+      if (!canvas) return
+      e.preventDefault()
+      canvas.dispatchEvent(new WheelEvent('wheel', {
+        deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode,
+        clientX: e.clientX, clientY: e.clientY,
+        bubbles: true, cancelable: true,
+      }))
+    }
 
     globe
       .htmlLat(d => d.lat)
@@ -1850,6 +1864,7 @@ function App() {
             setTimeout(() => { justClickedCityRef.current = false }, 400)
             handleCityClickRef.current?.(d)
           }
+          el.addEventListener('wheel', forwardWheel, { passive: false })
         } else {
           const hasCities = COUNTRY_CITIES[d.nameEn]
           const isIsland = ISLAND_NAMES.has(d.nameEn)
@@ -1895,6 +1910,7 @@ function App() {
                 handleCountryClickRef.current(feat)
               }
             }
+            el.addEventListener('wheel', forwardWheel, { passive: false })
           } else {
             el.style.cssText = 'pointer-events:none;'
             el.innerHTML = `<div style="
