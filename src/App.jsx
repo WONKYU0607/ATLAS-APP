@@ -2503,11 +2503,9 @@ function App() {
           .filter(p => p.user_ratings_total && p.user_ratings_total >= minReviews)
           .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
 
-        let topHotspots = filterHotspots(1000)
-        if (topHotspots.length < 3) topHotspots = filterHotspots(500)
-        if (topHotspots.length < 3) topHotspots = filterHotspots(300)
-        if (topHotspots.length < 3) topHotspots = filterHotspots(100)
-        
+        // 리뷰 100개 이상이면 모두 표시 (리뷰 많은 순, Google 상한 20개)
+        const topHotspots = filterHotspots(100)
+
         setHotspots(topHotspots)
       }
       
@@ -2573,10 +2571,8 @@ function App() {
           })
           .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
 
-        let results = filterResults(1000)
-        if (results.length < 3) results = filterResults(500)
-        if (results.length < 3) results = filterResults(300)
-        if (results.length < 3) results = filterResults(100)
+        // 리뷰 100개 이상이면 모두 표시 (리뷰 많은 순, Google 상한 20개)
+        const results = filterResults(100)
 
         if (reqId !== foodReqRef.current) return  // 더 최신 요청이 시작됨 → 이 응답 폐기
         setRestaurants(results)
