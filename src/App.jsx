@@ -2739,7 +2739,7 @@ function App() {
       `}</style>
 
       {/* Globe */}
-      <div ref={globeContainerRef} style={{position:'absolute',inset:0,zIndex:0}}/>
+      <div ref={globeContainerRef} style={{position:'absolute',inset:0,zIndex:0,touchAction:'none'}}/>
 
       {/* Header */}
       <div style={{
