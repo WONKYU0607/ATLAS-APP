@@ -42,6 +42,49 @@ const claimImage = (url, ownerKey) => {
   return true
 }
 
+// ── WebGL 라벨용 캔버스 텍스트 스프라이트 (한글 지원, three-spritetext 자체구현) ──
+// 캔버스 fillText는 시스템 폰트를 쓰므로 한/영/일/중 모두 렌더됨
+function makeTextSprite(text, opts = {}) {
+  const {
+    color = 'rgba(255,255,255,0.95)',
+    fontWeight = 700,
+    stroke = 'rgba(0,0,0,0.95)',
+    strokeWidth = 7,
+    worldHeight = 2.6,   // 지구 반경 100 기준 라벨 높이 (체감 보며 조정)
+  } = opts
+  const FS = 64                       // 캔버스 렌더 폰트 px (해상도용, 클수록 선명)
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')
+  const font = `${fontWeight} ${FS}px Pretendard, Inter, system-ui, sans-serif`
+  ctx.font = font
+  const textW = Math.ceil(ctx.measureText(text).width)
+  const pad = strokeWidth + 10
+  const w = textW + pad * 2
+  const h = FS + pad * 2
+  canvas.width = w * dpr
+  canvas.height = h * dpr
+  ctx.scale(dpr, dpr)
+  ctx.font = font                     // 캔버스 리사이즈 후 컨텍스트 초기화되므로 재설정
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.lineJoin = 'round'
+  ctx.lineWidth = strokeWidth
+  ctx.strokeStyle = stroke
+  ctx.strokeText(text, w / 2, h / 2)
+  ctx.fillStyle = color
+  ctx.fillText(text, w / 2, h / 2)
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.minFilter = THREE.LinearFilter
+  texture.generateMipmaps = false
+  texture.needsUpdate = true
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false })
+  const sprite = new THREE.Sprite(material)
+  sprite.scale.set((w / h) * worldHeight, worldHeight, 1)
+  sprite.renderOrder = 10
+  return sprite
+}
+
 function SpotImage({ imageUrl, photoRef, wikiTitle, spotName, cityName, fallback, className, style, alt, onClick }) {
   const [src, setSrc] = useState(null)
 
@@ -1709,6 +1752,7 @@ function App() {
         _type: 'country',
       }))
       globe.htmlElementsData([...labelItems, ...islandLabels, ...OCEAN_LABELS])
+      globe.customLayerData([])  // 세계뷰엔 도시 라벨 없음
       lastPovKeyRef.current = '' // 라벨 새로 생성됨 → 다음 틱에 강제 재처리
       return
     }
@@ -1732,7 +1776,8 @@ function App() {
         _type: 'country',
       }))
 
-    globe.htmlElementsData([...countryLabels, ...otherIslandLabels, ...cities, ...OCEAN_LABELS])
+    globe.htmlElementsData([...countryLabels, ...otherIslandLabels, ...OCEAN_LABELS])
+    globe.customLayerData(cities)  // 도시 라벨은 WebGL 스프라이트로 (터치 안 막힘 + 떠다님 없음)
     lastPovKeyRef.current = '' // 라벨 새로 생성됨 → 다음 틱에 강제 재처리
   }, [selectedCountry, selectedCity, countries, lang])
 
@@ -1791,6 +1836,21 @@ function App() {
       .htmlLat(d => d.lat)
       .htmlLng(d => d.lng)
       .htmlAltitude(d => d._type === 'city' ? 0.012 : d._type === 'ocean' ? 0.003 : d._type === 'geoline' ? 0.002 : 0.005)
+      .customThreeObject(d => {
+        const isSelected = (selectedCity?._koName || selectedCity?.name) === (d._koName || d.name)
+        return makeTextSprite(d.name, {
+          color: isSelected ? '#3b82f6' : 'rgba(255,255,255,0.96)',
+          worldHeight: isSelected ? 3.0 : 2.6,
+        })
+      })
+      .customThreeObjectUpdate((obj, d) => {
+        Object.assign(obj.position, globe.getCoords(d.lat, d.lng, 0.012))
+      })
+      .onCustomLayerClick(d => {
+        justClickedCityRef.current = true
+        setTimeout(() => { justClickedCityRef.current = false }, 400)
+        handleCityClickRef.current?.(d)
+      })
       .htmlElement(d => {
         const el = document.createElement('div')
         el.dataset.lat = d.lat
@@ -1825,46 +1885,8 @@ function App() {
             user-select:none;
           ">${d.name}</div>`
         } else if (d._type === 'city') {
-          const isSelected = (selectedCity?._koName || selectedCity?.name) === (d._koName || d.name)
-          el.style.cssText = 'cursor:pointer;pointer-events:all;'
-          const inner = document.createElement('div')
-          inner.style.cssText = `
-            transform:translate(-50%,-50%);
-            font-family:Pretendard,Inter,system-ui,sans-serif;
-            font-size:${isSelected ? '14px' : '12px'};
-            font-weight:700;
-            color:${isSelected ? '#2563eb' : 'rgba(255,255,255,0.95)'};
-            text-shadow:0 1px 6px rgba(0,0,0,1),0 0 12px rgba(0,0,0,0.9);
-            white-space:nowrap;
-            user-select:none;
-            padding:4px 10px;
-            border-radius:6px;
-            background:transparent;
-            transition:all 0.2s ease;
-            border:none;
-          `
-          inner.textContent = d.name
-          el.appendChild(inner)
-          el.onmouseenter = () => {
-            inner.style.fontSize = '15px'
-            inner.style.background = 'transparent'
-            inner.style.border = 'none'
-            inner.style.color = '#93c5fd'
-            inner.style.transform = 'translate(-50%,-50%) scale(1.1)'
-          }
-          el.onmouseleave = () => {
-            inner.style.fontSize = isSelected ? '14px' : '12px'
-            inner.style.background = 'transparent'
-            inner.style.border = 'none'
-            inner.style.color = isSelected ? '#2563eb' : 'rgba(255,255,255,0.95)'
-            inner.style.transform = 'translate(-50%,-50%) scale(1)'
-          }
-          el.onclick = () => {
-            justClickedCityRef.current = true
-            setTimeout(() => { justClickedCityRef.current = false }, 400)
-            handleCityClickRef.current?.(d)
-          }
-          el.addEventListener('wheel', forwardWheel, { passive: false })
+          // 도시 라벨은 customLayer(WebGL 스프라이트)에서 처리 → HTML 생성 안 함
+          el.style.cssText = 'pointer-events:none;'
         } else {
           const hasCities = COUNTRY_CITIES[d.nameEn]
           const isIsland = ISLAND_NAMES.has(d.nameEn)
