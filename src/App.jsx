@@ -464,6 +464,7 @@ function App() {
   const justClickedCityRef = useRef(false) // 도시 클릭 직후 polygon 클릭 무시용
   const foodReqRef = useRef(0) // 음식점 fetch 경쟁 상태 방지 (최신 요청만 반영)
   const lastPovKeyRef = useRef('') // hideBackLabels idle 스킵용 (라벨 재생성 시 리셋)
+  const labelSpritesRef = useRef([]) // WebGL 라벨 스프라이트 추적 (줌별 동적 크기 조정용)
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [selectedCity, setSelectedCity] = useState(null)
@@ -1664,6 +1665,17 @@ function App() {
         const next = angle < maxAngle ? '1' : '0'
         if (el.style.opacity !== next) el.style.opacity = next
       })
+
+      // WebGL 라벨 스프라이트: 줌(고도)에 따라 크기 조정 → 화면상 일정한 크기 유지
+      // sizeMul 공식이 체감 튜닝 포인트 (값 키우면 라벨 커짐)
+      const sizeMul = Math.min(2.6, Math.max(0.32, pov.altitude * 0.85 + 0.22))
+      const sprites = labelSpritesRef.current
+      for (let i = 0; i < sprites.length; i++) {
+        const s = sprites[i]
+        if (!s || !s.userData) continue
+        const h = s.userData.baseH * sizeMul
+        s.scale.set(h * s.userData.aspect, h, 1)
+      }
     }
     const labelInterval = setInterval(hideBackLabels, 100)
 
@@ -1743,16 +1755,19 @@ function App() {
         name: getCountryName(feat.properties.NAME),
         nameEn: feat.properties.NAME,
         _type: 'country',
+        _hasCities: !!COUNTRY_CITIES[feat.properties.NAME],
       })).filter(d => (d.lat !== 0 || d.lng !== 0) && !ISLAND_NAMES.has(d.nameEn))
       const islandLabels = ISLAND_LABEL_DATA.map(d => ({
         lat: d.lat,
         lng: d.lng,
         name: getCountryName(d.nameEn),
         nameEn: d.nameEn,
-        _type: 'country',
+        _type: 'island',
+        _hasCities: !!COUNTRY_CITIES[d.nameEn],
       }))
-      globe.htmlElementsData([...labelItems, ...islandLabels, ...OCEAN_LABELS])
-      globe.customLayerData([])  // 세계뷰엔 도시 라벨 없음
+      globe.htmlElementsData([...OCEAN_LABELS])
+      labelSpritesRef.current = []
+      globe.customLayerData([...labelItems, ...islandLabels])
       lastPovKeyRef.current = '' // 라벨 새로 생성됨 → 다음 틱에 강제 재처리
       return
     }
@@ -1765,6 +1780,7 @@ function App() {
       name: getCountryName(feat.properties.NAME),
       nameEn: feat.properties.NAME,
       _type: 'country',
+      _hasCities: !!COUNTRY_CITIES[feat.properties.NAME],
     })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn && !ISLAND_NAMES.has(d.nameEn))
     const otherIslandLabels = ISLAND_LABEL_DATA
       .filter(d => d.nameEn !== countryEn)
@@ -1773,11 +1789,13 @@ function App() {
         lng: d.lng,
         name: getCountryName(d.nameEn),
         nameEn: d.nameEn,
-        _type: 'country',
+        _type: 'island',
+        _hasCities: !!COUNTRY_CITIES[d.nameEn],
       }))
 
-    globe.htmlElementsData([...countryLabels, ...otherIslandLabels, ...OCEAN_LABELS])
-    globe.customLayerData(cities)  // 도시 라벨은 WebGL 스프라이트로 (터치 안 막힘 + 떠다님 없음)
+    globe.htmlElementsData([...OCEAN_LABELS])
+    labelSpritesRef.current = []
+    globe.customLayerData([...cities, ...countryLabels, ...otherIslandLabels])
     lastPovKeyRef.current = '' // 라벨 새로 생성됨 → 다음 틱에 강제 재처리
   }, [selectedCountry, selectedCity, countries, lang])
 
@@ -1837,19 +1855,40 @@ function App() {
       .htmlLng(d => d.lng)
       .htmlAltitude(d => d._type === 'city' ? 0.012 : d._type === 'ocean' ? 0.003 : d._type === 'geoline' ? 0.002 : 0.005)
       .customThreeObject(d => {
-        const isSelected = (selectedCity?._koName || selectedCity?.name) === (d._koName || d.name)
-        return makeTextSprite(d.name, {
-          color: isSelected ? '#3b82f6' : 'rgba(255,255,255,0.96)',
-          worldHeight: isSelected ? 3.0 : 2.6,
-        })
+        let color, worldHeight
+        if (d._type === 'city') {
+          const isSelected = (selectedCity?._koName || selectedCity?.name) === (d._koName || d.name)
+          color = isSelected ? '#3b82f6' : 'rgba(255,255,255,0.96)'
+          worldHeight = isSelected ? 3.0 : 2.6
+        } else if (d._type === 'island') {
+          color = d._hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.78)'
+          worldHeight = d._hasCities ? 2.8 : 2.4
+        } else { // country
+          color = d._hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)'
+          worldHeight = d._hasCities ? 2.8 : 2.2
+        }
+        const sprite = makeTextSprite(d.name, { color, worldHeight })
+        sprite.userData.baseH = worldHeight
+        sprite.userData.aspect = sprite.scale.x / sprite.scale.y
+        // 일반 국가 라벨은 클릭 비활성 → 폴리곤 클릭(국가선택)이 통과되게
+        if (d._type === 'country') sprite.raycast = () => {}
+        labelSpritesRef.current.push(sprite)
+        return sprite
       })
       .customThreeObjectUpdate((obj, d) => {
         Object.assign(obj.position, globe.getCoords(d.lat, d.lng, 0.012))
       })
       .onCustomLayerClick(d => {
-        justClickedCityRef.current = true
-        setTimeout(() => { justClickedCityRef.current = false }, 400)
-        handleCityClickRef.current?.(d)
+        if (d._type === 'city') {
+          justClickedCityRef.current = true
+          setTimeout(() => { justClickedCityRef.current = false }, 400)
+          handleCityClickRef.current?.(d)
+        } else if (d._type === 'island') {
+          let feat = countries.find(f => f.properties && f.properties.NAME === d.nameEn)
+          if (!feat) feat = { type: 'Feature', properties: { NAME: d.nameEn, LABEL_X: d.lng, LABEL_Y: d.lat }, geometry: null }
+          handleCountryClickRef.current?.(feat)
+        }
+        // 일반 국가 라벨(_type:'country')은 raycast 꺼서 여기 안 들어옴
       })
       .htmlElement(d => {
         const el = document.createElement('div')
