@@ -2,12 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>ATLAS — World Explorer</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { overflow: hidden; }
+      html, body {
+        overflow: hidden;
+        overscroll-behavior: none;        /* 당겨서 새로고침/바운스 방지 */
+        -webkit-text-size-adjust: 100%;   /* 자동 글자 확대 방지 */
+        touch-action: manipulation;       /* 더블탭 확대 방지 (탭 지연 제거) */
+      }
       #root { width: 100vw; height: 100vh; }
     </style>
   </head>
