@@ -1589,9 +1589,15 @@ function App() {
     setTimeout(() => globe.pointOfView({ lat: 36, lng: 127.8, altitude: window.innerWidth <= 768 ? 3.0 : 2.2 }), 300)
 
     // ── 뒷면 라벨 숨기기 (지구 뒤쪽 라벨 안 보이게) ──
+    let lastPovKey = ''
     const hideBackLabels = () => {
       if (!globeRef.current) return
       const pov = globeRef.current.pointOfView()
+      // POV가 직전 틱과 동일하면(정지 상태) 통째로 스킵 — idle 비용 0
+      const povKey = `${pov.lat.toFixed(3)},${pov.lng.toFixed(3)},${pov.altitude.toFixed(3)}`
+      if (povKey === lastPovKey) return
+      lastPovKey = povKey
+
       const camLat = pov.lat * Math.PI / 180
       const camLng = pov.lng * Math.PI / 180
       // 시야각 좁게: 정면 ~45도 이내만 표시
@@ -1606,8 +1612,14 @@ function App() {
           Math.sin(camLat) * Math.sin(lat) +
           Math.cos(camLat) * Math.cos(lat) * Math.cos(lng - camLng)
         )))
-        el.style.opacity = angle < maxAngle ? '1' : '0'
-        el.style.transition = 'opacity 0.3s'
+        // transition은 최초 1회만 설정 (매 틱 재설정 제거)
+        if (!el.dataset.tInit) {
+          el.style.transition = 'opacity 0.3s'
+          el.dataset.tInit = '1'
+        }
+        // opacity가 실제로 바뀔 때만 써서 불필요한 리플로우 방지
+        const next = angle < maxAngle ? '1' : '0'
+        if (el.style.opacity !== next) el.style.opacity = next
       })
     }
     const labelInterval = setInterval(hideBackLabels, 100)
