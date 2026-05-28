@@ -1999,10 +1999,33 @@ function App() {
 
     // 국가뷰: 화면상 가장 가까운 도시 선택
     const CITY_TAP_PX = 70    // 체감 튜닝: 줄이면 정확히 눌러야, 키우면 넉넉하게
+    const OVERLAP_PX = 78     // 선택한 도시의 이웃이 이보다 가까우면 겹침 → 줌인만
+    const SEP_TARGET_PX = 130 // 줌인 후 이웃과 벌어질 목표 화면거리
     const selectNearestCity = (countryName, event) => {
       const list = COUNTRY_CITIES[countryName] || []
       const best = pickNearestByScreen(list, c => c.lat, c => c.lng, event, CITY_TAP_PX)
-      if (best) {
+      if (!best) return
+      // 선택 도시의 가장 가까운 이웃까지 화면(px) 거리 → 겹침 판정
+      const bestSc = globe.getScreenCoords(best.lat, best.lng)
+      let nb = Infinity
+      if (bestSc) {
+        for (const c of list) {
+          if (c === best || !isFrontFace(c.lat, c.lng)) continue
+          const sc = globe.getScreenCoords(c.lat, c.lng)
+          if (!sc) continue
+          const d = Math.sqrt((sc.x - bestSc.x) ** 2 + (sc.y - bestSc.y) ** 2)
+          if (d < nb) nb = d
+        }
+      }
+      if (nb < OVERLAP_PX) {
+        // 겹침 위험 → 패널 안 열고 그 도시 기준으로 줌인만 (라벨 분리됨, 다시 탭하면 선택)
+        const pov = globe.pointOfView()
+        const newAlt = Math.max(0.05, pov.altitude * (nb / SEP_TARGET_PX))
+        justClickedCityRef.current = true
+        setTimeout(() => { justClickedCityRef.current = false }, 150)
+        globe.pointOfView({ lat: best.lat, lng: best.lng, altitude: newAlt }, 700)
+      } else {
+        // 안 겹침 → 평소대로 선택 + 패널
         justClickedCityRef.current = true
         setTimeout(() => { justClickedCityRef.current = false }, 150)
         handleCityClick({ ...best, name: getCityName(best.name), _koName: best.name, countryEn: countryName })
@@ -2064,7 +2087,9 @@ function App() {
             handleCountryClick(feat)
           }
         } else {
-          handleCountryClick(feat)
+          // 세계뷰: 탭 시 노란색 잠깐 표시(클릭 피드백) 후 선택
+          setHoveredCountry(feat.properties.NAME)
+          setTimeout(() => handleCountryClick(feat), 160)
         }
       })
       .onGlobeClick((coords, ev) => {
