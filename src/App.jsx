@@ -1668,7 +1668,7 @@ function App() {
 
       // WebGL 라벨 스프라이트: 줌(고도)에 따라 크기 조정 → 화면상 일정한 크기 유지
       // sizeMul 공식이 체감 튜닝 포인트 (값 키우면 라벨 커짐)
-      const sizeMul = Math.min(2.6, Math.max(0.32, pov.altitude * 0.85 + 0.22))
+      const sizeMul = Math.min(1.4, Math.max(0.3, pov.altitude * 0.45 + 0.16))
       const sprites = labelSpritesRef.current
       for (let i = 0; i < sprites.length; i++) {
         const s = sprites[i]
@@ -1854,6 +1854,7 @@ function App() {
       .htmlLat(d => d.lat)
       .htmlLng(d => d.lng)
       .htmlAltitude(d => d._type === 'city' ? 0.012 : d._type === 'ocean' ? 0.003 : d._type === 'geoline' ? 0.002 : 0.005)
+      .customLayerLabel('')
       .customThreeObject(d => {
         let color, worldHeight
         if (d._type === 'city') {
