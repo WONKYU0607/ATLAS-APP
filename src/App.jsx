@@ -42,53 +42,6 @@ const claimImage = (url, ownerKey) => {
   return true
 }
 
-// ── WebGL 라벨용 캔버스 텍스트 스프라이트 (한글 지원, three-spritetext 자체구현) ──
-// 캔버스 fillText는 시스템 폰트를 쓰므로 한/영/일/중 모두 렌더됨
-function makeTextSprite(text, opts = {}) {
-  const {
-    color = 'rgba(255,255,255,0.95)',
-    fontWeight = 700,
-    stroke = 'rgba(0,0,0,0.95)',
-    worldHeight = 2.6,   // 지구 반경 100 기준 라벨 높이 (체감 보며 조정)
-  } = opts
-  const FS = 112                      // 캔버스 렌더 폰트 px (높을수록 선명, 클수록 GPU메모리↑)
-  const strokeWidth = FS * 0.1        // 외곽선을 폰트 크기에 비례 (얇고 깔끔)
-  const dpr = Math.min(window.devicePixelRatio || 1, 3)
-  const canvas = document.createElement('canvas')
-  const ctx = canvas.getContext('2d')
-  const font = `${fontWeight} ${FS}px Pretendard, Inter, system-ui, sans-serif`
-  ctx.font = font
-  const textW = Math.ceil(ctx.measureText(text).width)
-  const pad = Math.ceil(strokeWidth + FS * 0.18)
-  const w = textW + pad * 2
-  const h = FS + pad * 2
-  canvas.width = Math.ceil(w * dpr)
-  canvas.height = Math.ceil(h * dpr)
-  ctx.scale(dpr, dpr)
-  ctx.font = font                     // 캔버스 리사이즈 후 컨텍스트 초기화되므로 재설정
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.lineJoin = 'round'
-  ctx.miterLimit = 2
-  ctx.lineWidth = strokeWidth
-  ctx.strokeStyle = stroke
-  ctx.strokeText(text, w / 2, h / 2)
-  ctx.fillStyle = color
-  ctx.fillText(text, w / 2, h / 2)
-  const texture = new THREE.CanvasTexture(canvas)
-  texture.colorSpace = THREE.SRGBColorSpace   // 색공간 정확 → 선명
-  texture.minFilter = THREE.LinearMipmapLinearFilter
-  texture.magFilter = THREE.LinearFilter
-  texture.anisotropy = 8                       // 비스듬히 봐도 선명 (GPU 최대치로 클램프됨)
-  texture.generateMipmaps = true
-  texture.needsUpdate = true
-  const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false })
-  const sprite = new THREE.Sprite(material)
-  sprite.scale.set((w / h) * worldHeight, worldHeight, 1)
-  sprite.renderOrder = 10
-  return sprite
-}
-
 function SpotImage({ imageUrl, photoRef, wikiTitle, spotName, cityName, fallback, className, style, alt, onClick }) {
   const [src, setSrc] = useState(null)
 
@@ -468,7 +421,6 @@ function App() {
   const justClickedCityRef = useRef(false) // 도시 클릭 직후 polygon 클릭 무시용
   const foodReqRef = useRef(0) // 음식점 fetch 경쟁 상태 방지 (최신 요청만 반영)
   const lastPovKeyRef = useRef('') // hideBackLabels idle 스킵용 (라벨 재생성 시 리셋)
-  const labelSpritesRef = useRef([]) // WebGL 라벨 스프라이트 추적 (줌별 동적 크기 조정용)
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [selectedCity, setSelectedCity] = useState(null)
@@ -1669,18 +1621,6 @@ function App() {
         const next = angle < maxAngle ? '1' : '0'
         if (el.style.opacity !== next) el.style.opacity = next
       })
-
-      // WebGL 라벨 스프라이트: 줌(고도)에 따라 크기 조정 → 화면상 일정한 크기 유지
-      // sizeMul 공식이 체감 튜닝 포인트 (값 키우면 라벨 커짐)
-      // 고도 높음(세계뷰)=크게 / 낮음(국가뷰 줌인)=작게 → 차이를 크게
-      const sizeMul = Math.min(2.2, Math.max(0.22, pov.altitude * 0.8 + 0.05))
-      const sprites = labelSpritesRef.current
-      for (let i = 0; i < sprites.length; i++) {
-        const s = sprites[i]
-        if (!s || !s.userData) continue
-        const h = s.userData.baseH * sizeMul
-        s.scale.set(h * s.userData.aspect, h, 1)
-      }
     }
     const labelInterval = setInterval(hideBackLabels, 100)
 
@@ -1770,9 +1710,7 @@ function App() {
         _type: 'island',
         _hasCities: !!COUNTRY_CITIES[d.nameEn],
       }))
-      globe.htmlElementsData([...OCEAN_LABELS])
-      labelSpritesRef.current = []
-      globe.customLayerData([...labelItems, ...islandLabels])
+      globe.htmlElementsData([...labelItems, ...islandLabels, ...OCEAN_LABELS])
       lastPovKeyRef.current = '' // 라벨 새로 생성됨 → 다음 틱에 강제 재처리
       return
     }
@@ -1798,9 +1736,7 @@ function App() {
         _hasCities: !!COUNTRY_CITIES[d.nameEn],
       }))
 
-    globe.htmlElementsData([...OCEAN_LABELS])
-    labelSpritesRef.current = []
-    globe.customLayerData([...cities, ...countryLabels, ...otherIslandLabels])
+    globe.htmlElementsData([...countryLabels, ...otherIslandLabels, ...cities, ...OCEAN_LABELS])
     lastPovKeyRef.current = '' // 라벨 새로 생성됨 → 다음 틱에 강제 재처리
   }, [selectedCountry, selectedCity, countries, lang])
 
@@ -1859,60 +1795,6 @@ function App() {
       .htmlLat(d => d.lat)
       .htmlLng(d => d.lng)
       .htmlAltitude(d => d._type === 'city' ? 0.012 : d._type === 'ocean' ? 0.003 : d._type === 'geoline' ? 0.002 : 0.005)
-      .customLayerLabel('')
-      .customThreeObject(d => {
-        let color, worldHeight
-        if (d._type === 'city') {
-          const isSelected = (selectedCity?._koName || selectedCity?.name) === (d._koName || d.name)
-          color = isSelected ? '#3b82f6' : 'rgba(255,255,255,0.96)'
-          worldHeight = isSelected ? 2.8 : 2.4   // 예전 14px / 12px
-        } else if (d._type === 'island') {
-          color = d._hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.78)'
-          worldHeight = d._hasCities ? 2.6 : 2.2  // 예전 13px / 11px
-        } else { // country
-          color = d._hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)'
-          worldHeight = d._hasCities ? 2.6 : 2.0  // 예전 13px / 10px
-        }
-        const sprite = makeTextSprite(d.name, { color, worldHeight })
-        sprite.userData.baseH = worldHeight
-        sprite.userData.aspect = sprite.scale.x / sprite.scale.y
-        sprite.userData.hoverable = (d._type === 'city' || d._type === 'island')
-        d.__sprite = sprite
-        // 일반 국가 라벨은 클릭 비활성 → 폴리곤 클릭(국가선택)이 통과되게
-        if (d._type === 'country') sprite.raycast = () => {}
-        labelSpritesRef.current.push(sprite)
-        return sprite
-      })
-      .customThreeObjectUpdate((obj, d) => {
-        Object.assign(obj.position, globe.getCoords(d.lat, d.lng, 0.012))
-      })
-      .onCustomLayerClick(d => {
-        if (d._type === 'city') {
-          justClickedCityRef.current = true
-          setTimeout(() => { justClickedCityRef.current = false }, 400)
-          handleCityClickRef.current?.(d)
-        } else if (d._type === 'island') {
-          let feat = countries.find(f => f.properties && f.properties.NAME === d.nameEn)
-          if (!feat) feat = { type: 'Feature', properties: { NAME: d.nameEn, LABEL_X: d.lng, LABEL_Y: d.lat }, geometry: null }
-          handleCountryClickRef.current?.(feat)
-        }
-        // 일반 국가 라벨(_type:'country')은 raycast 꺼서 여기 안 들어옴
-      })
-      .onCustomLayerHover((d, prev) => {
-        // 이전 호버 라벨 원복
-        if (prev && prev.__sprite && prev.__sprite.userData.hoverable) {
-          prev.__sprite.material.color.set('#ffffff')
-          prev.__sprite.userData.hovered = false
-        }
-        // 새 호버 라벨 파랗게 (흰 텍스처 × 파랑 = 파란 글씨)
-        if (d && d.__sprite && d.__sprite.userData.hoverable) {
-          d.__sprite.material.color.set('#60a5fa')
-          d.__sprite.userData.hovered = true
-        }
-        if (globeContainerRef.current) {
-          globeContainerRef.current.style.cursor = (d && d.__sprite && d.__sprite.userData.hoverable) ? 'pointer' : 'default'
-        }
-      })
       .htmlElement(d => {
         const el = document.createElement('div')
         el.dataset.lat = d.lat
@@ -1947,14 +1829,32 @@ function App() {
             user-select:none;
           ">${d.name}</div>`
         } else if (d._type === 'city') {
-          // 도시 라벨은 customLayer(WebGL 스프라이트)에서 처리 → HTML 생성 안 함
-          el.style.cssText = 'pointer-events:none;'
+          const isSelected = (selectedCity?._koName || selectedCity?.name) === (d._koName || d.name)
+          el.style.cssText = 'pointer-events:none;'  // 터치 투명 → 회전/줌 안 막힘 (선택은 onGlobeClick에서)
+          const inner = document.createElement('div')
+          inner.style.cssText = `
+            transform:translate(-50%,-50%);
+            font-family:Pretendard,Inter,system-ui,sans-serif;
+            font-size:${isSelected ? '14px' : '12px'};
+            font-weight:700;
+            color:${isSelected ? '#2563eb' : 'rgba(255,255,255,0.95)'};
+            text-shadow:0 1px 6px rgba(0,0,0,1),0 0 12px rgba(0,0,0,0.9);
+            white-space:nowrap;
+            user-select:none;
+            padding:4px 10px;
+            border-radius:6px;
+            background:transparent;
+            transition:all 0.2s ease;
+            border:none;
+          `
+          inner.textContent = d.name
+          el.appendChild(inner)
         } else {
           const hasCities = COUNTRY_CITIES[d.nameEn]
           const isIsland = ISLAND_NAMES.has(d.nameEn)
           if (isIsland) {
-            // 작은 섬나라: 라벨 자체를 클릭 가능 영역으로 (폴리곤이 작거나 없어서 클릭 어려움 보강)
-            el.style.cssText = 'cursor:pointer;pointer-events:all;'
+            // 섬나라 라벨: 터치 투명(pointer-events:none) → 회전/줌 안 막힘. 선택은 폴리곤/추후 onGlobeClick
+            el.style.cssText = 'pointer-events:none;'
             const inner = document.createElement('div')
             inner.style.cssText = `
               transform:translate(-50%,-50%);
@@ -1967,34 +1867,9 @@ function App() {
               user-select:none;
               padding:6px 12px;
               border-radius:6px;
-              transition:all 0.15s ease;
             `
             inner.textContent = d.name
             el.appendChild(inner)
-            el.onmouseenter = () => {
-              inner.style.color = '#fde047'
-              inner.style.fontSize = hasCities ? '14px' : '12px'
-            }
-            el.onmouseleave = () => {
-              inner.style.color = hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.78)'
-              inner.style.fontSize = hasCities ? '13px' : '11px'
-            }
-            el.onclick = (ev) => {
-              ev.stopPropagation()
-              let feat = countries.find(f => f.properties && f.properties.NAME === d.nameEn)
-              if (!feat) {
-                // 110m에 폴리곤 없는 작은 섬은 가짜 feat 생성 (LABEL 좌표만으로 진입 가능)
-                feat = {
-                  type: 'Feature',
-                  properties: { NAME: d.nameEn, LABEL_X: d.lng, LABEL_Y: d.lat },
-                  geometry: null,
-                }
-              }
-              if (handleCountryClickRef.current) {
-                handleCountryClickRef.current(feat)
-              }
-            }
-            el.addEventListener('wheel', forwardWheel, { passive: false })
           } else {
             el.style.cssText = 'pointer-events:none;'
             el.innerHTML = `<div style="
