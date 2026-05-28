@@ -1860,13 +1860,13 @@ function App() {
         if (d._type === 'city') {
           const isSelected = (selectedCity?._koName || selectedCity?.name) === (d._koName || d.name)
           color = isSelected ? '#3b82f6' : 'rgba(255,255,255,0.96)'
-          worldHeight = isSelected ? 3.0 : 2.6
+          worldHeight = isSelected ? 2.8 : 2.4   // 예전 14px / 12px
         } else if (d._type === 'island') {
           color = d._hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.78)'
-          worldHeight = d._hasCities ? 2.8 : 2.4
+          worldHeight = d._hasCities ? 2.6 : 2.2  // 예전 13px / 11px
         } else { // country
           color = d._hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)'
-          worldHeight = d._hasCities ? 2.8 : 2.2
+          worldHeight = d._hasCities ? 2.6 : 2.0  // 예전 13px / 10px
         }
         const sprite = makeTextSprite(d.name, { color, worldHeight })
         sprite.userData.baseH = worldHeight
