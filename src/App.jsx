@@ -16,6 +16,9 @@ const ISLAND_LABEL_DATA = ((ISLAND_POLYGONS && ISLAND_POLYGONS.features) || [])
   }))
   .filter(d => d.nameEn && typeof d.lat === 'number' && typeof d.lng === 'number')
 const ISLAND_NAMES = new Set(ISLAND_LABEL_DATA.map(d => d.nameEn))
+// 이름 정규화: "Solomon Is." ↔ "Solomon Islands" 같은 약자 변형 매칭용
+const normCountryName = (s) => String(s || '').toLowerCase().replace(/\bis\.?\b/g, 'islands').replace(/&/g, 'and').replace(/[^a-z]/g, '')
+const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.nameEn)))
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
@@ -1709,7 +1712,7 @@ function App() {
         nameEn: feat.properties.NAME,
         _type: 'country',
         _hasCities: !!COUNTRY_CITIES[feat.properties.NAME],
-      })).filter(d => (d.lat !== 0 || d.lng !== 0) && !ISLAND_NAMES.has(d.nameEn))
+      })).filter(d => (d.lat !== 0 || d.lng !== 0) && !ISLAND_NAMES.has(d.nameEn) && !ISLAND_NAMES_NORM.has(normCountryName(d.nameEn)))
       const islandLabels = ISLAND_LABEL_DATA.map(d => ({
         lat: d.lat,
         lng: d.lng,
@@ -1732,7 +1735,7 @@ function App() {
       nameEn: feat.properties.NAME,
       _type: 'country',
       _hasCities: !!COUNTRY_CITIES[feat.properties.NAME],
-    })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn && !ISLAND_NAMES.has(d.nameEn))
+    })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn && !ISLAND_NAMES.has(d.nameEn) && !ISLAND_NAMES_NORM.has(normCountryName(d.nameEn)))
     const otherIslandLabels = ISLAND_LABEL_DATA
       .filter(d => d.nameEn !== countryEn)
       .map(d => ({
@@ -1967,30 +1970,49 @@ function App() {
     const globe = globeRef.current
     const hasSelection = !!selectedCountry
 
-    // 탭 위치에서 가장 가까운 도시 선택 (국가뷰) — 임계값 안에서만
-    const CITY_TAP_KM = 250   // 체감 튜닝: 줄이면 더 정확히 눌러야, 키우면 멀어도 선택
-    const selectNearestCity = (coords, countryName) => {
-      const list = COUNTRY_CITIES[countryName] || []
+    // 카메라 뒤쪽(지구 뒷면) 점인지 — 뒷면 라벨은 선택 대상에서 제외
+    const isFrontFace = (lat, lng) => {
+      const pov = globe.pointOfView()
+      const cLat = pov.lat * Math.PI / 180, cLng = pov.lng * Math.PI / 180
+      const la = lat * Math.PI / 180, ln = lng * Math.PI / 180
+      const ang = Math.acos(Math.max(-1, Math.min(1,
+        Math.sin(cLat) * Math.sin(la) + Math.cos(cLat) * Math.cos(la) * Math.cos(ln - cLng))))
+      return ang < 1.4  // ~80도 이내(앞면)만
+    }
+    // 탭한 화면 위치 기준, 화면상 가장 가까운 항목 선택 (라벨 기준이라 정확)
+    const pickNearestByScreen = (list, getLat, getLng, event, maxPx) => {
+      const rect = globeContainerRef.current?.getBoundingClientRect()
+      if (!rect) return null
+      const tapX = event.clientX - rect.left, tapY = event.clientY - rect.top
       let best = null, bestD = Infinity
-      for (const c of list) {
-        const d = geoDistKm(coords.lat, coords.lng, c.lat, c.lng)
-        if (d < bestD) { bestD = d; best = c }
+      for (const it of list) {
+        const la = getLat(it), ln = getLng(it)
+        if (!isFrontFace(la, ln)) continue
+        const sc = globe.getScreenCoords(la, ln)
+        if (!sc) continue
+        const dx = sc.x - tapX, dy = sc.y - tapY
+        const d = Math.sqrt(dx * dx + dy * dy)
+        if (d < bestD) { bestD = d; best = it }
       }
-      if (best && bestD <= CITY_TAP_KM) {
+      return (best && bestD <= maxPx) ? best : null
+    }
+
+    // 국가뷰: 화면상 가장 가까운 도시 선택
+    const CITY_TAP_PX = 70    // 체감 튜닝: 줄이면 정확히 눌러야, 키우면 넉넉하게
+    const selectNearestCity = (countryName, event) => {
+      const list = COUNTRY_CITIES[countryName] || []
+      const best = pickNearestByScreen(list, c => c.lat, c => c.lng, event, CITY_TAP_PX)
+      if (best) {
         justClickedCityRef.current = true
         setTimeout(() => { justClickedCityRef.current = false }, 150)
         handleCityClick({ ...best, name: getCityName(best.name), _koName: best.name, countryEn: countryName })
       }
     }
-    // 탭 위치에서 가장 가까운 섬나라 선택 (세계뷰 바다 탭) — 폴리곤 없는 작은 섬용
-    const ISLAND_TAP_KM = 200
-    const selectNearestIsland = (coords) => {
-      let best = null, bestD = Infinity
-      for (const d of ISLAND_LABEL_DATA) {
-        const dist = geoDistKm(coords.lat, coords.lng, d.lat, d.lng)
-        if (dist < bestD) { bestD = dist; best = d }
-      }
-      if (best && bestD <= ISLAND_TAP_KM) {
+    // 세계뷰 바다 탭: 화면상 가장 가까운 섬나라 선택 (폴리곤 없는 작은 섬용)
+    const ISLAND_TAP_PX = 60
+    const selectNearestIsland = (event) => {
+      const best = pickNearestByScreen(ISLAND_LABEL_DATA, d => d.lat, d => d.lng, event, ISLAND_TAP_PX)
+      if (best) {
         justClickedCityRef.current = true
         setTimeout(() => { justClickedCityRef.current = false }, 150)
         let feat = countries.find(f => f.properties && f.properties.NAME === best.nameEn)
@@ -2035,9 +2057,9 @@ function App() {
       .onPolygonClick((feat, ev, coords) => {
         if (justClickedCityRef.current) return
         if (hasSelection) {
-          // 국가뷰: 같은 나라 땅 탭 → 가장 가까운 도시 / 다른 나라 → 전환
+          // 국가뷰: 같은 나라 땅 탭 → 화면상 가장 가까운 도시 / 다른 나라 → 전환
           if (feat.properties.NAME === selectedCountry.properties.NAME) {
-            selectNearestCity(coords, selectedCountry.properties.NAME)
+            selectNearestCity(selectedCountry.properties.NAME, ev)
           } else {
             handleCountryClick(feat)
           }
@@ -2045,14 +2067,14 @@ function App() {
           handleCountryClick(feat)
         }
       })
-      .onGlobeClick(coords => {
+      .onGlobeClick((coords, ev) => {
         if (justClickedCityRef.current) return
         if (hasSelection) {
-          // 국가뷰 바다 탭 → 가장 가까운 도시 (해안 도시용)
-          selectNearestCity(coords, selectedCountry.properties.NAME)
+          // 국가뷰 바다 탭 → 화면상 가장 가까운 도시 (해안 도시용)
+          selectNearestCity(selectedCountry.properties.NAME, ev)
         } else {
-          // 세계뷰 바다 탭 → 가장 가까운 작은 섬 (폴리곤 없는 섬)
-          selectNearestIsland(coords)
+          // 세계뷰 바다 탭 → 화면상 가장 가까운 작은 섬 (폴리곤 없는 섬)
+          selectNearestIsland(ev)
         }
       })
   }, [hoveredCountry, selectedCountry, lang, countries])
