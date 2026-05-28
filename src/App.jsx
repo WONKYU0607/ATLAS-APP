@@ -42,6 +42,14 @@ const claimImage = (url, ownerKey) => {
   return true
 }
 
+// 두 좌표 간 거리(km) — 탭 위치에서 가장 가까운 도시/섬 찾기용
+function geoDistKm(lat1, lng1, lat2, lng2) {
+  const R = 6371, toR = x => x * Math.PI / 180
+  const dLat = toR(lat2 - lat1), dLng = toR(lng2 - lng1)
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toR(lat1)) * Math.cos(toR(lat2)) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
 function SpotImage({ imageUrl, photoRef, wikiTitle, spotName, cityName, fallback, className, style, alt, onClick }) {
   const [src, setSrc] = useState(null)
 
@@ -1959,6 +1967,38 @@ function App() {
     const globe = globeRef.current
     const hasSelection = !!selectedCountry
 
+    // 탭 위치에서 가장 가까운 도시 선택 (국가뷰) — 임계값 안에서만
+    const CITY_TAP_KM = 250   // 체감 튜닝: 줄이면 더 정확히 눌러야, 키우면 멀어도 선택
+    const selectNearestCity = (coords, countryName) => {
+      const list = COUNTRY_CITIES[countryName] || []
+      let best = null, bestD = Infinity
+      for (const c of list) {
+        const d = geoDistKm(coords.lat, coords.lng, c.lat, c.lng)
+        if (d < bestD) { bestD = d; best = c }
+      }
+      if (best && bestD <= CITY_TAP_KM) {
+        justClickedCityRef.current = true
+        setTimeout(() => { justClickedCityRef.current = false }, 150)
+        handleCityClick({ ...best, name: getCityName(best.name), _koName: best.name, countryEn: countryName })
+      }
+    }
+    // 탭 위치에서 가장 가까운 섬나라 선택 (세계뷰 바다 탭) — 폴리곤 없는 작은 섬용
+    const ISLAND_TAP_KM = 200
+    const selectNearestIsland = (coords) => {
+      let best = null, bestD = Infinity
+      for (const d of ISLAND_LABEL_DATA) {
+        const dist = geoDistKm(coords.lat, coords.lng, d.lat, d.lng)
+        if (dist < bestD) { bestD = dist; best = d }
+      }
+      if (best && bestD <= ISLAND_TAP_KM) {
+        justClickedCityRef.current = true
+        setTimeout(() => { justClickedCityRef.current = false }, 150)
+        let feat = countries.find(f => f.properties && f.properties.NAME === best.nameEn)
+        if (!feat) feat = { type: 'Feature', properties: { NAME: best.nameEn, LABEL_X: best.lng, LABEL_Y: best.lat }, geometry: null }
+        handleCountryClick(feat)
+      }
+    }
+
     globe
       .polygonCapColor(feat => {
         const name = feat.properties.NAME
@@ -1992,10 +2032,28 @@ function App() {
         if (hasSelection) return
         setHoveredCountry(feat ? feat.properties.NAME : null)
       })
-      .onPolygonClick(feat => {
-        if (hasSelection) return
+      .onPolygonClick((feat, ev, coords) => {
         if (justClickedCityRef.current) return
-        handleCountryClick(feat)
+        if (hasSelection) {
+          // 국가뷰: 같은 나라 땅 탭 → 가장 가까운 도시 / 다른 나라 → 전환
+          if (feat.properties.NAME === selectedCountry.properties.NAME) {
+            selectNearestCity(coords, selectedCountry.properties.NAME)
+          } else {
+            handleCountryClick(feat)
+          }
+        } else {
+          handleCountryClick(feat)
+        }
+      })
+      .onGlobeClick(coords => {
+        if (justClickedCityRef.current) return
+        if (hasSelection) {
+          // 국가뷰 바다 탭 → 가장 가까운 도시 (해안 도시용)
+          selectNearestCity(coords, selectedCountry.properties.NAME)
+        } else {
+          // 세계뷰 바다 탭 → 가장 가까운 작은 섬 (폴리곤 없는 섬)
+          selectNearestIsland(coords)
+        }
       })
   }, [hoveredCountry, selectedCountry, lang, countries])
 
