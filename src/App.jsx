@@ -1668,7 +1668,8 @@ function App() {
 
       // WebGL 라벨 스프라이트: 줌(고도)에 따라 크기 조정 → 화면상 일정한 크기 유지
       // sizeMul 공식이 체감 튜닝 포인트 (값 키우면 라벨 커짐)
-      const sizeMul = Math.min(1.4, Math.max(0.3, pov.altitude * 0.45 + 0.16))
+      // 고도 높음(세계뷰)=크게 / 낮음(국가뷰 줌인)=작게 → 차이를 크게
+      const sizeMul = Math.min(2.2, Math.max(0.22, pov.altitude * 0.8 + 0.05))
       const sprites = labelSpritesRef.current
       for (let i = 0; i < sprites.length; i++) {
         const s = sprites[i]
@@ -1871,6 +1872,8 @@ function App() {
         const sprite = makeTextSprite(d.name, { color, worldHeight })
         sprite.userData.baseH = worldHeight
         sprite.userData.aspect = sprite.scale.x / sprite.scale.y
+        sprite.userData.hoverable = (d._type === 'city' || d._type === 'island')
+        d.__sprite = sprite
         // 일반 국가 라벨은 클릭 비활성 → 폴리곤 클릭(국가선택)이 통과되게
         if (d._type === 'country') sprite.raycast = () => {}
         labelSpritesRef.current.push(sprite)
@@ -1890,6 +1893,21 @@ function App() {
           handleCountryClickRef.current?.(feat)
         }
         // 일반 국가 라벨(_type:'country')은 raycast 꺼서 여기 안 들어옴
+      })
+      .onCustomLayerHover((d, prev) => {
+        // 이전 호버 라벨 원복
+        if (prev && prev.__sprite && prev.__sprite.userData.hoverable) {
+          prev.__sprite.material.color.set('#ffffff')
+          prev.__sprite.userData.hovered = false
+        }
+        // 새 호버 라벨 파랗게 (흰 텍스처 × 파랑 = 파란 글씨)
+        if (d && d.__sprite && d.__sprite.userData.hoverable) {
+          d.__sprite.material.color.set('#60a5fa')
+          d.__sprite.userData.hovered = true
+        }
+        if (globeContainerRef.current) {
+          globeContainerRef.current.style.cursor = (d && d.__sprite && d.__sprite.userData.hoverable) ? 'pointer' : 'default'
+        }
       })
       .htmlElement(d => {
         const el = document.createElement('div')
