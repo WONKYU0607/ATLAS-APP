@@ -430,6 +430,7 @@ function App() {
   const handleCityClickRef = useRef(null)  // ref to always-fresh click handler
   const handleCountryClickRef = useRef(null)  // ref for label click on small island countries
   const justClickedCityRef = useRef(false) // 도시 클릭 직후 polygon 클릭 무시용
+  const pendingPanelRef = useRef(false) // 직전이 줌-only였으면 true → 다음 탭은 무조건 패널 (의도 단계 추적)
   const foodReqRef = useRef(0) // 음식점 fetch 경쟁 상태 방지 (최신 요청만 반영)
   const lastPovKeyRef = useRef('') // hideBackLabels idle 스킵용 (라벨 재생성 시 리셋)
   const hasTouchedRef = useRef(false) // 페이지에 첫 터치 발생하면 true → 호버 영구 비활성 (모바일 확정)
@@ -2025,10 +2026,11 @@ function App() {
       const r = pickNearestByScreen(list, c => c.lat, c => c.lng, event, CITY_TAP_PX)
       if (!r) return
       const { best, bestD, secondD } = r
-      // 명확 판정: 비율(bestD * 2 <= secondD) 또는 절대차(secondD - bestD >= 28)
-      // 비율 조건이 클러스터에서 핵심 — 라벨 위 정확히 탭하면 1등이 압도적으로 가까움
-      const isClear = !isFinite(secondD) || (bestD * 2 <= secondD) || (secondD - bestD >= AMBIGUITY_MARGIN_PX)
+      // 명확 판정: 비율(bestD * 2 <= secondD) 또는 절대차(>=28) 또는 직전이 줌-only(다음 탭은 무조건 패널)
+      // pendingPanelRef는 사용자 의도 단계 추적 — "줌으로 클러스터 펼쳤으니 이번 탭은 선택" 흐름 자연스럽게
+      const isClear = !isFinite(secondD) || (bestD * 2 <= secondD) || (secondD - bestD >= AMBIGUITY_MARGIN_PX) || pendingPanelRef.current
       if (isClear) {
+        pendingPanelRef.current = false  // 패널 열림 → ref 소비/리셋
         justClickedCityRef.current = true
         setTimeout(() => { justClickedCityRef.current = false }, 150)
         handleCityClick({ ...best, name: getCityName(best.name), _koName: best.name, countryEn: countryName })
@@ -2051,6 +2053,7 @@ function App() {
         const pov = globe.pointOfView()
         const ratio = isFinite(minNeighborD) ? (minNeighborD / SEP_TARGET_PX) : 0.5
         const newAlt = Math.max(0.05, pov.altitude * ratio)
+        pendingPanelRef.current = true  // 줌만 했으므로 다음 탭은 무조건 패널 열림
         justClickedCityRef.current = true
         setTimeout(() => { justClickedCityRef.current = false }, 150)
         globe.pointOfView({ lat: best.lat, lng: best.lng, altitude: newAlt }, 700)
