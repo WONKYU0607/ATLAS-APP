@@ -3220,7 +3220,7 @@ function App() {
                     </div>
                     <span style={{fontSize:13,color:'#94a3b8',flexShrink:0,marginLeft:2}}>{infoExpanded ? '▼' : '▲'}</span>
                     <button
-                      onClick={(e) => { e.stopPropagation(); setShowCountryInfo(false) }}
+                      onClick={(e) => { e.stopPropagation(); closeCountry() }}
                       style={{background:'#f1f5f9',border:'none',borderRadius:14,width:24,height:24,padding:0,cursor:'pointer',fontSize:11,color:'#64748b',fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}
                       aria-label="close">✕</button>
                   </div>
