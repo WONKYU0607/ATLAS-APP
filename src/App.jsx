@@ -1980,11 +1980,12 @@ function App() {
       return ang < 1.4  // ~80도 이내(앞면)만
     }
     // 탭한 화면 위치 기준, 화면상 가장 가까운 항목 선택 (라벨 기준이라 정확)
+    // 반환: { best, bestD, secondD } — 1등 항목 + 1등·2등 화면거리(px). 모호함 판정용.
     const pickNearestByScreen = (list, getLat, getLng, event, maxPx) => {
       const rect = globeContainerRef.current?.getBoundingClientRect()
       if (!rect) return null
       const tapX = event.clientX - rect.left, tapY = event.clientY - rect.top
-      let best = null, bestD = Infinity
+      let best = null, bestD = Infinity, secondD = Infinity
       for (const it of list) {
         const la = getLat(it), ln = getLng(it)
         if (!isFrontFace(la, ln)) continue
@@ -1992,56 +1993,49 @@ function App() {
         if (!sc) continue
         const dx = sc.x - tapX, dy = sc.y - tapY
         const d = Math.sqrt(dx * dx + dy * dy)
-        if (d < bestD) { bestD = d; best = it }
+        if (d < bestD) { secondD = bestD; bestD = d; best = it }
+        else if (d < secondD) { secondD = d }
       }
-      return (best && bestD <= maxPx) ? best : null
+      if (!best || bestD > maxPx) return null
+      return { best, bestD, secondD }
     }
 
     // 국가뷰: 화면상 가장 가까운 도시 선택
     const CITY_TAP_PX = 70    // 체감 튜닝: 줄이면 정확히 눌러야, 키우면 넉넉하게
-    const OVERLAP_PX = 78     // 선택한 도시의 이웃이 이보다 가까우면 겹침 → 줌인만
-    const SEP_TARGET_PX = 130 // 줌인 후 이웃과 벌어질 목표 화면거리
+    // 탭 의도 판정: 1등이 2등보다 이만큼 명확히 가까우면 패널, 아니면(모호) 줌인
+    const AMBIGUITY_MARGIN_PX = 28
+    const SEP_TARGET_PX = 130 // 모호한 탭일 때 줌인 후 라벨들 벌어질 목표 거리
     const selectNearestCity = (countryName, event) => {
       const list = COUNTRY_CITIES[countryName] || []
-      const best = pickNearestByScreen(list, c => c.lat, c => c.lng, event, CITY_TAP_PX)
-      if (!best) return
-      // 선택 도시의 가장 가까운 이웃까지 화면(px) 거리 → 겹침 판정
-      const bestSc = globe.getScreenCoords(best.lat, best.lng)
-      let nb = Infinity
-      if (bestSc) {
-        for (const c of list) {
-          if (c === best || !isFrontFace(c.lat, c.lng)) continue
-          const sc = globe.getScreenCoords(c.lat, c.lng)
-          if (!sc) continue
-          const d = Math.sqrt((sc.x - bestSc.x) ** 2 + (sc.y - bestSc.y) ** 2)
-          if (d < nb) nb = d
-        }
-      }
-      if (nb < OVERLAP_PX) {
-        // 겹침 위험 → 패널 안 열고 그 도시 기준으로 줌인만 (라벨 분리됨, 다시 탭하면 선택)
-        const pov = globe.pointOfView()
-        const newAlt = Math.max(0.05, pov.altitude * (nb / SEP_TARGET_PX))
-        justClickedCityRef.current = true
-        setTimeout(() => { justClickedCityRef.current = false }, 150)
-        globe.pointOfView({ lat: best.lat, lng: best.lng, altitude: newAlt }, 700)
-      } else {
-        // 안 겹침 → 평소대로 선택 + 패널
+      const r = pickNearestByScreen(list, c => c.lat, c => c.lng, event, CITY_TAP_PX)
+      if (!r) return
+      const { best, bestD, secondD } = r
+      // 1등과 2등 거리 차이가 충분 → 의도 명확 → 패널 열기
+      if (secondD - bestD >= AMBIGUITY_MARGIN_PX) {
         justClickedCityRef.current = true
         setTimeout(() => { justClickedCityRef.current = false }, 150)
         handleCityClick({ ...best, name: getCityName(best.name), _koName: best.name, countryEn: countryName })
+      } else {
+        // 모호한 탭(라벨들 사이) → 패널 안 열고 1등 도시 기준 줌인 (라벨 분리 → 다시 탭하면 명확)
+        const pov = globe.pointOfView()
+        // 2등 라벨과 벌어질 만큼 줌. secondD가 가까울수록 더 깊게 줌인
+        const newAlt = Math.max(0.05, pov.altitude * (secondD / SEP_TARGET_PX))
+        justClickedCityRef.current = true
+        setTimeout(() => { justClickedCityRef.current = false }, 150)
+        globe.pointOfView({ lat: best.lat, lng: best.lng, altitude: newAlt }, 700)
       }
     }
     // 세계뷰 바다 탭: 화면상 가장 가까운 섬나라 선택 (폴리곤 없는 작은 섬용)
     const ISLAND_TAP_PX = 60
     const selectNearestIsland = (event) => {
-      const best = pickNearestByScreen(ISLAND_LABEL_DATA, d => d.lat, d => d.lng, event, ISLAND_TAP_PX)
-      if (best) {
-        justClickedCityRef.current = true
-        setTimeout(() => { justClickedCityRef.current = false }, 150)
-        let feat = countries.find(f => f.properties && f.properties.NAME === best.nameEn)
-        if (!feat) feat = { type: 'Feature', properties: { NAME: best.nameEn, LABEL_X: best.lng, LABEL_Y: best.lat }, geometry: null }
-        handleCountryClick(feat)
-      }
+      const r = pickNearestByScreen(ISLAND_LABEL_DATA, d => d.lat, d => d.lng, event, ISLAND_TAP_PX)
+      if (!r) return
+      const best = r.best
+      justClickedCityRef.current = true
+      setTimeout(() => { justClickedCityRef.current = false }, 150)
+      let feat = countries.find(f => f.properties && f.properties.NAME === best.nameEn)
+      if (!feat) feat = { type: 'Feature', properties: { NAME: best.nameEn, LABEL_X: best.lng, LABEL_Y: best.lat }, geometry: null }
+      handleCountryClick(feat)
     }
 
     globe
