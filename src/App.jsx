@@ -1182,16 +1182,9 @@ function App() {
         setSelectedCity(null); setCityData(null); setSelectedSpot(null); setSidePanel(null)
         setShowCountryInfo(false)
         backStateRef.current = { ...s, selectedCity: null, selectedSpot: null, sidePanel: null, showCountryInfo: false }
-        if (s.selectedCountry && globeRef.current) {
-          const g = globeRef.current
-          const cName = s.selectedCountry.properties?.NAME
-          const cz = cName && typeof COUNTRY_ZOOM !== 'undefined' && COUNTRY_ZOOM[cName]
-          if (cz) {
-            const alt = window.innerWidth <= 768 ? cz.alt * 1.5 : cz.alt
-            g.pointOfView({ lat: cz.lat, lng: cz.lng, altitude: alt }, 800)
-          }
-        }
+        // 도시 닫을 때 줌아웃 제거 — 줌 유지하면서 옆 도시 바로 탭 가능하게
         return
+      }
       }
       if (s.selectedCountry && s.showCountryInfo) {
         setShowCountryInfo(false)
