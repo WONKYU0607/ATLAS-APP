@@ -1971,6 +1971,8 @@ function App() {
     if (!globeRef.current || countries.length === 0) return
     const globe = globeRef.current
     const hasSelection = !!selectedCountry
+    // 모바일/터치 기기는 진짜 호버가 없음 — 드래그(회전)가 hover로 오인되어 노란색 잘못 들어오는 것 방지
+    const supportsHover = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: hover)').matches
 
     // 카메라 뒤쪽(지구 뒷면) 점인지 — 뒷면 라벨은 선택 대상에서 제외
     const isFrontFace = (lat, lng) => {
@@ -2004,6 +2006,7 @@ function App() {
 
     // 국가뷰: 화면상 가장 가까운 도시 선택
     const CITY_TAP_PX = 70    // 체감 튜닝: 줄이면 정확히 눌러야, 키우면 넉넉하게
+    const ON_LABEL_PX = 22    // 1등까지 이 거리 이내면 "라벨에 직접 명중" → 무조건 패널
     // 탭 의도 판정: 1등이 2등보다 이만큼 명확히 가까우면 패널, 아니면(모호) 줌인
     const AMBIGUITY_MARGIN_PX = 28
     const SEP_TARGET_PX = 160 // 모호 탭 줌인 후 클러스터 라벨들 분리될 목표 거리 (한 번에 분리되도록 공격적)
@@ -2012,8 +2015,9 @@ function App() {
       const r = pickNearestByScreen(list, c => c.lat, c => c.lng, event, CITY_TAP_PX)
       if (!r) return
       const { best, bestD, secondD } = r
-      // 1등과 2등 거리 차이가 충분 → 의도 명확 → 패널 열기
-      if (secondD - bestD >= AMBIGUITY_MARGIN_PX) {
+      // 라벨 위 직접 명중(bestD 작음) → 클러스터든 아니든 패널 열기 (최우선)
+      // 또는 1·2등 거리 차 충분 → 의도 명확 → 패널
+      if (bestD <= ON_LABEL_PX || (secondD - bestD) >= AMBIGUITY_MARGIN_PX) {
         justClickedCityRef.current = true
         setTimeout(() => { justClickedCityRef.current = false }, 150)
         handleCityClick({ ...best, name: getCityName(best.name), _koName: best.name, countryEn: countryName })
@@ -2085,6 +2089,7 @@ function App() {
       .polygonLabel(() => '')
       .onPolygonHover(feat => {
         if (hasSelection) return
+        if (!supportsHover) return  // 모바일: 드래그가 호버로 오인되어 잘못된 노란색 들어오는 것 방지
         setHoveredCountry(feat ? feat.properties.NAME : null)
       })
       .onPolygonClick((feat, ev, coords) => {
@@ -2476,7 +2481,7 @@ function App() {
     setSelectedCity(null)
     setCityData(null)
     setHoveredCountry(null)
-    setShowCountryInfo(false)
+    setShowCountryInfo(true)  // 국가 진입 시 정보 패널 자동 표시
 
     const center = getCountryCenter(feat)
     const altitude = getCountryAltitude(feat)
