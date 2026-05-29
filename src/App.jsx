@@ -432,6 +432,7 @@ function App() {
   const justClickedCityRef = useRef(false) // 도시 클릭 직후 polygon 클릭 무시용
   const foodReqRef = useRef(0) // 음식점 fetch 경쟁 상태 방지 (최신 요청만 반영)
   const lastPovKeyRef = useRef('') // hideBackLabels idle 스킵용 (라벨 재생성 시 리셋)
+  const hasTouchedRef = useRef(false) // 페이지에 첫 터치 발생하면 true → 호버 영구 비활성 (모바일 확정)
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [selectedCity, setSelectedCity] = useState(null)
@@ -490,6 +491,7 @@ function App() {
   const [showDrop, setShowDrop] = useState(false)
   const [hoveredCountry, setHoveredCountry] = useState(null)
   const [showCountryInfo, setShowCountryInfo] = useState(false)
+  const [infoExpanded, setInfoExpanded] = useState(false) // A안: 컴팩트(헤더만) ↔ 전체 펼침
   const [lang, setLang] = useState('en')
   const [showLangMenu, setShowLangMenu] = useState(false)
   const [showSharePopup, setShowSharePopup] = useState(false)
@@ -884,6 +886,13 @@ function App() {
 
   // 언어 변경 시 경로 캐시 초기화 (Directions API 응답 언어가 다름)
   useEffect(() => { setRouteCache({}) }, [lang])
+
+  // 페이지 첫 터치 감지 → 호버 영구 비활성화 (브라우저 (hover:hover) 오보고 우회)
+  useEffect(() => {
+    const onFirstTouch = () => { hasTouchedRef.current = true }
+    document.addEventListener('touchstart', onFirstTouch, { once: true, passive: true })
+    return () => { document.removeEventListener('touchstart', onFirstTouch) }
+  }, [])
 
   // ── Google Places 커버리지 진단 (개발용) ──────────────────────
   // 콘솔에서 실행:
@@ -1971,8 +1980,9 @@ function App() {
     if (!globeRef.current || countries.length === 0) return
     const globe = globeRef.current
     const hasSelection = !!selectedCountry
-    // 모바일/터치 기기는 진짜 호버가 없음 — 드래그(회전)가 hover로 오인되어 노란색 잘못 들어오는 것 방지
-    const supportsHover = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: hover)').matches
+    // 호버 지원 여부: 일부 안드로이드 브라우저가 (hover:hover) true로 잘못 보고하는 케이스 대비
+    // 첫 터치가 발생하면 무조건 터치 기기로 확정 (touchedRef는 모듈 외부)
+    const supportsHover = !hasTouchedRef.current && typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: hover)').matches
 
     // 카메라 뒤쪽(지구 뒷면) 점인지 — 뒷면 라벨은 선택 대상에서 제외
     const isFrontFace = (lat, lng) => {
@@ -2006,8 +2016,8 @@ function App() {
 
     // 국가뷰: 화면상 가장 가까운 도시 선택
     const CITY_TAP_PX = 70    // 체감 튜닝: 줄이면 정확히 눌러야, 키우면 넉넉하게
-    const ON_LABEL_PX = 22    // 1등까지 이 거리 이내면 "라벨에 직접 명중" → 무조건 패널
-    // 탭 의도 판정: 1등이 2등보다 이만큼 명확히 가까우면 패널, 아니면(모호) 줌인
+    // 의도 판정: 비율(1등이 2등보다 2배+ 가까움) 또는 절대차(>=28px). 어느 하나만 만족해도 패널.
+    // 비율은 클러스터 처리용(라벨 정확히 탭 = 1등 압도적), 절대차는 일반 거리용.
     const AMBIGUITY_MARGIN_PX = 28
     const SEP_TARGET_PX = 160 // 모호 탭 줌인 후 클러스터 라벨들 분리될 목표 거리 (한 번에 분리되도록 공격적)
     const selectNearestCity = (countryName, event) => {
@@ -2015,9 +2025,10 @@ function App() {
       const r = pickNearestByScreen(list, c => c.lat, c => c.lng, event, CITY_TAP_PX)
       if (!r) return
       const { best, bestD, secondD } = r
-      // 라벨 위 직접 명중(bestD 작음) → 클러스터든 아니든 패널 열기 (최우선)
-      // 또는 1·2등 거리 차 충분 → 의도 명확 → 패널
-      if (bestD <= ON_LABEL_PX || (secondD - bestD) >= AMBIGUITY_MARGIN_PX) {
+      // 명확 판정: 비율(bestD * 2 <= secondD) 또는 절대차(secondD - bestD >= 28)
+      // 비율 조건이 클러스터에서 핵심 — 라벨 위 정확히 탭하면 1등이 압도적으로 가까움
+      const isClear = !isFinite(secondD) || (bestD * 2 <= secondD) || (secondD - bestD >= AMBIGUITY_MARGIN_PX)
+      if (isClear) {
         justClickedCityRef.current = true
         setTimeout(() => { justClickedCityRef.current = false }, 150)
         handleCityClick({ ...best, name: getCityName(best.name), _koName: best.name, countryEn: countryName })
@@ -3228,22 +3239,25 @@ function App() {
                 boxShadow:'0 12px 48px rgba(0,0,0,.22)',
                 overflow:'hidden',
               }}>
-                {/* Header */}
-                <div style={{
+                {/* Header (탭하면 컴팩트↔전체 펼침 토글) */}
+                <div onClick={() => setInfoExpanded(v => !v)} style={{
                   background:`linear-gradient(135deg, ${cities?.[0]?.color || '#3b82f6'}18, ${cities?.[1]?.color || '#8b5cf6'}12)`,
-                  borderBottom:'1px solid #e2e8f0',padding:'16px 20px',
+                  borderBottom: infoExpanded ? '1px solid #e2e8f0' : 'none', padding:'16px 20px',
+                  cursor:'pointer', userSelect:'none',
                 }}>
                   <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
                     <span style={{fontSize:28}}>{info.emoji}</span>
-                    <div>
+                    <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:20,fontWeight:800,color:'#0f172a',letterSpacing:'-.3px'}}>{countryKo}</div>
                       <div style={{fontSize:11.5,color:'#64748b',fontWeight:500}}>{cName} · {info.continent}</div>
                     </div>
+                    <span style={{fontSize:14,color:'#94a3b8',flexShrink:0,marginLeft:4}}>{infoExpanded ? '▲' : '▼'}</span>
                   </div>
                   <div style={{fontSize:13,color:'#475569',fontStyle:'italic',lineHeight:1.5}}>"{info.tagline}"</div>
                 </div>
 
-                {/* Info Grid */}
+                {/* Info Grid (펼침 상태일 때만) */}
+                {infoExpanded && (
                 <div style={{padding:'14px 20px 18px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0'}}>
                   {[
                     { icon:'🏛️', label:t('lCapital'), value:info.capital },
@@ -3272,9 +3286,10 @@ function App() {
                     </div>
                   ))}
                 </div>
+                )}
 
-                {/* Emergency Contacts */}
-                {(() => {
+                {/* Emergency Contacts (펼침 상태일 때만) */}
+                {infoExpanded && (() => {
                   const em = EMERGENCY_CONTACTS[cName]
                   if (!em) return null
                   const items = [
@@ -3302,10 +3317,12 @@ function App() {
                   )
                 })()}
 
-                {/* Footer hint */}
+                {/* Footer hint (펼침 상태일 때만) */}
+                {infoExpanded && (
                 <div style={{borderTop:'1px solid #f1f5f9',padding:'10px 20px',textAlign:'center'}}>
                   <span style={{fontSize:11,color:'#94a3b8'}}>{t('cityInfoHint')}</span>
                 </div>
+                )}
               </div>
             )}
           </>
