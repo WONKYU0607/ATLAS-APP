@@ -2513,13 +2513,15 @@ function App() {
       setCityData(null)
       setShowCountryInfo(false)
       fetchCityData(city)
-      // 국가 줌보다 더 가까이 줌인
+      // 국가 줌보다 더 가까이 줌인 (단, 이미 더 가까이 줌인된 상태면 현재 줌 유지 — 줌아웃 방지)
       const countryName = city.countryEn || selectedCountry?.properties?.NAME
       const cz = countryName && COUNTRY_ZOOM[countryName]
       const baseAlt = cz ? cz.alt : 0.3
       const cityAlt = Math.max(Math.min(baseAlt * 0.45, 0.15), 0.06)
       const finalCityAlt = window.innerWidth <= 768 ? cityAlt * 1.4 : cityAlt
-      globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: finalCityAlt }, 900)
+      const currentAlt = globeRef.current.pointOfView().altitude
+      const targetAlt = Math.min(finalCityAlt, currentAlt) // 현재가 더 가까우면 유지
+      globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: targetAlt }, 900)
     } catch(e) { console.error('city click error:', e) }
   }
 
