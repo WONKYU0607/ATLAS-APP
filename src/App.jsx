@@ -3194,42 +3194,10 @@ function App() {
         const cities = COUNTRY_CITIES[cName]
         return (
           <>
-            {/* Bottom bar */}
-            <div style={{
-              position:'absolute',bottom:isMobile?'calc(12px + env(safe-area-inset-bottom))':24,
-              left:'50%',transform:'translateX(-50%)',
-              zIndex:1001,background:'rgba(255,255,255,.96)',backdropFilter:'blur(14px)',
-              border:'1.5px solid #e2e8f0',borderRadius:isMobile?16:40,
-              padding:isMobile?'7px 10px':'10px 20px',fontSize:isMobile?11:13,color:'#1e293b',
-              boxShadow:'0 4px 24px rgba(0,0,0,.18)',
-              display:'flex',alignItems:'center',gap:isMobile?5:12,
-              whiteSpace:'nowrap',
-              maxWidth:isMobile?'96vw':'none',
-              flexWrap:'nowrap',
-              justifyContent:'flex-start',
-            }}>
-              {info && <span style={{fontSize:isMobile?15:20,flexShrink:0}}>{info.emoji}</span>}
-              <span style={{fontWeight:700,fontSize:isMobile?12:15,flexShrink:0}}>{countryKo}</span>
-              {info && !isMobile && <span style={{fontSize:11,color:'#64748b',fontWeight:500}}>{info.tagline}</span>}
-              <span style={{color:'#94a3b8',fontSize:isMobile?10:12,flexShrink:0}}>
-                {cities ? `${cities.length}${t('nCities')}` : ''}
-              </span>
-              {info && (
-                <button onClick={()=>setShowCountryInfo(v=>!v)}
-                  style={{background: showCountryInfo ? '#3b82f6' : '#f0f9ff',border: showCountryInfo ? '1.5px solid #3b82f6' : '1.5px solid #bae6fd',borderRadius:20,padding:isMobile?'4px 9px':'5px 14px',cursor:'pointer',fontSize:isMobile?10.5:11.5,color: showCountryInfo ? 'white' : '#0369a1',fontWeight:700,transition:'all .2s',display:'flex',alignItems:'center',gap:3,flexShrink:0}}>
-                  📋{isMobile?'':' '+t('countryInfo')} {showCountryInfo ? '▾' : '▸'}
-                </button>
-              )}
-              <button onClick={closeCountry}
-                style={{background:'#f1f5f9',border:'none',borderRadius:20,padding:isMobile?'4px 8px':'5px 12px',cursor:'pointer',fontSize:isMobile?11:12,color:'#64748b',fontWeight:600,flexShrink:0}}>
-                ✕
-              </button>
-            </div>
-
-            {/* Country Info Panel */}
-            {showCountryInfo && info && (
+            {/* Country Info Panel (단일 통합 UI — 하단 바 역할 겸함) */}
+            {info && (
               <div className="countryInfoPanel" style={{
-                position:'absolute',bottom:isMobile?'calc(72px + env(safe-area-inset-bottom))':68,left:'50%',transform:'translateX(-50%)',
+                position:'absolute',bottom:isMobile?'calc(12px + env(safe-area-inset-bottom))':24,left:'50%',transform:'translateX(-50%)',
                 zIndex:1000,width:isMobile?'95vw':480,maxWidth:'95vw',
                 maxHeight:isMobile?'40vh':'none',
                 display:'flex',flexDirection:'column',
