@@ -3233,94 +3233,100 @@ function App() {
               <div className="countryInfoPanel" style={{
                 position:'absolute',bottom:isMobile?'calc(72px + env(safe-area-inset-bottom))':68,left:'50%',transform:'translateX(-50%)',
                 zIndex:1000,width:isMobile?'95vw':480,maxWidth:'95vw',
-                maxHeight:isMobile?'60vh':'none',overflowY:isMobile?'auto':'hidden',
+                maxHeight:isMobile?'40vh':'none',
+                display:'flex',flexDirection:'column',
                 background:'rgba(255,255,255,.97)',backdropFilter:'blur(16px)',
                 border:'1.5px solid #e2e8f0',borderRadius:18,
                 boxShadow:'0 12px 48px rgba(0,0,0,.22)',
                 overflow:'hidden',
               }}>
-                {/* Header (탭하면 컴팩트↔전체 펼침 토글) */}
+                {/* Header (탭하면 컴팩트↔전체 펼침 토글, ✕는 패널 자체 닫기) */}
                 <div onClick={() => setInfoExpanded(v => !v)} style={{
                   background:`linear-gradient(135deg, ${cities?.[0]?.color || '#3b82f6'}18, ${cities?.[1]?.color || '#8b5cf6'}12)`,
-                  borderBottom: infoExpanded ? '1px solid #e2e8f0' : 'none', padding:'16px 20px',
-                  cursor:'pointer', userSelect:'none',
+                  borderBottom: infoExpanded ? '1px solid #e2e8f0' : 'none', padding:'11px 14px',
+                  cursor:'pointer', userSelect:'none', flexShrink:0,
                 }}>
-                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
-                    <span style={{fontSize:28}}>{info.emoji}</span>
+                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:5}}>
+                    <span style={{fontSize:22}}>{info.emoji}</span>
                     <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:20,fontWeight:800,color:'#0f172a',letterSpacing:'-.3px'}}>{countryKo}</div>
-                      <div style={{fontSize:11.5,color:'#64748b',fontWeight:500}}>{cName} · {info.continent}</div>
+                      <div style={{fontSize:17,fontWeight:800,color:'#0f172a',letterSpacing:'-.3px'}}>{countryKo}</div>
+                      <div style={{fontSize:10.5,color:'#64748b',fontWeight:500}}>{cName} · {info.continent}</div>
                     </div>
-                    <span style={{fontSize:14,color:'#94a3b8',flexShrink:0,marginLeft:4}}>{infoExpanded ? '▲' : '▼'}</span>
+                    <span style={{fontSize:13,color:'#94a3b8',flexShrink:0,marginLeft:2}}>{infoExpanded ? '▼' : '▲'}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowCountryInfo(false) }}
+                      style={{background:'#f1f5f9',border:'none',borderRadius:14,width:24,height:24,padding:0,cursor:'pointer',fontSize:11,color:'#64748b',fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}
+                      aria-label="close">✕</button>
                   </div>
-                  <div style={{fontSize:13,color:'#475569',fontStyle:'italic',lineHeight:1.5}}>"{info.tagline}"</div>
+                  <div style={{fontSize:11.5,color:'#475569',fontStyle:'italic',lineHeight:1.4}}>"{info.tagline}"</div>
                 </div>
 
-                {/* Info Grid (펼침 상태일 때만) */}
+                {/* 펼침 상태: 스크롤 래퍼 안에 Grid + Emergency + Footer 통합 */}
                 {infoExpanded && (
-                <div style={{padding:'14px 20px 18px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0'}}>
-                  {[
-                    { icon:'🏛️', label:t('lCapital'), value:info.capital },
-                    { icon:'👥', label:t('lPop'), value:info.population },
-                    { icon:'📐', label:t('lArea'), value:info.area },
-                    { icon:'🗣️', label:t('lLang'), value:info.lang },
-                    { icon:'💰', label:t('lCurrency'), value:info.currency },
-                    { icon:'🕐', label:t('lTimezone'), value:info.timezone },
-                    { icon:'🌤️', label:t('lBestSeason'), value:info.bestSeason },
-                    { icon:'🌍', label:t('lContinent'), value:info.continent },
-                    { icon:'🔌', label:t('lVoltage'), value:info.voltage },
-                    { icon:'📞', label:t('lCallCode'), value:info.callCode },
-                    { icon:'🚗', label:t('lDrive'), value:info.drive },
-                    { icon:'🌍', label:t('lCityCount'), value: cities ? `${cities.length}${t('registered')}` : '—' },
-                  ].map((item, i) => (
-                    <div key={i} style={{
-                      display:'flex',alignItems:'center',gap:9,
-                      padding:'9px 4px',
-                      borderBottom: i < 10 ? '1px solid #f1f5f9' : 'none',
-                    }}>
-                      <span style={{fontSize:15,flexShrink:0,width:22,textAlign:'center'}}>{item.icon}</span>
-                      <div style={{minWidth:0}}>
-                        <div style={{fontSize:10,color:'#94a3b8',fontWeight:600,letterSpacing:'.5px',lineHeight:1}}>{item.label}</div>
-                        <div style={{fontSize:12.5,color:'#1e293b',fontWeight:600,marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.value}</div>
+                <div style={{flex:1,overflowY:'auto',minHeight:0}}>
+                  {/* Info Grid */}
+                  <div style={{padding:'10px 14px 12px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0'}}>
+                    {[
+                      { icon:'🏛️', label:t('lCapital'), value:info.capital },
+                      { icon:'👥', label:t('lPop'), value:info.population },
+                      { icon:'📐', label:t('lArea'), value:info.area },
+                      { icon:'🗣️', label:t('lLang'), value:info.lang },
+                      { icon:'💰', label:t('lCurrency'), value:info.currency },
+                      { icon:'🕐', label:t('lTimezone'), value:info.timezone },
+                      { icon:'🌤️', label:t('lBestSeason'), value:info.bestSeason },
+                      { icon:'🌍', label:t('lContinent'), value:info.continent },
+                      { icon:'🔌', label:t('lVoltage'), value:info.voltage },
+                      { icon:'📞', label:t('lCallCode'), value:info.callCode },
+                      { icon:'🚗', label:t('lDrive'), value:info.drive },
+                      { icon:'🌍', label:t('lCityCount'), value: cities ? `${cities.length}${t('registered')}` : '—' },
+                    ].map((item, i) => (
+                      <div key={i} style={{
+                        display:'flex',alignItems:'center',gap:7,
+                        padding:'6px 4px',
+                        borderBottom: i < 10 ? '1px solid #f1f5f9' : 'none',
+                      }}>
+                        <span style={{fontSize:14,flexShrink:0,width:20,textAlign:'center'}}>{item.icon}</span>
+                        <div style={{minWidth:0}}>
+                          <div style={{fontSize:9.5,color:'#94a3b8',fontWeight:600,letterSpacing:'.5px',lineHeight:1}}>{item.label}</div>
+                          <div style={{fontSize:11.5,color:'#1e293b',fontWeight:600,marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.value}</div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-                )}
+                    ))}
+                  </div>
 
-                {/* Emergency Contacts (펼침 상태일 때만) */}
-                {infoExpanded && (() => {
-                  const em = EMERGENCY_CONTACTS[cName]
-                  if (!em) return null
-                  const items = [
-                    em.police && {icon:'🚔',label:t('emergPolice'),num:em.police},
-                    em.ambulance && {icon:'🚑',label:t('emergAmbulance'),num:em.ambulance},
-                    em.fire && {icon:'🚒',label:t('emergFire'),num:em.fire},
-                    em.tourist && {icon:'ℹ️',label:t('emergTourist'),num:em.tourist},
-                    em.general && {icon:'📞',label:t('emergGeneral'),num:em.general},
-                  ].filter(Boolean)
-                  return (
-                    <div style={{padding:'10px 20px 14px',borderTop:'1px solid #f1f5f9'}}>
-                      <div style={{fontSize:11,fontWeight:700,color:'#ef4444',letterSpacing:'.5px',marginBottom:8}}>🆘 {t('emergTitle')}</div>
-                      <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'repeat(3,1fr)',gap:5}}>
-                        {items.map((it,i)=>(
-                          <a key={i} href={`tel:${it.num}`} style={{display:'flex',alignItems:'center',gap:4,padding:'6px 8px',borderRadius:8,background:'#fef2f2',border:'1px solid #fecaca',textDecoration:'none',fontSize:11,color:'#dc2626',fontWeight:600,minWidth:0,overflow:'hidden'}}>
-                            <span style={{flexShrink:0,fontSize:12}}>{it.icon}</span>
-                            <div style={{minWidth:0,overflow:'hidden'}}>
-                              <div style={{fontSize:9,color:'#94a3b8',fontWeight:500,lineHeight:1}}>{it.label}</div>
-                              <div style={{fontSize:12,fontWeight:700,color:'#dc2626',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{it.num}</div>
-                            </div>
-                          </a>
-                        ))}
+                  {/* Emergency Contacts */}
+                  {(() => {
+                    const em = EMERGENCY_CONTACTS[cName]
+                    if (!em) return null
+                    const items = [
+                      em.police && {icon:'🚔',label:t('emergPolice'),num:em.police},
+                      em.ambulance && {icon:'🚑',label:t('emergAmbulance'),num:em.ambulance},
+                      em.fire && {icon:'🚒',label:t('emergFire'),num:em.fire},
+                      em.tourist && {icon:'ℹ️',label:t('emergTourist'),num:em.tourist},
+                      em.general && {icon:'📞',label:t('emergGeneral'),num:em.general},
+                    ].filter(Boolean)
+                    return (
+                      <div style={{padding:'8px 14px 10px',borderTop:'1px solid #f1f5f9'}}>
+                        <div style={{fontSize:10.5,fontWeight:700,color:'#ef4444',letterSpacing:'.5px',marginBottom:6}}>🆘 {t('emergTitle')}</div>
+                        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'repeat(3,1fr)',gap:4}}>
+                          {items.map((it,i)=>(
+                            <a key={i} href={`tel:${it.num}`} style={{display:'flex',alignItems:'center',gap:4,padding:'5px 7px',borderRadius:7,background:'#fef2f2',border:'1px solid #fecaca',textDecoration:'none',fontSize:10.5,color:'#dc2626',fontWeight:600,minWidth:0,overflow:'hidden'}}>
+                              <span style={{flexShrink:0,fontSize:11}}>{it.icon}</span>
+                              <div style={{minWidth:0,overflow:'hidden'}}>
+                                <div style={{fontSize:8.5,color:'#94a3b8',fontWeight:500,lineHeight:1}}>{it.label}</div>
+                                <div style={{fontSize:11,fontWeight:700,color:'#dc2626',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{it.num}</div>
+                              </div>
+                            </a>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )
-                })()}
+                    )
+                  })()}
 
-                {/* Footer hint (펼침 상태일 때만) */}
-                {infoExpanded && (
-                <div style={{borderTop:'1px solid #f1f5f9',padding:'10px 20px',textAlign:'center'}}>
-                  <span style={{fontSize:11,color:'#94a3b8'}}>{t('cityInfoHint')}</span>
+                  {/* Footer hint */}
+                  <div style={{borderTop:'1px solid #f1f5f9',padding:'7px 14px',textAlign:'center'}}>
+                    <span style={{fontSize:10.5,color:'#94a3b8'}}>{t('cityInfoHint')}</span>
+                  </div>
                 </div>
                 )}
               </div>
