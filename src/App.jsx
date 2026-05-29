@@ -1749,7 +1749,9 @@ function App() {
 
     globe.htmlElementsData([...countryLabels, ...otherIslandLabels, ...cities, ...OCEAN_LABELS])
     lastPovKeyRef.current = '' // 라벨 새로 생성됨 → 다음 틱에 강제 재처리
-  }, [selectedCountry, selectedCity, countries, lang])
+    // selectedCity는 deps에서 제외: cities 배열이 selectedCity에 의존 안 하고,
+    // 포함하면 도시 나갈 때 라벨 데이터가 재생성되어 줌아웃 중 라벨이 튐
+  }, [selectedCountry, countries, lang])
 
 
 
@@ -2004,7 +2006,7 @@ function App() {
     const CITY_TAP_PX = 70    // 체감 튜닝: 줄이면 정확히 눌러야, 키우면 넉넉하게
     // 탭 의도 판정: 1등이 2등보다 이만큼 명확히 가까우면 패널, 아니면(모호) 줌인
     const AMBIGUITY_MARGIN_PX = 28
-    const SEP_TARGET_PX = 130 // 모호한 탭일 때 줌인 후 라벨들 벌어질 목표 거리
+    const SEP_TARGET_PX = 160 // 모호 탭 줌인 후 클러스터 라벨들 분리될 목표 거리 (한 번에 분리되도록 공격적)
     const selectNearestCity = (countryName, event) => {
       const list = COUNTRY_CITIES[countryName] || []
       const r = pickNearestByScreen(list, c => c.lat, c => c.lng, event, CITY_TAP_PX)
@@ -2016,10 +2018,24 @@ function App() {
         setTimeout(() => { justClickedCityRef.current = false }, 150)
         handleCityClick({ ...best, name: getCityName(best.name), _koName: best.name, countryEn: countryName })
       } else {
-        // 모호한 탭(라벨들 사이) → 패널 안 열고 1등 도시 기준 줌인 (라벨 분리 → 다시 탭하면 명확)
+        // 모호한 탭 → 한 번에 클러스터 분리될 만큼 줌인
+        // best의 가장 가까운 이웃까지 화면거리(min) 계산 → 그게 SEP_TARGET_PX 되도록 줌
+        // 가장 가까운 쌍이 분리되면 나머지(그 너머)는 자동으로 더 멀리 떨어짐
+        const bestSc = globe.getScreenCoords(best.lat, best.lng)
+        let minNeighborD = Infinity
+        if (bestSc) {
+          for (const c of list) {
+            if (c === best || !isFrontFace(c.lat, c.lng)) continue
+            const sc = globe.getScreenCoords(c.lat, c.lng)
+            if (!sc) continue
+            const d = Math.sqrt((sc.x - bestSc.x) ** 2 + (sc.y - bestSc.y) ** 2)
+            if (d < minNeighborD) minNeighborD = d
+          }
+        }
+        // 이웃까지 거리가 SEP_TARGET_PX 되도록 줌인 (alt 비례)
         const pov = globe.pointOfView()
-        // 2등 라벨과 벌어질 만큼 줌. secondD가 가까울수록 더 깊게 줌인
-        const newAlt = Math.max(0.05, pov.altitude * (secondD / SEP_TARGET_PX))
+        const ratio = isFinite(minNeighborD) ? (minNeighborD / SEP_TARGET_PX) : 0.5
+        const newAlt = Math.max(0.05, pov.altitude * ratio)
         justClickedCityRef.current = true
         setTimeout(() => { justClickedCityRef.current = false }, 150)
         globe.pointOfView({ lat: best.lat, lng: best.lng, altitude: newAlt }, 700)
@@ -2081,9 +2097,8 @@ function App() {
             handleCountryClick(feat)
           }
         } else {
-          // 세계뷰: 탭 시 노란색 잠깐 표시(클릭 피드백) 후 선택
-          setHoveredCountry(feat.properties.NAME)
-          setTimeout(() => handleCountryClick(feat), 160)
+          // 세계뷰: 즉시 국가 진입 (지연 피드백 제거 → 짧은 탭도 안정적)
+          handleCountryClick(feat)
         }
       })
       .onGlobeClick((coords, ev) => {
