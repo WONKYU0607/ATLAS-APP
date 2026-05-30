@@ -433,6 +433,7 @@ function App() {
   const pendingPanelRef = useRef(false) // 직전이 줌-only였으면 true → 다음 탭은 무조건 패널 (의도 단계 추적)
   const foodReqRef = useRef(0) // 음식점 fetch 경쟁 상태 방지 (최신 요청만 반영)
   const lastPovKeyRef = useRef('') // hideBackLabels idle 스킵용 (라벨 재생성 시 리셋)
+  const prevPovRef = useRef(null) // 도시 클릭 전 카메라 상태 저장 (닫을 때 복원용)
   const hasTouchedRef = useRef(false) // 페이지에 첫 터치 발생하면 true → 호버 영구 비활성 (모바일 확정)
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState(null)
@@ -2011,7 +2012,7 @@ function App() {
     const CITY_TAP_PX = 70    // 체감 튜닝: 줄이면 정확히 눌러야, 키우면 넉넉하게
     // 의도 판정: 비율(1등이 2등보다 2배+ 가까움) 또는 절대차(>=28px). 어느 하나만 만족해도 패널.
     // 비율은 클러스터 처리용(라벨 정확히 탭 = 1등 압도적), 절대차는 일반 거리용.
-    const AMBIGUITY_MARGIN_PX = 28
+    const AMBIGUITY_MARGIN_PX = 18
     const SEP_TARGET_PX = 160 // 모호 탭 줌인 후 클러스터 라벨들 분리될 목표 거리 (한 번에 분리되도록 공격적)
     const selectNearestCity = (countryName, event) => {
       const list = COUNTRY_CITIES[countryName] || []
@@ -2020,7 +2021,7 @@ function App() {
       const { best, bestD, secondD } = r
       // 명확 판정: 비율(bestD * 2 <= secondD) 또는 절대차(>=28) 또는 직전이 줌-only(다음 탭은 무조건 패널)
       // pendingPanelRef는 사용자 의도 단계 추적 — "줌으로 클러스터 펼쳤으니 이번 탭은 선택" 흐름 자연스럽게
-      const isClear = !isFinite(secondD) || (bestD * 2 <= secondD) || (secondD - bestD >= AMBIGUITY_MARGIN_PX) || pendingPanelRef.current
+      const isClear = !isFinite(secondD) || (bestD * 1.5 <= secondD) || (secondD - bestD >= AMBIGUITY_MARGIN_PX) || pendingPanelRef.current
       if (isClear) {
         pendingPanelRef.current = false  // 패널 열림 → ref 소비/리셋
         justClickedCityRef.current = true
@@ -2506,13 +2507,14 @@ function App() {
       setShowCountryInfo(false)
       fetchCityData(city)
       // 국가 줌보다 더 가까이 줌인 (단, 이미 더 가까이 줌인된 상태면 현재 줌 유지 — 줌아웃 방지)
+      const pov = globeRef.current.pointOfView()
+      prevPovRef.current = { lat: pov.lat, lng: pov.lng, altitude: pov.altitude } // 닫을 때 복원용
       const countryName = city.countryEn || selectedCountry?.properties?.NAME
       const cz = countryName && COUNTRY_ZOOM[countryName]
       const baseAlt = cz ? cz.alt : 0.3
       const cityAlt = Math.max(Math.min(baseAlt * 0.45, 0.15), 0.06)
       const finalCityAlt = window.innerWidth <= 768 ? cityAlt * 1.4 : cityAlt
-      const currentAlt = globeRef.current.pointOfView().altitude
-      const targetAlt = Math.min(finalCityAlt, currentAlt) // 현재가 더 가까우면 유지
+      const targetAlt = Math.min(finalCityAlt, pov.altitude) // 현재가 더 가까우면 유지
       globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: targetAlt }, 900)
     } catch(e) { console.error('city click error:', e) }
   }
@@ -2750,8 +2752,13 @@ function App() {
 
 
   const closePanel = () => {
-    // 줌아웃 없이 상태만 초기화 — 현재 뷰 그대로 유지
+    // 줌을 클릭 전 상태로 복원 (큰 그림으로 자연스럽게 돌아감)
     setSelectedCity(null); setCityData(null); setSelectedSpot(null); setSidePanel(null)
+    if (prevPovRef.current && globeRef.current) {
+      const p = prevPovRef.current
+      globeRef.current.pointOfView({ lat: p.lat, lng: p.lng, altitude: p.altitude }, 900)
+      prevPovRef.current = null
+    }
   }
 
   const closeCountry = () => {
@@ -3191,7 +3198,7 @@ function App() {
             {/* Country Info Panel (단일 통합 UI — 하단 바 역할 겸함) */}
             {info && (
               <div className="countryInfoPanel" style={{
-                position:'absolute',bottom:isMobile?'calc(12px + env(safe-area-inset-bottom))':24,left:'50%',transform:'translateX(-50%)',
+                position:'absolute',bottom:isMobile?'calc(24px + env(safe-area-inset-bottom))':24,left:'50%',transform:'translateX(-50%)',
                 zIndex:1000,width:isMobile?'95vw':480,maxWidth:'95vw',
                 maxHeight:isMobile?'40vh':'none',
                 display:'flex',flexDirection:'column',
@@ -3494,7 +3501,7 @@ function App() {
                   title={t("favToggle")}>{isFav('city',selectedCity?._koName||selectedCity?.name)?'★':'☆'}</button>
                 <button onClick={()=>toggleVisitedCity(selectedCity?._koName||selectedCity?.name)}
                   style={{background:isVisitedCity(selectedCity?._koName||selectedCity?.name)?'#22c55e':'#f5f0ea',border:isVisitedCity(selectedCity?._koName||selectedCity?.name)?'none':'1px solid #e0d9d0',color:isVisitedCity(selectedCity?._koName||selectedCity?.name)?'white':'#b0a89e',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
-                  title={isVisitedCity(selectedCity?._koName||selectedCity?.name)?t("visitedUnmark"):t("visitedMark")}>{isVisitedCity(selectedCity?._koName||selectedCity?.name)?'✓':'🚩'}</button>
+                  title={isVisitedCity(selectedCity?._koName||selectedCity?.name)?t("visitedUnmark"):t("visitedMark")}>{isVisitedCity(selectedCity?._koName||selectedCity?.name)?'✓':'⊘'}</button>
                 <button onClick={closePanel}
                   style={{background:'#f5f0ea',border:'1px solid #e0d9d0',color:'#b0a89e',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all .2s'}}
                   onMouseEnter={e=>e.currentTarget.style.background='#e8e0d6'}
