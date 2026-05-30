@@ -1984,7 +1984,9 @@ function App() {
       const la = lat * Math.PI / 180, ln = lng * Math.PI / 180
       const ang = Math.acos(Math.max(-1, Math.min(1,
         Math.sin(cLat) * Math.sin(la) + Math.cos(cLat) * Math.cos(la) * Math.cos(ln - cLng))))
-      return ang < 1.4  // ~80도 이내(앞면)만
+      // 줌 깊이에 따른 시야각 — 줌인 시 좁게 (화면에 보이는 도시만 후보로)
+      const threshold = Math.min(1.4, Math.atan(pov.altitude * 1.5) + 0.2)
+      return ang < threshold
     }
     // 탭한 화면 위치 기준, 화면상 가장 가까운 항목 선택 (라벨 기준이라 정확)
     // 반환: { best, bestD, secondD } — 1등 항목 + 1등·2등 화면거리(px). 모호함 판정용.
@@ -3191,7 +3193,7 @@ function App() {
               <div className="countryInfoPanel" style={{
                 position:'absolute',bottom:isMobile?'calc(60px + env(safe-area-inset-bottom))':24,left:'50%',transform:'translateX(-50%)',
                 zIndex:1000,width:isMobile?'95vw':480,maxWidth:'95vw',
-                maxHeight:isMobile?'40vh':'none',
+                maxHeight:isMobile?'27vh':'none',
                 display:'flex',flexDirection:'column',
                 background:'rgba(255,255,255,.97)',backdropFilter:'blur(16px)',
                 border:'1.5px solid #e2e8f0',borderRadius:18,
@@ -3492,7 +3494,7 @@ function App() {
                   title={t("favToggle")}>{isFav('city',selectedCity?._koName||selectedCity?.name)?'★':'☆'}</button>
                 <button onClick={()=>toggleVisitedCity(selectedCity?._koName||selectedCity?.name)}
                   style={{background:isVisitedCity(selectedCity?._koName||selectedCity?.name)?'#22c55e':'#f5f0ea',border:isVisitedCity(selectedCity?._koName||selectedCity?.name)?'none':'1px solid #e0d9d0',color:isVisitedCity(selectedCity?._koName||selectedCity?.name)?'white':'#b0a89e',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
-                  title={isVisitedCity(selectedCity?._koName||selectedCity?.name)?t("visitedUnmark"):t("visitedMark")}>{isVisitedCity(selectedCity?._koName||selectedCity?.name)?'✓':'⊘'}</button>
+                  title={isVisitedCity(selectedCity?._koName||selectedCity?.name)?t("visitedUnmark"):t("visitedMark")}>{isVisitedCity(selectedCity?._koName||selectedCity?.name)?'✓':'🚩'}</button>
                 <button onClick={closePanel}
                   style={{background:'#f5f0ea',border:'1px solid #e0d9d0',color:'#b0a89e',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all .2s'}}
                   onMouseEnter={e=>e.currentTarget.style.background='#e8e0d6'}
