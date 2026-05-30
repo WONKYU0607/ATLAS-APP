@@ -433,7 +433,6 @@ function App() {
   const pendingPanelRef = useRef(false) // 직전이 줌-only였으면 true → 다음 탭은 무조건 패널 (의도 단계 추적)
   const foodReqRef = useRef(0) // 음식점 fetch 경쟁 상태 방지 (최신 요청만 반영)
   const lastPovKeyRef = useRef('') // hideBackLabels idle 스킵용 (라벨 재생성 시 리셋)
-  const prevPovRef = useRef(null) // 도시 클릭 전 카메라 상태 저장 (닫을 때 복원용)
   const hasTouchedRef = useRef(false) // 페이지에 첫 터치 발생하면 true → 호버 영구 비활성 (모바일 확정)
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState(null)
@@ -2506,16 +2505,9 @@ function App() {
       setCityData(null)
       setShowCountryInfo(false)
       fetchCityData(city)
-      // 국가 줌보다 더 가까이 줌인 (단, 이미 더 가까이 줌인된 상태면 현재 줌 유지 — 줌아웃 방지)
+      // 도시로 카메라 슬라이드만 (줌 레벨은 그대로 유지)
       const pov = globeRef.current.pointOfView()
-      prevPovRef.current = { lat: pov.lat, lng: pov.lng, altitude: pov.altitude } // 닫을 때 복원용
-      const countryName = city.countryEn || selectedCountry?.properties?.NAME
-      const cz = countryName && COUNTRY_ZOOM[countryName]
-      const baseAlt = cz ? cz.alt : 0.3
-      const cityAlt = Math.max(Math.min(baseAlt * 0.45, 0.15), 0.06)
-      const finalCityAlt = window.innerWidth <= 768 ? cityAlt * 1.4 : cityAlt
-      const targetAlt = Math.min(finalCityAlt, pov.altitude) // 현재가 더 가까우면 유지
-      globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: targetAlt }, 900)
+      globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: pov.altitude }, 900)
     } catch(e) { console.error('city click error:', e) }
   }
 
@@ -2752,13 +2744,8 @@ function App() {
 
 
   const closePanel = () => {
-    // 줌을 클릭 전 상태로 복원 (큰 그림으로 자연스럽게 돌아감)
+    // 줌 그대로 유지 — 도시 패널은 줌 상태에 영향 주지 않음
     setSelectedCity(null); setCityData(null); setSelectedSpot(null); setSidePanel(null)
-    if (prevPovRef.current && globeRef.current) {
-      const p = prevPovRef.current
-      globeRef.current.pointOfView({ lat: p.lat, lng: p.lng, altitude: p.altitude }, 900)
-      prevPovRef.current = null
-    }
   }
 
   const closeCountry = () => {
