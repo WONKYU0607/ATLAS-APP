@@ -1847,7 +1847,7 @@ function App() {
           const isSelected = (selectedCity?._koName || selectedCity?.name) === (d._koName || d.name)
           // 데스크탑(hover 지원 + 터치 미발생): 라벨 hover/클릭 가능 / 모바일: 터치 투명
           const supportsHover = !hasTouchedRef.current && typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: hover)').matches
-          el.style.cssText = supportsHover ? 'cursor:pointer;' : 'pointer-events:none;'
+          el.style.cssText = supportsHover ? 'cursor:pointer;pointer-events:auto;' : 'pointer-events:none;'
           const inner = document.createElement('div')
           const baseColor = isSelected ? '#2563eb' : 'rgba(255,255,255,0.95)'
           inner.style.cssText = `
