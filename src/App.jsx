@@ -2011,7 +2011,7 @@ function App() {
     const CITY_TAP_PX = 70    // 체감 튜닝: 줄이면 정확히 눌러야, 키우면 넉넉하게
     // 의도 판정: 비율(1등이 2등보다 2배+ 가까움) 또는 절대차(>=28px). 어느 하나만 만족해도 패널.
     // 비율은 클러스터 처리용(라벨 정확히 탭 = 1등 압도적), 절대차는 일반 거리용.
-    const AMBIGUITY_MARGIN_PX = 18
+    const AMBIGUITY_MARGIN_PX = 28
     const SEP_TARGET_PX = 160 // 모호 탭 줌인 후 클러스터 라벨들 분리될 목표 거리 (한 번에 분리되도록 공격적)
     const selectNearestCity = (countryName, event) => {
       const list = COUNTRY_CITIES[countryName] || []
@@ -2020,7 +2020,7 @@ function App() {
       const { best, bestD, secondD } = r
       // 명확 판정: 비율(bestD * 2 <= secondD) 또는 절대차(>=28) 또는 직전이 줌-only(다음 탭은 무조건 패널)
       // pendingPanelRef는 사용자 의도 단계 추적 — "줌으로 클러스터 펼쳤으니 이번 탭은 선택" 흐름 자연스럽게
-      const isClear = !isFinite(secondD) || (bestD * 1.5 <= secondD) || (secondD - bestD >= AMBIGUITY_MARGIN_PX) || pendingPanelRef.current
+      const isClear = !isFinite(secondD) || (bestD * 2 <= secondD) || (secondD - bestD >= AMBIGUITY_MARGIN_PX) || pendingPanelRef.current
       if (isClear) {
         pendingPanelRef.current = false  // 패널 열림 → ref 소비/리셋
         justClickedCityRef.current = true
