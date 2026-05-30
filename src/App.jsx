@@ -1845,24 +1845,32 @@ function App() {
           ">${d.name}</div>`
         } else if (d._type === 'city') {
           const isSelected = (selectedCity?._koName || selectedCity?.name) === (d._koName || d.name)
-          el.style.cssText = 'pointer-events:none;'  // 터치 투명 → 회전/줌 안 막힘 (선택은 onGlobeClick에서)
+          // 데스크탑(hover 지원 + 터치 미발생): 라벨 hover/클릭 가능 / 모바일: 터치 투명
+          const supportsHover = !hasTouchedRef.current && typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: hover)').matches
+          el.style.cssText = supportsHover ? 'cursor:pointer;' : 'pointer-events:none;'
           const inner = document.createElement('div')
+          const baseColor = isSelected ? '#2563eb' : 'rgba(255,255,255,0.95)'
           inner.style.cssText = `
             transform:translate(-50%,-50%);
             font-family:Pretendard,Inter,system-ui,sans-serif;
             font-size:${isSelected ? '14px' : '12px'};
             font-weight:700;
-            color:${isSelected ? '#2563eb' : 'rgba(255,255,255,0.95)'};
+            color:${baseColor};
             text-shadow:0 1px 6px rgba(0,0,0,1),0 0 12px rgba(0,0,0,0.9);
             white-space:nowrap;
             user-select:none;
             padding:4px 10px;
             border-radius:6px;
             background:transparent;
-            transition:all 0.2s ease;
+            transition:color 0.15s ease;
             border:none;
           `
           inner.textContent = d.name
+          if (supportsHover) {
+            inner.addEventListener('mouseenter', () => { inner.style.color = '#60a5fa' })
+            inner.addEventListener('mouseleave', () => { inner.style.color = baseColor })
+            inner.addEventListener('click', (e) => { e.stopPropagation(); handleCityClickRef.current?.(d) })
+          }
           el.appendChild(inner)
         } else {
           const hasCities = COUNTRY_CITIES[d.nameEn]
