@@ -2002,7 +2002,7 @@ function App() {
         if (!sc) continue
         // 화면 영역 밖 라벨은 후보 제외 (줌인 시 시야 좁아져서 80도 통과해도 화면 밖일 수 있음)
         if (sc.x < 0 || sc.x > rect.width || sc.y < 0 || sc.y > rect.height) continue
-        const labelHalfW = ((it.name || it.nameEn || '').length || 3) * 6
+        const labelHalfW = ((it.name || it.nameEn || '').length || 3) * 10
         const dx = Math.max(Math.abs(sc.x - tapX) - labelHalfW, 0), dy = sc.y - tapY
         const d = Math.sqrt(dx * dx + dy * dy)
         if (d < bestD) { secondD = bestD; bestD = d; best = it }
