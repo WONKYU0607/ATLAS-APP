@@ -2020,7 +2020,9 @@ function App() {
       const { best, bestD, secondD } = r
       // 명확 판정: 비율(bestD * 2 <= secondD) 또는 절대차(>=28) 또는 직전이 줌-only(다음 탭은 무조건 패널)
       // pendingPanelRef는 사용자 의도 단계 추적 — "줌으로 클러스터 펼쳤으니 이번 탭은 선택" 흐름 자연스럽게
-      const isClear = !isFinite(secondD) || (bestD * 2 <= secondD) || (secondD - bestD >= AMBIGUITY_MARGIN_PX) || pendingPanelRef.current
+      // 줌인된 상태(작은 altitude)면 모호 판정 거치지 않고 무조건 패널 — 사용자 의도 명확
+      const isZoomedIn = globe.pointOfView().altitude < 0.15
+      const isClear = isZoomedIn || !isFinite(secondD) || (bestD * 2 <= secondD) || (secondD - bestD >= AMBIGUITY_MARGIN_PX) || pendingPanelRef.current
       if (isClear) {
         pendingPanelRef.current = false  // 패널 열림 → ref 소비/리셋
         justClickedCityRef.current = true
