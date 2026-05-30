@@ -1998,6 +1998,8 @@ function App() {
         if (!isFrontFace(la, ln)) continue
         const sc = globe.getScreenCoords(la, ln)
         if (!sc) continue
+        // 화면 영역 밖 라벨은 후보 제외 (줌인 시 시야 좁아져서 80도 통과해도 화면 밖일 수 있음)
+        if (sc.x < 0 || sc.x > rect.width || sc.y < 0 || sc.y > rect.height) continue
         const dx = sc.x - tapX, dy = sc.y - tapY
         const d = Math.sqrt(dx * dx + dy * dy)
         if (d < bestD) { secondD = bestD; bestD = d; best = it }
@@ -3187,7 +3189,7 @@ function App() {
             {/* Country Info Panel (단일 통합 UI — 하단 바 역할 겸함) */}
             {info && (
               <div className="countryInfoPanel" style={{
-                position:'absolute',bottom:isMobile?'calc(24px + env(safe-area-inset-bottom))':24,left:'50%',transform:'translateX(-50%)',
+                position:'absolute',bottom:isMobile?'calc(60px + env(safe-area-inset-bottom))':24,left:'50%',transform:'translateX(-50%)',
                 zIndex:1000,width:isMobile?'95vw':480,maxWidth:'95vw',
                 maxHeight:isMobile?'40vh':'none',
                 display:'flex',flexDirection:'column',
