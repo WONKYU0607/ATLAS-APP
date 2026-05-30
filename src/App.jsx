@@ -1185,7 +1185,6 @@ function App() {
         // 도시 닫을 때 줌아웃 제거 — 줌 유지하면서 옆 도시 바로 탭 가능하게
         return
       }
-      }
       if (s.selectedCountry && s.showCountryInfo) {
         setShowCountryInfo(false)
         backStateRef.current = { ...s, showCountryInfo: false }
@@ -2751,13 +2750,8 @@ function App() {
 
 
   const closePanel = () => {
+    // 줌아웃 없이 상태만 초기화 — 현재 뷰 그대로 유지
     setSelectedCity(null); setCityData(null); setSelectedSpot(null); setSidePanel(null)
-    if (selectedCountry && globeRef.current) {
-      const center = getCountryCenter(selectedCountry)
-      const altitude = getCountryAltitude(selectedCountry)
-      const mAlt = window.innerWidth <= 768 ? altitude * 1.5 : altitude
-      globeRef.current.pointOfView({ lat: center.lat, lng: center.lng, altitude: mAlt }, 900)
-    }
   }
 
   const closeCountry = () => {
