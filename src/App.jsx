@@ -6,6 +6,7 @@ import { COUNTRY_ISO, COUNTRY_NAME_OVERRIDE, getCountryDisplayName, LANG_OPTIONS
 import { COUNTRY_CITIES } from './data/countryCities'
 import ISLAND_POLYGONS from './data/islandPolygons.json'
 import CITY_PHOTOS, { pickI18n } from './data/cityPhotos'
+import COUNTRIES_50M from './data/countries50m.json'
 
 // 작은 섬나라 라벨 데이터 (폴리곤 없이 라벨 좌표만 사용 — 클릭 시 진입)
 const ISLAND_LABEL_DATA = ((ISLAND_POLYGONS && ISLAND_POLYGONS.features) || [])
@@ -1513,7 +1514,7 @@ function App() {
       setCountries(fixed)
     }
 
-    load110m().then(processGeo).catch(err => console.error('[ATLAS] Polygon load failed:', err))
+    processGeo(COUNTRIES_50M)
   }, [])
 
   // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
