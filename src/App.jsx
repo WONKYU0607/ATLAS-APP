@@ -2109,7 +2109,20 @@ function App() {
       .onPolygonClick((feat, ev, coords) => {
         if (justClickedCityRef.current) return
         if (hasSelection) {
+          // 마이크로스테이트(폴리곤 없는 국가)는 자기 도시 우선 시도 — 폴리곤 클릭이 다른 나라로 빠져나가지 않게
+          const isMicroState = !selectedCountry.geometry
+          if (isMicroState) {
+            const cl = COUNTRY_CITIES[selectedCountry.properties.NAME] || []
+            const cityR = pickNearestByScreen(cl, c => c.lat, c => c.lng, ev, 70)
+            if (cityR) { selectNearestCity(selectedCountry.properties.NAME, ev); return }
+          }
           // 국가뷰: 같은 나라 땅 탭 → 화면상 가장 가까운 도시 / 다른 나라 → 전환
+          if (feat.properties.NAME === selectedCountry.properties.NAME) {
+            selectNearestCity(selectedCountry.properties.NAME, ev)
+          } else {
+            handleCountryClick(feat)
+          }
+        } else {
           if (feat.properties.NAME === selectedCountry.properties.NAME) {
             selectNearestCity(selectedCountry.properties.NAME, ev)
           } else {
