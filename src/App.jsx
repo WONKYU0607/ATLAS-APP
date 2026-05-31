@@ -2100,6 +2100,7 @@ function App() {
         if (hoveredCountry === name) return 0.005
         return 0.003
       })
+      .polygonCapCurvatureResolution(12)
       .polygonLabel(() => '')
       .onPolygonHover(feat => {
         if (hasSelection) return
