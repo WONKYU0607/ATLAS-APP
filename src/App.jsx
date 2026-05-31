@@ -2000,10 +2000,10 @@ function App() {
         if (!isFrontFace(la, ln)) continue
         const sc = globe.getScreenCoords(la, ln)
         if (!sc) continue
-        // 화면 영역 밖 라벨은 후보 제외 (줌인 시 시야 좁아져서 80도 통과해도 화면 밖일 수 있음)
-        if (sc.x < 0 || sc.x > rect.width || sc.y < 0 || sc.y > rect.height) continue
-        const labelHalfW = ((it.name || it.nameEn || '').length || 3) * 10
-        const dx = Math.max(Math.abs(sc.x - tapX) - labelHalfW, 0), dy = sc.y - tapY
+        // 화면 영역 밖 또는 가장자리 살짝 걸친 라벨 후보 제외 (50px 안쪽만)
+        const m = 50
+        if (sc.x < m || sc.x > rect.width - m || sc.y < m || sc.y > rect.height - m) continue
+        const dx = sc.x - tapX, dy = sc.y - tapY
         const d = Math.sqrt(dx * dx + dy * dy)
         if (d < bestD) { secondD = bestD; bestD = d; best = it }
         else if (d < secondD) { secondD = d }
@@ -2116,6 +2116,14 @@ function App() {
             handleCountryClick(feat)
           }
         } else {
+          // 세계뷰: 먼저 마이크로스테이트(폴리곤 없는 작은 국가, 큰 나라 영토 안에 위치) 체크
+          const microR = pickNearestByScreen(ISLAND_LABEL_DATA, d => d.lat, d => d.lng, ev, 30)
+          if (microR) {
+            let mFeat = countries.find(f => f.properties && f.properties.NAME === microR.best.nameEn)
+            if (!mFeat) mFeat = { type: 'Feature', properties: { NAME: microR.best.nameEn, LABEL_X: microR.best.lng, LABEL_Y: microR.best.lat }, geometry: null }
+            handleCountryClick(mFeat)
+            return
+          }
           // 세계뷰: 즉시 국가 진입 (지연 피드백 제거 → 짧은 탭도 안정적)
           handleCountryClick(feat)
         }
@@ -3194,8 +3202,8 @@ function App() {
             {info && (
               <div className="countryInfoPanel" style={{
                 position:'absolute',bottom:isMobile?'calc(60px + env(safe-area-inset-bottom))':24,left:'50%',transform:'translateX(-50%)',
-                zIndex:1000,width:isMobile?'95vw':480,maxWidth:'95vw',
-                maxHeight:isMobile?'27vh':'none',
+                zIndex:1000,width:isMobile?'78vw':480,maxWidth:'95vw',
+                maxHeight:isMobile?'40vh':'none',
                 display:'flex',flexDirection:'column',
                 background:'rgba(255,255,255,.97)',backdropFilter:'blur(16px)',
                 border:'1.5px solid #e2e8f0',borderRadius:18,
