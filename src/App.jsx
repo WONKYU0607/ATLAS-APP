@@ -2255,6 +2255,8 @@ function App() {
     const name = feat.properties.NAME
     // 사전 정의된 줌이 있으면 사용
     if (COUNTRY_ZOOM[name]) return COUNTRY_ZOOM[name].alt
+    // geometry 없으면 마이크로스테이트(폴리곤 없는 작은 국가) → 깊게 줌인
+    if (!feat.geometry) return 0.05
     // 없으면 바운딩박스 기반 계산
     try {
       let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180
