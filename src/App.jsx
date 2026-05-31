@@ -1481,7 +1481,7 @@ function App() {
 
   // Load world GeoJSON (110m 고정, 남극 날짜변경선 ring 제거)
   useEffect(() => {
-    const load110m = () => fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson')
+    const load110m = () => fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
       .then(r => r.json())
 
     // 경도 180도 이상 span 하는 ring은 렌더링 시 지구 전체 덮음 (남극 등)
@@ -1513,7 +1513,7 @@ function App() {
       setCountries(fixed)
     }
 
-    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson').then(r => r.json()).then(processGeo).catch(err => console.error('[ATLAS] Polygon load failed:', err))
+    load110m().then(processGeo).catch(err => console.error('[ATLAS] Polygon load failed:', err))
   }, [])
 
   // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
@@ -2096,11 +2096,11 @@ function App() {
       })
       .polygonAltitude(feat => {
         const name = feat.properties.NAME
-        if (hasSelection && selectedCountry?.properties.NAME === name) return 0.002
-        if (hoveredCountry === name) return 0.0015
-        return 0.001
+        if (hasSelection && selectedCountry?.properties.NAME === name) return 0.006
+        if (hoveredCountry === name) return 0.005
+        return 0.003
       })
-      .polygonCapCurvatureResolution(12)
+      .polygonCapCurvatureResolution(8)
       .polygonLabel(() => '')
       .onPolygonHover(feat => {
         if (hasSelection) return
