@@ -2027,7 +2027,8 @@ function App() {
       // pendingPanelRef는 사용자 의도 단계 추적 — "줌으로 클러스터 펼쳤으니 이번 탭은 선택" 흐름 자연스럽게
       // 줌인된 상태(작은 altitude)면 모호 판정 거치지 않고 무조건 패널 — 사용자 의도 명확
       const isZoomedIn = globe.pointOfView().altitude < 0.15
-      const isClear = isZoomedIn || !isFinite(secondD) || (bestD * 2 <= secondD) || (secondD - bestD >= AMBIGUITY_MARGIN_PX) || pendingPanelRef.current
+      const isAmbiguousCluster = !isZoomedIn && isFinite(secondD) && secondD < 50
+      const isClear = !isAmbiguousCluster && (isZoomedIn || !isFinite(secondD) || (bestD * 2 <= secondD) || (secondD - bestD >= AMBIGUITY_MARGIN_PX) || pendingPanelRef.current)
       if (isClear) {
         pendingPanelRef.current = false  // 패널 열림 → ref 소비/리셋
         justClickedCityRef.current = true
