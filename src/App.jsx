@@ -1481,7 +1481,7 @@ function App() {
 
   // Load world GeoJSON (110m 고정, 남극 날짜변경선 ring 제거)
   useEffect(() => {
-    const load110m = () => fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
+    const load110m = () => fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson')
       .then(r => r.json())
 
     // 경도 180도 이상 span 하는 ring은 렌더링 시 지구 전체 덮음 (남극 등)
