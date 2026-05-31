@@ -2100,7 +2100,6 @@ function App() {
         if (hoveredCountry === name) return 0.005
         return 0.003
       })
-      .polygonCapCurvatureResolution(8)
       .polygonLabel(() => '')
       .onPolygonHover(feat => {
         if (hasSelection) return
@@ -3223,22 +3222,22 @@ function App() {
                 {/* Header (탭하면 컴팩트↔전체 펼침 토글, ✕는 패널 자체 닫기) */}
                 <div onClick={() => setInfoExpanded(v => !v)} style={{
                   background:`linear-gradient(135deg, ${cities?.[0]?.color || '#3b82f6'}18, ${cities?.[1]?.color || '#8b5cf6'}12)`,
-                  borderBottom: infoExpanded ? '1px solid #e2e8f0' : 'none', padding:'11px 14px',
+                  borderBottom: infoExpanded ? '1px solid #e2e8f0' : 'none', padding:'8px 11px',
                   cursor:'pointer', userSelect:'none', flexShrink:0,
                 }}>
-                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:5}}>
-                    <span style={{fontSize:22}}>{info.emoji}</span>
+                  <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:3}}>
+                    <span style={{fontSize:18}}>{info.emoji}</span>
                     <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:17,fontWeight:800,color:'#0f172a',letterSpacing:'-.3px'}}>{countryKo}</div>
-                      <div style={{fontSize:10.5,color:'#64748b',fontWeight:500}}>{cName} · {info.continent}</div>
+                      <div style={{fontSize:14,fontWeight:800,color:'#0f172a',letterSpacing:'-.3px'}}>{countryKo}</div>
+                      <div style={{fontSize:9,color:'#64748b',fontWeight:500}}>{cName} · {info.continent}</div>
                     </div>
-                    <span style={{fontSize:13,color:'#94a3b8',flexShrink:0,marginLeft:2}}>{infoExpanded ? '▼' : '▲'}</span>
+                    <span style={{fontSize:11,color:'#94a3b8',flexShrink:0,marginLeft:2}}>{infoExpanded ? '▼' : '▲'}</span>
                     <button
                       onClick={(e) => { e.stopPropagation(); closeCountry() }}
-                      style={{background:'#f1f5f9',border:'none',borderRadius:14,width:24,height:24,padding:0,cursor:'pointer',fontSize:11,color:'#64748b',fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}
+                      style={{background:'#f1f5f9',border:'none',borderRadius:12,width:20,height:20,padding:0,cursor:'pointer',fontSize:10,color:'#64748b',fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}
                       aria-label="close">✕</button>
                   </div>
-                  <div style={{fontSize:11.5,color:'#475569',fontStyle:'italic',lineHeight:1.4}}>"{info.tagline}"</div>
+                  <div style={{fontSize:10,color:'#475569',fontStyle:'italic',lineHeight:1.4}}>"{info.tagline}"</div>
                 </div>
 
                 {/* 펼침 상태: 스크롤 래퍼 안에 Grid + Emergency + Footer 통합 */}
