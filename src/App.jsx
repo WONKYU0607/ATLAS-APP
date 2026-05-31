@@ -2096,9 +2096,9 @@ function App() {
       })
       .polygonAltitude(feat => {
         const name = feat.properties.NAME
-        if (hasSelection && selectedCountry?.properties.NAME === name) return 0.006
-        if (hoveredCountry === name) return 0.005
-        return 0.003
+        if (hasSelection && selectedCountry?.properties.NAME === name) return 0.002
+        if (hoveredCountry === name) return 0.0015
+        return 0.001
       })
       .polygonCapCurvatureResolution(12)
       .polygonLabel(() => '')
