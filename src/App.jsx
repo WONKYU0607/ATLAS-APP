@@ -2123,12 +2123,6 @@ function App() {
             handleCountryClick(feat)
           }
         } else {
-          if (feat.properties.NAME === selectedCountry.properties.NAME) {
-            selectNearestCity(selectedCountry.properties.NAME, ev)
-          } else {
-            handleCountryClick(feat)
-          }
-        } else {
           // 세계뷰: 먼저 마이크로스테이트(폴리곤 없는 작은 국가, 큰 나라 영토 안에 위치) 체크
           const microR = pickNearestByScreen(ISLAND_LABEL_DATA, d => d.lat, d => d.lng, ev, 30)
           if (microR) {
