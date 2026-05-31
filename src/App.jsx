@@ -1513,8 +1513,7 @@ function App() {
       setCountries(fixed)
     }
 
-    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson').then(r => r.json()).then(processGeo).catch(err => console.error('[ATLAS] Polygon load failed:', err))    processGeo(COUNTRIES_50M)
-  }, [])
+    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson').then(r => r.json()).then(processGeo).catch(err => console.error('[ATLAS] Polygon load failed:', err))
 
   // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
   useEffect(() => {
