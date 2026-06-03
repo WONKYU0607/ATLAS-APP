@@ -556,7 +556,11 @@ function App() {
   const [dragItem, setDragItem] = useState(null)
   const [activeDayTab, setActiveDayTab] = useState(0)
   const [courseTripStart, setCourseTripStart] = useState(() => {
-    try { return localStorage.getItem('atlas_trip_start') || '' } catch { return '' }
+    const today = new Date().toISOString().slice(0, 10)
+    try {
+      const saved = localStorage.getItem('atlas_trip_start')
+      return (saved && saved >= today) ? saved : today  // 미래 저장값만 유지, 과거/없으면 오늘
+    } catch { return today }
   })
   const saveTripStart = (d) => { setCourseTripStart(d); localStorage.setItem('atlas_trip_start', d) }
   const getDayDate = (dayIdx) => {
@@ -3836,7 +3840,7 @@ Write all text in ${langName}.`
               {/* 출발일 */}
               <div>
                 <div style={{fontSize:12,fontWeight:600,color:'#1a1714',marginBottom:6}}>{t('courseDepartureOpt')}</div>
-                <input type="date" value={courseTripStart} onChange={e=>saveTripStart(e.target.value)}
+                <input type="date" value={courseTripStart} min={new Date().toISOString().slice(0,10)} onChange={e=>saveTripStart(e.target.value)}
                   style={{width:'100%',padding:'10px 14px',border:'1px solid #e0d9d0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box',color:courseTripStart?'#1a1714':'#c8b8a8',fontWeight:700,cursor:'pointer',transition:'border .2s',background:'#f5f0ea'}}
                   onFocus={e=>e.currentTarget.style.borderColor='#c8856a'}
                   onBlur={e=>e.currentTarget.style.borderColor='#e0d9d0'}/>
@@ -3934,7 +3938,7 @@ Write all text in ${langName}.`
             {/* 날짜 */}
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12,padding:'8px 12px',background:'#f0ebe4',borderRadius:8,border:'1px solid #e0d9d0'}}>
               <span style={{fontSize:11,color:'#b0a89e',fontWeight:500,flexShrink:0}}>{t('courseDeparture')}</span>
-              <input type="date" value={courseTripStart} onChange={e=>saveTripStart(e.target.value)}
+              <input type="date" value={courseTripStart} min={new Date().toISOString().slice(0,10)} onChange={e=>saveTripStart(e.target.value)}
                 style={{flex:1,fontSize:11,border:'none',background:'none',color:'#1a1714',fontWeight:600,outline:'none',cursor:'pointer'}}/>
               {courseTripStart && <button onClick={()=>saveTripStart('')} style={{background:'none',border:'none',color:'#c8b8a8',fontSize:11,cursor:'pointer',lineHeight:1}}>✕</button>}
             </div>
