@@ -594,15 +594,6 @@ function App() {
   const removeAiCity = (name) => setAiCities(prev => prev.filter(x => x.city.name !== name))
   const setAiCityDays = (name, days) => setAiCities(prev => prev.map(x => x.city.name === name ? { ...x, days: Math.max(1, days) } : x))
   const aiTotalDays = aiCities.reduce((s, x) => s + x.days, 0)
-  const [aiTheme, setAiTheme] = useState(['종합'])
-  const toggleAiTheme = (key) => {
-    if (key === '종합') { setAiTheme(['종합']); return }
-    let next = aiTheme.filter(k => k !== '종합')
-    if (next.includes(key)) next = next.filter(k => k !== key)
-    else next = [...next, key]
-    if (next.length === 0) next = ['종합']
-    setAiTheme(next)
-  }
   const [aiDays, setAiDays] = useState(2)
   const [aiTransport, setAiTransport] = useState('transit')
   const [aiHours, setAiHours] = useState(4)
@@ -652,15 +643,14 @@ function App() {
     }
 
     const perDay = aiHours <= 1 ? 2 : aiHours <= 2 ? 3 : aiHours <= 4 ? 5 : aiHours <= 6 ? 7 : 9
-    const themes = aiTheme
 
-    // 도시 한 곳의 관광지 수집 (핫플 실시간 로드 + 정적 spots 보조) + 테마 필터
+    // 도시 한 곳의 관광지 수집 (핫플만 — 정적 spots 폐기, 패널과 일관)
     const collectAttractions = async (cityObj) => {
       const cityKey = cityObj.name || cityObj._koName
       const cityLat = cityObj.lat, cityLng = cityObj.lng
       let attractions = []
 
-      // 1순위: Google 핫플 실시간 로드 (모든 도시)
+      // Google 핫플 실시간 로드
       const hs = await fetchHotspotsFor(cityObj)
       hs.forEach(p => {
         attractions.push({
@@ -671,35 +661,7 @@ function App() {
           emoji:'📍', photo_ref:p.photos?.[0]?.photo_reference||null
         })
       })
-      // 보조: 정적 spots (핫플에 없는 것만 추가)
-      const staticData = CITY_DATA[cityKey]
-      if (staticData?.spots) {
-        staticData.spots.forEach(s => {
-          if (s.type === '음식') return
-          if (attractions.some(a => a.name === s.name)) return
-          attractions.push({
-            source: 'spot', name: s.name, displayName: s.name,
-            cityName: cityKey, cityDisplayName: getCityName(cityKey),
-            type: s.type, rating: s.rating || 4.0, wikiTitle: s.wikiTitle,
-            lat: cityLat, lng: cityLng, _lat: cityLat, _lng: cityLng,
-            emoji: s.type==='자연'?'🌿':s.type==='역사'?'🏛️':s.type==='문화'?'🎭':s.type==='랜드마크'?'🏙️':'📍'
-          })
-        })
-      }
 
-      // 테마 필터 (정적 spot의 type 기준 + 핫플은 '핫플' 테마에 매칭)
-      if (!themes.includes('종합')) {
-        let filteredAttr = []
-        if (themes.includes('역사')) filteredAttr.push(...attractions.filter(a => ['역사','문화','랜드마크'].includes(a.type)))
-        if (themes.includes('자연')) filteredAttr.push(...attractions.filter(a => ['자연'].includes(a.type)))
-        if (themes.includes('핫플')) filteredAttr.push(...attractions.filter(a => a.source === 'hotspot'))
-        const seen = new Set()
-        filteredAttr = filteredAttr.filter(a => { if (seen.has(a.name)) return false; seen.add(a.name); return true })
-        if (filteredAttr.length < 3) {
-          attractions.forEach(a => { if (!seen.has(a.name)) { filteredAttr.push(a); seen.add(a.name) } })
-        }
-        attractions = filteredAttr
-      }
       attractions.sort((a,b) => (b.rating||0) - (a.rating||0))
       return { cityKey, cityLat, cityLng, attractions }
     }
@@ -3850,25 +3812,6 @@ Write all text in ${langName}.`
                 </div>
               </div>
 
-              {/* 테마 */}
-              <div>
-                <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
-                  <div style={{fontSize:12,fontWeight:700,color:'#1a1714'}}>{t('aiTheme')}</div>
-                  <span style={{fontSize:10,color:'#b0a89e',fontWeight:400}}>({t('multiSelect')})</span>
-                </div>
-                <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
-                  {[{k:'종합',l:t('aiThemeAll')},{k:'역사',l:t('aiThemeHistory')},{k:'자연',l:t('aiThemeNature')},{k:'핫플',l:t('aiThemeHotspot')}].map(tm=>(
-                    <button key={tm.k} onClick={()=>toggleAiTheme(tm.k)} style={{
-                      padding:'7px 14px',fontSize:12,fontWeight:aiTheme.includes(tm.k)?600:400,
-                      background:aiTheme.includes(tm.k)?'#c8856a':'#f5f0ea',
-                      color:aiTheme.includes(tm.k)?'white':'#a89080',
-                      border:aiTheme.includes(tm.k)?'none':'1px solid #e0d9d0',borderRadius:20,cursor:'pointer',
-                      transition:'all .15s'
-                    }}>{tm.l}</button>
-                  ))}
-                </div>
-              </div>
-
               {/* 일수 + 강도 */}
               <div>
                 <div style={{fontSize:12,fontWeight:600,color:'#1a1714',marginBottom:6}}>{t('aiHoursLabel')}</div>
@@ -3909,7 +3852,7 @@ Write all text in ${langName}.`
               {/* 미리보기 요약 */}
               {aiCities.length > 0 && (
                 <div style={{padding:'10px 14px',background:'#f5f0ea',border:'1px solid #e0d9d0',borderRadius:10,fontSize:12,color:'#9a8070',lineHeight:1.7}}>
-                  <strong>{aiCities.map(x=>getCityName(x.city.name)).join(' → ')}</strong>{t('aiSummaryIn')} <strong>{aiTotalDays}{t('aiDayUnit')}</strong>{t('aiSummaryDuring')} <strong>{aiTheme.map(k=>({종합:t('aiThemeAll'),역사:t('aiThemeHistory'),자연:t('aiThemeNature'),핫플:t('aiThemeHotspot')}[k]||k)).join(' + ')}</strong>,
+                  <strong>{aiCities.map(x=>getCityName(x.city.name)).join(' → ')}</strong>{t('aiSummaryIn')} <strong>{aiTotalDays}{t('aiDayUnit')}</strong>{t('aiSummaryTrip')||' 여행'}
                   {t(aiHours<=1?'aiPreview1h':aiHours<=2?'aiPreview2h':aiHours<=4?'aiPreview4h':aiHours<=6?'aiPreview6h':'aiPreview8h')} {t('aiPreviewText')}
                   {courseTripStart && <><br/>📅 {formatDate(getDayDate(0))} ~ {formatDate(getDayDate(aiTotalDays-1))}</>}
                 </div>
