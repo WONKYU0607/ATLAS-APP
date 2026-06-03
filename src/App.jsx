@@ -8,14 +8,17 @@ import ISLAND_POLYGONS from './data/islandPolygons.json'
 import CITY_PHOTOS, { pickI18n } from './data/cityPhotos'
 
 // 작은 섬나라 라벨 데이터 (폴리곤 없이 라벨 좌표만 사용 — 클릭 시 진입)
+const ISLAND_NAME_ALIAS = { 'Cape Verde': 'Cabo Verde', 'Federated States of Micronesia': 'Micronesia' }
 const ISLAND_LABEL_DATA = ((ISLAND_POLYGONS && ISLAND_POLYGONS.features) || [])
   .map(f => ({
-    nameEn: f && f.properties && f.properties.NAME,
+    nameEn: (f && f.properties && (ISLAND_NAME_ALIAS[f.properties.NAME] || f.properties.NAME)),
     lat: f && f.properties && f.properties.LABEL_Y,
     lng: f && f.properties && f.properties.LABEL_X,
   }))
   .filter(d => d.nameEn && typeof d.lat === 'number' && typeof d.lng === 'number')
 const ISLAND_NAMES = new Set(ISLAND_LABEL_DATA.map(d => d.nameEn))
+// 데이터 없고 클릭 불가한 폴리곤(속령·분쟁지·남극 등) — 라벨 숨김
+const HIDDEN_COUNTRY_LABELS = new Set(['W. Sahara', 'Falkland Is.', 'Greenland', 'Fr. S. Antarctic Lands', 'Puerto Rico', 'New Caledonia', 'Antarctica', 'N. Cyprus', 'Somaliland'])
 // 이름 정규화: "Solomon Is." ↔ "Solomon Islands" 같은 약자 변형 매칭용
 const normCountryName = (s) => String(s || '').toLowerCase().replace(/\bis\.?\b/g, 'islands').replace(/&/g, 'and').replace(/[^a-z]/g, '')
 const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.nameEn)))
@@ -1185,11 +1188,6 @@ function App() {
         // 도시 닫을 때 줌아웃 제거 — 줌 유지하면서 옆 도시 바로 탭 가능하게
         return
       }
-      if (s.selectedCountry && s.showCountryInfo) {
-        setShowCountryInfo(false)
-        backStateRef.current = { ...s, showCountryInfo: false }
-        return
-      }
       if (s.selectedCountry) {
         setSelectedCountry(null); setSelectedCity(null); setCityData(null); setSelectedSpot(null); setShowCountryInfo(false)
         backStateRef.current = { ...s, selectedCountry: null, selectedCity: null, selectedSpot: null, showCountryInfo: false }
@@ -1714,7 +1712,7 @@ function App() {
         nameEn: feat.properties.NAME,
         _type: 'country',
         _hasCities: !!COUNTRY_CITIES[feat.properties.NAME],
-      })).filter(d => (d.lat !== 0 || d.lng !== 0) && !ISLAND_NAMES.has(d.nameEn) && !ISLAND_NAMES_NORM.has(normCountryName(d.nameEn)))
+      })).filter(d => (d.lat !== 0 || d.lng !== 0) && !HIDDEN_COUNTRY_LABELS.has(d.nameEn) && !ISLAND_NAMES.has(d.nameEn) && !ISLAND_NAMES_NORM.has(normCountryName(d.nameEn)))
       const islandLabels = ISLAND_LABEL_DATA.map(d => ({
         lat: d.lat,
         lng: d.lng,
@@ -1737,7 +1735,7 @@ function App() {
       nameEn: feat.properties.NAME,
       _type: 'country',
       _hasCities: !!COUNTRY_CITIES[feat.properties.NAME],
-    })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn && !ISLAND_NAMES.has(d.nameEn) && !ISLAND_NAMES_NORM.has(normCountryName(d.nameEn)))
+    })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn && !HIDDEN_COUNTRY_LABELS.has(d.nameEn) && !ISLAND_NAMES.has(d.nameEn) && !ISLAND_NAMES_NORM.has(normCountryName(d.nameEn)))
     const otherIslandLabels = ISLAND_LABEL_DATA
       .filter(d => d.nameEn !== countryEn)
       .map(d => ({
@@ -3490,7 +3488,7 @@ function App() {
           </div>
         )}
 
-        <div className="panel" style={{position:'absolute',top:0,right:0,bottom:0,width:isMobile?'100%':420,zIndex:1000,background:'white',borderLeft:isMobile?'none':'1.5px solid #e2e8f0',overflowY:'auto',boxShadow:isMobile?'none':'-12px 0 40px rgba(0,0,0,.15)'}}>
+        <div className="panel" style={{position:'absolute',top:0,right:0,bottom:0,width:isMobile?'100%':420,zIndex:1000,background:'white',borderLeft:isMobile?'none':'1.5px solid #e2e8f0',overflowY:'auto',WebkitOverflowScrolling:'touch',touchAction:'pan-y',boxShadow:isMobile?'none':'-12px 0 40px rgba(0,0,0,.15)'}}>
           <div style={{position:'sticky',top:0,zIndex:10,padding:'20px 20px 14px',background:'linear-gradient(white 87%,transparent)'}}>
             <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
               <div>
@@ -3697,129 +3695,76 @@ function App() {
                     </div>
 
 
-                    {cityData.spots?.length > 0 && (
-                      <>
-                        <div style={{fontSize:10,color:'#94a3b8',letterSpacing:'2.5px',textTransform:'uppercase',marginBottom:12}}>
-                          {t('spots')} · {cityData.spots.length}{t('spotsUnit')}
-                        </div>
-                        <div style={{display:'flex',flexDirection:'column',gap:11}}>
-                          {cityData.spots.map((spot,i)=>(
-                            <div key={i} className="card"
-                              onClick={()=>setSelectedSpot(selectedSpot?.name===spot.name?null:spot)}
-                              style={{borderRadius:14,overflow:'hidden',background:'white',border:`1.5px solid ${selectedSpot?.name===spot.name?(selectedCity?.color||'#3b82f6'):'#e2e8f0'}`,boxShadow:'0 2px 8px rgba(0,0,0,.06)'}}>
-                              <div style={{height: selectedSpot?.name===spot.name ? 200 : 142,overflow:'hidden',position:'relative',transition:'height .3s'}}>
-                                {selectedSpot?.name===spot.name ? (
-                                  <SpotGallery
-                                    photoRef={spot.photo_ref}
-                                    wikiTitle={spot.wikiTitle}
-                                    spotName={spot.name}
-                                    cityName={CITY_I18N[selectedCity?._koName||selectedCity?.name]?.[0] || selectedCity?.name}
-                                    fallback={spot.img || getImg(spot.type)}
-                                    style={{width:'100%',height:'100%'}}
-                                  />
-                                ) : (
-                                  <SpotImage
-                                    className="cimg"
-                                    photoRef={spot.photo_ref}
-                                    wikiTitle={spot.wikiTitle}
-                                    spotName={spot.name}
-                                    cityName={CITY_I18N[selectedCity?._koName||selectedCity?.name]?.[0] || selectedCity?.name}
-                                    alt={spot.name}
-                                    fallback={spot.img || getImg(spot.type)}
-                                    style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
-                                  />
-                                )}
-                                {selectedSpot?.name!==spot.name && <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 55%)'}}/>}
-                                <button onClick={e=>{e.stopPropagation();toggleFav({type:'spot',name:spot.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),wikiTitle:spot.wikiTitle,spotType:spot.type,rating:spot.rating})}}
-                                  style={{position:'absolute',top:8,right:8,width:30,height:30,borderRadius:8,background:isFav('spot',spot.name)?'rgba(251,191,36,.9)':'rgba(0,0,0,.4)',border:'none',color:isFav('spot',spot.name)?'white':'rgba(255,255,255,.7)',fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',transition:'all .2s',zIndex:2}}
-                                  title={t("favToggle")}>{isFav('spot',spot.name)?'★':'☆'}</button>
-                                <button onClick={e=>{e.stopPropagation();addToCourse({source:'spot',name:spot.name,displayName:trSpot(selectedCity?._koName||selectedCity?.name,spot.name)?.name||spot.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),type:spot.type,rating:spot.rating,wikiTitle:spot.wikiTitle,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:spot.type==='자연'?'🌿':spot.type==='역사'?'🏛️':spot.type==='음식'?'🍽️':spot.type==='문화'?'🎭':'📍'})}}
-                                  style={{position:'absolute',top:8,right:44,width:30,height:30,borderRadius:8,background:isInCourse(spot.name,'spot')?'rgba(59,130,246,.9)':'rgba(0,0,0,.4)',border:'none',color:'white',fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',transition:'all .2s',zIndex:2,animation:isInCourse(spot.name,'spot')?'coursePop .3s':'none'}}
-                                  title={t("courseAddToTrip")}>{isInCourse(spot.name,'spot')?'✓':'＋'}</button>
-
-
-                                <div style={{position:'absolute',bottom:10,left:12,right:12,display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
-                                  <div>
-                                    <div style={{fontSize:13.5,fontWeight:700,color:'white',textShadow:'0 1px 4px rgba(0,0,0,.6)'}}>{trSpot(selectedCity?._koName||selectedCity?.name,spot.name)?.name || spot.name}</div>
-                                    <div style={{display:'inline-block',fontSize:10,padding:'2px 9px',borderRadius:20,background:TYPE_COLORS[spot.type]||'#64748b',color:'white',marginTop:4,fontWeight:700}}>{getSpotType(spot.type)}</div>
-                                  </div>
-                                  {spot.rating > 0 && (
-                                    <a href={`https://www.google.com/maps/search/${encodeURIComponent(spot.wikiTitle || spot.name)}+${encodeURIComponent(selectedCity?.name || '')}`}
-                                      target="_blank" rel="noopener noreferrer"
-                                      onClick={e => e.stopPropagation()}
-                                      style={{textDecoration:'none',display:'flex',alignItems:'center',gap:3}}
-                                      title={t("mapsRating")}
-                                    >
-                                      <span style={{fontSize:13,color:'#fbbf24',fontWeight:700}}>★ {spot.rating}</span>
-                                    </a>
-                                  )}
-                                </div>
-                              </div>
-
-                              {selectedSpot?.name===spot.name && (
-                                <div style={{padding:'12px 14px',borderTop:`1px solid ${(selectedCity?.color||'#3b82f6')}22`,background:`${selectedCity?.color||'#3b82f6'}07`}}>
-                                  <p style={{fontSize:12.5,color:'#475569',lineHeight:1.75,marginBottom:10}}>{trSpot(selectedCity?._koName||selectedCity?.name,spot.name)?.desc || (lang === 'ko' ? spot.desc : '')}</p>
-                                  {/* 참고 정보 + Google 최신 정보 */}
-                                  {(spot.openTime || spot.price) && (
-                                    <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8,alignItems:'center'}}>
-                                      {spot.openTime && (
-                                        <div style={{display:'flex',alignItems:'center',gap:4,background:'white',borderRadius:8,padding:'4px 10px',fontSize:11,color:'#475569',border:'1px solid #e2e8f0'}}>
-                                          🕐 {translateSpotField(spot.openTime, lang)}
-                                        </div>
-                                      )}
-                                      {spot.price && (
-                                        <div style={{display:'flex',alignItems:'center',gap:4,background:'white',borderRadius:8,padding:'4px 10px',fontSize:11,color:'#475569',border:'1px solid #e2e8f0'}}>
-                                          🎫 {translateSpotField(spot.price, lang)}
-                                        </div>
-                                      )}
-                                      <span style={{fontSize:9,color:'#94a3b8',fontStyle:'italic'}}>{t('refNote')}</span>
-                                    </div>
-                                  )}
-                                  <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                                    {/* Google Maps 최신 운영정보 + 리뷰 (메인 버튼) */}
-                                    <a
-                                      href={`https://www.google.com/maps/search/${encodeURIComponent(spot.wikiTitle || spot.name)}+${encodeURIComponent(selectedCity?.name || '')}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={e => e.stopPropagation()}
-                                      style={{
-                                        display:'inline-flex',alignItems:'center',gap:6,
-                                        background:'#fff',color:'#1a73e8',borderRadius:8,
-                                        padding:'7px 14px',fontSize:12,fontWeight:700,
-                                        textDecoration:'none',
-                                        border:'1.5px solid #dadce0',
-                                        boxShadow:'0 1px 4px rgba(0,0,0,0.08)'
-                                      }}
-                                    >
-                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#ea4335"/></svg>
-                                      {t('mapsBtn')}
-                                    </a>
-                                  {spot.website && (
-                                    <a
-                                      href={spot.website}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={e => e.stopPropagation()}
-                                      style={{
-                                        display:'inline-flex',alignItems:'center',gap:6,
-                                        background: spot.website?.includes('wikipedia.org') ? '#475569' : (selectedCity?.color || '#3b82f6'),
-                                        color:'white',borderRadius:8,
-                                        padding:'7px 14px',fontSize:12,fontWeight:700,
-                                        textDecoration:'none',
-                                        boxShadow:`0 2px 8px ${spot.website?.includes('wikipedia.org') ? '#47556944' : (selectedCity?.color || '#3b82f6') + '44'}`
-                                      }}
-                                    >
-                                      {spot.website?.includes('wikipedia.org') ? `📖 ${t('wikiDetail')}` : `🌐 ${t('official')}`}
-                                    </a>
-                                  )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                    {/* 추천 관광지 / 맛집 탭 + 인라인 목록 */}
+                    <div>
+                      {/* 탭 버튼 */}
+                      <div style={{display:'flex',gap:6,marginBottom:12}}>
+                        {[{key:'hotspots',label:lang==='ko'?'추천 관광지':lang==='ja'?'おすすめ':lang==='zh'?'推荐景点':'Top Spots'},{key:'restaurants',label:lang==='ko'?'맛집':lang==='ja'?'グルメ':lang==='zh'?'美食':'Food'}].map(tab=>(
+                          <button key={tab.key} onClick={()=>setActiveTab(tab.key)}
+                            style={{flex:1,padding:'9px 0',fontSize:13,fontWeight:activeTab===tab.key?700:500,background:activeTab===tab.key?(selectedCity?.color||'#c8856a'):'#f5f0ea',color:activeTab===tab.key?'white':'#9a8070',border:'none',borderRadius:10,cursor:'pointer',transition:'all .2s'}}>
+                            {tab.label}</button>
+                        ))}
+                      </div>
+                      {/* 맛집 카테고리 */}
+                      {activeTab==='restaurants' && (
+                        <div style={{display:'flex',gap:4,marginBottom:12,background:'#f5f0ea',borderRadius:8,padding:3}}>
+                          {[{key:'restaurant',label:t('foodRestaurant')||'식당'},{key:'cafe',label:t('foodCafe')||'카페'},{key:'bar',label:t('foodBar')||'바'}].map(cat=>(
+                            <button key={cat.key} onClick={()=>setFoodCategory(cat.key)}
+                              style={{flex:1,padding:'6px 0',fontSize:11,fontWeight:foodCategory===cat.key?600:400,background:foodCategory===cat.key?'#fff':'none',color:foodCategory===cat.key?'#1a1714':'#b0a89e',border:'none',borderRadius:6,cursor:'pointer',transition:'all .15s'}}>
+                              {cat.label}</button>
                           ))}
                         </div>
-                      </>
-                    )}
+                      )}
+                      {/* 목록 */}
+                      {loadingPlaces ? (
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:50}}>
+                          <div style={{width:28,height:28,borderRadius:'50%',border:'2px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>
+                        </div>
+                      ) : (activeTab==='hotspots'?hotspots:restaurants).length>0 ? (
+                        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                          {(activeTab==='hotspots'?hotspots:restaurants).map((place,idx)=>(
+                            <a key={idx} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id||''}`}
+                              target="_blank" rel="noopener noreferrer"
+                              style={{textDecoration:'none',background:'white',border:'1px solid #ede8e0',borderRadius:12,overflow:'hidden',cursor:'pointer',transition:'all .2s'}}>
+                              <div style={{display:'flex',gap:10,padding:10,alignItems:'center'}}>
+                                {place.photos && place.photos.length>0 ? (
+                                  <img src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photo_reference=${place.photos[0].photo_reference}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`}
+                                    alt={place.name} style={{width:72,height:72,borderRadius:10,objectFit:'cover',flexShrink:0}}/>
+                                ) : (
+                                  <div style={{width:72,height:72,borderRadius:10,background:'#f5f0ea',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,color:'#c8b8a8',flexShrink:0}}>
+                                    {activeTab==='hotspots'?'Place':foodCategory==='cafe'?'Cafe':foodCategory==='bar'?'Bar':'Food'}
+                                  </div>
+                                )}
+                                <div style={{flex:1,minWidth:0}}>
+                                  <div style={{fontSize:13.5,fontWeight:700,color:'#1a1714',marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{place.name}</div>
+                                  {place.rating && (
+                                    <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:3}}>
+                                      <span style={{fontSize:11.5,color:'#c8a870',fontWeight:600}}>★ {place.rating}</span>
+                                      {place.user_ratings_total && <span style={{fontSize:9,color:'#c8b8a8'}}>({place.user_ratings_total.toLocaleString()})</span>}
+                                    </div>
+                                  )}
+                                  {place.vicinity && <div style={{fontSize:10,color:'#b0a89e',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{place.vicinity}</div>}
+                                  {place.opening_hours && (
+                                    <div style={{fontSize:9,color:place.opening_hours.open_now?'#6fa870':'#c07060',fontWeight:600,marginTop:3}}>
+                                      {place.opening_hours.open_now?t('openNow'):t('closedNow')}</div>
+                                  )}
+                                </div>
+                                <div style={{display:'flex',flexDirection:'column',gap:4,flexShrink:0}}>
+                                  <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:activeTab==='hotspots'?'hotspot':'restaurant',name:place.name,displayName:place.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:place.rating,place_id:place.place_id,vicinity:place.vicinity,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:activeTab==='hotspots'?'📍':foodCategory==='cafe'?'☕':foodCategory==='bar'?'🍻':'🍽️',photo_ref:place.photos?.[0]?.photo_reference||null})}}
+                                    style={{background:isInCourse(place.name,activeTab==='hotspots'?'hotspot':'restaurant')?'#c8856a':'#f5f0ea',border:isInCourse(place.name,activeTab==='hotspots'?'hotspot':'restaurant')?'none':'1px solid #e0d9d0',color:isInCourse(place.name,activeTab==='hotspots'?'hotspot':'restaurant')?'white':'#c8b8a8',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:14,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
+                                    title={t("courseAddToTrip")}>{isInCourse(place.name,activeTab==='hotspots'?'hotspot':'restaurant')?'✓':'＋'}</button>
+                                  <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav({type:activeTab==='hotspots'?'hotspot':'restaurant',name:place.name,place_id:place.place_id,rating:place.rating,user_ratings_total:place.user_ratings_total,vicinity:place.vicinity,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name)})}}
+                                    style={{background:isFav(activeTab==='hotspots'?'hotspot':'restaurant',place.name)?'#fef3c7':'#f5f0ea',border:isFav(activeTab==='hotspots'?'hotspot':'restaurant',place.name)?'1px solid #f0c040':'1px solid #e0d9d0',color:isFav(activeTab==='hotspots'?'hotspot':'restaurant',place.name)?'#c8a020':'#c8b8a8',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:12,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
+                                    title={t("favToggle")}>{isFav(activeTab==='hotspots'?'hotspot':'restaurant',place.name)?'★':'☆'}</button>
+                                </div>
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{textAlign:'center',padding:40,color:'#94a3b8',fontSize:13}}>{t('noData')}</div>
+                      )}
+                    </div>
                   </>
                 )}
               </>
