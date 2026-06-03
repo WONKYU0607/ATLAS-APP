@@ -87,6 +87,7 @@ export const T = {
   aiSubtitle:{ko:'도시와 조건을 선택하면 최적 코스를 짜드려요',en:'Select city & options to generate the best itinerary',ja:'都市と条件を選択して最適コースを作成',zh:'选择城市和条件，生成最佳路线'},
   aiSelectCity:{ko:'도시 선택',en:'Select City',ja:'都市を選択',zh:'选择城市'},
   aiSearchCity:{ko:'도시 이름 검색 (예: 파리, Tokyo, 서울)',en:'Search city (e.g. Paris, Tokyo, Seoul)',ja:'都市名で検索（例：パリ、東京）',zh:'搜索城市（如：巴黎、东京、首尔）'},
+  aiAddCity:{ko:'+ 도시 추가 (여러 도시 선택 가능)',en:'+ Add another city',ja:'+ 都市を追加',zh:'+ 添加城市'},
   aiTheme:{ko:'관광 테마',en:'Travel Theme',ja:'観光テーマ',zh:'旅游主题'},
   aiThemeAll:{ko:'종합',en:'All',ja:'総合',zh:'综合'},
   aiThemeHistory:{ko:'역사',en:'History',ja:'歴史',zh:'历史'},
