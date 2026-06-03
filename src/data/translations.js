@@ -71,6 +71,7 @@ export const T = {
   multiSelect:{ko:'중복 선택 가능',en:'Multi-select',ja:'複数選択可',zh:'可多选'},
   aiSummaryIn:{ko:'에서',en:' —',ja:'で',zh:'，'},
   aiSummaryDuring:{ko:' 동안',en:'',ja:'',zh:''},
+  aiSummaryTrip:{ko:' 여행',en:' trip',ja:'の旅',zh:'旅行'},
   courseDeparture:{ko:'출발일',en:'Departure',ja:'出発日',zh:'出发日'},
   courseDepartureOpt:{ko:'출발일 (선택)',en:'Departure date (optional)',ja:'出発日（任意）',zh:'出发日（选填）'},
   courseSpot:{ko:'관광지',en:'Attraction',ja:'観光地',zh:'景点'},
