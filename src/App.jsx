@@ -500,7 +500,6 @@ function App() {
   const [infoExpanded, setInfoExpanded] = useState(false) // A안: 컴팩트(헤더만) ↔ 전체 펼침
   const [lang, setLang] = useState('en')
   const [showLangMenu, setShowLangMenu] = useState(false)
-  const [showSharePopup, setShowSharePopup] = useState(false)
   const [sidePanel, setSidePanel] = useState(null) // 'hotspots' | 'restaurants' | null
   const [showFavorites, setShowFavorites] = useState(false)
   const [showHamburger, setShowHamburger] = useState(false)
@@ -633,27 +632,30 @@ function App() {
   const generateAiCourse = () => {
     if (!aiCity) return
     setAiGenerating(true)
+    // 날짜 미설정 시 오늘로 동기화
+    if (!courseTripStart) {
+      saveTripStart(new Date().toISOString().slice(0, 10))
+    }
     setTimeout(() => {
       const cityKey = aiCity.name || aiCity._koName
       const staticData = CITY_DATA[cityKey]
       const cityLat = aiCity.lat, cityLng = aiCity.lng
 
-      // 1) 장소 수집
-      let attractions = []; let foodPlaces = []
+      // 1) 장소 수집 (관광지만 — 식당은 음식문화로 분리됨)
+      let attractions = []
       if (staticData?.spots) {
         staticData.spots.forEach(s => {
-          const item = {
+          if (s.type === '음식') return  // 식당류 제외
+          attractions.push({
             source: 'spot', name: s.name, displayName: s.name,
             cityName: cityKey, cityDisplayName: getCityName(cityKey),
             type: s.type, rating: s.rating || 4.0, wikiTitle: s.wikiTitle,
             lat: cityLat, lng: cityLng, _lat: cityLat, _lng: cityLng,
-            emoji: s.type==='자연'?'🌿':s.type==='역사'?'🏛️':s.type==='음식'?'🍽️':s.type==='문화'?'🎭':s.type==='랜드마크'?'🏙️':'📍'
-          }
-          if (s.type === '음식') foodPlaces.push(item)
-          else attractions.push(item)
+            emoji: s.type==='자연'?'🌿':s.type==='역사'?'🏛️':s.type==='문화'?'🎭':s.type==='랜드마크'?'🏙️':'📍'
+          })
         })
       }
-      // Google Places 데이터도 활용 (현재 로드된 것)
+      // Google 핫플(관광 명소) 활용
       if (hotspots.length > 0) {
         hotspots.forEach(p => {
           if (!attractions.some(a => a.name === p.name)) {
@@ -667,84 +669,39 @@ function App() {
           }
         })
       }
-      if (restaurants.length > 0) {
-        restaurants.forEach(p => {
-          if (!foodPlaces.some(f => f.name === p.name)) {
-            foodPlaces.push({
-              source:'restaurant', name:p.name, displayName:p.name,
-              cityName:cityKey, cityDisplayName:getCityName(cityKey),
-              rating:p.rating||4.0, place_id:p.place_id, vicinity:p.vicinity,
-              lat:cityLat, lng:cityLng, _lat:p.geometry?.location?.lat||cityLat, _lng:p.geometry?.location?.lng||cityLng,
-              emoji:'🍽️', photo_ref:p.photos?.[0]?.photo_reference||null
-            })
-          }
-        })
-      }
 
-      // 2) 테마 필터
+      // 2) 테마 필터 (관광지만)
       const themes = aiTheme
       if (!themes.includes('종합')) {
         let filteredAttr = []
-        let extraFood = []
         if (themes.includes('역사')) filteredAttr.push(...attractions.filter(a => ['역사','문화','랜드마크'].includes(a.type)))
         if (themes.includes('자연')) filteredAttr.push(...attractions.filter(a => ['자연'].includes(a.type)))
         if (themes.includes('핫플')) filteredAttr.push(...attractions.filter(a => a.source === 'hotspot'))
-        if (themes.includes('음식')) extraFood.push(...foodPlaces.slice(0, 6))
-        if (themes.includes('맛집')) extraFood.push(...foodPlaces.slice(0, 8))
-        // 중복 제거
         const seen = new Set()
         filteredAttr = filteredAttr.filter(a => { if (seen.has(a.name)) return false; seen.add(a.name); return true })
-        extraFood = extraFood.filter(f => { if (seen.has(f.name)) return false; seen.add(f.name); return true })
-        // 테마에 관광지 유형이 없으면 기존 관광지에서 보충
-        if (filteredAttr.length < 3 && !themes.includes('음식') && !themes.includes('맛집')) {
+        // 부족하면 나머지 관광지로 보충
+        if (filteredAttr.length < 3) {
           attractions.forEach(a => { if (!seen.has(a.name)) { filteredAttr.push(a); seen.add(a.name) } })
         }
-        if (themes.includes('음식') || themes.includes('맛집')) {
-          attractions = [...filteredAttr.slice(0, Math.max(2, filteredAttr.length)), ...extraFood]
-          foodPlaces = foodPlaces.filter(f => !seen.has(f.name))
-        } else {
-          attractions = filteredAttr
-        }
+        attractions = filteredAttr
       }
 
       // 3) 별점순 정렬
       attractions.sort((a,b) => (b.rating||0) - (a.rating||0))
-      foodPlaces.sort((a,b) => (b.rating||0) - (a.rating||0))
 
       // 4) 시간별 하루 장소 수
       const perDay = aiHours <= 1 ? 2 : aiHours <= 2 ? 3 : aiHours <= 4 ? 5 : aiHours <= 6 ? 7 : 9
-      const mealsPerDay = aiHours <= 2 ? 1 : 2
 
-      // 5) 날짜별 배분
+      // 5) 날짜별 배분 (관광지만, 동선 최적화)
       const days = []
-      let attrIdx = 0, foodIdx = 0
+      let attrIdx = 0
       for (let d = 0; d < aiDays; d++) {
-        const dayItems = []
-        // 오전 관광
-        const morningCount = Math.ceil(perDay * 0.4)
-        for (let i = 0; i < morningCount && attrIdx < attractions.length; i++) {
-          dayItems.push({ ...attractions[attrIdx], _slot: 'morning' }); attrIdx++
+        const picked = []
+        for (let i = 0; i < perDay && attrIdx < attractions.length; i++) {
+          picked.push(attractions[attrIdx]); attrIdx++
         }
-        // 점심
-        if (foodIdx < foodPlaces.length) {
-          dayItems.push({ ...foodPlaces[foodIdx], _slot: 'lunch' }); foodIdx++
-        }
-        // 오후 관광
-        const afternoonCount = perDay - morningCount
-        for (let i = 0; i < afternoonCount && attrIdx < attractions.length; i++) {
-          dayItems.push({ ...attractions[attrIdx], _slot: 'afternoon' }); attrIdx++
-        }
-        // 저녁
-        if (mealsPerDay >= 2 && foodIdx < foodPlaces.length) {
-          dayItems.push({ ...foodPlaces[foodIdx], _slot: 'dinner' }); foodIdx++
-        }
-        // 동선 최적화 (시간대별 그룹 내에서 가까운 순)
-        const morning = sortByProximity(dayItems.filter(i=>i._slot==='morning'), cityLat, cityLng)
-        const lunch = dayItems.filter(i=>i._slot==='lunch')
-        const lastMorning = morning[morning.length-1]
-        const afternoon = sortByProximity(dayItems.filter(i=>i._slot==='afternoon'), lastMorning?._lat||cityLat, lastMorning?._lng||cityLng)
-        const dinner = dayItems.filter(i=>i._slot==='dinner')
-        const ordered = [...morning, ...lunch, ...afternoon, ...dinner].map(({_slot,_lat,_lng,...rest})=>({...rest, addedAt:Date.now()}))
+        const ordered = sortByProximity(picked, cityLat, cityLng)
+          .map(({_lat,_lng,...rest})=>({...rest, addedAt:Date.now()}))
         days.push({ items: ordered })
       }
 
@@ -1768,7 +1725,6 @@ function App() {
   useEffect(() => {
     if (selectedCity) {
       fetchPlacesData(selectedCity)
-      setShowSharePopup(false)
       setSidePanel(null)
       setFoodCategory('restaurant')
       setFoodCulture(null)
@@ -2859,7 +2815,7 @@ Write all text in ${langName}.`
         .countryInfoPanel{animation:cInfoIn .35s cubic-bezier(.16,1,.3,1)}
         @keyframes cInfoIn{from{opacity:0;transform:translateX(-50%) translateY(12px) scale(.97)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
         @keyframes sIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
-        @keyframes sharePopIn{from{opacity:0;transform:translateY(-8px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
         @keyframes sidePanelIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
         @keyframes courseBasketIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
         @keyframes coursePop{0%{transform:scale(1)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
@@ -3641,11 +3597,11 @@ Write all text in ${langName}.`
                       <button
                         onClick={() => shareNative(selectedCity)}
                         style={{
-                          flex:1,padding:'10px 14px',background:'#3b82f6',border:'none',borderRadius:10,
+                          flex:1,padding:'10px 14px',background:'#c8856a',border:'none',borderRadius:10,
                           fontSize:13,fontWeight:600,color:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'all .2s'
                         }}
-                        onMouseEnter={e=>e.currentTarget.style.background='#2563eb'}
-                        onMouseLeave={e=>e.currentTarget.style.background='#3b82f6'}
+                        onMouseEnter={e=>e.currentTarget.style.background='#b9744f'}
+                        onMouseLeave={e=>e.currentTarget.style.background='#c8856a'}
                       >{t('shareBtn')}</button>
                     </div>
 
@@ -3837,7 +3793,7 @@ Write all text in ${langName}.`
                   <span style={{fontSize:10,color:'#b0a89e',fontWeight:400}}>({t('multiSelect')})</span>
                 </div>
                 <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
-                  {[{k:'종합',l:t('aiThemeAll')},{k:'역사',l:t('aiThemeHistory')},{k:'자연',l:t('aiThemeNature')},{k:'음식',l:t('aiThemeFood')},{k:'핫플',l:t('aiThemeHotspot')},{k:'맛집',l:t('aiThemeRestaurant')}].map(tm=>(
+                  {[{k:'종합',l:t('aiThemeAll')},{k:'역사',l:t('aiThemeHistory')},{k:'자연',l:t('aiThemeNature')},{k:'핫플',l:t('aiThemeHotspot')}].map(tm=>(
                     <button key={tm.k} onClick={()=>toggleAiTheme(tm.k)} style={{
                       padding:'7px 14px',fontSize:12,fontWeight:aiTheme.includes(tm.k)?600:400,
                       background:aiTheme.includes(tm.k)?'#c8856a':'#f5f0ea',
@@ -3903,7 +3859,7 @@ Write all text in ${langName}.`
               {/* 미리보기 요약 */}
               {aiCity && (
                 <div style={{padding:'10px 14px',background:'#f5f0ea',border:'1px solid #e0d9d0',borderRadius:10,fontSize:12,color:'#9a8070',lineHeight:1.7}}>
-                  <strong>{getCityName(aiCity.name)}</strong>{t('aiSummaryIn')} <strong>{aiDays}{t('aiDayUnit')}</strong>{t('aiSummaryDuring')} <strong>{aiTheme.map(k=>({종합:t('aiThemeAll'),역사:t('aiThemeHistory'),자연:t('aiThemeNature'),음식:t('aiThemeFood'),핫플:t('aiThemeHotspot'),맛집:t('aiThemeRestaurant')}[k]||k)).join(' + ')}</strong>,
+                  <strong>{getCityName(aiCity.name)}</strong>{t('aiSummaryIn')} <strong>{aiDays}{t('aiDayUnit')}</strong>{t('aiSummaryDuring')} <strong>{aiTheme.map(k=>({종합:t('aiThemeAll'),역사:t('aiThemeHistory'),자연:t('aiThemeNature'),핫플:t('aiThemeHotspot')}[k]||k)).join(' + ')}</strong>,
                   {t(aiHours<=1?'aiPreview1h':aiHours<=2?'aiPreview2h':aiHours<=4?'aiPreview4h':aiHours<=6?'aiPreview6h':'aiPreview8h')} {t('aiPreviewText')}
                   {courseTripStart && <><br/>📅 {formatDate(getDayDate(0))} ~ {formatDate(getDayDate(aiDays-1))}</>}
                 </div>
