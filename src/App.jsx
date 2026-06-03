@@ -584,6 +584,16 @@ function App() {
   // ── AI 코스 자동 생성 (알고리즘 기반, 비용 없음) ──────────────
   const [showAiModal, setShowAiModal] = useState(false)
   const [aiCity, setAiCity] = useState(null)
+  // 다중 도시: [{city, days}, ...]
+  const [aiCities, setAiCities] = useState([])
+  const addAiCity = (c) => {
+    if (aiCities.some(x => x.city.name === c.name)) return  // 중복 방지
+    setAiCities(prev => [...prev, { city: c, days: 1 }])
+    setAiCitySearch('')
+  }
+  const removeAiCity = (name) => setAiCities(prev => prev.filter(x => x.city.name !== name))
+  const setAiCityDays = (name, days) => setAiCities(prev => prev.map(x => x.city.name === name ? { ...x, days: Math.max(1, days) } : x))
+  const aiTotalDays = aiCities.reduce((s, x) => s + x.days, 0)
   const [aiTheme, setAiTheme] = useState(['종합'])
   const toggleAiTheme = (key) => {
     if (key === '종합') { setAiTheme(['종합']); return }
@@ -634,93 +644,112 @@ function App() {
   }
 
   const generateAiCourse = () => {
-    if (!aiCity) return
+    if (aiCities.length === 0) return
     setAiGenerating(true)
     // 날짜 미설정 시 오늘로 동기화
     if (!courseTripStart) {
       saveTripStart(new Date().toISOString().slice(0, 10))
     }
     setTimeout(() => {
-      const cityKey = aiCity.name || aiCity._koName
-      const staticData = CITY_DATA[cityKey]
-      const cityLat = aiCity.lat, cityLng = aiCity.lng
-
-      // 1) 장소 수집 (관광지만 — 식당은 음식문화로 분리됨)
-      let attractions = []
-      if (staticData?.spots) {
-        staticData.spots.forEach(s => {
-          if (s.type === '음식') return  // 식당류 제외
-          attractions.push({
-            source: 'spot', name: s.name, displayName: s.name,
-            cityName: cityKey, cityDisplayName: getCityName(cityKey),
-            type: s.type, rating: s.rating || 4.0, wikiTitle: s.wikiTitle,
-            lat: cityLat, lng: cityLng, _lat: cityLat, _lng: cityLng,
-            emoji: s.type==='자연'?'🌿':s.type==='역사'?'🏛️':s.type==='문화'?'🎭':s.type==='랜드마크'?'🏙️':'📍'
-          })
-        })
-      }
-      // Google 핫플(관광 명소) 활용
-      if (hotspots.length > 0) {
-        hotspots.forEach(p => {
-          if (!attractions.some(a => a.name === p.name)) {
-            attractions.push({
-              source:'hotspot', name:p.name, displayName:p.name,
-              cityName:cityKey, cityDisplayName:getCityName(cityKey),
-              rating:p.rating||4.0, place_id:p.place_id, vicinity:p.vicinity,
-              lat:cityLat, lng:cityLng, _lat:p.geometry?.location?.lat||cityLat, _lng:p.geometry?.location?.lng||cityLng,
-              emoji:'📍', photo_ref:p.photos?.[0]?.photo_reference||null
-            })
-          }
-        })
-      }
-
-      // 2) 테마 필터 (관광지만)
-      const themes = aiTheme
-      if (!themes.includes('종합')) {
-        let filteredAttr = []
-        if (themes.includes('역사')) filteredAttr.push(...attractions.filter(a => ['역사','문화','랜드마크'].includes(a.type)))
-        if (themes.includes('자연')) filteredAttr.push(...attractions.filter(a => ['자연'].includes(a.type)))
-        if (themes.includes('핫플')) filteredAttr.push(...attractions.filter(a => a.source === 'hotspot'))
-        const seen = new Set()
-        filteredAttr = filteredAttr.filter(a => { if (seen.has(a.name)) return false; seen.add(a.name); return true })
-        // 부족하면 나머지 관광지로 보충
-        if (filteredAttr.length < 3) {
-          attractions.forEach(a => { if (!seen.has(a.name)) { filteredAttr.push(a); seen.add(a.name) } })
-        }
-        attractions = filteredAttr
-      }
-
-      // 3) 별점순 정렬
-      attractions.sort((a,b) => (b.rating||0) - (a.rating||0))
-
-      // 4) 시간별 하루 장소 수
       const perDay = aiHours <= 1 ? 2 : aiHours <= 2 ? 3 : aiHours <= 4 ? 5 : aiHours <= 6 ? 7 : 9
+      const themes = aiTheme
 
-      // 5) 날짜별 배분 (관광지만, 동선 최적화)
-      const days = []
-      let attrIdx = 0
-      for (let d = 0; d < aiDays; d++) {
-        const picked = []
-        for (let i = 0; i < perDay && attrIdx < attractions.length; i++) {
-          picked.push(attractions[attrIdx]); attrIdx++
+      // 도시 한 곳의 관광지 수집 + 테마 필터 + 정렬
+      const collectAttractions = (cityObj) => {
+        const cityKey = cityObj.name || cityObj._koName
+        const staticData = CITY_DATA[cityKey]
+        const cityLat = cityObj.lat, cityLng = cityObj.lng
+        let attractions = []
+        if (staticData?.spots) {
+          staticData.spots.forEach(s => {
+            if (s.type === '음식') return
+            attractions.push({
+              source: 'spot', name: s.name, displayName: s.name,
+              cityName: cityKey, cityDisplayName: getCityName(cityKey),
+              type: s.type, rating: s.rating || 4.0, wikiTitle: s.wikiTitle,
+              lat: cityLat, lng: cityLng, _lat: cityLat, _lng: cityLng,
+              emoji: s.type==='자연'?'🌿':s.type==='역사'?'🏛️':s.type==='문화'?'🎭':s.type==='랜드마크'?'🏙️':'📍'
+            })
+          })
         }
-        const ordered = sortByProximity(picked, cityLat, cityLng)
-          .map(({_lat,_lng,...rest})=>({...rest, addedAt:Date.now()}))
-        days.push({ items: ordered })
+        // 선택된 도시가 현재 지구본에서 열린 도시면 Google 핫플도 활용
+        if (selectedCity && (selectedCity.name === cityKey) && hotspots.length > 0) {
+          hotspots.forEach(p => {
+            if (!attractions.some(a => a.name === p.name)) {
+              attractions.push({
+                source:'hotspot', name:p.name, displayName:p.name,
+                cityName:cityKey, cityDisplayName:getCityName(cityKey),
+                rating:p.rating||4.0, place_id:p.place_id, vicinity:p.vicinity,
+                lat:cityLat, lng:cityLng, _lat:p.geometry?.location?.lat||cityLat, _lng:p.geometry?.location?.lng||cityLng,
+                emoji:'📍', photo_ref:p.photos?.[0]?.photo_reference||null
+              })
+            }
+          })
+        }
+        // 테마 필터
+        if (!themes.includes('종합')) {
+          let filteredAttr = []
+          if (themes.includes('역사')) filteredAttr.push(...attractions.filter(a => ['역사','문화','랜드마크'].includes(a.type)))
+          if (themes.includes('자연')) filteredAttr.push(...attractions.filter(a => ['자연'].includes(a.type)))
+          if (themes.includes('핫플')) filteredAttr.push(...attractions.filter(a => a.source === 'hotspot'))
+          const seen = new Set()
+          filteredAttr = filteredAttr.filter(a => { if (seen.has(a.name)) return false; seen.add(a.name); return true })
+          if (filteredAttr.length < 3) {
+            attractions.forEach(a => { if (!seen.has(a.name)) { filteredAttr.push(a); seen.add(a.name) } })
+          }
+          attractions = filteredAttr
+        }
+        attractions.sort((a,b) => (b.rating||0) - (a.rating||0))
+        return { cityKey, cityLat, cityLng, attractions }
       }
 
-      // 6) 플래너에 로드 + 자동 저장
+      // 1) 도시 동선 정렬 (가까운 순, 첫 도시 기준 nearest neighbor)
+      let orderedCities = [...aiCities]
+      if (orderedCities.length > 1) {
+        const sorted = []
+        const remaining = orderedCities.map(x => ({ ...x, _lat: x.city.lat, _lng: x.city.lng }))
+        let cur = remaining.shift()  // 첫 선택 도시를 출발점으로
+        sorted.push(cur)
+        while (remaining.length > 0) {
+          let minD = Infinity, minI = 0
+          remaining.forEach((r, i) => {
+            const d = haversine(cur._lat, cur._lng, r._lat, r._lng)
+            if (d < minD) { minD = d; minI = i }
+          })
+          cur = remaining.splice(minI, 1)[0]
+          sorted.push(cur)
+        }
+        orderedCities = sorted
+      }
+
+      // 2) 도시별로 days만큼 날짜 채우기
+      const days = []
+      orderedCities.forEach(({ city, days: cityDays }) => {
+        const { cityLat, cityLng, attractions } = collectAttractions(city)
+        let attrIdx = 0
+        for (let d = 0; d < cityDays; d++) {
+          const picked = []
+          for (let i = 0; i < perDay && attrIdx < attractions.length; i++) {
+            picked.push(attractions[attrIdx]); attrIdx++
+          }
+          const ordered = sortByProximity(picked, cityLat, cityLng)
+            .map(({_lat,_lng,...rest})=>({...rest, addedAt:Date.now()}))
+          days.push({ items: ordered })
+        }
+      })
+
+      // 3) 플래너에 로드 + 자동 저장
       saveCourseDays(days)
       setCourseTransport(aiTransport)
       setActiveDayTab(0)
       setShowAiModal(false)
       setShowCoursePlanner(true)
       setCourseSource('ai')
-      // AI 코스 자동 저장
       setTimeout(() => {
-        const cityName2 = getCityName(cityKey)
+        const cityNames = orderedCities.map(x => getCityName(x.city.name))
+        const courseName = cityNames.length <= 2 ? cityNames.join('·') : `${cityNames[0]} 외 ${cityNames.length-1}`
         const aiSaved = {
-          id: Date.now(), name: `${cityName2} ${days.length}${lang==='ko'?'일':'D'}`,
+          id: Date.now(), name: `${courseName} ${days.length}${lang==='ko'?'일':'D'}`,
           type: 'ai',
           days, transport: aiTransport, tripStart: courseTripStart,
           createdAt: Date.now()
@@ -728,7 +757,7 @@ function App() {
         setSavedCourses(prev => { const nl = [aiSaved, ...prev]; localStorage.setItem('atlas_saved_courses', JSON.stringify(nl)); return nl })
       }, 100)
       setAiGenerating(false)
-    }, 600) // 약간의 딜레이로 생성 중 느낌
+    }, 600)
   }
 
   const saveCourse = (items) => { setCourseItems(items); localStorage.setItem('atlas_course', JSON.stringify(items)) }
@@ -3747,47 +3776,60 @@ Write all text in ${langName}.`
             <div style={{padding:'18px 24px 24px',display:'flex',flexDirection:'column',gap:16,background:'#faf8f5'}}>
               {/* 도시 선택 */}
               <div>
-                <div style={{fontSize:12,fontWeight:600,color:'#1a1714',marginBottom:6}}>{t('aiSelectCity')}</div>
-                {aiCity ? (
-                  <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',background:'#f5f0ea',border:'1px solid #e0d9d0',borderRadius:10}}>
-                    {getFlagImg(COUNTRY_INFO[aiCity.countryEn]?.emoji) ? (
-                      <img src={getFlagImg(COUNTRY_INFO[aiCity.countryEn]?.emoji)} alt="" style={{width:22,height:16,objectFit:'cover',borderRadius:2,border:'1px solid #e2e8f0',flexShrink:0}}/>
-                    ) : (
-                      <span style={{fontSize:18}}>{aiCity.emoji||'📍'}</span>
-                    )}
-                    <div style={{flex:1}}>
-                      <span style={{fontSize:14,fontWeight:600,color:'#1a1714'}}>{getCityName(aiCity.name)}</span>
-                      <span style={{fontSize:11,color:'#b0a89e',marginLeft:6}}>{aiCity.countryKo}</span>
-                    </div>
-                    <button onClick={()=>{setAiCity(null);setAiCitySearch('')}} style={{background:'none',border:'none',color:'#c8b8a8',cursor:'pointer',fontSize:14}}>✕</button>
-                  </div>
-                ) : (
-                  <div style={{position:'relative'}}>
-                    <input value={aiCitySearch} onChange={e=>setAiCitySearch(e.target.value)}
-                      placeholder={t("aiSearchCity")}
-                      style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box',transition:'border .2s'}}
-                      onFocus={e=>e.currentTarget.style.borderColor='#3b82f6'}
-                      onBlur={e=>e.currentTarget.style.borderColor='#e2e8f0'}/>
-                    {aiCityResults.length > 0 && (
-                      <div style={{position:'absolute',top:'calc(100% + 4px)',left:0,right:0,background:'white',border:'1.5px solid #e2e8f0',borderRadius:12,boxShadow:'0 8px 24px rgba(0,0,0,.12)',maxHeight:200,overflowY:'auto',zIndex:10}}>
-                        {aiCityResults.map((c,i)=>(
-                          <div key={i} onClick={()=>{setAiCity(c);setAiCitySearch('')}}
-                            style={{display:'flex',alignItems:'center',gap:8,padding:'9px 14px',cursor:'pointer',transition:'background .1s',borderBottom:i<aiCityResults.length-1?'1px solid #f8fafc':'none'}}
-                            onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
-                            onMouseLeave={e=>e.currentTarget.style.background='white'}>
-                            {getFlagImg(COUNTRY_INFO[c.countryEn]?.emoji) ? (
-                              <img src={getFlagImg(COUNTRY_INFO[c.countryEn]?.emoji)} alt="" style={{width:20,height:14,objectFit:'cover',borderRadius:2,border:'1px solid #e2e8f0',flexShrink:0}}/>
-                            ) : (
-                              <span style={{fontSize:16}}>{c.emoji||'📍'}</span>
-                            )}
-                            <span style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{getCityName(c.name)}</span>
-                            <span style={{fontSize:11,color:'#94a3b8'}}>{c.countryKo}</span>
-                          </div>
-                        ))}
+                <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
+                  <div style={{fontSize:12,fontWeight:600,color:'#1a1714'}}>{t('aiSelectCity')}</div>
+                  {aiCities.length>0 && <span style={{fontSize:10,color:'#b0a89e'}}>{aiTotalDays}{t('aiDayUnit')}</span>}
+                </div>
+
+                {/* 선택된 도시 리스트 (도시별 일수) */}
+                {aiCities.length > 0 && (
+                  <div style={{display:'flex',flexDirection:'column',gap:6,marginBottom:8}}>
+                    {aiCities.map((entry,i)=>(
+                      <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 12px',background:'#f5f0ea',border:'1px solid #e0d9d0',borderRadius:10}}>
+                        {getFlagImg(COUNTRY_INFO[entry.city.countryEn]?.emoji) ? (
+                          <img src={getFlagImg(COUNTRY_INFO[entry.city.countryEn]?.emoji)} alt="" style={{width:20,height:14,objectFit:'cover',borderRadius:2,border:'1px solid #e2e8f0',flexShrink:0}}/>
+                        ) : (
+                          <span style={{fontSize:16}}>{entry.city.emoji||'📍'}</span>
+                        )}
+                        <span style={{flex:1,fontSize:13,fontWeight:600,color:'#1a1714',minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCityName(entry.city.name)}</span>
+                        {/* 일수 조절 */}
+                        <div style={{display:'flex',alignItems:'center',gap:0,background:'white',borderRadius:8,border:'1px solid #e0d9d0',overflow:'hidden',flexShrink:0}}>
+                          <button onClick={()=>setAiCityDays(entry.city.name, entry.days-1)} style={{width:26,height:26,border:'none',background:'none',color:'#c8856a',fontSize:15,fontWeight:700,cursor:'pointer'}}>−</button>
+                          <span style={{minWidth:30,textAlign:'center',fontSize:12,fontWeight:700,color:'#1a1714'}}>{entry.days}{t('aiDayUnit')}</span>
+                          <button onClick={()=>setAiCityDays(entry.city.name, entry.days+1)} style={{width:26,height:26,border:'none',background:'none',color:'#c8856a',fontSize:15,fontWeight:700,cursor:'pointer'}}>＋</button>
+                        </div>
+                        <button onClick={()=>removeAiCity(entry.city.name)} style={{background:'none',border:'none',color:'#c8b8a8',cursor:'pointer',fontSize:14,flexShrink:0}}>✕</button>
                       </div>
-                    )}
+                    ))}
                   </div>
                 )}
+
+                {/* 도시 추가 검색 (항상 표시) */}
+                <div style={{position:'relative'}}>
+                  <input value={aiCitySearch} onChange={e=>setAiCitySearch(e.target.value)}
+                    placeholder={aiCities.length>0 ? t("aiAddCity") : t("aiSearchCity")}
+                    style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box',transition:'border .2s'}}
+                    onFocus={e=>e.currentTarget.style.borderColor='#c8856a'}
+                    onBlur={e=>e.currentTarget.style.borderColor='#e2e8f0'}/>
+                  {aiCityResults.length > 0 && (
+                    <div style={{position:'absolute',top:'calc(100% + 4px)',left:0,right:0,background:'white',border:'1.5px solid #e2e8f0',borderRadius:12,boxShadow:'0 8px 24px rgba(0,0,0,.12)',maxHeight:200,overflowY:'auto',zIndex:10}}>
+                      {aiCityResults.filter(c=>!aiCities.some(x=>x.city.name===c.name)).map((c,i,arr)=>(
+                        <div key={i} onClick={()=>addAiCity(c)}
+                          style={{display:'flex',alignItems:'center',gap:8,padding:'9px 14px',cursor:'pointer',transition:'background .1s',borderBottom:i<arr.length-1?'1px solid #f8fafc':'none'}}
+                          onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
+                          onMouseLeave={e=>e.currentTarget.style.background='white'}>
+                          {getFlagImg(COUNTRY_INFO[c.countryEn]?.emoji) ? (
+                            <img src={getFlagImg(COUNTRY_INFO[c.countryEn]?.emoji)} alt="" style={{width:20,height:14,objectFit:'cover',borderRadius:2,border:'1px solid #e2e8f0',flexShrink:0}}/>
+                          ) : (
+                            <span style={{fontSize:16}}>{c.emoji||'📍'}</span>
+                          )}
+                          <span style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{getCityName(c.name)}</span>
+                          <span style={{fontSize:11,color:'#94a3b8'}}>{c.countryKo}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* 테마 */}
@@ -3810,30 +3852,16 @@ Write all text in ${langName}.`
               </div>
 
               {/* 일수 + 강도 */}
-              <div style={{display:'flex',gap:12}}>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:12,fontWeight:600,color:'#1a1714',marginBottom:6}}>{t('aiDaysLabel')}</div>
-                  <div style={{display:'flex',gap:4}}>
-                    {[1,2,3,4,5].map(n=>(
-                      <button key={n} onClick={()=>setAiDays(n)} style={{
-                        flex:1,padding:'9px 0',fontSize:13,fontWeight:aiDays===n?700:400,
-                        background:aiDays===n?'#c8856a':'#f5f0ea',color:aiDays===n?'white':'#a89080',
-                        border:aiDays===n?'none':'1px solid #e0d9d0',borderRadius:8,cursor:'pointer',transition:'all .15s'
-                      }}>{n}{t('aiDayUnit')}</button>
-                    ))}
-                  </div>
-                </div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:12,fontWeight:600,color:'#1a1714',marginBottom:6}}>{t('aiHoursLabel')}</div>
-                  <div style={{display:'flex',gap:4}}>
-                    {[1,2,4,6,8].map(h=>(
-                      <button key={h} onClick={()=>setAiHours(h)} style={{
-                        flex:1,padding:'9px 0',fontSize:12,fontWeight:aiHours===h?700:400,
-                        background:aiHours===h?'#c8856a':'#f5f0ea',color:aiHours===h?'white':'#a89080',
-                        border:aiHours===h?'none':'1px solid #e0d9d0',borderRadius:8,cursor:'pointer',transition:'all .15s'
-                      }}>{h}{t('aiHourUnit')}</button>
-                    ))}
-                  </div>
+              <div>
+                <div style={{fontSize:12,fontWeight:600,color:'#1a1714',marginBottom:6}}>{t('aiHoursLabel')}</div>
+                <div style={{display:'flex',gap:4}}>
+                  {[1,2,4,6,8].map(h=>(
+                    <button key={h} onClick={()=>setAiHours(h)} style={{
+                      flex:1,padding:'9px 0',fontSize:12,fontWeight:aiHours===h?700:400,
+                      background:aiHours===h?'#c8856a':'#f5f0ea',color:aiHours===h?'white':'#a89080',
+                      border:aiHours===h?'none':'1px solid #e0d9d0',borderRadius:8,cursor:'pointer',transition:'all .15s'
+                    }}>{h}{t('aiHourUnit')}</button>
+                  ))}
                 </div>
               </div>
 
@@ -3861,21 +3889,21 @@ Write all text in ${langName}.`
               </div>
 
               {/* 미리보기 요약 */}
-              {aiCity && (
+              {aiCities.length > 0 && (
                 <div style={{padding:'10px 14px',background:'#f5f0ea',border:'1px solid #e0d9d0',borderRadius:10,fontSize:12,color:'#9a8070',lineHeight:1.7}}>
-                  <strong>{getCityName(aiCity.name)}</strong>{t('aiSummaryIn')} <strong>{aiDays}{t('aiDayUnit')}</strong>{t('aiSummaryDuring')} <strong>{aiTheme.map(k=>({종합:t('aiThemeAll'),역사:t('aiThemeHistory'),자연:t('aiThemeNature'),핫플:t('aiThemeHotspot')}[k]||k)).join(' + ')}</strong>,
+                  <strong>{aiCities.map(x=>getCityName(x.city.name)).join(' → ')}</strong>{t('aiSummaryIn')} <strong>{aiTotalDays}{t('aiDayUnit')}</strong>{t('aiSummaryDuring')} <strong>{aiTheme.map(k=>({종합:t('aiThemeAll'),역사:t('aiThemeHistory'),자연:t('aiThemeNature'),핫플:t('aiThemeHotspot')}[k]||k)).join(' + ')}</strong>,
                   {t(aiHours<=1?'aiPreview1h':aiHours<=2?'aiPreview2h':aiHours<=4?'aiPreview4h':aiHours<=6?'aiPreview6h':'aiPreview8h')} {t('aiPreviewText')}
-                  {courseTripStart && <><br/>📅 {formatDate(getDayDate(0))} ~ {formatDate(getDayDate(aiDays-1))}</>}
+                  {courseTripStart && <><br/>📅 {formatDate(getDayDate(0))} ~ {formatDate(getDayDate(aiTotalDays-1))}</>}
                 </div>
               )}
 
               {/* 생성 버튼 */}
-              <button onClick={generateAiCourse} disabled={!aiCity||aiGenerating}
+              <button onClick={generateAiCourse} disabled={aiCities.length===0||aiGenerating}
                 style={{
                   width:'100%',padding:'14px',fontSize:14,fontWeight:700,
-                  background:aiCity?'#c8856a':'#f0ebe4',
-                  color:aiCity?'white':'#c8b8a8',border:'none',borderRadius:10,
-                  cursor:aiCity&&!aiGenerating?'pointer':'not-allowed',
+                  background:aiCities.length>0?'#c8856a':'#f0ebe4',
+                  color:aiCities.length>0?'white':'#c8b8a8',border:'none',borderRadius:10,
+                  cursor:aiCities.length>0&&!aiGenerating?'pointer':'not-allowed',
                   transition:'all .2s',display:'flex',alignItems:'center',justifyContent:'center',gap:8
                 }}>
                 {aiGenerating ? (
