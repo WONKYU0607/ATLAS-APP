@@ -3639,7 +3639,7 @@ Write all text in ${langName}.`
                         onMouseLeave={e=>{e.currentTarget.style.background='#f8fafc';e.currentTarget.style.color='#64748b';e.currentTarget.style.borderColor='#e2e8f0'}}
                       >{t('linkCopy')}</button>
                       <button
-                        onClick={() => setShowSharePopup(v => !v)}
+                        onClick={() => shareNative(selectedCity)}
                         style={{
                           flex:1,padding:'10px 14px',background:'#3b82f6',border:'none',borderRadius:10,
                           fontSize:13,fontWeight:600,color:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'all .2s'
@@ -3647,94 +3647,6 @@ Write all text in ${langName}.`
                         onMouseEnter={e=>e.currentTarget.style.background='#2563eb'}
                         onMouseLeave={e=>e.currentTarget.style.background='#3b82f6'}
                       >{t('shareBtn')}</button>
-
-                      {/* 공유 팝업 */}
-                      {showSharePopup && (
-                        <div style={{
-                          position:'absolute',top:'calc(100% + 8px)',left:0,right:0,
-                          background:'white',borderRadius:14,border:'1.5px solid #e2e8f0',
-                          boxShadow:'0 12px 36px rgba(0,0,0,.15)',padding:16,zIndex:100,
-                          animation:'sharePopIn .25s cubic-bezier(.16,1,.3,1)'
-                        }}>
-                          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-                            <span style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>{t('shareTitle')}</span>
-                            <button onClick={()=>setShowSharePopup(false)} style={{background:'none',border:'none',fontSize:18,cursor:'pointer',color:'#94a3b8',padding:0,lineHeight:1}}>✕</button>
-                          </div>
-                          <div style={{display:'flex',gap:12,justifyContent:'center'}}>
-                            {[
-                              { label:'KakaoTalk', emoji:'💬', bg:'#FEE500', color:'#3C1E1E',
-                                action: () => {
-                                  const url = shareCity(selectedCity)
-                                  const text = getCityName(selectedCity._koName||selectedCity.name) + t('shareTitleSuffix')
-                                  const mobile = /iPhone|iPad|Android/i.test(navigator.userAgent)
-                                  if (mobile) {
-                                    window.location.href = `kakaotalk://msg/text/${encodeURIComponent(text + '\n' + url)}`
-                                    setTimeout(() => {
-                                      navigator.clipboard.writeText(url).then(() => alert(t('linkCopiedKakao'))).catch(()=>{})
-                                    }, 1500)
-                                  } else {
-                                    navigator.clipboard.writeText(url).then(() => alert(t('linkCopiedKakao'))).catch(()=>{})
-                                  }
-                                  setShowSharePopup(false)
-                                }
-                              },
-                              { label:'Instagram', emoji:'📸', bg:'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)', color:'#fff',
-                                action: () => {
-                                  const url = shareCity(selectedCity)
-                                  navigator.clipboard.writeText(url).then(() => {
-                                    alert(t('linkCopiedInsta'))
-                                    const mobile = /iPhone|iPad|Android/i.test(navigator.userAgent)
-                                    if (mobile) window.open('instagram://', '_blank')
-                                  }).catch(()=>{})
-                                  setShowSharePopup(false)
-                                }
-                              },
-                              { label:'X', emoji:'𝕏', bg:'#000', color:'#fff',
-                                action: () => {
-                                  const url = shareCity(selectedCity)
-                                  const text = getCityName(selectedCity._koName||selectedCity.name) + t('shareTitleSuffix')
-                                  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
-                                  setShowSharePopup(false)
-                                }
-                              },
-                              { label:'Facebook', emoji:'f', bg:'#1877F2', color:'#fff',
-                                action: () => {
-                                  const url = shareCity(selectedCity)
-                                  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank')
-                                  setShowSharePopup(false)
-                                }
-                              },
-                            ].map((btn,i) => (
-                              <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
-                                <button onClick={btn.action} title={btn.label}
-                                  style={{
-                                    width:52,height:52,borderRadius:'50%',border:'none',
-                                    background:btn.bg,color:btn.color,
-                                    fontSize: btn.label==='Facebook' ? 22 : btn.label==='X' ? 18 : 24,
-                                    fontWeight: btn.label==='Facebook' ? 800 : 400,
-                                    cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',
-                                    boxShadow:'0 2px 8px rgba(0,0,0,.1)',transition:'transform .15s'
-                                  }}
-                                  onMouseEnter={e=>e.currentTarget.style.transform='scale(1.1)'}
-                                  onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}
-                                >{btn.emoji}</button>
-                                <span style={{fontSize:10,color:'#64748b',fontWeight:500}}>{btn.label}</span>
-                              </div>
-                            ))}
-                          </div>
-                          <div style={{marginTop:14,paddingTop:12,borderTop:'1px solid #f1f5f9'}}>
-                            <button onClick={() => { copyLink(selectedCity); setShowSharePopup(false) }}
-                              style={{
-                                width:'100%',padding:'10px',background:'#f8fafc',border:'1.5px solid #e2e8f0',
-                                borderRadius:10,fontSize:13,fontWeight:600,color:'#64748b',cursor:'pointer',
-                                display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'all .2s'
-                              }}
-                              onMouseEnter={e=>{e.currentTarget.style.background='#e2e8f0'}}
-                              onMouseLeave={e=>{e.currentTarget.style.background='#f8fafc'}}
-                            >{t('linkCopy')}</button>
-                          </div>
-                        </div>
-                      )}
                     </div>
 
 
@@ -3818,7 +3730,7 @@ Write all text in ${langName}.`
                             )}
                             {(foodCulture.dishes||[]).map((dish,idx)=>(
                               <div key={idx} style={{background:'white',border:'1px solid #ede8e0',borderRadius:12,padding:'13px 14px'}}>
-                                <div style={{fontSize:14.5,fontWeight:700,color:'#1a1714',marginBottom:6}}>{dish.emoji||'🍽️'} {dish.name}</div>
+                                <div style={{fontSize:14.5,fontWeight:700,color:'#1a1714',marginBottom:6}}>{idx+1}. {dish.name}</div>
                                 <div style={{fontSize:12.5,color:'#6b5d52',lineHeight:1.65,marginBottom:dish.price?8:0}}>{dish.desc}</div>
                                 {dish.price && (
                                   <div style={{display:'inline-block',fontSize:11,fontWeight:600,color:'#c8856a',background:'#f7efe9',borderRadius:6,padding:'3px 9px'}}>💰 {dish.price}</div>
