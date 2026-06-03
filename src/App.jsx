@@ -446,6 +446,8 @@ function App() {
   const [restaurants, setRestaurants] = useState([])
   const [loadingPlaces, setLoadingPlaces] = useState(false)
   const [foodCategory, setFoodCategory] = useState('restaurant') // 'restaurant' | 'cafe' | 'bar'
+  const [foodCulture, setFoodCulture] = useState(null) // AI 생성 음식문화 데이터
+  const [loadingFoodCulture, setLoadingFoodCulture] = useState(false)
 
   // API 사용량 추적 및 제한
   const MAX_DAILY_CALLS = 300
@@ -1769,6 +1771,7 @@ function App() {
       setShowSharePopup(false)
       setSidePanel(null)
       setFoodCategory('restaurant')
+      setFoodCulture(null)
     } else {
       setHotspots([])
       setRestaurants([])
@@ -2710,6 +2713,46 @@ function App() {
       }
     } catch (error) {
       console.error('Failed to fetch food data:', error)
+    }
+  }
+
+  // 음식 문화 AI 생성 (localStorage 캐싱)
+  const fetchFoodCulture = async (city) => {
+    const cityKey = city._koName || city.name
+    const cacheKey = `foodCulture_${cityKey}_${lang}`
+    // 캐시 확인
+    try {
+      const cached = localStorage.getItem(cacheKey)
+      if (cached) { setFoodCulture(JSON.parse(cached)); return }
+    } catch {}
+
+    setLoadingFoodCulture(true)
+    setFoodCulture(null)
+    const cityName = getCityName(cityKey) || city.name
+    const langName = lang === 'ko' ? '한국어' : lang === 'ja' ? '日本語' : lang === 'zh' ? '中文' : 'English'
+    const prompt = `You are a travel food culture curator. Introduce the food culture of "${cityName}" to travelers.
+Pick 3-4 representative dishes. For each dish, provide: name, a 2-3 sentence description covering its origin/history, why it developed in this region, its taste/characteristics, and an approximate price range in local currency.
+Exclude specific restaurant names or locations — focus on the food itself.
+Respond ONLY with valid JSON (no markdown, no code fences) in this exact format:
+{"intro":"1-2 sentence overview of the city's food culture","dishes":[{"emoji":"🍜","name":"dish name","desc":"origin, history, why developed, taste","price":"approximate price range"}]}
+Write all text in ${langName}.`
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      })
+      const data = await res.json()
+      let txt = (data.text || '').trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim()
+      const parsed = JSON.parse(txt)
+      setFoodCulture(parsed)
+      try { localStorage.setItem(cacheKey, JSON.stringify(parsed)) } catch {}
+    } catch (e) {
+      console.error('Food culture fetch error:', e)
+      setFoodCulture({ error: true })
+    } finally {
+      setLoadingFoodCulture(false)
     }
   }
 
@@ -3695,74 +3738,96 @@ function App() {
                     </div>
 
 
-                    {/* 추천 관광지 / 맛집 탭 + 인라인 목록 */}
+                    {/* 추천 관광지 / 음식 문화 탭 */}
                     <div>
                       {/* 탭 버튼 */}
                       <div style={{display:'flex',gap:6,marginBottom:12}}>
-                        {[{key:'hotspots',label:lang==='ko'?'추천 관광지':lang==='ja'?'おすすめ':lang==='zh'?'推荐景点':'Top Spots'},{key:'restaurants',label:lang==='ko'?'맛집':lang==='ja'?'グルメ':lang==='zh'?'美食':'Food'}].map(tab=>(
-                          <button key={tab.key} onClick={()=>setActiveTab(tab.key)}
+                        {[{key:'hotspots',label:lang==='ko'?'추천 관광지':lang==='ja'?'おすすめ':lang==='zh'?'推荐景点':'Top Spots'},{key:'food',label:lang==='ko'?'음식 문화':lang==='ja'?'食文化':lang==='zh'?'饮食文化':'Food Culture'}].map(tab=>(
+                          <button key={tab.key} onClick={()=>{setActiveTab(tab.key); if(tab.key==='food' && !foodCulture && !loadingFoodCulture) fetchFoodCulture(selectedCity)}}
                             style={{flex:1,padding:'9px 0',fontSize:13,fontWeight:activeTab===tab.key?700:500,background:activeTab===tab.key?'#c8856a':'#f5f0ea',color:activeTab===tab.key?'white':'#9a8070',border:'none',borderRadius:10,cursor:'pointer',transition:'all .2s'}}>
                             {tab.label}</button>
                         ))}
                       </div>
-                      {/* 맛집 카테고리 */}
-                      {activeTab==='restaurants' && (
-                        <div style={{display:'flex',gap:4,marginBottom:12,background:'#f5f0ea',borderRadius:8,padding:3}}>
-                          {[{key:'restaurant',label:t('foodRestaurant')||'식당'},{key:'cafe',label:t('foodCafe')||'카페'},{key:'bar',label:t('foodBar')||'바'}].map(cat=>(
-                            <button key={cat.key} onClick={()=>setFoodCategory(cat.key)}
-                              style={{flex:1,padding:'6px 0',fontSize:11,fontWeight:foodCategory===cat.key?600:400,background:foodCategory===cat.key?'#fff':'none',color:foodCategory===cat.key?'#1a1714':'#b0a89e',border:'none',borderRadius:6,cursor:'pointer',transition:'all .15s'}}>
-                              {cat.label}</button>
-                          ))}
-                        </div>
-                      )}
-                      {/* 목록 */}
-                      {loadingPlaces ? (
-                        <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:50}}>
-                          <div style={{width:28,height:28,borderRadius:'50%',border:'2px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>
-                        </div>
-                      ) : (activeTab==='hotspots'?hotspots:restaurants).length>0 ? (
-                        <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                          {(activeTab==='hotspots'?hotspots:restaurants).map((place,idx)=>(
-                            <a key={idx} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id||''}`}
-                              target="_blank" rel="noopener noreferrer"
-                              style={{textDecoration:'none',background:'white',border:'1px solid #ede8e0',borderRadius:12,overflow:'hidden',cursor:'pointer',transition:'all .2s'}}>
-                              <div style={{display:'flex',gap:10,padding:10,alignItems:'center'}}>
-                                {place.photos && place.photos.length>0 ? (
-                                  <img src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photo_reference=${place.photos[0].photo_reference}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`}
-                                    alt={place.name} style={{width:72,height:72,borderRadius:10,objectFit:'cover',flexShrink:0}}/>
-                                ) : (
-                                  <div style={{width:72,height:72,borderRadius:10,background:'#f5f0ea',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,color:'#c8b8a8',flexShrink:0}}>
-                                    {activeTab==='hotspots'?'Place':foodCategory==='cafe'?'Cafe':foodCategory==='bar'?'Bar':'Food'}
+
+                      {/* 추천 관광지 목록 */}
+                      {activeTab==='hotspots' && (
+                        loadingPlaces ? (
+                          <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:50}}>
+                            <div style={{width:28,height:28,borderRadius:'50%',border:'2px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>
+                          </div>
+                        ) : hotspots.length>0 ? (
+                          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                            {hotspots.map((place,idx)=>(
+                              <a key={idx} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id||''}`}
+                                target="_blank" rel="noopener noreferrer"
+                                style={{textDecoration:'none',background:'white',border:'1px solid #ede8e0',borderRadius:12,overflow:'hidden',cursor:'pointer',transition:'all .2s'}}>
+                                <div style={{display:'flex',gap:10,padding:10,alignItems:'center'}}>
+                                  {place.photos && place.photos.length>0 ? (
+                                    <img src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photo_reference=${place.photos[0].photo_reference}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`}
+                                      alt={place.name} style={{width:72,height:72,borderRadius:10,objectFit:'cover',flexShrink:0}}/>
+                                  ) : (
+                                    <div style={{width:72,height:72,borderRadius:10,background:'#f5f0ea',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,color:'#c8b8a8',flexShrink:0}}>Place</div>
+                                  )}
+                                  <div style={{flex:1,minWidth:0}}>
+                                    <div style={{fontSize:13.5,fontWeight:700,color:'#1a1714',marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{place.name}</div>
+                                    {place.rating && (
+                                      <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:3}}>
+                                        <span style={{fontSize:11.5,color:'#c8a870',fontWeight:600}}>★ {place.rating}</span>
+                                        {place.user_ratings_total && <span style={{fontSize:9,color:'#c8b8a8'}}>({place.user_ratings_total.toLocaleString()})</span>}
+                                      </div>
+                                    )}
+                                    {place.vicinity && <div style={{fontSize:10,color:'#b0a89e',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{place.vicinity}</div>}
+                                    {place.opening_hours && (
+                                      <div style={{fontSize:9,color:place.opening_hours.open_now?'#6fa870':'#c07060',fontWeight:600,marginTop:3}}>
+                                        {place.opening_hours.open_now?t('openNow'):t('closedNow')}</div>
+                                    )}
                                   </div>
+                                  <div style={{display:'flex',flexDirection:'column',gap:4,flexShrink:0}}>
+                                    <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:'hotspot',name:place.name,displayName:place.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:place.rating,place_id:place.place_id,vicinity:place.vicinity,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:'📍',photo_ref:place.photos?.[0]?.photo_reference||null})}}
+                                      style={{background:isInCourse(place.name,'hotspot')?'#c8856a':'#f5f0ea',border:isInCourse(place.name,'hotspot')?'none':'1px solid #e0d9d0',color:isInCourse(place.name,'hotspot')?'white':'#c8b8a8',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:14,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
+                                      title={t("courseAddToTrip")}>{isInCourse(place.name,'hotspot')?'✓':'＋'}</button>
+                                    <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav({type:'hotspot',name:place.name,place_id:place.place_id,rating:place.rating,user_ratings_total:place.user_ratings_total,vicinity:place.vicinity,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name)})}}
+                                      style={{background:isFav('hotspot',place.name)?'#fef3c7':'#f5f0ea',border:isFav('hotspot',place.name)?'1px solid #f0c040':'1px solid #e0d9d0',color:isFav('hotspot',place.name)?'#c8a020':'#c8b8a8',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:12,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
+                                      title={t("favToggle")}>{isFav('hotspot',place.name)?'★':'☆'}</button>
+                                  </div>
+                                </div>
+                              </a>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{textAlign:'center',padding:40,color:'#94a3b8',fontSize:13}}>{t('noData')}</div>
+                        )
+                      )}
+
+                      {/* 음식 문화 (AI 생성) */}
+                      {activeTab==='food' && (
+                        loadingFoodCulture ? (
+                          <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:50,gap:14}}>
+                            <div style={{width:28,height:28,borderRadius:'50%',border:'2px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>
+                            <div style={{fontSize:12,color:'#b0a89e'}}>{lang==='ko'?'음식 문화를 불러오는 중...':lang==='ja'?'読み込み中...':lang==='zh'?'加载中...':'Loading...'}</div>
+                          </div>
+                        ) : foodCulture?.error ? (
+                          <div style={{textAlign:'center',padding:40,color:'#94a3b8',fontSize:13}}>
+                            {lang==='ko'?'정보를 불러오지 못했습니다':lang==='ja'?'読み込めませんでした':lang==='zh'?'加载失败':'Failed to load'}
+                            <button onClick={()=>fetchFoodCulture(selectedCity)} style={{display:'block',margin:'12px auto 0',padding:'7px 16px',background:'#c8856a',color:'white',border:'none',borderRadius:8,fontSize:12,cursor:'pointer'}}>{lang==='ko'?'다시 시도':'Retry'}</button>
+                          </div>
+                        ) : foodCulture ? (
+                          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                            {foodCulture.intro && (
+                              <div style={{fontSize:12.5,color:'#6b5d52',lineHeight:1.6,padding:'2px 2px 6px'}}>{foodCulture.intro}</div>
+                            )}
+                            {(foodCulture.dishes||[]).map((dish,idx)=>(
+                              <div key={idx} style={{background:'white',border:'1px solid #ede8e0',borderRadius:12,padding:'13px 14px'}}>
+                                <div style={{fontSize:14.5,fontWeight:700,color:'#1a1714',marginBottom:6}}>{dish.emoji||'🍽️'} {dish.name}</div>
+                                <div style={{fontSize:12.5,color:'#6b5d52',lineHeight:1.65,marginBottom:dish.price?8:0}}>{dish.desc}</div>
+                                {dish.price && (
+                                  <div style={{display:'inline-block',fontSize:11,fontWeight:600,color:'#c8856a',background:'#f7efe9',borderRadius:6,padding:'3px 9px'}}>💰 {dish.price}</div>
                                 )}
-                                <div style={{flex:1,minWidth:0}}>
-                                  <div style={{fontSize:13.5,fontWeight:700,color:'#1a1714',marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{place.name}</div>
-                                  {place.rating && (
-                                    <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:3}}>
-                                      <span style={{fontSize:11.5,color:'#c8a870',fontWeight:600}}>★ {place.rating}</span>
-                                      {place.user_ratings_total && <span style={{fontSize:9,color:'#c8b8a8'}}>({place.user_ratings_total.toLocaleString()})</span>}
-                                    </div>
-                                  )}
-                                  {place.vicinity && <div style={{fontSize:10,color:'#b0a89e',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{place.vicinity}</div>}
-                                  {place.opening_hours && (
-                                    <div style={{fontSize:9,color:place.opening_hours.open_now?'#6fa870':'#c07060',fontWeight:600,marginTop:3}}>
-                                      {place.opening_hours.open_now?t('openNow'):t('closedNow')}</div>
-                                  )}
-                                </div>
-                                <div style={{display:'flex',flexDirection:'column',gap:4,flexShrink:0}}>
-                                  <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:activeTab==='hotspots'?'hotspot':'restaurant',name:place.name,displayName:place.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:place.rating,place_id:place.place_id,vicinity:place.vicinity,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:activeTab==='hotspots'?'📍':foodCategory==='cafe'?'☕':foodCategory==='bar'?'🍻':'🍽️',photo_ref:place.photos?.[0]?.photo_reference||null})}}
-                                    style={{background:isInCourse(place.name,activeTab==='hotspots'?'hotspot':'restaurant')?'#c8856a':'#f5f0ea',border:isInCourse(place.name,activeTab==='hotspots'?'hotspot':'restaurant')?'none':'1px solid #e0d9d0',color:isInCourse(place.name,activeTab==='hotspots'?'hotspot':'restaurant')?'white':'#c8b8a8',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:14,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
-                                    title={t("courseAddToTrip")}>{isInCourse(place.name,activeTab==='hotspots'?'hotspot':'restaurant')?'✓':'＋'}</button>
-                                  <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav({type:activeTab==='hotspots'?'hotspot':'restaurant',name:place.name,place_id:place.place_id,rating:place.rating,user_ratings_total:place.user_ratings_total,vicinity:place.vicinity,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name)})}}
-                                    style={{background:isFav(activeTab==='hotspots'?'hotspot':'restaurant',place.name)?'#fef3c7':'#f5f0ea',border:isFav(activeTab==='hotspots'?'hotspot':'restaurant',place.name)?'1px solid #f0c040':'1px solid #e0d9d0',color:isFav(activeTab==='hotspots'?'hotspot':'restaurant',place.name)?'#c8a020':'#c8b8a8',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:12,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
-                                    title={t("favToggle")}>{isFav(activeTab==='hotspots'?'hotspot':'restaurant',place.name)?'★':'☆'}</button>
-                                </div>
                               </div>
-                            </a>
-                          ))}
-                        </div>
-                      ) : (
-                        <div style={{textAlign:'center',padding:40,color:'#94a3b8',fontSize:13}}>{t('noData')}</div>
+                            ))}
+                            <div style={{fontSize:9.5,color:'#c8b8a8',textAlign:'center',marginTop:4,fontStyle:'italic'}}>{lang==='ko'?'AI가 생성한 정보로 가격은 대략적입니다':lang==='ja'?'AI生成・価格は目安':lang==='zh'?'AI生成·价格仅供参考':'AI-generated · prices are approximate'}</div>
+                          </div>
+                        ) : null
                       )}
                     </div>
                   </>
