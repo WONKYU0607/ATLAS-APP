@@ -1778,7 +1778,7 @@ function App() {
 
   // 맛집 카테고리 변경 시 다시 로드
   useEffect(() => {
-    if (selectedCity && sidePanel === 'restaurants') {
+    if (selectedCity && activeTab === 'restaurants') {
       setRestaurants([])
       setLoadingPlaces(true)
       fetchFoodData(selectedCity, foodCategory).finally(() => setLoadingPlaces(false))
@@ -3701,7 +3701,7 @@ function App() {
                       <div style={{display:'flex',gap:6,marginBottom:12}}>
                         {[{key:'hotspots',label:lang==='ko'?'추천 관광지':lang==='ja'?'おすすめ':lang==='zh'?'推荐景点':'Top Spots'},{key:'restaurants',label:lang==='ko'?'맛집':lang==='ja'?'グルメ':lang==='zh'?'美食':'Food'}].map(tab=>(
                           <button key={tab.key} onClick={()=>setActiveTab(tab.key)}
-                            style={{flex:1,padding:'9px 0',fontSize:13,fontWeight:activeTab===tab.key?700:500,background:activeTab===tab.key?(selectedCity?.color||'#c8856a'):'#f5f0ea',color:activeTab===tab.key?'white':'#9a8070',border:'none',borderRadius:10,cursor:'pointer',transition:'all .2s'}}>
+                            style={{flex:1,padding:'9px 0',fontSize:13,fontWeight:activeTab===tab.key?700:500,background:activeTab===tab.key?'#c8856a':'#f5f0ea',color:activeTab===tab.key?'white':'#9a8070',border:'none',borderRadius:10,cursor:'pointer',transition:'all .2s'}}>
                             {tab.label}</button>
                         ))}
                       </div>
