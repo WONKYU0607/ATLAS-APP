@@ -643,121 +643,123 @@ function App() {
     return sorted
   }
 
-  const generateAiCourse = () => {
+  const generateAiCourse = async () => {
     if (aiCities.length === 0) return
     setAiGenerating(true)
     // 날짜 미설정 시 오늘로 동기화
     if (!courseTripStart) {
       saveTripStart(new Date().toISOString().slice(0, 10))
     }
-    setTimeout(() => {
-      const perDay = aiHours <= 1 ? 2 : aiHours <= 2 ? 3 : aiHours <= 4 ? 5 : aiHours <= 6 ? 7 : 9
-      const themes = aiTheme
 
-      // 도시 한 곳의 관광지 수집 + 테마 필터 + 정렬
-      const collectAttractions = (cityObj) => {
-        const cityKey = cityObj.name || cityObj._koName
-        const staticData = CITY_DATA[cityKey]
-        const cityLat = cityObj.lat, cityLng = cityObj.lng
-        let attractions = []
-        if (staticData?.spots) {
-          staticData.spots.forEach(s => {
-            if (s.type === '음식') return
-            attractions.push({
-              source: 'spot', name: s.name, displayName: s.name,
-              cityName: cityKey, cityDisplayName: getCityName(cityKey),
-              type: s.type, rating: s.rating || 4.0, wikiTitle: s.wikiTitle,
-              lat: cityLat, lng: cityLng, _lat: cityLat, _lng: cityLng,
-              emoji: s.type==='자연'?'🌿':s.type==='역사'?'🏛️':s.type==='문화'?'🎭':s.type==='랜드마크'?'🏙️':'📍'
-            })
-          })
-        }
-        // 선택된 도시가 현재 지구본에서 열린 도시면 Google 핫플도 활용
-        if (selectedCity && (selectedCity.name === cityKey) && hotspots.length > 0) {
-          hotspots.forEach(p => {
-            if (!attractions.some(a => a.name === p.name)) {
-              attractions.push({
-                source:'hotspot', name:p.name, displayName:p.name,
-                cityName:cityKey, cityDisplayName:getCityName(cityKey),
-                rating:p.rating||4.0, place_id:p.place_id, vicinity:p.vicinity,
-                lat:cityLat, lng:cityLng, _lat:p.geometry?.location?.lat||cityLat, _lng:p.geometry?.location?.lng||cityLng,
-                emoji:'📍', photo_ref:p.photos?.[0]?.photo_reference||null
-              })
-            }
-          })
-        }
-        // 테마 필터
-        if (!themes.includes('종합')) {
-          let filteredAttr = []
-          if (themes.includes('역사')) filteredAttr.push(...attractions.filter(a => ['역사','문화','랜드마크'].includes(a.type)))
-          if (themes.includes('자연')) filteredAttr.push(...attractions.filter(a => ['자연'].includes(a.type)))
-          if (themes.includes('핫플')) filteredAttr.push(...attractions.filter(a => a.source === 'hotspot'))
-          const seen = new Set()
-          filteredAttr = filteredAttr.filter(a => { if (seen.has(a.name)) return false; seen.add(a.name); return true })
-          if (filteredAttr.length < 3) {
-            attractions.forEach(a => { if (!seen.has(a.name)) { filteredAttr.push(a); seen.add(a.name) } })
-          }
-          attractions = filteredAttr
-        }
-        attractions.sort((a,b) => (b.rating||0) - (a.rating||0))
-        return { cityKey, cityLat, cityLng, attractions }
-      }
+    const perDay = aiHours <= 1 ? 2 : aiHours <= 2 ? 3 : aiHours <= 4 ? 5 : aiHours <= 6 ? 7 : 9
+    const themes = aiTheme
 
-      // 1) 도시 동선 정렬 (가까운 순, 첫 도시 기준 nearest neighbor)
-      let orderedCities = [...aiCities]
-      if (orderedCities.length > 1) {
-        const sorted = []
-        const remaining = orderedCities.map(x => ({ ...x, _lat: x.city.lat, _lng: x.city.lng }))
-        let cur = remaining.shift()  // 첫 선택 도시를 출발점으로
-        sorted.push(cur)
-        while (remaining.length > 0) {
-          let minD = Infinity, minI = 0
-          remaining.forEach((r, i) => {
-            const d = haversine(cur._lat, cur._lng, r._lat, r._lng)
-            if (d < minD) { minD = d; minI = i }
-          })
-          cur = remaining.splice(minI, 1)[0]
-          sorted.push(cur)
-        }
-        orderedCities = sorted
-      }
+    // 도시 한 곳의 관광지 수집 (핫플 실시간 로드 + 정적 spots 보조) + 테마 필터
+    const collectAttractions = async (cityObj) => {
+      const cityKey = cityObj.name || cityObj._koName
+      const cityLat = cityObj.lat, cityLng = cityObj.lng
+      let attractions = []
 
-      // 2) 도시별로 days만큼 날짜 채우기
-      const days = []
-      orderedCities.forEach(({ city, days: cityDays }) => {
-        const { cityLat, cityLng, attractions } = collectAttractions(city)
-        let attrIdx = 0
-        for (let d = 0; d < cityDays; d++) {
-          const picked = []
-          for (let i = 0; i < perDay && attrIdx < attractions.length; i++) {
-            picked.push(attractions[attrIdx]); attrIdx++
-          }
-          const ordered = sortByProximity(picked, cityLat, cityLng)
-            .map(({_lat,_lng,...rest})=>({...rest, addedAt:Date.now()}))
-          days.push({ items: ordered })
-        }
+      // 1순위: Google 핫플 실시간 로드 (모든 도시)
+      const hs = await fetchHotspotsFor(cityObj)
+      hs.forEach(p => {
+        attractions.push({
+          source:'hotspot', name:p.name, displayName:p.name,
+          cityName:cityKey, cityDisplayName:getCityName(cityKey),
+          rating:p.rating||4.0, place_id:p.place_id, vicinity:p.vicinity,
+          lat:cityLat, lng:cityLng, _lat:p.geometry?.location?.lat||cityLat, _lng:p.geometry?.location?.lng||cityLng,
+          emoji:'📍', photo_ref:p.photos?.[0]?.photo_reference||null
+        })
       })
+      // 보조: 정적 spots (핫플에 없는 것만 추가)
+      const staticData = CITY_DATA[cityKey]
+      if (staticData?.spots) {
+        staticData.spots.forEach(s => {
+          if (s.type === '음식') return
+          if (attractions.some(a => a.name === s.name)) return
+          attractions.push({
+            source: 'spot', name: s.name, displayName: s.name,
+            cityName: cityKey, cityDisplayName: getCityName(cityKey),
+            type: s.type, rating: s.rating || 4.0, wikiTitle: s.wikiTitle,
+            lat: cityLat, lng: cityLng, _lat: cityLat, _lng: cityLng,
+            emoji: s.type==='자연'?'🌿':s.type==='역사'?'🏛️':s.type==='문화'?'🎭':s.type==='랜드마크'?'🏙️':'📍'
+          })
+        })
+      }
 
-      // 3) 플래너에 로드 + 자동 저장
-      saveCourseDays(days)
-      setCourseTransport(aiTransport)
-      setActiveDayTab(0)
-      setShowAiModal(false)
-      setShowCoursePlanner(true)
-      setCourseSource('ai')
-      setTimeout(() => {
-        const cityNames = orderedCities.map(x => getCityName(x.city.name))
-        const courseName = cityNames.length <= 2 ? cityNames.join('·') : `${cityNames[0]} 외 ${cityNames.length-1}`
-        const aiSaved = {
-          id: Date.now(), name: `${courseName} ${days.length}${lang==='ko'?'일':'D'}`,
-          type: 'ai',
-          days, transport: aiTransport, tripStart: courseTripStart,
-          createdAt: Date.now()
+      // 테마 필터 (정적 spot의 type 기준 + 핫플은 '핫플' 테마에 매칭)
+      if (!themes.includes('종합')) {
+        let filteredAttr = []
+        if (themes.includes('역사')) filteredAttr.push(...attractions.filter(a => ['역사','문화','랜드마크'].includes(a.type)))
+        if (themes.includes('자연')) filteredAttr.push(...attractions.filter(a => ['자연'].includes(a.type)))
+        if (themes.includes('핫플')) filteredAttr.push(...attractions.filter(a => a.source === 'hotspot'))
+        const seen = new Set()
+        filteredAttr = filteredAttr.filter(a => { if (seen.has(a.name)) return false; seen.add(a.name); return true })
+        if (filteredAttr.length < 3) {
+          attractions.forEach(a => { if (!seen.has(a.name)) { filteredAttr.push(a); seen.add(a.name) } })
         }
-        setSavedCourses(prev => { const nl = [aiSaved, ...prev]; localStorage.setItem('atlas_saved_courses', JSON.stringify(nl)); return nl })
-      }, 100)
-      setAiGenerating(false)
-    }, 600)
+        attractions = filteredAttr
+      }
+      attractions.sort((a,b) => (b.rating||0) - (a.rating||0))
+      return { cityKey, cityLat, cityLng, attractions }
+    }
+
+    // 1) 도시 동선 정렬 (가까운 순, 첫 도시 기준 nearest neighbor)
+    let orderedCities = [...aiCities]
+    if (orderedCities.length > 1) {
+      const sorted = []
+      const remaining = orderedCities.map(x => ({ ...x, _lat: x.city.lat, _lng: x.city.lng }))
+      let cur = remaining.shift()
+      sorted.push(cur)
+      while (remaining.length > 0) {
+        let minD = Infinity, minI = 0
+        remaining.forEach((r, i) => {
+          const d = haversine(cur._lat, cur._lng, r._lat, r._lng)
+          if (d < minD) { minD = d; minI = i }
+        })
+        cur = remaining.splice(minI, 1)[0]
+        sorted.push(cur)
+      }
+      orderedCities = sorted
+    }
+
+    // 2) 도시별로 days만큼 날짜 채우기 (장소를 일수에 고르게 분배)
+    const days = []
+    for (const { city, days: cityDays } of orderedCities) {
+      const { cityLat, cityLng, attractions } = await collectAttractions(city)
+      // 고른 분배: 그 도시 전체 장소를 일수로 나눠 하루치 결정 (단, perDay 상한)
+      const perDayForCity = Math.min(perDay, Math.max(2, Math.ceil(attractions.length / cityDays)))
+      let attrIdx = 0
+      for (let d = 0; d < cityDays; d++) {
+        const picked = []
+        for (let i = 0; i < perDayForCity && attrIdx < attractions.length; i++) {
+          picked.push(attractions[attrIdx]); attrIdx++
+        }
+        const ordered = sortByProximity(picked, cityLat, cityLng)
+          .map(({_lat,_lng,...rest})=>({...rest, addedAt:Date.now()}))
+        days.push({ items: ordered })
+      }
+    }
+
+    // 3) 플래너에 로드 + 자동 저장
+    saveCourseDays(days)
+    setCourseTransport(aiTransport)
+    setActiveDayTab(0)
+    setShowAiModal(false)
+    setShowCoursePlanner(true)
+    setCourseSource('ai')
+    setTimeout(() => {
+      const cityNames = orderedCities.map(x => getCityName(x.city.name))
+      const courseName = cityNames.length <= 2 ? cityNames.join('·') : `${cityNames[0]} 외 ${cityNames.length-1}`
+      const aiSaved = {
+        id: Date.now(), name: `${courseName} ${days.length}${lang==='ko'?'일':'D'}`,
+        type: 'ai',
+        days, transport: aiTransport, tripStart: courseTripStart,
+        createdAt: Date.now()
+      }
+      setSavedCourses(prev => { const nl = [aiSaved, ...prev]; localStorage.setItem('atlas_saved_courses', JSON.stringify(nl)); return nl })
+    }, 100)
+    setAiGenerating(false)
   }
 
   const saveCourse = (items) => { setCourseItems(items); localStorage.setItem('atlas_course', JSON.stringify(items)) }
@@ -2606,6 +2608,22 @@ function App() {
   }
 
 
+
+  // 임의 도시의 핫플(관광 명소) 배열을 반환 (state 안 건드림, AI 코스용)
+  const fetchHotspotsFor = async (city) => {
+    if (!city?.lat || !city?.lng) return []
+    try {
+      const res = await fetch(
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park|point_of_interest&language=${lang==='zh'?'zh-CN':lang}`
+      )
+      const data = await res.json()
+      if (!data.results) return []
+      return data.results
+        .filter(p => p.rating && p.rating >= 4.0)
+        .filter(p => p.user_ratings_total && p.user_ratings_total >= 100)
+        .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+    } catch { return [] }
+  }
 
   const fetchPlacesData = async (city) => {
     if (!city?.lat || !city?.lng) return
