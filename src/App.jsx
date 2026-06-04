@@ -401,7 +401,7 @@ function App() {
 
   // ── 트래블 피드 (Phase 1) ──
   const [showFeed, setShowFeed] = useState(false)
-  const [feedMainTab, setFeedMainTab] = useState('journals') // 'journals' | 'courses'
+  const [feedMainTab, setFeedMainTab] = useState('courses') // 'courses' (여행기 제거됨)
   const [feedSubTab, setFeedSubTab] = useState('all') // 'all' | 'mine'
   const [feedJournals, setFeedJournals] = useState([])
   const [feedJournalsLoading, setFeedJournalsLoading] = useState(false)
@@ -3009,7 +3009,7 @@ Write all text in ${langName}.`
                 <div style={{padding:'12px 16px 14px',borderTop:'1px solid #ede8e0'}}>
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'#f5f0ea',border:'1px solid #ede8e0',transition:'all .15s'}}
                     onClick={async()=>{
-                      setShowFeed(true);setShowHamburger(false);setFeedMainTab('journals');setFeedSubTab('all');setFeedJournalsLoading(true)
+                      setShowFeed(true);setShowHamburger(false);setFeedMainTab('courses');setFeedSubTab('all');setFeedJournalsLoading(true)
                       try{
                         const data=await loadJournals({ limitN: 30 })
                         setFeedJournals(data)
@@ -4588,7 +4588,7 @@ Write all text in ${langName}.`
 
           {/* Main Tabs */}
           <div style={{display:'flex',borderBottom:'1px solid #f0f0f0',flexShrink:0,background:'#ffffff',position:'sticky',top:isMobile?60:62,zIndex:9}}>
-            {[{k:'journals',label:t('feedTabJournals'),icon:'📔'},{k:'courses',label:t('feedTabCourses'),icon:'🗺️'}].map(tab => (
+            {[{k:'courses',label:t('feedTabCourses'),icon:'🗺️'}].map(tab => (
               <button key={tab.k} onClick={()=>setFeedMainTab(tab.k)}
                 style={{flex:1,padding:isMobile?'13px 0':'15px 0',background:'transparent',border:'none',
                   borderBottom:feedMainTab===tab.k?'2.5px solid #262626':'2.5px solid transparent',
