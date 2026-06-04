@@ -3955,7 +3955,7 @@ Write all text in ${langName}.`
                   borderRadius:20,cursor:'pointer',whiteSpace:'nowrap',transition:'all .15s',flexShrink:0
                 }}>
                   Day {i+1}
-                  {courseTripStart && <span style={{fontSize:9,opacity:.7,marginLeft:4}}>{formatDate(getDayDate(i))}</span>}
+                  {courseTripStart && <span style={{fontSize:9,fontWeight:600,opacity:activeDayTab===i?1:.85,marginLeft:4}}>{formatDate(getDayDate(i))}</span>}
                   <span style={{fontSize:9,opacity:.6,marginLeft:3}}>({courseDays[i].items.length})</span>
                 </button>
               ))}
@@ -3993,7 +3993,7 @@ Write all text in ${langName}.`
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       <span style={{fontSize:12,fontWeight:700,color:'#1a1714'}}>Day {activeDayTab+1}</span>
-                      {courseTripStart && <span style={{fontSize:11,color:'#c8856a'}}>{formatDate(getDayDate(activeDayTab))}</span>}
+                      {courseTripStart && <span style={{fontSize:11,fontWeight:700,color:'#1a1714'}}>{formatDate(getDayDate(activeDayTab))}</span>}
                       <span style={{fontSize:11,color:'#6b7280'}}>{items.length}{t('coursePlace')}</span>
                     </div>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
@@ -4044,33 +4044,30 @@ Write all text in ${langName}.`
                               {item.rating && <span style={{fontSize:9,color:'#d97706'}}>★{item.rating}</span>}
                             </div>
                           </div>
-                          {/* 이동 버튼 → 해당 도시/관광지로 바로 이동 */}
+                          {/* 이동 버튼 → 데스크탑: 구글맵 / 모바일: 도시 패널 */}
                           <button onClick={()=>{
-                            const city = allCitiesFlat.find(c => c.name === item.cityName)
-                            if (!city) return
-                            const feat = countries.find(f => f.properties.NAME === city.countryEn)
-                            if (feat) setSelectedCountry(feat)
-                            setTimeout(() => {
-                              handleCityClick(city)
-                              if (item.source === 'spot' && item.name) {
-                                setTimeout(() => {
-                                  const spotData = CITY_DATA[item.cityName]
-                                  const spot = spotData?.spots?.find(s => s.name === item.name)
-                                  if (spot) setSelectedSpot(spot)
-                                }, 800)
-                              }
-                            }, 200)
-                            setShowCoursePlanner(false)
+                            if (isMobile) {
+                              const city = allCitiesFlat.find(c => c.name === item.cityName)
+                              if (!city) return
+                              const feat = countries.find(f => f.properties.NAME === city.countryEn)
+                              if (feat) setSelectedCountry(feat)
+                              setTimeout(() => { handleCityClick(city) }, 200)
+                              setShowCoursePlanner(false)
+                            } else {
+                              // 데스크탑: 코스 유지하고 구글맵 새 탭
+                              const q = encodeURIComponent(item.name)
+                              window.open(`https://www.google.com/maps/search/?api=1&query=${q}&query_place_id=${item.place_id||''}`, '_blank')
+                            }
                           }}
-                            style={{background:'none',border:'1px solid #e0d9d0',color:'#b0a89e',width:24,height:24,borderRadius:5,cursor:'pointer',fontSize:11,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
+                            style={{background:'none',border:'1px solid #e0d9d0',color:'#6b7280',width:24,height:24,borderRadius:5,cursor:'pointer',fontSize:11,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
                             onMouseEnter={e=>{e.currentTarget.style.color='#3b82f6';e.currentTarget.style.borderColor='#93c5fd';e.currentTarget.style.background='#eff6ff'}}
-                            onMouseLeave={e=>{e.currentTarget.style.color='#b0a89e';e.currentTarget.style.borderColor='#e0d9d0';e.currentTarget.style.background='none'}}
-                            title="이동">→</button>
+                            onMouseLeave={e=>{e.currentTarget.style.color='#6b7280';e.currentTarget.style.borderColor='#e0d9d0';e.currentTarget.style.background='none'}}
+                            title={isMobile?t('courseGoCity'):t('courseGoMap')}>→</button>
                           {/* Day 이동 */}
                           {courseDays.length > 1 && (
                             <select value="" onChange={e=>{if(e.target.value!=='')moveToDayFn(activeDayTab,idx,parseInt(e.target.value));e.target.value=''}}
-                              style={{width:56,fontSize:9,padding:'3px 2px',border:'1px solid #e0d9d0',borderRadius:5,color:'#b0a89e',background:'#faf8f5',cursor:'pointer',flexShrink:0}}>
-                              <option value="">{t('courseMove')}</option>
+                              style={{width:70,fontSize:9,padding:'3px 2px',border:'1px solid #e0d9d0',borderRadius:5,color:'#1a1714',fontWeight:600,background:'#faf8f5',cursor:'pointer',flexShrink:0}}>
+                              <option value="">{t('courseChangeDay')}</option>
                               {courseDays.map((_,di)=>di!==activeDayTab&&<option key={di} value={di}>Day {di+1}</option>)}
                             </select>
                           )}
@@ -4103,25 +4100,21 @@ Write all text in ${langName}.`
             })()}
           </div>
 
-          {/* 푸터 */}
+          {/* 푸터 (수동 코스만 — AI는 자동저장돼서 푸터 불필요, 헤더 ✕로 닫음) */}
+          {courseSource !== 'ai' && (
           <div style={{padding:'14px 20px',borderTop:'1px solid #e8e2da',flexShrink:0,display:'flex',gap:6}}>
-            {courseSource === 'ai' ? (
-              <div style={{flex:1,padding:'11px',background:'#f5efe8',border:'1px solid #e0d9d0',borderRadius:8,fontSize:12,fontWeight:600,color:'#9a8070',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
-                {t('courseTypeAi')} — {t('courseSaved')}
-              </div>
-            ) : (
               <button onClick={()=>{const s=saveCourseToList('manual');if(s)alert(t('courseSaved'));setShowCoursePlanner(false)}}
                 style={{flex:1,padding:'11px',background:'#c8856a',border:'none',borderRadius:8,fontSize:12,fontWeight:700,color:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'all .15s'}}
                 onMouseEnter={e=>e.currentTarget.style.background='#b8745a'}
                 onMouseLeave={e=>e.currentTarget.style.background='#c8856a'}>
                 {t('courseSave')}
               </button>
-            )}
             <button onClick={()=>setShowCoursePlanner(false)}
               style={{padding:'11px 16px',background:'none',border:'1px solid #e0d9d0',borderRadius:8,fontSize:12,fontWeight:500,color:'#b0a89e',cursor:'pointer',transition:'all .15s'}}
               onMouseEnter={e=>e.currentTarget.style.background='#f0ebe4'}
               onMouseLeave={e=>e.currentTarget.style.background='none'}>✕</button>
           </div>
+          )}
         </div>
       )}
 
