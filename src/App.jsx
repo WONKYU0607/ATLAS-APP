@@ -2854,8 +2854,8 @@ Write all text in ${langName}.`
       {/* Header */}
       <div style={{
         position:'absolute',top:0,left:0,right:isMobile?0:(selectedCity?(sidePanel?840:420):0),zIndex:1000,
-        background:'linear-gradient(to bottom,rgba(0,0,0,.65) 0%,transparent 100%)',
-        padding:isMobile?'12px 12px 40px':'16px 20px 50px',pointerEvents:'none',
+        background:'transparent',borderBottom:'1px solid rgba(255,255,255,.25)',
+        padding:isMobile?'12px 12px 14px':'16px 20px 18px',pointerEvents:'none',
         transition:'right .42s cubic-bezier(.16,1,.3,1)'
       }}>
         <div style={{display:'flex',alignItems:'center',gap:isMobile?4:12,pointerEvents:'all'}}>
@@ -2875,7 +2875,7 @@ Write all text in ${langName}.`
                 <div style={{padding:'16px 16px 10px',borderBottom:'1px solid #ede8e0'}}>
                   {/* AI 코스 */}
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
-                    <span style={{fontSize:13,fontWeight:700,color:'#c8856a'}}> AI {t('menuSavedCourses')}</span>
+                    <span style={{fontSize:13,fontWeight:700,color:'#1a1714'}}>AI {t('menuSavedCourses')}</span>
                     <span style={{fontSize:11,color:'#9a8070'}}>{savedCourses.filter(sc=>sc.type==='ai').length}</span>
                   </div>
                   {savedCourses.filter(sc=>sc.type==='ai').length === 0 ? (
@@ -2891,12 +2891,12 @@ Write all text in ${langName}.`
                             })()}</div>
                             <div style={{fontSize:10,color:'#9a8070',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
-                          <button onClick={()=>loadSavedCourse(sc)} style={{background:'#c8856a',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
+                          <button onClick={()=>loadSavedCourse(sc)} style={{background:'#f5efe8',border:'1px solid #e8dcd0',color:'#1a1714',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
                           <button onClick={()=>{
                             if (!currentUser) { setShowLoginModal(true); setShowHamburger(false); return }
                             setShareModalCourse({ days: sc.days||[], transport: sc.transport||'transit', type: 'ai' })
                             setShowHamburger(false)
-                          }} title={t('shareBtn')} style={{background:'#c8856a',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('shareBtn')}</button>
+                          }} title={t('shareBtn')} style={{background:'#f5efe8',border:'1px solid #e8dcd0',color:'#1a1714',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('shareBtn')}</button>
                           <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:11,fontWeight:600,cursor:'pointer',padding:'2px 6px'}}>{t('courseDelete')}</button>
                         </div>
                       ))}
@@ -2905,7 +2905,7 @@ Write all text in ${langName}.`
 
                   {/* 수동 코스 */}
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8,marginTop:14}}>
-                    <span style={{fontSize:13,fontWeight:700,color:'#c8856a'}}> {t('courseTypeManual')} {t('menuSavedCourses')}</span>
+                    <span style={{fontSize:13,fontWeight:700,color:'#1a1714'}}>{t('courseTypeManual')} {t('menuSavedCourses')}</span>
                     <span style={{fontSize:11,color:'#9a8070'}}>{savedCourses.filter(sc=>sc.type!=='ai').length}</span>
                   </div>
                   {savedCourses.filter(sc=>sc.type!=='ai').length === 0 ? (
@@ -2921,12 +2921,12 @@ Write all text in ${langName}.`
                             })()}</div>
                             <div style={{fontSize:10,color:'#9a8070',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
-                          <button onClick={()=>loadSavedCourse(sc)} style={{background:'#c8856a',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
+                          <button onClick={()=>loadSavedCourse(sc)} style={{background:'#f5efe8',border:'1px solid #e8dcd0',color:'#1a1714',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
                           <button onClick={()=>{
                             if (!currentUser) { setShowLoginModal(true); setShowHamburger(false); return }
                             setShareModalCourse({ days: sc.days||[], transport: sc.transport||'transit', type: 'manual' })
                             setShowHamburger(false)
-                          }} title={t('shareBtn')} style={{background:'#c8856a',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('shareBtn')}</button>
+                          }} title={t('shareBtn')} style={{background:'#f5efe8',border:'1px solid #e8dcd0',color:'#1a1714',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('shareBtn')}</button>
                           <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:11,fontWeight:600,cursor:'pointer',padding:'2px 6px'}}>{t('courseDelete')}</button>
                         </div>
                       ))}
@@ -3021,7 +3021,6 @@ Write all text in ${langName}.`
                     onMouseEnter={e=>e.currentTarget.style.background='#ede8e0'}
                     onMouseLeave={e=>e.currentTarget.style.background='#f5f0ea'}>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,191,36,.1))',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
                       <div>
                         <div style={{fontSize:13,fontWeight:700,color:'#1a1714'}}>{t('travelFeed')}</div>
                         <div style={{fontSize:10,color:'#9a8070',marginTop:2}}>{t('travelFeedDesc')}</div>
@@ -3064,7 +3063,6 @@ Write all text in ${langName}.`
                     onMouseEnter={e=>e.currentTarget.style.background='#ede8e0'}
                     onMouseLeave={e=>e.currentTarget.style.background='#f5f0ea'}>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <div style={{width:24,height:24,borderRadius:6,background:'rgba(5,150,105,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:'#10b981'}}>¤</div>
                       <div>
                         <div style={{fontSize:13,fontWeight:700,color:'#1a1714'}}>{t('currCalc')}</div>
                         <div style={{fontSize:10,color:'#9a8070',marginTop:2}}>{currFrom}  {currTo}</div>
@@ -3505,7 +3503,7 @@ Write all text in ${langName}.`
             <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
               <div>
                 <div style={{fontSize:11,color:'#94a3b8',letterSpacing:'2px',textTransform:'uppercase',marginBottom:4}}>
-                  {selectedCity?.emoji || '📍'} {countryKo}
+                  {countryKo}
                 </div>
                 <div style={{fontSize:26,fontWeight:800,letterSpacing:'-.5px',color:'#0f172a'}}>{getCityName(selectedCity?._koName || selectedCity?.name) || ''}</div>
               </div>
