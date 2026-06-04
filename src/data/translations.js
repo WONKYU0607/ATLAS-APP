@@ -126,7 +126,7 @@ export const T = {
   linkCopy:{ko:'🔗 링크 복사',en:'🔗 Copy Link',ja:'🔗 リンクコピー',zh:'🔗 复制链接'},
   shareBtn:{ko:'📤 공유하기',en:'📤 Share',ja:'📤 共有',zh:'📤 分享'},
   shareTitle:{ko:'공유하기',en:'Share',ja:'共有する',zh:'分享'},
-  favTitle:{ko:'⭐ 즐겨찾기',en:'⭐ Favorites',ja:'⭐ お気に入り',zh:'⭐ 收藏'},
+  favTitle:{ko:'즐겨찾기',en:'Favorites',ja:'お気に入り',zh:'收藏'},
   favDeleteAll:{ko:'전체 삭제',en:'Clear all',ja:'全削除',zh:'全部删除'},
   favEmpty:{ko:'즐겨찾기가 없습니다',en:'No favorites yet',ja:'お気に入りなし',zh:'暂无收藏'},
   favDeleteConfirm:{ko:'즐겨찾기를 모두 삭제할까요?',en:'Delete all favorites?',ja:'お気に入りを全削除しますか？',zh:'删除所有收藏？'},
