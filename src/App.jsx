@@ -2870,34 +2870,34 @@ Write all text in ${langName}.`
             </div>
             {/* Hamburger Dropdown */}
             {showHamburger && (
-              <div style={{position:'absolute',top:'calc(100% + 10px)',left:0,background:'rgba(15,23,42,.97)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,.15)',borderRadius:16,overflow:'hidden',zIndex:2001,boxShadow:'0 16px 48px rgba(0,0,0,.5)',width:isMobile?Math.min(340,window.innerWidth-24):340,maxHeight:'75vh',overflowY:'auto'}}>
+              <div style={{position:'absolute',top:'calc(100% + 10px)',left:0,background:'rgba(252,250,247,.98)',backdropFilter:'blur(20px)',border:'1px solid #e0d9d0',borderRadius:16,overflow:'hidden',zIndex:2001,boxShadow:'0 16px 48px rgba(0,0,0,.5)',width:isMobile?Math.min(340,window.innerWidth-24):340,maxHeight:'75vh',overflowY:'auto'}}>
                 {/* 저장된 코스 */}
-                <div style={{padding:'16px 16px 10px',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
+                <div style={{padding:'16px 16px 10px',borderBottom:'1px solid #ede8e0'}}>
                   {/* AI 코스 */}
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
-                    <span style={{fontSize:13,fontWeight:700,color:'#a78bfa'}}>🤖 AI {t('menuSavedCourses')}</span>
-                    <span style={{fontSize:11,color:'#64748b'}}>{savedCourses.filter(sc=>sc.type==='ai').length}</span>
+                    <span style={{fontSize:13,fontWeight:700,color:'#c8856a'}}> AI {t('menuSavedCourses')}</span>
+                    <span style={{fontSize:11,color:'#9a8070'}}>{savedCourses.filter(sc=>sc.type==='ai').length}</span>
                   </div>
                   {savedCourses.filter(sc=>sc.type==='ai').length === 0 ? (
-                    <div style={{padding:'10px 0',textAlign:'center',color:'#64748b',fontSize:11}}>{t('menuNoSaved')}</div>
+                    <div style={{padding:'10px 0',textAlign:'center',color:'#9a8070',fontSize:11}}>{t('menuNoSaved')}</div>
                   ) : (
                     <div style={{display:'flex',flexDirection:'column',gap:5,marginBottom:6}}>
                       {savedCourses.filter(sc=>sc.type==='ai').map((sc) => (
-                        <div key={sc.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,background:'rgba(139,92,246,.08)',border:'1px solid rgba(139,92,246,.2)'}}>
+                        <div key={sc.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,background:'rgba(200,133,106,.08)',border:'1px solid rgba(200,133,106,.2)'}}>
                           <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontSize:13,fontWeight:600,color:'white',lineHeight:1.4}}>{(() => {
+                            <div style={{fontSize:13,fontWeight:600,color:'#1a1714',lineHeight:1.4}}>{(() => {
                               const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>getCityName(it.cityName||it.name))).filter(Boolean))]
                               return cities.length > 0 ? `${cities.join(' · ')} ${(sc.days||[]).length}${lang==='ko'?'일':'D'}` : sc.name
                             })()}</div>
-                            <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
+                            <div style={{fontSize:10,color:'#9a8070',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
-                          <button onClick={()=>loadSavedCourse(sc)} style={{background:'#7c3aed',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
+                          <button onClick={()=>loadSavedCourse(sc)} style={{background:'#c8856a',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
                           <button onClick={()=>{
                             if (!currentUser) { setShowLoginModal(true); setShowHamburger(false); return }
                             setShareModalCourse({ days: sc.days||[], transport: sc.transport||'transit', type: 'ai' })
                             setShowHamburger(false)
-                          }} title={t('shareBtn')} style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',color:'white',padding:'4px 8px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>🌍</button>
-                          <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
+                          }} title={t('shareBtn')} style={{background:'#c8856a',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('shareBtn')}</button>
+                          <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:11,fontWeight:600,cursor:'pointer',padding:'2px 6px'}}>{t('courseDelete')}</button>
                         </div>
                       ))}
                     </div>
@@ -2905,29 +2905,29 @@ Write all text in ${langName}.`
 
                   {/* 수동 코스 */}
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8,marginTop:14}}>
-                    <span style={{fontSize:13,fontWeight:700,color:'#93c5fd'}}>📝 {t('courseTypeManual')} {t('menuSavedCourses')}</span>
-                    <span style={{fontSize:11,color:'#64748b'}}>{savedCourses.filter(sc=>sc.type!=='ai').length}</span>
+                    <span style={{fontSize:13,fontWeight:700,color:'#c8856a'}}> {t('courseTypeManual')} {t('menuSavedCourses')}</span>
+                    <span style={{fontSize:11,color:'#9a8070'}}>{savedCourses.filter(sc=>sc.type!=='ai').length}</span>
                   </div>
                   {savedCourses.filter(sc=>sc.type!=='ai').length === 0 ? (
-                    <div style={{padding:'10px 0',textAlign:'center',color:'#64748b',fontSize:11}}>{t('menuNoSaved')}</div>
+                    <div style={{padding:'10px 0',textAlign:'center',color:'#9a8070',fontSize:11}}>{t('menuNoSaved')}</div>
                   ) : (
                     <div style={{display:'flex',flexDirection:'column',gap:5}}>
                       {savedCourses.filter(sc=>sc.type!=='ai').map((sc) => (
-                        <div key={sc.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,background:'rgba(59,130,246,.08)',border:'1px solid rgba(59,130,246,.2)'}}>
+                        <div key={sc.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,background:'rgba(200,133,106,.08)',border:'1px solid rgba(200,133,106,.2)'}}>
                           <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontSize:13,fontWeight:600,color:'white',lineHeight:1.4}}>{(() => {
+                            <div style={{fontSize:13,fontWeight:600,color:'#1a1714',lineHeight:1.4}}>{(() => {
                               const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>getCityName(it.cityName||it.name))).filter(Boolean))]
                               return cities.length > 0 ? `${cities.join(' · ')} ${(sc.days||[]).length}${lang==='ko'?'일':'D'}` : sc.name
                             })()}</div>
-                            <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
+                            <div style={{fontSize:10,color:'#9a8070',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
                           </div>
-                          <button onClick={()=>loadSavedCourse(sc)} style={{background:'#3b82f6',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
+                          <button onClick={()=>loadSavedCourse(sc)} style={{background:'#c8856a',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
                           <button onClick={()=>{
                             if (!currentUser) { setShowLoginModal(true); setShowHamburger(false); return }
                             setShareModalCourse({ days: sc.days||[], transport: sc.transport||'transit', type: 'manual' })
                             setShowHamburger(false)
-                          }} title={t('shareBtn')} style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',color:'white',padding:'4px 8px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>🌍</button>
-                          <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:14,cursor:'pointer',padding:2}}>✕</button>
+                          }} title={t('shareBtn')} style={{background:'#c8856a',border:'none',color:'white',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('shareBtn')}</button>
+                          <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:11,fontWeight:600,cursor:'pointer',padding:'2px 6px'}}>{t('courseDelete')}</button>
                         </div>
                       ))}
                     </div>
@@ -2936,9 +2936,9 @@ Write all text in ${langName}.`
                 {/* 즐겨찾기 */}
                 <div style={{padding:'12px 16px 14px'}}>
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
-                    <span style={{fontSize:14,fontWeight:700,color:'white'}}>{t('favTitle')}</span>
+                    <span style={{fontSize:14,fontWeight:700,color:'#1a1714'}}>{t('favTitle')}</span>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <span style={{fontSize:11,color:'#64748b'}}>{favorites.length}</span>
+                      <span style={{fontSize:11,color:'#9a8070'}}>{favorites.length}</span>
                       {favorites.length > 0 && (
                         <button onClick={()=>{if(confirm(t('favDeleteConfirm')))saveFavorites([])}}
                           style={{background:'none',border:'none',color:'#ef4444',fontSize:10,cursor:'pointer',fontWeight:600}}>{t('favDeleteAll')}</button>
@@ -2946,57 +2946,57 @@ Write all text in ${langName}.`
                     </div>
                   </div>
                   {favorites.length === 0 ? (
-                    <div style={{padding:'16px 0',textAlign:'center',color:'#64748b',fontSize:12}}>{t('favEmpty')}</div>
+                    <div style={{padding:'16px 0',textAlign:'center',color:'#9a8070',fontSize:12}}>{t('favEmpty')}</div>
                   ) : (
                     <div>
                       {favorites.filter(f=>f.type==='city').length > 0 && (
                         <div style={{marginBottom:6}}>
-                          <div style={{fontSize:10,color:'#94a3b8',letterSpacing:2,padding:'4px 0',textTransform:'uppercase'}}>{t('favCity')}</div>
+                          <div style={{fontSize:10,color:'#9a8070',letterSpacing:2,padding:'4px 0',textTransform:'uppercase'}}>{t('favCity')}</div>
                           {favorites.filter(f=>f.type==='city').map((f,i)=>(
                             <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
-                              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+                              onMouseEnter={e=>e.currentTarget.style.background='#ede8e0'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}
                               onClick={()=>{const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>cs.map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f._koName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300)};setShowHamburger(false)}}>
-                              <span style={{fontSize:16}}>{f.emoji||'📍'}</span>
+                              <span style={{fontSize:16}}>{f.emoji||''}</span>
                               <div style={{flex:1,minWidth:0}}>
-                                <div style={{fontSize:12,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCityName(f._koName||f.name)||f.displayName||f.name}</div>
-                                <div style={{fontSize:10,color:'#94a3b8'}}>{f.countryEn?getCountryName(f.countryEn):(f.countryName||'')}</div>
+                                <div style={{fontSize:12,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCityName(f._koName||f.name)||f.displayName||f.name}</div>
+                                <div style={{fontSize:10,color:'#9a8070'}}>{f.countryEn?getCountryName(f.countryEn):(f.countryName||'')}</div>
                               </div>
-                              <button onClick={e=>{e.stopPropagation();toggleFav(f)}} style={{background:'none',border:'none',color:'#fbbf24',fontSize:14,cursor:'pointer',padding:2}}>⭐</button>
+                              <button onClick={e=>{e.stopPropagation();toggleFav(f)}} style={{background:'none',border:'none',color:'#9a8070',fontSize:13,cursor:'pointer',padding:2}}>✕</button>
                             </div>
                           ))}
                         </div>
                       )}
                       {favorites.filter(f=>f.type==='spot').length > 0 && (
                         <div style={{marginBottom:6}}>
-                          <div style={{fontSize:10,color:'#94a3b8',letterSpacing:2,padding:'4px 0',textTransform:'uppercase'}}>{t('favSpot')}</div>
+                          <div style={{fontSize:10,color:'#9a8070',letterSpacing:2,padding:'4px 0',textTransform:'uppercase'}}>{t('favSpot')}</div>
                           {favorites.filter(f=>f.type==='spot').map((f,i)=>(
                             <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
-                              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+                              onMouseEnter={e=>e.currentTarget.style.background='#ede8e0'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}
                               onClick={()=>{if(f.cityName){const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>cs.map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f.cityName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300);setTimeout(()=>{const spot=CITY_DATA[f.cityName]?.spots?.find(s=>s.name===f.name);if(spot)setSelectedSpot(spot)},1200)}};setShowHamburger(false)}}>
-                              <span style={{fontSize:13,width:24,height:24,borderRadius:6,background:'rgba(251,191,36,.15)',display:'flex',alignItems:'center',justifyContent:'center'}}>📍</span>
+                              
                               <div style={{flex:1,minWidth:0}}>
-                                <div style={{fontSize:12,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{trSpot(f.cityName, f.name)?.name || f.name}</div>
-                                <div style={{fontSize:10,color:'#94a3b8'}}>{getCityName(f.cityName)||f.cityDisplayName||f.cityName||''}</div>
+                                <div style={{fontSize:12,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{trSpot(f.cityName, f.name)?.name || f.name}</div>
+                                <div style={{fontSize:10,color:'#9a8070'}}>{getCityName(f.cityName)||f.cityDisplayName||f.cityName||''}</div>
                               </div>
-                              <button onClick={e=>{e.stopPropagation();toggleFav(f)}} style={{background:'none',border:'none',color:'#fbbf24',fontSize:14,cursor:'pointer',padding:2}}>⭐</button>
+                              <button onClick={e=>{e.stopPropagation();toggleFav(f)}} style={{background:'none',border:'none',color:'#9a8070',fontSize:13,cursor:'pointer',padding:2}}>✕</button>
                             </div>
                           ))}
                         </div>
                       )}
                       {favorites.filter(f=>f.type==='hotspot'||f.type==='restaurant').length > 0 && (
                         <div>
-                          <div style={{fontSize:10,color:'#94a3b8',letterSpacing:2,padding:'4px 0',textTransform:'uppercase'}}>{t('favHotspot')} · {t('favFood')}</div>
+                          <div style={{fontSize:10,color:'#9a8070',letterSpacing:2,padding:'4px 0',textTransform:'uppercase'}}>{t('favHotspot')} · {t('favFood')}</div>
                           {favorites.filter(f=>f.type==='hotspot'||f.type==='restaurant').map((f,i)=>(
                             <a key={i} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(f.name)}&query_place_id=${f.place_id||''}`}
                               target="_blank" rel="noopener noreferrer"
                               style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,textDecoration:'none',transition:'background .15s'}}
-                              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                              onMouseEnter={e=>e.currentTarget.style.background='#ede8e0'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                               <span style={{fontSize:10,width:24,height:24,borderRadius:6,background:f.type==='hotspot'?'#f5f0ea':'#eef5ea',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,color:f.type==='hotspot'?'#c8856a':'#6fa870'}}>{f.type==='hotspot'?'H':'F'}</span>
                               <div style={{flex:1,minWidth:0}}>
-                                <div style={{fontSize:12,fontWeight:600,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{(f.place_id && [...hotspots,...restaurants].find(p=>p.place_id===f.place_id))?.name || f.name}</div>
-                                <div style={{fontSize:10,color:'#94a3b8'}}>{f.rating?`★ ${f.rating}`:''} {getCityName(f.cityName)||f.cityDisplayName||''}</div>
+                                <div style={{fontSize:12,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{(f.place_id && [...hotspots,...restaurants].find(p=>p.place_id===f.place_id))?.name || f.name}</div>
+                                <div style={{fontSize:10,color:'#9a8070'}}>{f.rating?` ${f.rating}`:''} {getCityName(f.cityName)||f.cityDisplayName||''}</div>
                               </div>
-                              <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav(f)}} style={{background:'none',border:'none',color:'#fbbf24',fontSize:14,cursor:'pointer',padding:2}}>⭐</button>
+                              <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav(f)}} style={{background:'none',border:'none',color:'#9a8070',fontSize:13,cursor:'pointer',padding:2}}>✕</button>
                             </a>
                           ))}
                         </div>
@@ -3006,8 +3006,8 @@ Write all text in ${langName}.`
                 </div>
 
                 {/* 트래블 피드 */}
-                <div style={{padding:'12px 16px 14px',borderTop:'1px solid rgba(255,255,255,.08)'}}>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
+                <div style={{padding:'12px 16px 14px',borderTop:'1px solid #ede8e0'}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'#f5f0ea',border:'1px solid #ede8e0',transition:'all .15s'}}
                     onClick={async()=>{
                       setShowFeed(true);setShowHamburger(false);setFeedMainTab('journals');setFeedSubTab('all');setFeedJournalsLoading(true)
                       try{
@@ -3018,41 +3018,41 @@ Write all text in ${langName}.`
                       // 코스 데이터도 미리 로드 (탭 전환 시 즉시 표시)
                       try{const cd=await loadSharedCourses();setCommunityCoursesData(cd)}catch(e){}
                     }}
-                    onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
-                    onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
+                    onMouseEnter={e=>e.currentTarget.style.background='#ede8e0'}
+                    onMouseLeave={e=>e.currentTarget.style.background='#f5f0ea'}>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,191,36,.1))',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
                       <div>
-                        <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('travelFeed')}</div>
-                        <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{t('travelFeedDesc')}</div>
+                        <div style={{fontSize:13,fontWeight:700,color:'#1a1714'}}>{t('travelFeed')}</div>
+                        <div style={{fontSize:10,color:'#9a8070',marginTop:2}}>{t('travelFeedDesc')}</div>
                       </div>
                     </div>
-                    <span style={{fontSize:14,color:'#64748b'}}>→</span>
+                    
                   </div>
                 </div>
 
                 {/* 내 여행 기록 */}
                 <div style={{padding:'0 16px 14px'}}>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'#f5f0ea',border:'1px solid #ede8e0',transition:'all .15s'}}
                     onClick={()=>{setShowMyTravels(true);setShowHamburger(false)}}
-                    onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
-                    onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
+                    onMouseEnter={e=>e.currentTarget.style.background='#ede8e0'}
+                    onMouseLeave={e=>e.currentTarget.style.background='#f5f0ea'}>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <span style={{fontSize:18}}>🌍</span>
+                      
                       <div>
-                        <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('visitedTitle')}</div>
-                        <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>
+                        <div style={{fontSize:13,fontWeight:700,color:'#1a1714'}}>{t('visitedTitle')}</div>
+                        <div style={{fontSize:10,color:'#9a8070',marginTop:2}}>
                           {visitedCityCount}{t('visitedCityCount')} · {(()=>{const vc=new Set();(visited.cities||[]).forEach(c=>{const entry=Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===c));if(entry)vc.add(entry[0])});return vc.size})()}{lang==='ko'?'개국':' countries'}
                         </div>
                       </div>
                     </div>
-                    <span style={{fontSize:14,color:'#64748b'}}>→</span>
+                    
                   </div>
                 </div>
 
                 {/* 환율 계산기 */}
                 <div style={{padding:'0 16px 14px'}}>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'#f5f0ea',border:'1px solid #ede8e0',transition:'all .15s'}}
                     onClick={()=>{
                       setShowCurrencyCalc(true);setShowHamburger(false)
                       if(selectedCountry){
@@ -3061,37 +3061,37 @@ Write all text in ${langName}.`
                         if(ci){const code=extractCurrencyCode(ci.currency);if(code&&code!=='KRW'){setCurrTo(code)}}
                       }
                     }}
-                    onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
-                    onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
+                    onMouseEnter={e=>e.currentTarget.style.background='#ede8e0'}
+                    onMouseLeave={e=>e.currentTarget.style.background='#f5f0ea'}>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       <div style={{width:24,height:24,borderRadius:6,background:'rgba(5,150,105,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:'#10b981'}}>¤</div>
                       <div>
-                        <div style={{fontSize:13,fontWeight:700,color:'white'}}>{t('currCalc')}</div>
-                        <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{currFrom} → {currTo}</div>
+                        <div style={{fontSize:13,fontWeight:700,color:'#1a1714'}}>{t('currCalc')}</div>
+                        <div style={{fontSize:10,color:'#9a8070',marginTop:2}}>{currFrom}  {currTo}</div>
                       </div>
                     </div>
-                    <span style={{fontSize:14,color:'#64748b'}}>→</span>
+                    
                   </div>
                 </div>
 
                 {/* 로그인/계정 */}
                 <div style={{padding:'0 16px 14px'}}>
                   {currentUser ? (
-                    <div style={{padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)'}}>
+                    <div style={{padding:'8px 12px',borderRadius:10,background:'#f5f0ea',border:'1px solid #ede8e0'}}>
                       <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
-                        <div style={{width:28,height:28,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:800,color:'white'}}>{(currentUser.displayName || currentUser.email)?.[0]?.toUpperCase() || '?'}</div>
+                        <div style={{width:28,height:28,borderRadius:'50%',background:'#c8856a',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:800,color:'white'}}>{(currentUser.displayName || currentUser.email)?.[0]?.toUpperCase() || '?'}</div>
                         <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontSize:12,fontWeight:700,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{currentUser.displayName || currentUser.email}</div>
-                          {currentUser.displayName && <div style={{fontSize:10,color:'#64748b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{currentUser.email}</div>}
+                          <div style={{fontSize:12,fontWeight:700,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{currentUser.displayName || currentUser.email}</div>
+                          {currentUser.displayName && <div style={{fontSize:10,color:'#9a8070',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{currentUser.email}</div>}
                         </div>
                       </div>
                       {/* 홈 국가 설정 */}
                       <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
-                        <span style={{fontSize:10,color:'#94a3b8',whiteSpace:'nowrap'}}>{lang==='ko'?'홈 국가':'Home'}</span>
+                        <span style={{fontSize:10,color:'#9a8070',whiteSpace:'nowrap'}}>{lang==='ko'?'홈 국가':'Home'}</span>
                         <select value={homeCountry} onChange={e=>{setHomeCountry(e.target.value);localStorage.setItem('atlas_home_country',e.target.value);const code=extractCurrencyCode(COUNTRY_INFO[e.target.value]?.currency);if(code)setCurrFrom(code)}}
-                          style={{flex:1,padding:'4px 6px',borderRadius:6,border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.08)',color:'white',fontSize:11,cursor:'pointer'}}>
-                          <option value="" style={{background:'#1e293b'}}>—</option>
-                          {Object.keys(COUNTRY_INFO).sort().map(c=><option key={c} value={c} style={{background:'#1e293b'}}>{COUNTRY_INFO[c].emoji} {lang==='ko'?c:c}</option>)}
+                          style={{flex:1,padding:'4px 6px',borderRadius:6,border:'1px solid #e0d9d0',background:'#ede8e0',color:'#1a1714',fontSize:11,cursor:'pointer'}}>
+                          <option value="" style={{background:'#f5f0ea'}}>—</option>
+                          {Object.keys(COUNTRY_INFO).sort().map(c=><option key={c} value={c} style={{background:'#f5f0ea'}}>{COUNTRY_INFO[c].emoji} {lang==='ko'?c:c}</option>)}
                         </select>
                       </div>
                       <button onClick={()=>{handleLogout();setShowHamburger(false)}}
@@ -3100,18 +3100,18 @@ Write all text in ${langName}.`
                       </button>
                     </div>
                   ) : (
-                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',transition:'all .15s'}}
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'#f5f0ea',border:'1px solid #ede8e0',transition:'all .15s'}}
                       onClick={()=>{setShowLoginModal(true);setShowHamburger(false)}}
-                      onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}
-                      onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}>
+                      onMouseEnter={e=>e.currentTarget.style.background='#ede8e0'}
+                      onMouseLeave={e=>e.currentTarget.style.background='#f5f0ea'}>
                       <div style={{display:'flex',alignItems:'center',gap:8}}>
-                        <div style={{width:24,height:24,borderRadius:6,background:'rgba(59,130,246,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:'#60a5fa'}}>👤</div>
+                        
                         <div>
-                          <div style={{fontSize:13,fontWeight:700,color:'white'}}>{lang==='ko'?'로그인 / 회원가입':'Login / Sign up'}</div>
-                          <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>{lang==='ko'?'데이터 클라우드 동기화':'Sync your data'}</div>
+                          <div style={{fontSize:13,fontWeight:700,color:'#1a1714'}}>{lang==='ko'?'로그인 / 회원가입':'Login / Sign up'}</div>
+                          <div style={{fontSize:10,color:'#9a8070',marginTop:2}}>{lang==='ko'?'데이터 클라우드 동기화':'Sync your data'}</div>
                         </div>
                       </div>
-                      <span style={{fontSize:14,color:'#64748b'}}>→</span>
+                      
                     </div>
                   )}
                 </div>
@@ -3887,38 +3887,38 @@ Write all text in ${langName}.`
             <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:16}}>
               <div>
                 <div style={{fontSize:19,fontWeight:700,color:'#1a1714',letterSpacing:'-.4px'}}>{t('coursePlanner')}</div>
-                <div style={{fontSize:11,color:'#b0a89e',marginTop:3}}>
+                <div style={{fontSize:11,color:'#1a1714',fontWeight:600,marginTop:3}}>
                   {courseItems.length}{t('coursePlace')} · {courseDays.length}{t('courseDay')}
                   {courseTripStart ? ` · ${formatDate(getDayDate(0))} – ${formatDate(getDayDate(courseDays.length-1))}` : ''}
                 </div>
               </div>
               <div style={{display:'flex',gap:6,alignItems:'center'}}>
                 <button onClick={downloadCoursePPT}
-                  style={{padding:'5px 10px',borderRadius:6,border:'1px solid #e0d9d0',background:'#faf8f5',fontSize:11,fontWeight:600,color:'#c8856a',cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',gap:3}}
-                  onMouseEnter={e=>{e.currentTarget.style.background='#c8856a';e.currentTarget.style.color='white';e.currentTarget.style.borderColor='#c8856a'}}
-                  onMouseLeave={e=>{e.currentTarget.style.background='#faf8f5';e.currentTarget.style.color='#c8856a';e.currentTarget.style.borderColor='#e0d9d0'}}
-                >📊 {t('courseDownloadPPT')}</button>
+                  style={{padding:'5px 10px',borderRadius:6,border:'1px solid #e0d9d0',background:'#faf8f5',fontSize:11,fontWeight:600,color:'#1a1714',cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',gap:3}}
+                  onMouseEnter={e=>{e.currentTarget.style.background='#f0ebe4'}}
+                  onMouseLeave={e=>{e.currentTarget.style.background='#faf8f5'}}
+                >{t('courseDownloadPPT')}</button>
                 <button onClick={()=>{
                   if (!currentUser) { setShowLoginModal(true); return }
                   if (courseItems.length === 0) return
                   setShareModalCourse({ days: courseDays, transport: courseTransport, type: courseSource })
                 }}
-                  style={{padding:'5px 10px',borderRadius:6,border:'none',background:'linear-gradient(135deg,#2563eb,#7c3aed)',fontSize:11,fontWeight:600,color:'white',cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',gap:3}}
-                  onMouseEnter={e=>e.currentTarget.style.opacity='.85'}
-                  onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-                >🌍 {t('shareBtn')}</button>
+                  style={{padding:'5px 10px',borderRadius:6,border:'none',background:'#7eb8e0',fontSize:11,fontWeight:600,color:'white',cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',gap:3}}
+                  onMouseEnter={e=>e.currentTarget.style.background='#6aa8d4'}
+                  onMouseLeave={e=>e.currentTarget.style.background='#7eb8e0'}
+                >{t('shareBtn')}</button>
                 <button
                   onClick={()=>{if(confirm(t('courseDeleteConfirm'))){
                     saveCourse([]);saveCourseDays([]);setRouteCache({});
                     setSavedCourses([]);localStorage.removeItem('atlas_saved_courses');
                     setShowCoursePlanner(false)
                   }}}
-                  style={{padding:'5px 10px',borderRadius:6,border:'1px solid #e0d9d0',background:'none',fontSize:11,fontWeight:500,color:'#b0a89e',cursor:'pointer',transition:'all .15s'}}
+                  style={{padding:'5px 10px',borderRadius:6,border:'1px solid #e0d9d0',background:'none',fontSize:11,fontWeight:500,color:'#1a1714',cursor:'pointer',transition:'all .15s'}}
                   onMouseEnter={e=>{e.currentTarget.style.color='#c0604a';e.currentTarget.style.borderColor='#e8c0b0'}}
-                  onMouseLeave={e=>{e.currentTarget.style.color='#b0a89e';e.currentTarget.style.borderColor='#e0d9d0'}}
+                  onMouseLeave={e=>{e.currentTarget.style.color='#1a1714';e.currentTarget.style.borderColor='#e0d9d0'}}
                 >{t('courseDeleteAll')}</button>
                 <button onClick={()=>setShowCoursePlanner(false)}
-                  style={{width:30,height:30,borderRadius:6,border:'1px solid #e0d9d0',background:'none',color:'#b0a89e',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
+                  style={{width:30,height:30,borderRadius:6,border:'1px solid #e0d9d0',background:'none',color:'#1a1714',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
                   onMouseEnter={e=>e.currentTarget.style.background='#f0ebe4'}
                   onMouseLeave={e=>e.currentTarget.style.background='none'}>✕</button>
               </div>
@@ -3926,10 +3926,10 @@ Write all text in ${langName}.`
 
             {/* 날짜 */}
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12,padding:'8px 12px',background:'#f0ebe4',borderRadius:8,border:'1px solid #e0d9d0'}}>
-              <span style={{fontSize:11,color:'#b0a89e',fontWeight:500,flexShrink:0}}>{t('courseDeparture')}</span>
+              <span style={{fontSize:11,color:'#1a1714',fontWeight:600,flexShrink:0}}>{t('courseDeparture')}</span>
               <input type="date" value={courseTripStart} min={new Date().toISOString().slice(0,10)} onChange={e=>saveTripStart(e.target.value)}
                 style={{flex:1,fontSize:11,border:'none',background:'none',color:'#1a1714',fontWeight:600,outline:'none',cursor:'pointer'}}/>
-              {courseTripStart && <button onClick={()=>saveTripStart('')} style={{background:'none',border:'none',color:'#c8b8a8',fontSize:11,cursor:'pointer',lineHeight:1}}>✕</button>}
+              {courseTripStart && <button onClick={()=>saveTripStart('')} style={{background:'none',border:'none',color:'#1a1714',fontSize:11,cursor:'pointer',lineHeight:1}}>✕</button>}
             </div>
 
             {/* 이동수단 */}
@@ -3950,7 +3950,7 @@ Write all text in ${langName}.`
                 <button key={i} onClick={()=>setActiveDayTab(i)} style={{
                   padding:'5px 14px',fontSize:11,fontWeight:activeDayTab===i?700:400,
                   background:activeDayTab===i?'#c8856a':'none',
-                  color:activeDayTab===i?'#fff':'#b0a89e',
+                  color:activeDayTab===i?'#fff':'#1a1714',
                   border:activeDayTab===i?'none':'1px solid #e0d9d0',
                   borderRadius:20,cursor:'pointer',whiteSpace:'nowrap',transition:'all .15s',flexShrink:0
                 }}>
@@ -3994,16 +3994,16 @@ Write all text in ${langName}.`
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       <span style={{fontSize:12,fontWeight:700,color:'#1a1714'}}>Day {activeDayTab+1}</span>
                       {courseTripStart && <span style={{fontSize:11,fontWeight:700,color:'#1a1714'}}>{formatDate(getDayDate(activeDayTab))}</span>}
-                      <span style={{fontSize:11,color:'#6b7280'}}>{items.length}{t('coursePlace')}</span>
+                      <span style={{fontSize:11,color:'#1a1714',fontWeight:600}}>{items.length}{t('coursePlace')}</span>
                     </div>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       {totalMin > 0 && <span style={{fontSize:11,color:'#374151',fontWeight:500}}>{totalHr > 0 ? `${totalHr}${t('courseHour')} ${totalMinRem}${t('courseMin')}` : `${totalMin}${t('courseMin')}`}</span>}
                       {loadingRoutes && <div style={{width:12,height:12,borderRadius:'50%',border:'1.5px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>}
                       {courseDays.length > 1 && (
                         <button onClick={()=>removeCourseDay(activeDayTab)}
-                          style={{fontSize:10,background:'none',border:'1px solid #e0d9d0',color:'#c8b8a8',padding:'3px 8px',borderRadius:5,cursor:'pointer',transition:'all .15s'}}
+                          style={{fontSize:10,background:'none',border:'1px solid #e0d9d0',color:'#1a1714',padding:'3px 8px',borderRadius:5,cursor:'pointer',transition:'all .15s'}}
                           onMouseEnter={e=>{e.currentTarget.style.color='#c0604a';e.currentTarget.style.borderColor='#e8c0b0'}}
-                          onMouseLeave={e=>{e.currentTarget.style.color='#c8b8a8';e.currentTarget.style.borderColor='#e0d9d0'}}
+                          onMouseLeave={e=>{e.currentTarget.style.color='#1a1714';e.currentTarget.style.borderColor='#e0d9d0'}}
                         >{t('courseDelete')}</button>
                       )}
                     </div>
@@ -4037,7 +4037,7 @@ Write all text in ${langName}.`
                           <div style={{flex:1,minWidth:0}}>
                             <div style={{fontSize:13,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCourseItemName(item)}</div>
                             <div style={{display:'flex',alignItems:'center',gap:5,marginTop:3}}>
-                              <span style={{fontSize:10,color:'#6b7280'}}>{getCourseItemCity(item)}</span>
+                              <span style={{fontSize:10,color:'#1a1714',fontWeight:500}}>{getCourseItemCity(item)}</span>
                               <span style={{fontSize:9,padding:'1px 5px',borderRadius:3,background:'#f5efe8',color:'#6b5c4f',fontWeight:500}}>
                                 {item.source==='spot'?t('courseSpot'):item.source==='hotspot'?t('courseHotspot'):t('courseRestaurant')}
                               </span>
@@ -4073,16 +4073,16 @@ Write all text in ${langName}.`
                           )}
                           {/* 삭제 */}
                           <button onClick={()=>removeFromDay(activeDayTab,idx)}
-                            style={{background:'none',border:'none',color:'#d8cfc4',width:24,height:24,borderRadius:5,cursor:'pointer',fontSize:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
+                            style={{background:'none',border:'none',color:'#1a1714',width:24,height:24,borderRadius:5,cursor:'pointer',fontSize:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
                             onMouseEnter={e=>{e.currentTarget.style.color='#c0604a'}}
-                            onMouseLeave={e=>{e.currentTarget.style.color='#d8cfc4'}}>×</button>
+                            onMouseLeave={e=>{e.currentTarget.style.color='#1a1714'}}>×</button>
                         </div>
 
                         {/* 경로 */}
                         {idx < items.length - 1 && (
                           <div style={{display:'flex',alignItems:'center',gap:6,padding:'5px 0 5px 34px'}}>
                             {route ? (
-                              <span style={{fontSize:10,color:'#64748b',fontWeight:500}}>
+                              <span style={{fontSize:10,color:'#1a1714',fontWeight:600}}>
                                 — {route.noRoute ? t('courseNoRoute') : `${route.duration} · ${route.distance}`}
                               </span>
                             ) : loadingRoutes ? (
