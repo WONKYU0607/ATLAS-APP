@@ -122,8 +122,11 @@ export const createJournal = async (uid, journalData, userName, userPhoto) => {
     userPhoto: userPhoto || null,
     title: journalData.title || '',
     body: journalData.body || '',
-    photos: journalData.photos || [],
+    blocks: journalData.blocks || [],          // 블로그식: [{photo, caption}]
+    photos: journalData.photos || [],          // 썸네일/구버전 호환 (blocks 첫 사진 자동 채움)
     cities: journalData.cities || [],
+    startDate: journalData.startDate || '',     // 'YYYY-MM-DD'
+    endDate: journalData.endDate || '',
     days: journalData.days || 1,
     rating: journalData.rating || 0,
     visibility: journalData.visibility || 'public',
