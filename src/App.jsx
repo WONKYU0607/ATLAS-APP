@@ -421,7 +421,7 @@ function App() {
   const [feedSpotWikiLoading, setFeedSpotWikiLoading] = useState(false)
   // 사진 라이트박스 (갤러리 확대)
   const [lightbox, setLightbox] = useState(null) // { titles: string[], index: number }
-  const [journalForm, setJournalForm] = useState({ title:'', body:'', cities:[], days:1, rating:0, visibility:'public', photos:[] })
+  const [journalForm, setJournalForm] = useState({ title:'', body:'', cities:[], days:1, rating:0, visibility:'public', photos:[], blocks:[], startDate:'', endDate:'' })
   const [journalNewPhotos, setJournalNewPhotos] = useState([]) // File 객체 (업로드 대기)
   const [journalSaving, setJournalSaving] = useState(false)
   const [journalCommentText, setJournalCommentText] = useState('')
@@ -4316,230 +4316,6 @@ Write all text in ${langName}.`
 
       {/* Travel Feed Modal (Phase 1.5 - Fullscreen Modern Light) */}
       {showFeed && (() => {
-        // 인기 여행기 (좋아요 많은 순 5개)
-        const trendingJournals = [...feedJournals].sort((a,b) => (b.likeCount||0) - (a.likeCount||0)).slice(0, 5)
-        // 인기 도시 (모든 여행기 cities 빈도 집계)
-        const cityFreq = {}
-        feedJournals.forEach(j => (j.cities||[]).forEach(c => {
-          if (c.name) cityFreq[c.name] = (cityFreq[c.name]||0) + 1
-        }))
-        const popularCities = Object.entries(cityFreq).sort((a,b) => b[1]-a[1]).slice(0, 12).map(([name, count]) => ({ name, count }))
-
-        // ── 큐레이션 콘텐츠 (하드코딩, 봄 테마 4월) ──
-        // 패널 E: 시즌 배너 (월마다 자동 전환)
-        const SEASON_BANNERS = {
-          1: {
-            emoji: '❄️',
-            title: { ko:'겨울의 절정, 눈과 온천', en:'Snow & Hot Springs', ja:'冬の絶頂、雪と温泉', zh:'冬日巅峰，雪与温泉' },
-            subtitle: { ko:'1월에 즐기는 가장 따뜻한 추위', en:'Warmest cold of the year', ja:'1月の暖かな寒さ', zh:'一月最暖的寒冷' },
-            cities: ['삿포로','다낭','방콕'],
-            gradient: 'linear-gradient(135deg,#bae6fd,#e0e7ff,#ffffff)'
-          },
-          2: {
-            emoji: '🏮',
-            title: { ko:'따뜻한 도시로 떠나는 2월', en:'Escape to Warmer Cities', ja:'暖かい街への2月', zh:'前往温暖之城的二月' },
-            subtitle: { ko:'추위를 피해 가는 단거리 여행', en:'Short trips from the cold', ja:'寒さを避ける近場旅行', zh:'避寒短途旅行' },
-            cities: ['호이안','도쿄','오사카'],
-            gradient: 'linear-gradient(135deg,#fde68a,#fbcfe8,#fca5a5)'
-          },
-          3: {
-            emoji: '🌷',
-            title: { ko:'봄의 시작, 유채꽃 피는 계절', en:'Spring Awakening', ja:'春の始まり、菜の花の季節', zh:'春日序曲，油菜花盛开' },
-            subtitle: { ko:'3월의 첫 봄 기운을 만나러', en:'First breath of spring', ja:'3月の春の息吹', zh:'三月初春气息' },
-            cities: ['제주','오키나와','후쿠오카','다낭'],
-            gradient: 'linear-gradient(135deg,#fef08a,#fde68a,#fb923c)'
-          },
-          4: {
-            emoji: '🌸',
-            title: { ko:'벚꽃 만개, 봄의 도시로', en:'Cherry Blossom Season', ja:'桜満開、春の都市へ', zh:'樱花盛开，前往春日之城' },
-            subtitle: { ko:'4월에만 만날 수 있는 풍경', en:'Once-a-year spring views', ja:'4月だけの絶景', zh:'仅四月可见的美景' },
-            cities: ['교토','도쿄','오사카'],
-            gradient: 'linear-gradient(135deg,#fda4af,#fbcfe8,#a5b4fc)'
-          },
-          5: {
-            emoji: '🌿',
-            title: { ko:'신록의 계절, 자연이 깨어나는 5월', en:'Lush Green Awakens', ja:'新緑の季節、自然が目覚める5月', zh:'新绿之季，自然苏醒' },
-            subtitle: { ko:'가족과 함께 떠나기 좋은 시기', en:'Perfect for family trips', ja:'家族旅行に最適', zh:'最适合家庭出游' },
-            cities: ['밴쿠버','다낭','발리'],
-            gradient: 'linear-gradient(135deg,#86efac,#a7f3d0,#5eead4)'
-          },
-          6: {
-            emoji: '🌊',
-            title: { ko:'지중해의 여름이 시작된다', en:'Mediterranean Summer Begins', ja:'地中海の夏が始まる', zh:'地中海的夏天开始了' },
-            subtitle: { ko:'6월, 가장 푸른 바다를 만나는 달', en:'The bluest seas of June', ja:'6月、最も青い海', zh:'六月，最蓝的大海' },
-            cities: ['산토리니','푸켓','세부'],
-            gradient: 'linear-gradient(135deg,#67e8f9,#7dd3fc,#818cf8)'
-          },
-          7: {
-            emoji: '🏖️',
-            title: { ko:'한여름, 휴양지로 떠나는 시간', en:'Peak Summer, Beach Time', ja:'真夏、リゾートへ', zh:'盛夏，度假时光' },
-            subtitle: { ko:'7월의 태양과 바다가 부르는 곳', en:'Sun, sand, and sea await', ja:'7月の太陽と海', zh:'七月的阳光与大海' },
-            cities: ['발리','푸켓','오사카','도쿄'],
-            gradient: 'linear-gradient(135deg,#5eead4,#fbbf24,#fb923c)'
-          },
-          8: {
-            emoji: '🏔️',
-            title: { ko:'더위를 피해 알프스로', en:'Escape to the Alps', ja:'暑さを逃れアルプスへ', zh:'避暑前往阿尔卑斯' },
-            subtitle: { ko:'8월에도 시원한 고산 여행지', en:'Cool mountain getaways', ja:'8月でも涼しい山岳地', zh:'八月依然清凉的高山' },
-            cities: ['인터라켄','사이판','괌'],
-            gradient: 'linear-gradient(135deg,#dbeafe,#bfdbfe,#93c5fd)'
-          },
-          9: {
-            emoji: '🍂',
-            title: { ko:'예술과 가을이 머무는 도시', en:'Where Art Meets Autumn', ja:'芸術と秋が宿る街', zh:'艺术与秋意栖息的城市' },
-            subtitle: { ko:'9월의 시작, 새 계절을 여는 여행', en:'Open a new season', ja:'9月、新しい季節へ', zh:'九月，开启新季节' },
-            cities: ['파리','도쿄','오사카'],
-            gradient: 'linear-gradient(135deg,#fbbf24,#f59e0b,#b45309)'
-          },
-          10: {
-            emoji: '🍁',
-            title: { ko:'단풍 절정, 가장 붉은 가을', en:'Peak Foliage Season', ja:'紅葉の絶頂、最も赤い秋', zh:'红叶巅峰，最红的秋天' },
-            subtitle: { ko:'10월에만 펼쳐지는 단풍 풍경', en:'Crimson views of October', ja:'10月だけの紅葉', zh:'仅十月可见的红叶' },
-            cities: ['교토','밴쿠버','후쿠오카','다낭'],
-            gradient: 'linear-gradient(135deg,#fb923c,#ef4444,#b91c1c)'
-          },
-          11: {
-            emoji: '🌅',
-            title: { ko:'사막과 황금빛 일몰의 계절', en:'Desert & Golden Sunsets', ja:'砂漠と黄金の夕日', zh:'沙漠与金色日落' },
-            subtitle: { ko:'11월, 사막 여행의 베스트 시즌', en:'Best season for the desert', ja:'11月、砂漠ベストシーズン', zh:'十一月，沙漠最佳季节' },
-            cities: ['두바이','방콕','치앙마이'],
-            gradient: 'linear-gradient(135deg,#fde047,#f97316,#9a3412)'
-          },
-          12: {
-            emoji: '🎄',
-            title: { ko:'오로라와 산타의 겨울 동화', en:'Aurora & Christmas Magic', ja:'オーロラとサンタの冬', zh:'极光与圣诞奇迹' },
-            subtitle: { ko:'12월, 한 해를 마무리하는 특별한 여행', en:'A magical year-end trip', ja:'12月、特別な締めくくり', zh:'十二月，特别的年末旅行' },
-            cities: ['로바니에미','도쿄','다낭'],
-            gradient: 'linear-gradient(135deg,#1e1b4b,#5b21b6,#7c3aed)'
-          }
-        }
-        const seasonBanner = SEASON_BANNERS[new Date().getMonth() + 1] || SEASON_BANNERS[4]
-
-        // 시즌 라벨 (월 + 계절) 미리 계산
-        const _curMonth = new Date().getMonth() + 1
-        const _monthLabel = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][_curMonth-1]
-        const _seasonLabel = _curMonth>=3&&_curMonth<=5 ? (lang==='ko'?'봄':lang==='ja'?'春':lang==='zh'?'春':'SPRING')
-          : _curMonth>=6&&_curMonth<=8 ? (lang==='ko'?'여름':lang==='ja'?'夏':lang==='zh'?'夏':'SUMMER')
-          : _curMonth>=9&&_curMonth<=11 ? (lang==='ko'?'가을':lang==='ja'?'秋':lang==='zh'?'秋':'AUTUMN')
-          : (lang==='ko'?'겨울':lang==='ja'?'冬':lang==='zh'?'冬':'WINTER')
-        const seasonBannerLabel = _monthLabel + ' · ' + _seasonLabel
-
-        // 패널 A: 히어로 카드 2개
-        const heroCards = [
-          {
-            emoji: '💕',
-            title: { ko:'허니문 추천 도시', en:'Honeymoon Destinations', ja:'ハネムーンおすすめ', zh:'蜜月推荐城市' },
-            subtitle: { ko:'로맨틱한 봄날의 여행', en:'Romantic spring escapes', ja:'ロマンチックな春旅', zh:'浪漫的春日旅行' },
-            cta: { ko:'둘러보기 →', en:'Explore →', ja:'見る →', zh:'探索 →' },
-            cities: ['파리','바르셀로나','산토리니','발리','몰디브','베네치아','두브로브니크'],
-            gradient: 'linear-gradient(135deg,#ec4899,#f97316)'
-          },
-          {
-            emoji: '✨',
-            title: { ko:'AI가 짜주는 여행 코스', en:'AI Travel Planner', ja:'AIが作る旅行プラン', zh:'AI 智能行程' },
-            subtitle: { ko:'3분만에 완성되는 일정', en:'Complete plan in 3 min', ja:'3分で完成', zh:'3分钟生成行程' },
-            cta: { ko:'지금 시작 →', en:'Start now →', ja:'今すぐ →', zh:'立即开始 →' },
-            action: 'openAI',
-            gradient: 'linear-gradient(135deg,#8b5cf6,#3b82f6)'
-          }
-        ]
-
-        // 패널 B: 큐레이션 매거진
-        const magazines = [
-          {
-            emoji: '🌸',
-            tag: { ko:'SPRING', en:'SPRING', ja:'SPRING', zh:'SPRING' },
-            title: { ko:'벚꽃 명소 BEST 7', en:'Cherry Blossom Top 7', ja:'桜の名所 BEST 7', zh:'樱花名所 BEST 7' },
-            subtitle: { ko:'4월에 꼭 가야 할 곳', en:'Must-visit in April', ja:'4月の必訪地', zh:'四月必访' },
-            cities: ['교토','도쿄','워싱턴DC','파리','암스테르담','서울','요코하마'],
-            color: '#fce7f3'
-          },
-          {
-            emoji: '🌃',
-            tag: { ko:'NIGHT', en:'NIGHT', ja:'NIGHT', zh:'NIGHT' },
-            title: { ko:'야경의 도시 BEST 5', en:'City Lights Top 5', ja:'夜景の街 BEST 5', zh:'夜景之城 BEST 5' },
-            subtitle: { ko:'밤이 더 아름다운', en:'Beautiful by night', ja:'夜が美しい', zh:'夜更美' },
-            cities: ['홍콩','뉴욕','상하이','파리','도쿄'],
-            color: '#1e293b'
-          },
-          {
-            emoji: '🍣',
-            tag: { ko:'FOODIE', en:'FOODIE', ja:'FOODIE', zh:'FOODIE' },
-            title: { ko:'미식 여행 도시 10', en:'Foodie Cities Top 10', ja:'美食の都市 10', zh:'美食之城 10' },
-            subtitle: { ko:'먹기 위해 떠나는 여행', en:'Travel for food', ja:'食のための旅', zh:'为美食而行' },
-            cities: ['도쿄','오사카','방콕','로마','이스탄불','홍콩','파리','바르셀로나','상하이','싱가포르'],
-            color: '#fef3c7'
-          },
-          {
-            emoji: '🏖️',
-            tag: { ko:'BEACH', en:'BEACH', ja:'BEACH', zh:'BEACH' },
-            title: { ko:'휴양지 BEST 8', en:'Beach Getaway Top 8', ja:'リゾート BEST 8', zh:'度假胜地 BEST 8' },
-            subtitle: { ko:'바다와 함께하는 휴식', en:'Relax by the sea', ja:'海でのんびり', zh:'海边度假' },
-            cities: ['발리','몰디브','사이판','괌','산토리니','푸켓','세부','오키나와','이비자','테네리페'],
-            color: '#cffafe'
-          },
-          {
-            emoji: '🏛️',
-            tag: { ko:'HISTORY', en:'HISTORY', ja:'HISTORY', zh:'HISTORY' },
-            title: { ko:'역사 도시 BEST 6', en:'Historic Cities Top 6', ja:'歴史都市 BEST 6', zh:'历史名城 BEST 6' },
-            subtitle: { ko:'천 년의 시간을 걷다', en:'Walk through millennia', ja:'千年の時を歩く', zh:'千年时光漫步' },
-            cities: ['로마','이스탄불','아테네','교토','시안','카이로'],
-            color: '#fef3c7'
-          },
-          {
-            emoji: '🏔️',
-            tag: { ko:'NATURE', en:'NATURE', ja:'NATURE', zh:'NATURE' },
-            title: { ko:'자연이 살아있는 도시', en:'Nature Escapes', ja:'自然が生きる街', zh:'自然之城' },
-            subtitle: { ko:'도시에서 만나는 대자연', en:'Wild beauty in cities', ja:'都市で出会う大自然', zh:'城市中的大自然' },
-            cities: ['밴쿠버','케이프타운','퀸스타운','취리히','오슬로','레이캬비크'],
-            color: '#dcfce7'
-          }
-        ]
-
-        // 패널 C: 카테고리 칩
-        const categoryChips = [
-          { key:'beach', emoji:'🏖️', label:{ko:'휴양',en:'Beach',ja:'リゾート',zh:'度假'}, cities:['발리','몰디브','사이판','괌','푸켓','세부','오키나와','이비자','산토리니','테네리페','다합'] },
-          { key:'food', emoji:'🍣', label:{ko:'미식',en:'Foodie',ja:'美食',zh:'美食'}, cities:['도쿄','오사카','방콕','로마','이스탄불','홍콩','파리','바르셀로나'] },
-          { key:'history', emoji:'🏛️', label:{ko:'역사',en:'History',ja:'歴史',zh:'历史'}, cities:['로마','이스탄불','아테네','교토','시안','카이로','프라하','두브로브니크'] },
-          { key:'night', emoji:'🌃', label:{ko:'야경',en:'Night',ja:'夜景',zh:'夜景'}, cities:['홍콩','뉴욕','상하이','파리','도쿄','두바이','싱가포르'] },
-          { key:'shopping', emoji:'🛍️', label:{ko:'쇼핑',en:'Shopping',ja:'ショッピング',zh:'购物'}, cities:['뉴욕','파리','밀라노','도쿄','홍콩','두바이','런던'] },
-          { key:'nature', emoji:'🏔️', label:{ko:'자연',en:'Nature',ja:'自然',zh:'自然'}, cities:['밴쿠버','퀸스타운','오슬로','레이캬비크','케이프타운'] },
-          { key:'culture', emoji:'🎭', label:{ko:'문화',en:'Culture',ja:'文化',zh:'文化'}, cities:['파리','로마','런던','베를린','빈','상트페테르부르크'] },
-          { key:'romantic', emoji:'💕', label:{ko:'로맨틱',en:'Romantic',ja:'ロマンチック',zh:'浪漫'}, cities:['파리','베네치아','산토리니','프라하','잘츠부르크','바르셀로나'] }
-        ]
-
-        // 패널 D: 추천 코스 (큐레이션)
-        const featuredCourses = [
-          {
-            emoji: '🌸',
-            title: { ko:'도쿄 벚꽃 3박4일', en:'Tokyo Cherry Blossom 4D', ja:'東京桜 3泊4日', zh:'东京樱花 4日' },
-            subtitle: { ko:'우에노→신주쿠→메구로→아사쿠사', en:'Ueno→Shinjuku→Meguro→Asakusa', ja:'上野→新宿→目黒→浅草', zh:'上野→新宿→目黒→浅草' },
-            tags: ['벚꽃','봄','문화'],
-            color: 'linear-gradient(135deg,#fda4af,#fbcfe8)'
-          },
-          {
-            emoji: '💕',
-            title: { ko:'파리 로맨틱 5일', en:'Paris Romantic 5D', ja:'パリ ロマンチック 5日', zh:'巴黎浪漫 5日' },
-            subtitle: { ko:'에펠탑→루브르→몽마르트→베르사유', en:'Eiffel→Louvre→Montmartre→Versailles', ja:'エッフェル→ルーブル→モンマルトル→ベルサイユ', zh:'埃菲尔→卢浮宫→蒙马特→凡尔赛' },
-            tags: ['허니문','로맨틱','유럽'],
-            color: 'linear-gradient(135deg,#ec4899,#f97316)'
-          },
-          {
-            emoji: '🍣',
-            title: { ko:'오사카 미식 3일', en:'Osaka Foodie 3D', ja:'大阪 美食 3日', zh:'大阪美食 3日' },
-            subtitle: { ko:'도톤보리→쿠로몬→신세카이→우메다', en:'Dotonbori→Kuromon→Shinsekai→Umeda', ja:'道頓堀→黒門→新世界→梅田', zh:'道顿堀→黑门→新世界→梅田' },
-            tags: ['미식','일본','3일'],
-            color: 'linear-gradient(135deg,#fbbf24,#f59e0b)'
-          },
-          {
-            emoji: '🏖️',
-            title: { ko:'발리 힐링 6일', en:'Bali Healing 6D', ja:'バリ癒し 6日', zh:'巴厘岛疗愈 6日' },
-            subtitle: { ko:'우붓→스미냑→꾸따→누사두아', en:'Ubud→Seminyak→Kuta→Nusa Dua', ja:'ウブド→スミニャック→クタ→ヌサドゥア', zh:'乌布→水明漾→库塔→努沙杜瓦' },
-            tags: ['휴양','힐링','동남아'],
-            color: 'linear-gradient(135deg,#10b981,#06b6d4)'
-          }
-        ]
-
         return (
         <div style={{
           position:'fixed',inset:0,zIndex:3000,background:'#ffffff',
@@ -4547,24 +4323,14 @@ Write all text in ${langName}.`
           animation:'feedSlideUp .28s cubic-bezier(.22,.9,.32,1)',
         }}>
           <style>{`
-            @keyframes feedSlideUp {
-              from { transform: translateY(100%); opacity: 0; }
-              to { transform: translateY(0); opacity: 1; }
-            }
-            @keyframes feedFadeIn {
-              from { opacity: 0; transform: translateY(10px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
+            @keyframes feedSlideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+            @keyframes feedFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
             .feed-card { transition: all .2s cubic-bezier(.22,.9,.32,1); }
             .feed-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0,0,0,.08); }
-            .feed-trend-card { transition: transform .2s; }
-            .feed-trend-card:hover { transform: scale(1.02); }
-            .feed-city-chip { transition: all .15s; }
-            .feed-city-chip:hover { transform: scale(1.06); }
             .feed-fab { transition: all .2s; }
             .feed-fab:hover { transform: scale(1.08); box-shadow: 0 12px 32px rgba(236,72,153,.45); }
             .feed-header-shadow { box-shadow: 0 1px 0 rgba(0,0,0,.04); }
-            .feed-section-scroll::-webkit-scrollbar { height: 6px; }
+            .feed-section-scroll::-webkit-scrollbar { width: 6px; }
             .feed-section-scroll::-webkit-scrollbar-track { background: transparent; }
             .feed-section-scroll::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 3px; }
           `}</style>
@@ -4586,812 +4352,90 @@ Write all text in ${langName}.`
             <div style={{width:36}}></div>
           </div>
 
-          {/* Main Tabs */}
-          <div style={{display:'flex',borderBottom:'1px solid #f0f0f0',flexShrink:0,background:'#ffffff',position:'sticky',top:isMobile?60:62,zIndex:9}}>
-            {[{k:'courses',label:t('feedTabCourses'),icon:'🗺️'}].map(tab => (
-              <button key={tab.k} onClick={()=>setFeedMainTab(tab.k)}
-                style={{flex:1,padding:isMobile?'13px 0':'15px 0',background:'transparent',border:'none',
-                  borderBottom:feedMainTab===tab.k?'2.5px solid #262626':'2.5px solid transparent',
-                  cursor:'pointer',fontSize:isMobile?13:14,fontWeight:feedMainTab===tab.k?700:500,
-                  color:feedMainTab===tab.k?'#262626':'#a3a3a3',transition:'all .15s'}}>
-                {tab.icon} {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Content - 풀스크린 뷰 활성 시 unmount하여 SpotImage 부하 해소 */}
-          {feedView === 'main' && (
-          <div className="feed-section-scroll" style={{flex:1,overflowY:'auto',background:'#ffffff'}}>
-            {feedMainTab === 'journals' ? (
-              feedJournalsLoading ? (
-                <div style={{textAlign:'center',padding:'80px 0',color:'#a3a3a3',fontSize:14}}>{lang==='ko'?'불러오는 중...':lang==='ja'?'読み込み中...':lang==='zh'?'加载中...':'Loading...'}</div>
-              ) : (
+          {/* Content: 블로그식 커뮤니티 피드 */}
+          <div className="feed-section-scroll" style={{flex:1,overflowY:'auto',background:'#ffffff',padding:isMobile?'14px 12px':'18px 22px'}}>
+            {(() => {
+              // 공개글 + 내 글만 노출
+              let visible = (feedJournals||[]).filter(j => j.visibility!=='private' || (currentUser && j.uid===currentUser.uid))
+              if (feedSubTab==='mine') visible = visible.filter(j => currentUser && j.uid===currentUser.uid)
+              const fmtDate = (s) => s ? s.slice(5).replace('-','.') : ''
+              return (
                 <>
-                  {/* Panel E: 시즌 배너 (4월 봄) */}
-                  <div style={{padding:isMobile?'14px 16px 0':'18px 22px 0',animation:'feedFadeIn .25s'}}>
-                    <div className="feed-card" onClick={()=>openFeedCityList(seasonBanner)} style={{
-                      borderRadius:18,padding:isMobile?'18px 18px':'22px 24px',cursor:'pointer',
-                      background:seasonBanner.gradient,
-                      display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,
-                      boxShadow:'0 6px 18px rgba(252,164,175,.25)',position:'relative',overflow:'hidden',
-                    }}>
-                      <div style={{position:'absolute',top:-20,right:-10,fontSize:140,opacity:.18,lineHeight:1}}>{seasonBanner.emoji}</div>
-                      <div style={{flex:1,position:'relative',zIndex:1}}>
-                        <div style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,.9)',background:'rgba(0,0,0,.15)',padding:'3px 10px',borderRadius:12,display:'inline-block',marginBottom:8,letterSpacing:.5}}>{seasonBannerLabel}</div>
-                        <div style={{fontSize:isMobile?17:20,fontWeight:800,color:'white',lineHeight:1.25,letterSpacing:-0.3,marginBottom:5,textShadow:'0 1px 8px rgba(0,0,0,.1)'}}>{seasonBanner.title[lang]||seasonBanner.title.ko}</div>
-                        <div style={{fontSize:isMobile?12:13,color:'rgba(255,255,255,.95)',fontWeight:500}}>{seasonBanner.subtitle[lang]||seasonBanner.subtitle.ko}</div>
-                      </div>
-                      <div style={{fontSize:48,position:'relative',zIndex:1}}>{seasonBanner.emoji}</div>
-                    </div>
-                  </div>
-
-                  {/* Panel A: 히어로 카드 2개 */}
-                  <div style={{padding:isMobile?'14px 16px 0':'16px 22px 0',display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'1fr 1fr',gap:10,animation:'feedFadeIn .3s'}}>
-                    {heroCards.map((c,i) => (
-                      <div key={i} className="feed-card" onClick={()=>{
-                        if (c.action === 'openAI') { setShowFeed(false); setShowAiModal(true); return }
-                        openFeedCityList(c)
-                      }} style={{
-                        borderRadius:16,padding:isMobile?'14px 14px':'16px 18px',cursor:'pointer',
-                        background:c.gradient,minHeight:isMobile?140:160,
-                        display:'flex',flexDirection:'column',justifyContent:'space-between',
-                        boxShadow:'0 4px 14px rgba(0,0,0,.06)',position:'relative',overflow:'hidden',
-                      }}>
-                        <div style={{position:'absolute',top:-15,right:-10,fontSize:90,opacity:.18,lineHeight:1}}>{c.emoji}</div>
-                        <div style={{position:'relative',zIndex:1}}>
-                          <div style={{fontSize:30,marginBottom:4}}>{c.emoji}</div>
-                          <div style={{fontSize:isMobile?13:15,fontWeight:800,color:'white',lineHeight:1.25,letterSpacing:-0.2,marginBottom:4}}>{c.title[lang]||c.title.ko}</div>
-                          <div style={{fontSize:isMobile?10:11,color:'rgba(255,255,255,.9)',lineHeight:1.4,fontWeight:500}}>{c.subtitle[lang]||c.subtitle.ko}</div>
-                        </div>
-                        <div style={{fontSize:11,fontWeight:700,color:'white',marginTop:8,position:'relative',zIndex:1}}>{c.cta[lang]||c.cta.ko}</div>
-                      </div>
+                  {/* 필터 토글 */}
+                  <div style={{display:'flex',gap:6,marginBottom:14}}>
+                    {[{k:'all',label:t('feedTabAll')},{k:'mine',label:t('feedTabMine')}].map(st => (
+                      <button key={st.k} onClick={()=>setFeedSubTab(st.k)}
+                        style={{padding:'6px 16px',borderRadius:18,border:'none',cursor:'pointer',fontSize:12.5,fontWeight:700,
+                          background:feedSubTab===st.k?'#262626':'#f1f5f9',color:feedSubTab===st.k?'#fff':'#737373',transition:'all .15s'}}>
+                        {st.label}
+                      </button>
                     ))}
                   </div>
 
-                  {/* Panel B: 매거진 (가로 슬라이더) */}
-                  <div style={{padding:isMobile?'18px 0 6px':'22px 0 8px',animation:'feedFadeIn .35s'}}>
-                    <div style={{padding:isMobile?'0 16px 12px':'0 22px 14px'}}>
-                      <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#262626',letterSpacing:-0.3}}>📖 {lang==='ko'?'이번 주 여행 매거진':lang==='ja'?'今週の旅行マガジン':lang==='zh'?'本周旅行杂志':'Travel Magazine'}</div>
-                      <div style={{fontSize:11,color:'#a3a3a3',marginTop:3}}>{lang==='ko'?'테마별로 큐레이션된 도시들':'Curated by theme'}</div>
+                  {feedJournalsLoading ? (
+                    <div style={{textAlign:'center',color:'#a3a3a3',fontSize:14,padding:'60px 0'}}>{lang==='ko'?'불러오는 중...':lang==='ja'?'読み込み中...':lang==='zh'?'加载中...':'Loading...'}</div>
+                  ) : visible.length === 0 ? (
+                    <div style={{textAlign:'center',color:'#a3a3a3',padding:'70px 20px'}}>
+                      <div style={{fontSize:44,marginBottom:12}}>✏️</div>
+                      <div style={{fontSize:15,fontWeight:600,color:'#737373'}}>{feedSubTab==='mine'?(lang==='ko'?'작성한 여행기가 없어요':lang==='ja'?'書いた旅行記がありません':lang==='zh'?'还没有写过游记':'No posts of yours yet'):(lang==='ko'?'아직 여행기가 없어요':lang==='ja'?'まだ旅行記がありません':lang==='zh'?'还没有游记':'No posts yet')}</div>
+                      <div style={{fontSize:13,marginTop:6}}>{lang==='ko'?'첫 번째 여행기를 작성해보세요':lang==='ja'?'最初の旅行記を書いてみましょう':lang==='zh'?'写下第一篇游记吧':'Write the first one'}</div>
                     </div>
-                    <div className="feed-section-scroll" style={{display:'flex',gap:12,overflowX:'auto',padding:isMobile?'0 16px 8px':'0 22px 8px',scrollSnapType:'x mandatory'}}>
-                      {magazines.map((m,i) => {
-                        const isDark = m.color === '#1e293b'
-                        return (
-                          <div key={i} className="feed-trend-card" onClick={()=>openFeedCityList(m)} style={{
-                            minWidth:isMobile?180:210,maxWidth:isMobile?180:210,height:isMobile?240:260,
-                            borderRadius:16,overflow:'hidden',cursor:'pointer',scrollSnapAlign:'start',flexShrink:0,
-                            background:m.color,
-                            display:'flex',flexDirection:'column',justifyContent:'space-between',
-                            padding:isMobile?'14px 14px':'16px 16px',position:'relative',
-                            boxShadow:'0 4px 14px rgba(0,0,0,.05)',
-                          }}>
-                            <div style={{position:'absolute',top:-15,right:-15,fontSize:130,opacity:isDark?.15:.25,lineHeight:1}}>{m.emoji}</div>
-                            <div style={{position:'relative',zIndex:1}}>
-                              <div style={{fontSize:9,fontWeight:800,color:isDark?'rgba(255,255,255,.7)':'#737373',letterSpacing:1.2,marginBottom:8}}>{m.tag[lang]||m.tag.ko}</div>
-                              <div style={{fontSize:42,marginBottom:8,lineHeight:1}}>{m.emoji}</div>
-                            </div>
-                            <div style={{position:'relative',zIndex:1}}>
-                              <div style={{fontSize:isMobile?14:15,fontWeight:800,color:isDark?'white':'#262626',lineHeight:1.3,letterSpacing:-0.2,marginBottom:5}}>{m.title[lang]||m.title.ko}</div>
-                              <div style={{fontSize:11,color:isDark?'rgba(255,255,255,.75)':'#737373',fontWeight:500,lineHeight:1.4}}>{m.subtitle[lang]||m.subtitle.ko}</div>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Panel C: 카테고리 칩 */}
-                  <div style={{padding:isMobile?'14px 0 6px':'18px 0 8px',animation:'feedFadeIn .4s'}}>
-                    <div style={{padding:isMobile?'0 16px 10px':'0 22px 12px'}}>
-                      <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#262626',letterSpacing:-0.3}}>🏷️ {lang==='ko'?'카테고리별 추천':lang==='ja'?'カテゴリ別':lang==='zh'?'分类推荐':'Browse by Category'}</div>
-                    </div>
-                    <div className="feed-section-scroll" style={{display:'flex',gap:8,overflowX:'auto',padding:isMobile?'0 16px 8px':'0 22px 8px'}}>
-                      {categoryChips.map((c,i) => (
-                        <div key={c.key} className="feed-city-chip" onClick={()=>openFeedCityList(c)} style={{
-                          padding:'10px 16px',borderRadius:22,cursor:'pointer',flexShrink:0,
-                          background:'#f5f5f5',border:'1px solid #f0f0f0',
-                          display:'flex',alignItems:'center',gap:6,whiteSpace:'nowrap',
-                        }}>
-                          <span style={{fontSize:16}}>{c.emoji}</span>
-                          <span style={{fontSize:13,fontWeight:700,color:'#262626'}}>{c.label[lang]||c.label.ko}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Panel D: 추천 코스 */}
-                  <div style={{padding:isMobile?'14px 0 0':'18px 0 0',animation:'feedFadeIn .45s'}}>
-                    <div style={{padding:isMobile?'0 16px 12px':'0 22px 14px'}}>
-                      <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#262626',letterSpacing:-0.3}}>🗺️ {lang==='ko'?'에디터 추천 코스':lang==='ja'?'編集者おすすめコース':lang==='zh'?'编辑推荐路线':'Editor\u2019s Picks'}</div>
-                      <div style={{fontSize:11,color:'#a3a3a3',marginTop:3}}>{lang==='ko'?'전문가가 직접 짠 여행 코스':'Hand-picked itineraries'}</div>
-                    </div>
-                    <div className="feed-section-scroll" style={{display:'flex',gap:12,overflowX:'auto',padding:isMobile?'0 16px 8px':'0 22px 8px',scrollSnapType:'x mandatory'}}>
-                      {featuredCourses.map((c,i) => (
-                        <div key={i} className="feed-trend-card" style={{
-                          minWidth:isMobile?260:300,maxWidth:isMobile?260:300,
-                          borderRadius:16,overflow:'hidden',scrollSnapAlign:'start',flexShrink:0,
-                          background:'white',border:'1px solid #f0f0f0',
-                          boxShadow:'0 2px 8px rgba(0,0,0,.04)',
-                        }}>
-                          <div style={{height:isMobile?100:110,background:c.color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:48,position:'relative'}}>
-                            <div style={{position:'absolute',top:-20,right:-10,fontSize:130,opacity:.15,lineHeight:1}}>{c.emoji}</div>
-                            <span style={{position:'relative',zIndex:1}}>{c.emoji}</span>
-                          </div>
-                          <div style={{padding:'14px 16px'}}>
-                            <div style={{fontSize:isMobile?14:15,fontWeight:800,color:'#262626',marginBottom:5,letterSpacing:-0.2,lineHeight:1.3}}>{c.title[lang]||c.title.ko}</div>
-                            <div style={{fontSize:11,color:'#737373',marginBottom:10,lineHeight:1.5,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{c.subtitle[lang]||c.subtitle.ko}</div>
-                            <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
-                              {c.tags.map((tag,ti) => (
-                                <span key={ti} style={{padding:'3px 8px',borderRadius:10,background:'#f5f5f5',fontSize:10,color:'#525252',fontWeight:600}}>#{tag}</span>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Section 1: 이번 주 인기 여행기 (가로 슬라이더) */}
-                  {trendingJournals.length > 0 && (
-                    <div style={{padding:isMobile?'18px 0 14px':'24px 0 18px',animation:'feedFadeIn .3s'}}>
-                      <div style={{padding:isMobile?'0 16px':'0 22px',marginBottom:12,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                        <div>
-                          <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#262626',letterSpacing:-0.3}}>✨ {lang==='ko'?'이번 주 인기 여행기':lang==='ja'?'今週の人気旅行記':lang==='zh'?'本周热门游记':'Trending This Week'}</div>
-                          <div style={{fontSize:11,color:'#a3a3a3',marginTop:3}}>{lang==='ko'?'좋아요가 많은 여행기':'Most loved journals'}</div>
-                        </div>
-                      </div>
-                      <div className="feed-section-scroll" style={{display:'flex',gap:12,overflowX:'auto',padding:isMobile?'0 16px 8px':'0 22px 8px',scrollSnapType:'x mandatory'}}>
-                        {trendingJournals.map(j => {
-                          const cityNames = (j.cities||[]).map(c=>getCityName(c.name)).join(' · ')
-                          return (
-                            <div key={j.id} className="feed-trend-card" onClick={()=>setViewingJournal(j)}
-                              style={{minWidth:isMobile?260:300,maxWidth:isMobile?260:300,height:isMobile?320:360,borderRadius:18,overflow:'hidden',cursor:'pointer',position:'relative',scrollSnapAlign:'start',background:'#1f1f1f',flexShrink:0}}>
-                              {(j.photos||[]).length > 0 ? (
-                                <img src={j.photos[0]} alt="" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />
-                              ) : (
-                                <div style={{width:'100%',height:'100%',background:'linear-gradient(135deg,#f59e0b,#ec4899)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:48}}>📔</div>
-                              )}
-                              <div style={{position:'absolute',inset:0,background:'linear-gradient(to top, rgba(0,0,0,.85) 0%, rgba(0,0,0,.2) 50%, transparent 100%)'}}></div>
-                              <div style={{position:'absolute',top:12,left:12,background:'rgba(255,255,255,.95)',color:'#262626',padding:'4px 10px',borderRadius:14,fontSize:10,fontWeight:700,display:'flex',alignItems:'center',gap:4}}>
-                                ❤️ {j.likeCount||0}
-                              </div>
-                              <div style={{position:'absolute',bottom:0,left:0,right:0,padding:isMobile?'14px 16px':'18px 20px',color:'white'}}>
-                                {cityNames && <div style={{fontSize:11,opacity:.85,marginBottom:6,fontWeight:600}}>📍 {cityNames}</div>}
-                                <div style={{fontSize:isMobile?17:19,fontWeight:800,marginBottom:6,lineHeight:1.25,letterSpacing:-0.3,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{j.title || t('journalNoTitle')}</div>
-                                <div style={{display:'flex',alignItems:'center',gap:8,fontSize:11,opacity:.9}}>
-                                  <div style={{width:22,height:22,borderRadius:'50%',background:'linear-gradient(135deg,#f59e0b,#ec4899)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800}}>{(j.userName||'?')[0]?.toUpperCase()}</div>
-                                  <span style={{fontWeight:600}}>{j.userName}</span>
-                                  <span>·</span>
-                                  <span>{j.days}{t('journalDaysSeparator')}</span>
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Section 2: 인기 도시 (원형 칩 슬라이더) */}
-                  {popularCities.length > 0 && (
-                    <div style={{padding:isMobile?'8px 0 18px':'10px 0 24px',borderTop:'1px solid #f5f5f5',marginTop:6,animation:'feedFadeIn .35s'}}>
-                      <div style={{padding:isMobile?'14px 16px 12px':'18px 22px 14px'}}>
-                        <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#262626',letterSpacing:-0.3}}>🔥 {lang==='ko'?'지금 인기 도시':lang==='ja'?'今人気の都市':lang==='zh'?'当前热门城市':'Popular Cities'}</div>
-                        <div style={{fontSize:11,color:'#a3a3a3',marginTop:3}}>{lang==='ko'?'여행자들이 가장 많이 다녀온 곳':'Most visited by travelers'}</div>
-                      </div>
-                      <div className="feed-section-scroll" style={{display:'flex',gap:14,overflowX:'auto',padding:isMobile?'0 16px 6px':'0 22px 6px'}}>
-                        {popularCities.map((c, i) => {
-                          const grad = ['linear-gradient(135deg,#f59e0b,#ec4899)','linear-gradient(135deg,#3b82f6,#8b5cf6)','linear-gradient(135deg,#10b981,#3b82f6)','linear-gradient(135deg,#ef4444,#f59e0b)','linear-gradient(135deg,#8b5cf6,#ec4899)','linear-gradient(135deg,#06b6d4,#3b82f6)'][i % 6]
-                          return (
-                            <div key={c.name} className="feed-city-chip" onClick={()=>{
-                              const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===c.name))
-                              if (entry) { const cityObj = entry[1].find(x=>x.name===c.name); if (cityObj) { openFeedCityDetail({...cityObj, _koName:cityObj.name, countryEn:entry[0]}) } }
-                            }} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:6,cursor:'pointer',minWidth:64,flexShrink:0}}>
-                              <div style={{width:isMobile?60:64,height:isMobile?60:64,borderRadius:'50%',background:grad,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:22,fontWeight:800,boxShadow:'0 4px 12px rgba(0,0,0,.08)'}}>
-                                {getCityName(c.name)[0]}
-                              </div>
-                              <div style={{fontSize:11,fontWeight:700,color:'#262626',textAlign:'center',maxWidth:70,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{getCityName(c.name)}</div>
-                              <div style={{fontSize:9,color:'#a3a3a3'}}>{c.count} {lang==='ko'?'편':'posts'}</div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Section 3: 최신 여행기 (그리드) */}
-                  <div style={{padding:isMobile?'14px 0 80px':'18px 0 100px',borderTop:'1px solid #f5f5f5',animation:'feedFadeIn .4s'}}>
-                    <div style={{padding:isMobile?'0 16px 14px':'0 22px 16px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                      <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#262626',letterSpacing:-0.3}}>📔 {lang==='ko'?'최신 여행기':lang==='ja'?'最新の旅行記':lang==='zh'?'最新游记':'Latest Journals'}</div>
-                      <div style={{display:'flex',gap:6}}>
-                        {[{k:'all',label:t('feedTabAll')},{k:'mine',label:t('feedTabMine')}].map(st => (
-                          <button key={st.k} onClick={async()=>{
-                            setFeedSubTab(st.k);setFeedJournalsLoading(true)
-                            try {
-                              const opts = st.k==='mine' && currentUser ? { byUid: currentUser.uid, limitN: 30 } : { limitN: 30 }
-                              const data = await loadJournals(opts)
-                              setFeedJournals(data)
-                            } catch(e) { console.error(e) }
-                            setFeedJournalsLoading(false)
-                          }} style={{padding:'5px 12px',borderRadius:14,border:'none',background:feedSubTab===st.k?'#262626':'#f5f5f5',color:feedSubTab===st.k?'white':'#737373',fontSize:11,fontWeight:600,cursor:'pointer'}}>
-                            {st.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    {feedJournals.length === 0 ? (
-                      <div style={{textAlign:'center',padding:'40px 20px',margin:isMobile?'0 16px':'0 22px',background:'#fafafa',borderRadius:14,border:'1px dashed #e5e5e5'}}>
-                        <div style={{fontSize:40,marginBottom:10,opacity:.7}}>📔</div>
-                        <div style={{color:'#525252',fontSize:14,fontWeight:700,marginBottom:4}}>{t('feedEmpty')}</div>
-                        <div style={{color:'#a3a3a3',fontSize:12}}>{t('feedEmptyHint')}</div>
-                      </div>
-                    ) : (
-                    <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:12,padding:isMobile?'0 16px':'0 22px'}}>
-                      {feedJournals.map(j => {
+                  ) : (
+                    <div style={{display:'flex',flexDirection:'column',gap:16}}>
+                      {visible.map(j => {
+                        const thumb = (j.blocks&&j.blocks[0]&&j.blocks[0].photo) || (j.photos&&j.photos[0]) || ''
+                        const cityStr = (j.cities||[]).map(c=>getCityName(c.name)).join(' · ')
                         const liked = currentUser && (j.likes||[]).includes(currentUser.uid)
-                        const cityNames = (j.cities||[]).map(c=>getCityName(c.name)).join(' · ')
                         return (
                           <div key={j.id} className="feed-card" onClick={()=>setViewingJournal(j)}
-                            style={{borderRadius:14,background:'white',overflow:'hidden',cursor:'pointer',boxShadow:'0 1px 4px rgba(0,0,0,.04)',border:'1px solid #f0f0f0'}}>
-                            {(j.photos||[]).length > 0 && (
-                              <div style={{width:'100%',aspectRatio:'1',background:'#f5f5f5',overflow:'hidden'}}>
-                                <img src={j.photos[0]} alt="" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />
+                            style={{borderRadius:16,overflow:'hidden',background:'#fff',border:'1px solid #f0f0f0',boxShadow:'0 1px 3px rgba(0,0,0,.04)',cursor:'pointer'}}>
+                            {thumb && (
+                              <div style={{position:'relative'}}>
+                                <img src={thumb} loading="lazy" style={{width:'100%',height:isMobile?180:220,objectFit:'cover',display:'block'}} alt="" />
+                                {j.rating>0 && (
+                                  <div style={{position:'absolute',top:10,right:10,background:'rgba(15,23,42,.62)',color:'#fde68a',fontSize:11.5,fontWeight:800,padding:'3px 9px',borderRadius:20,backdropFilter:'blur(4px)'}}>★ {j.rating}</div>
+                                )}
                               </div>
                             )}
-                            <div style={{padding:'12px 14px'}}>
-                              <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
-                                <div style={{width:22,height:22,borderRadius:'50%',background:'linear-gradient(135deg,#f59e0b,#ec4899)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:800,color:'white'}}>{(j.userName||'?')[0]?.toUpperCase()}</div>
-                                <span style={{fontSize:11,color:'#525252',fontWeight:600}}>{j.userName}</span>
-                                {j.rating > 0 && <span style={{fontSize:10,color:'#f59e0b',fontWeight:700,marginLeft:'auto'}}>★ {j.rating}</span>}
+                            <div style={{padding:isMobile?'12px 13px 13px':'14px 16px 15px'}}>
+                              <div style={{fontSize:isMobile?15.5:17,fontWeight:800,color:'#1a1a1a',lineHeight:1.35,marginBottom:6,letterSpacing:-0.3}}>{j.title || t('journalNoTitle')}</div>
+                              <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:8,marginBottom:8,fontSize:12}}>
+                                {cityStr && <span style={{color:'#3b82f6',fontWeight:600}}>📍 {cityStr}</span>}
+                                <span style={{color:'#94a3b8'}}>{j.days>1?(j.days-1)+t('journalDaysUnit')+j.days+t('journalDaysSeparator'):j.days+t('journalDaysSeparator')}</span>
+                                {j.startDate && <span style={{color:'#cbd5e1'}}>·</span>}
+                                {j.startDate && <span style={{color:'#94a3b8'}}>{fmtDate(j.startDate)}{j.endDate?' ~ '+fmtDate(j.endDate):''}</span>}
                               </div>
-                              <div style={{fontSize:14,fontWeight:700,color:'#262626',marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',letterSpacing:-0.2}}>{j.title || t('journalNoTitle')}</div>
-                              {cityNames && <div style={{fontSize:11,color:'#737373',marginBottom:6,fontWeight:500}}>📍 {cityNames}</div>}
-                              <div style={{fontSize:11,color:'#737373',lineHeight:1.5,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{j.body}</div>
-                              <div style={{display:'flex',alignItems:'center',gap:14,marginTop:10,paddingTop:8,borderTop:'1px solid #f5f5f5'}}>
-                                <span style={{fontSize:11,color:liked?'#ec4899':'#a3a3a3',display:'flex',alignItems:'center',gap:3,fontWeight:600}}>{liked?'❤️':'🤍'} {j.likeCount||0}</span>
-                                <span style={{fontSize:11,color:'#a3a3a3',display:'flex',alignItems:'center',gap:3}}>💬 {j.commentCount||0}</span>
-                                <span style={{fontSize:10,color:'#d4d4d4',marginLeft:'auto'}}>{j.createdAt?new Date(j.createdAt).toLocaleDateString():''}</span>
+                              {j.body && <div style={{fontSize:13,color:'#64748b',lineHeight:1.6,marginBottom:10,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{j.body}</div>}
+                              <div style={{display:'flex',alignItems:'center',gap:10,fontSize:12,color:'#94a3b8'}}>
+                                <span style={{fontWeight:600,color:'#737373'}}>{j.userName}</span>
+                                <span>{j.createdAt?new Date(j.createdAt).toLocaleDateString():''}</span>
+                                <span style={{marginLeft:'auto',color:liked?'#ef4444':'#94a3b8',fontWeight:700}}>{liked?'❤️':'🤍'} {j.likeCount||0}</span>
+                                <span style={{fontWeight:700}}>💬 {(j.comments||[]).length}</span>
                               </div>
                             </div>
                           </div>
                         )
                       })}
                     </div>
-                    )}
-                  </div>
+                  )}
                 </>
               )
-            ) : (
-              /* 코스 탭 */
-              communityCoursesData.length === 0 ? (
-                <div style={{textAlign:'center',padding:'100px 20px',animation:'feedFadeIn .4s'}}>
-                  <div style={{fontSize:64,marginBottom:18}}>🗺️</div>
-                  <div style={{color:'#262626',fontSize:16,fontWeight:700,marginBottom:6}}>{t('communityEmpty')}</div>
-                  <div style={{color:'#a3a3a3',fontSize:13}}>{t('communityEmptyHint')}</div>
-                </div>
-              ) : (
-                <div style={{padding:isMobile?'16px 16px 80px':'20px 22px 100px',display:'flex',flexDirection:'column',gap:14,animation:'feedFadeIn .3s'}}>
-                  {communityCoursesData.map((sc,idx) => {
-                    const days = sc.course?.days || sc.days || []
-                    const cities = [...new Set(days.flatMap(d=>(d.items||[]).map(it=>it.cityI18n?.[lang] || getCityName(it.cityName||it.name))).filter(Boolean))]
-                    const totalPlaces = days.reduce((a,d)=>a+(d.items||[]).length,0)
-                    const photos = sc.photos || []
-                    const dateStr = sc.createdAt ? new Date(sc.createdAt).toLocaleDateString() : ''
-                    return (
-                      <div key={sc.id||idx} className="feed-card" style={{borderRadius:14,border:'1px solid #f0f0f0',background:'white',overflow:'hidden',padding:'14px 16px'}}>
-                        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:10}}>
-                          <div>
-                            <div style={{fontSize:15,fontWeight:800,color:'#262626',letterSpacing:-0.2}}>{cities.join(' · ') || 'Course'}</div>
-                            <div style={{fontSize:11,color:'#737373',marginTop:3}}>
-                              {totalPlaces}{t('communityPlaces')} · {days.length}{t('communityDays')}
-                              {(sc.course?.type||sc.type)==='ai' && <span style={{marginLeft:6,padding:'1px 6px',borderRadius:4,background:'linear-gradient(135deg,#f3e8ff,#fce7f3)',color:'#7c3aed',fontSize:9,fontWeight:700}}>AI</span>}
-                            </div>
-                          </div>
-                          <span style={{fontSize:10,color:'#a3a3a3'}}>{sc.userName||'?'} · {dateStr}</span>
-                        </div>
-                        {photos.length > 0 && (
-                          <div className="feed-section-scroll" style={{display:'flex',gap:6,marginBottom:10,overflowX:'auto',paddingBottom:2}}>
-                            {photos.map((url,i)=>(
-                              <img key={i} src={url} style={{width:90,height:64,borderRadius:8,objectFit:'cover',flexShrink:0,border:'1px solid #f0f0f0'}} alt="" />
-                            ))}
-                          </div>
-                        )}
-                        <div style={{display:'flex',justifyContent:'flex-end'}}>
-                          <button onClick={()=>{
-                            setCourseDays(days);localStorage.setItem('atlas_course_days',JSON.stringify(days))
-                            const flat=days.flatMap(d=>d.items||[]);saveCourse(flat)
-                            setCourseTransport(sc.course?.transport||sc.transport||'transit')
-                            setActiveDayTab(0);setShowCoursePlanner(true);setShowFeed(false)
-                            setCourseSource(sc.course?.type||sc.type||'manual')
-                          }} style={{background:'linear-gradient(135deg,#f59e0b,#ec4899)',border:'none',color:'white',padding:'8px 18px',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                            {t('communityLoad')}
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            )}
+            })()}
           </div>
-          )}
 
           {/* Floating Action Button (여행기 작성) */}
-          {feedMainTab === 'journals' && feedView === 'main' && (
-            <button className="feed-fab" onClick={()=>{
-              if (!currentUser) { setShowLoginModal(true); return }
-              setEditingJournal(null)
-              setJournalForm({ title:'', body:'', cities:[], days:1, rating:0, visibility:'public', photos:[] })
-              setJournalNewPhotos([])
-              setShowJournalEditor(true)
-            }} style={{
-              position:'fixed',bottom:isMobile?'calc(20px + env(safe-area-inset-bottom))':28,right:isMobile?20:32,zIndex:11,
-              width:isMobile?56:60,height:isMobile?56:60,borderRadius:'50%',
-              background:'linear-gradient(135deg,#f59e0b,#ec4899)',border:'none',color:'white',
-              fontSize:24,cursor:'pointer',boxShadow:'0 8px 24px rgba(236,72,153,.35)',
-              display:'flex',alignItems:'center',justifyContent:'center',
-            }}>✏️</button>
-          )}
-
-          {/* ===== Phase 2: 도시 목록 풀스크린 (cityList) ===== */}
-          {feedCityList && feedView === 'cityList' && (
-            <div style={{
-              position:'absolute',inset:0,background:'#ffffff',zIndex:10,
-              display:'flex',flexDirection:'column',
-              animation:'feedSlideUp .28s cubic-bezier(.22,.9,.32,1)',
-              overflowY:'auto',
-            }}>
-              {/* 상단 그라데이션 히어로 */}
-              <div style={{
-                background: feedCityList.gradient,
-                padding: isMobile ? 'calc(20px + env(safe-area-inset-top)) 20px 28px' : '32px 32px 36px',
-                position:'relative',color:'white',overflow:'hidden',
-              }}>
-                <div style={{position:'absolute',top:-30,right:-20,fontSize:200,opacity:.15,lineHeight:1,pointerEvents:'none'}}>{feedCityList.emoji}</div>
-                <button onClick={feedGoBack} style={{
-                  background:'rgba(0,0,0,.55)',border:'1px solid rgba(255,255,255,.25)',width:38,height:38,borderRadius:10,cursor:'pointer',
-                  display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:20,
-                  backdropFilter:'blur(8px)',marginBottom:18,boxShadow:'0 2px 12px rgba(0,0,0,.4)',
-                }}>←</button>
-                <div style={{fontSize:46,marginBottom:8,lineHeight:1,position:'relative',zIndex:1}}>{feedCityList.emoji}</div>
-                <div style={{fontSize:isMobile?22:28,fontWeight:800,letterSpacing:-0.5,marginBottom:6,lineHeight:1.2,position:'relative',zIndex:1}}>{feedCityList.title}</div>
-                {feedCityList.subtitle && (
-                  <div style={{fontSize:isMobile?13:14,color:'rgba(255,255,255,.92)',fontWeight:500,position:'relative',zIndex:1}}>{feedCityList.subtitle}</div>
-                )}
-                <div style={{fontSize:11,color:'rgba(255,255,255,.85)',marginTop:14,fontWeight:600,position:'relative',zIndex:1}}>
-                  {feedCityList.cities.length}{lang==='ko'?'개 도시':lang==='ja'?'都市':lang==='zh'?'个城市':' cities'}
-                </div>
-              </div>
-
-              {/* 도시 목록 (텍스트 row 형식) */}
-              <div style={{padding:isMobile?'14px 14px 28px':'20px 28px 36px',display:'flex',flexDirection:'column',gap:isMobile?10:12}}>
-                {feedCityList.cities.map((city, i) => {
-                  const koName = city._koName || city.name
-                  const enName = (CITY_I18N[koName]?.[0]) || city.name
-                  const curated = CITY_PHOTOS[koName]
-                  const thumbWiki = curated?.photos?.[0] || enName
-                  const thumbUrl = curated?.photoUrls?.[0]
-                  const tagline = pickI18n(curated?.tagline, lang)
-                  return (
-                    <div key={city.name + i} onClick={()=>openFeedCityDetail(city)} style={{
-                      display:'flex',alignItems:'center',gap:isMobile?12:14,padding:isMobile?'10px':'12px',
-                      borderRadius:14,cursor:'pointer',background:'white',border:'1px solid #f1f5f9',
-                      transition:'all .15s cubic-bezier(.22,.9,.32,1)',
-                      animation:'feedFadeIn .25s',
-                    }}
-                    onMouseEnter={e=>{e.currentTarget.style.background='#f8fafc';e.currentTarget.style.transform='translateX(2px)';e.currentTarget.style.boxShadow='0 4px 14px rgba(0,0,0,.05)'}}
-                    onMouseLeave={e=>{e.currentTarget.style.background='white';e.currentTarget.style.transform='translateX(0)';e.currentTarget.style.boxShadow='none'}}>
-                      {/* 썸네일 */}
-                      <div style={{width:isMobile?72:88,height:isMobile?72:88,borderRadius:12,overflow:'hidden',flexShrink:0,background:'#e2e8f0',position:'relative'}}>
-                        <SpotImage
-                          imageUrl={thumbUrl}
-                          wikiTitle={thumbWiki}
-                          spotName={enName}
-                          cityName={enName}
-                          alt={getCityName(koName)}
-                          fallback={getImg('도시') || getImg('자연')}
-                          style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
-                        />
-                      </div>
-                      {/* 텍스트 */}
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:isMobile?15:17,fontWeight:800,color:'#1e293b',letterSpacing:-0.3,marginBottom:2}}>
-                          {getCityName(koName)}
-                        </div>
-                        <div style={{fontSize:11,color:'#64748b',fontWeight:600,marginBottom:tagline?4:0}}>
-                          {getCountryName(city.countryEn)}
-                        </div>
-                        {tagline && (
-                          <div style={{fontSize:12,color:'#94a3b8',lineHeight:1.4,overflow:'hidden',textOverflow:'ellipsis',display:'-webkit-box',WebkitLineClamp:isMobile?2:1,WebkitBoxOrient:'vertical'}}>{tagline}</div>
-                        )}
-                      </div>
-                      {/* 화살표 */}
-                      <div style={{fontSize:18,color:'#cbd5e1',flexShrink:0}}>›</div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* ===== Phase 2: 도시 상세 풀스크린 (cityDetail) ===== */}
-          {feedCityDetail && feedView === 'cityDetail' && (() => {
-            const koName = feedCityDetail._koName || feedCityDetail.name
-            const enName = (CITY_I18N[koName]?.[0]) || feedCityDetail.name
-            const curated = CITY_PHOTOS[koName]
-            const galleryTitles = (curated?.photos && curated.photos.length > 0) ? curated.photos : [enName]
-            const galleryUrls = curated?.photoUrls || []
-            const heroWiki = galleryTitles[0]
-            const heroUrl = galleryUrls[0]
-            return (
-            <div style={{
-              position:'absolute',inset:0,background:'#ffffff',zIndex:11,
-              display:'flex',flexDirection:'column',
-              animation:'feedSlideUp .28s cubic-bezier(.22,.9,.32,1)',
-              overflowY:'auto',
-            }}>
-              {/* 상단 도시 히어로 */}
-              <div style={{
-                position:'relative',height:isMobile?280:360,overflow:'hidden',background:'#1e293b',flexShrink:0,
-              }}>
-                <SpotImage
-                  imageUrl={heroUrl}
-                  wikiTitle={heroWiki}
-                  spotName={heroWiki}
-                  cityName={enName}
-                  alt={getCityName(koName)}
-                  fallback={getImg('도시') || getImg('자연')}
-                  style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
-                />
-                <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,.1) 35%, rgba(0,0,0,.75) 100%)',pointerEvents:'none'}}/>
-                <button onClick={feedGoBack} style={{
-                  position:'absolute',top:isMobile?'calc(14px + env(safe-area-inset-top))':18,left:16,
-                  background:'rgba(0,0,0,.6)',border:'1px solid rgba(255,255,255,.25)',boxShadow:'0 2px 12px rgba(0,0,0,.4)',width:38,height:38,borderRadius:10,cursor:'pointer',
-                  display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:20,
-                  backdropFilter:'blur(8px)',
-                }}>←</button>
-                <div style={{position:'absolute',bottom:22,left:22,right:22,color:'white'}}>
-                  <div style={{fontSize:11,fontWeight:700,letterSpacing:1.5,opacity:.88,marginBottom:8}}>{getCountryName(feedCityDetail.countryEn)}</div>
-                  <div style={{fontSize:isMobile?32:42,fontWeight:800,letterSpacing:-0.8,lineHeight:1.05,textShadow:'0 2px 14px rgba(0,0,0,.5)',marginBottom:pickI18n(curated?.tagline,lang)?6:0}}>
-                    {getCityName(koName)}
-                  </div>
-                  {pickI18n(curated?.tagline, lang) && (
-                    <div style={{fontSize:isMobile?13:15,fontWeight:500,color:'rgba(255,255,255,.95)',textShadow:'0 1px 6px rgba(0,0,0,.5)'}}>{pickI18n(curated.tagline, lang)}</div>
-                  )}
-                </div>
-              </div>
-
-              <div style={{padding:isMobile?'20px 16px 40px':'28px 32px 48px'}}>
-                {/* 큐레이션 설명 */}
-                {pickI18n(curated?.desc, lang) && (
-                  <div style={{
-                    padding:isMobile?'16px 18px':'18px 22px',background:'linear-gradient(135deg,#fef3c7,#fed7aa)',borderRadius:14,
-                    marginBottom:22,fontSize:14,color:'#7c2d12',lineHeight:1.75,fontWeight:500,
-                  }}>{pickI18n(curated.desc, lang)}</div>
-                )}
-
-                {/* 날씨 + 추천 시즌 - 가로 카드 */}
-                <div style={{display:'grid',gridTemplateColumns:pickI18n(curated?.bestSeason,lang)?'1fr 1fr':'1fr',gap:10,marginBottom:24}}>
-                  {feedCityDetailData?.weather && (
-                    <div style={{
-                      background:'linear-gradient(135deg,#dbeafe,#ede9fe)',padding:isMobile?'13px 14px':'15px 18px',
-                      borderRadius:13,display:'flex',alignItems:'center',gap:12,
-                    }}>
-                      <div style={{fontSize:32,lineHeight:1}}>{feedCityDetailData.weather.icon}</div>
-                      <div>
-                        <div style={{fontSize:10,color:'#64748b',fontWeight:700,letterSpacing:.5,marginBottom:2}}>{lang==='ko'?'현재 날씨':lang==='ja'?'現在の天気':lang==='zh'?'当前天气':'Weather'}</div>
-                        <div style={{fontSize:18,fontWeight:800,color:'#1e293b',letterSpacing:-0.3,lineHeight:1.1}}>{feedCityDetailData.weather.temp}{typeof feedCityDetailData.weather.temp === 'number' ? '°C' : ''}</div>
-                        <div style={{fontSize:10,color:'#64748b',marginTop:1}}>{feedCityDetailData.weather.condition}</div>
-                      </div>
-                    </div>
-                  )}
-                  {pickI18n(curated?.bestSeason, lang) && (
-                    <div style={{
-                      background:'linear-gradient(135deg,#d1fae5,#a7f3d0)',padding:isMobile?'13px 14px':'15px 18px',
-                      borderRadius:13,display:'flex',alignItems:'center',gap:12,
-                    }}>
-                      <div style={{fontSize:32,lineHeight:1}}>🌸</div>
-                      <div>
-                        <div style={{fontSize:10,color:'#065f46',fontWeight:700,letterSpacing:.5,marginBottom:2}}>{lang==='ko'?'추천 시즌':lang==='ja'?'おすすめ時期':lang==='zh'?'推荐季节':'Best Season'}</div>
-                        <div style={{fontSize:13,fontWeight:800,color:'#064e3b',letterSpacing:-0.2,lineHeight:1.2}}>{pickI18n(curated.bestSeason, lang)}</div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 사진 갤러리 */}
-                {galleryTitles.length > 1 && (
-                  <div style={{marginBottom:24}}>
-                    <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#1e293b',letterSpacing:-0.3,marginBottom:12}}>
-                      📷 {lang==='ko'?'풍경':lang==='ja'?'風景':lang==='zh'?'风景':'Gallery'}
-                    </div>
-                    <div className="feed-section-scroll" style={{display:'flex',gap:10,overflowX:'auto',paddingBottom:6,scrollSnapType:'x mandatory'}}>
-                      {galleryTitles.slice(1).map((title, gi) => (
-                        <div key={title+gi} onClick={()=>openLightbox(galleryTitles, gi+1)} style={{
-                          minWidth:isMobile?220:260,maxWidth:isMobile?220:260,height:isMobile?160:200,
-                          borderRadius:14,overflow:'hidden',flexShrink:0,scrollSnapAlign:'start',background:'#e2e8f0',
-                          boxShadow:'0 2px 10px rgba(0,0,0,.06)',position:'relative',cursor:'zoom-in',
-                          transition:'transform .15s',
-                        }}
-                        onMouseEnter={e=>e.currentTarget.style.transform='scale(1.02)'}
-                        onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
-                          <SpotImage
-                            imageUrl={galleryUrls[gi+1]}
-                            wikiTitle={title}
-                            spotName={title}
-                            cityName={enName}
-                            alt={title}
-                            fallback={getImg('자연')}
-                            style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
-                          />
-                          <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,.55) 0%,transparent 50%)',pointerEvents:'none'}}/>
-                          <div style={{position:'absolute',bottom:8,left:11,right:11,fontSize:11,fontWeight:700,color:'white',textShadow:'0 1px 4px rgba(0,0,0,.6)'}}>{title}</div>
-                          <div style={{position:'absolute',top:8,right:10,background:'rgba(0,0,0,.5)',backdropFilter:'blur(8px)',borderRadius:6,padding:'3px 7px',fontSize:11,color:'white',fontWeight:700}}>🔍</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 본문 - 로딩 / 추천 관광지 */}
-                {feedCityDetailLoading || !feedCityDetailData ? (
-                  <div style={{padding:'24px 0',textAlign:'center',color:'#94a3b8',fontSize:13}}>
-                    {lang==='ko'?'관광지 정보 불러오는 중...':lang==='ja'?'読み込み中...':lang==='zh'?'加载中...':'Loading spots...'}
-                  </div>
-                ) : feedCityDetailData.spots && feedCityDetailData.spots.length > 0 && (
-                  <>
-                    <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#1e293b',letterSpacing:-0.3,marginBottom:14}}>
-                      ✨ {lang==='ko'?'추천 관광지':lang==='ja'?'おすすめスポット':lang==='zh'?'推荐景点':'Top Spots'} · {feedCityDetailData.spots.length}
-                    </div>
-                    <div style={{display:'grid',gridTemplateColumns:'repeat(3, 1fr)',gap:isMobile?3:5}}>
-                      {feedCityDetailData.spots.map((spot, i) => {
-                        const trData = spot._google ? null : trSpot(koName, spot.name)
-                        const displayName = trData?.name || spot.name
-                        return (
-                          <div key={i} onClick={()=>openFeedSpotDetail(spot)} style={{
-                            position:'relative',aspectRatio:'1/1',overflow:'hidden',
-                            cursor:'pointer',background:'#e2e8f0',
-                          }}
-                          onMouseEnter={e=>{const im=e.currentTarget.querySelector('img');if(im)im.style.transform='scale(1.08)'}}
-                          onMouseLeave={e=>{const im=e.currentTarget.querySelector('img');if(im)im.style.transform='scale(1)'}}>
-                            <SpotImage
-                              photoRef={spot.photo_ref}
-                              wikiTitle={spot.wikiTitle}
-                              spotName={spot.name}
-                              cityName={enName}
-                              alt={displayName}
-                              fallback={spot.img || getImg(spot.type)}
-                              style={{width:'100%',height:'100%',objectFit:'cover',display:'block',transition:'transform .3s cubic-bezier(.22,.9,.32,1)'}}
-                            />
-                            {/* 하단 가는 그라데이션 + 작은 이름 */}
-                            <div style={{position:'absolute',inset:0,background:'linear-gradient(to top, rgba(0,0,0,.78) 0%, rgba(0,0,0,0) 45%)',pointerEvents:'none'}}/>
-                            <div style={{position:'absolute',bottom:6,left:8,right:8,color:'white',pointerEvents:'none'}}>
-                              <div style={{fontSize:isMobile?11:12,fontWeight:800,letterSpacing:-0.2,textShadow:'0 1px 4px rgba(0,0,0,.7)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',lineHeight:1.2}}>
-                                {displayName}
-                              </div>
-                              {spot.rating && (
-                                <div style={{fontSize:isMobile?9:10,fontWeight:700,marginTop:2,opacity:.95,textShadow:'0 1px 3px rgba(0,0,0,.7)'}}>★ {spot.rating}</div>
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </>
-                )}
-
-                {/* 지구본 모드로 이동 */}
-                <div style={{marginTop:30,padding:'20px',background:'#f8fafc',borderRadius:14,textAlign:'center'}}>
-                  <div style={{fontSize:12,color:'#64748b',marginBottom:10}}>{lang==='ko'?'지구본에서 위치와 주변 도시도 함께 보고 싶다면':lang==='ja'?'地球儀で位置と周辺都市も一緒に見たい場合':lang==='zh'?'若想在地球仪上查看位置和周边城市':'Explore on globe'}</div>
-                  <button onClick={()=>{
-                    const target = feedCityDetail
-                    const targetCountry = getCountryFeat(target.countryEn, target.lat, target.lng)
-                    setFeedView('main'); setFeedCityList(null); setFeedCityDetail(null); setShowFeed(false)
-                    setSelectedCountry(targetCountry)
-                    setTimeout(() => handleCityClick(target), 200)
-                  }} style={{
-                    background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',border:'none',color:'white',
-                    padding:'12px 26px',borderRadius:10,fontSize:13,fontWeight:700,cursor:'pointer',
-                    boxShadow:'0 4px 12px rgba(59,130,246,.3)',
-                  }}>🌍 {lang==='ko'?'지구본에서 보기':lang==='ja'?'地球儀で見る':lang==='zh'?'在地球仪上查看':'View on Globe'}</button>
-                </div>
-              </div>
-            </div>
-            )
-          })()}
-
-          {/* ===== Phase 2: 관광지 상세 풀스크린 (feedSpotDetail) — cityDetail 위 ===== */}
-          {feedSpotDetail && feedCityDetail && (() => {
-            const koName = feedCityDetail._koName || feedCityDetail.name
-            const enCity = (CITY_I18N[koName]?.[0]) || feedCityDetail.name
-            const trData = trSpot(koName, feedSpotDetail.name)
-            const displayName = trData?.name || feedSpotDetail.name
-            const staticDesc = trData?.desc || (lang === 'ko' ? feedSpotDetail.desc : '') || ''
-            return (
-            <div style={{
-              position:'absolute',inset:0,background:'#ffffff',zIndex:12,
-              display:'flex',flexDirection:'column',
-              animation:'feedSlideUp .28s cubic-bezier(.22,.9,.32,1)',
-              overflowY:'auto',
-            }}>
-              {/* 히어로 사진 */}
-              <div style={{position:'relative',height:isMobile?300:380,overflow:'hidden',background:'#1e293b',flexShrink:0}}>
-                <SpotImage
-                  photoRef={feedSpotDetail.photo_ref}
-                  wikiTitle={feedSpotDetail.wikiTitle}
-                  spotName={feedSpotDetail.name}
-                  cityName={enCity}
-                  alt={displayName}
-                  fallback={feedSpotDetail.img || getImg(feedSpotDetail.type)}
-                  style={{width:'100%',height:'100%',objectFit:'cover',display:'block',cursor:'zoom-in'}}
-                  onClick={()=>openLightbox([feedSpotDetail.wikiTitle || feedSpotDetail.name], 0)}
-                />
-                <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom, rgba(0,0,0,.4) 0%, rgba(0,0,0,.05) 35%, rgba(0,0,0,.78) 100%)',pointerEvents:'none'}}/>
-                <button onClick={()=>setFeedSpotDetail(null)} style={{
-                  position:'absolute',top:isMobile?'calc(14px + env(safe-area-inset-top))':18,left:16,
-                  background:'rgba(0,0,0,.6)',border:'1px solid rgba(255,255,255,.25)',boxShadow:'0 2px 12px rgba(0,0,0,.4)',width:38,height:38,borderRadius:10,cursor:'pointer',
-                  display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:20,
-                  backdropFilter:'blur(8px)',
-                }}>←</button>
-                <div style={{position:'absolute',bottom:24,left:22,right:22,color:'white'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
-                    <div style={{fontSize:11,padding:'4px 10px',borderRadius:12,background:TYPE_COLORS[feedSpotDetail.type]||'#64748b',fontWeight:700,letterSpacing:.5}}>{getSpotType(feedSpotDetail.type)}</div>
-                    {feedSpotDetail.rating && <div style={{fontSize:13,fontWeight:700}}>★ {feedSpotDetail.rating}</div>}
-                  </div>
-                  <div style={{fontSize:isMobile?26:34,fontWeight:800,letterSpacing:-0.6,lineHeight:1.1,textShadow:'0 2px 12px rgba(0,0,0,.5)',marginBottom:6}}>{displayName}</div>
-                  <div style={{fontSize:12,fontWeight:600,opacity:.92}}>📍 {getCityName(koName)}, {feedCityDetail.countryEn ? getCountryName(feedCityDetail.countryEn) : ''}</div>
-                </div>
-              </div>
-
-              <div style={{padding:isMobile?'22px 18px 40px':'30px 32px 48px'}}>
-                {/* Wikipedia summary (자세한 설명) */}
-                {feedSpotWikiLoading ? (
-                  <div style={{padding:'14px 0',color:'#94a3b8',fontSize:13,textAlign:'center'}}>
-                    {lang==='ko'?'자세한 정보 불러오는 중...':lang==='ja'?'詳細情報を読み込み中...':lang==='zh'?'正在加载详细信息...':'Loading details...'}
-                  </div>
-                ) : feedSpotWikiSummary ? (
-                  <div style={{
-                    padding:isMobile?'16px 18px':'18px 22px',background:'linear-gradient(135deg,#fff,#fafbff)',
-                    borderRadius:14,border:'1.5px solid #e0e7ff',marginBottom:18,
-                  }}>
-                    <div style={{fontSize:11,color:'#6366f1',fontWeight:800,letterSpacing:1,marginBottom:8}}>📖 {lang==='ko'?'상세 정보':lang==='ja'?'詳細情報':lang==='zh'?'详细信息':'Details'}</div>
-                    <div style={{fontSize:14,color:'#334155',lineHeight:1.85,whiteSpace:'pre-wrap'}}>{feedSpotWikiSummary}</div>
-                  </div>
-                ) : null}
-
-                {/* 큐레이션 desc (CITY_DATA spot.desc) */}
-                {staticDesc && (
-                  <div style={{
-                    padding:isMobile?'14px 16px':'16px 20px',background:'#f8fafc',borderRadius:12,
-                    borderLeft:`3px solid ${TYPE_COLORS[feedSpotDetail.type]||'#3b82f6'}`,marginBottom:18,
-                    fontSize:13.5,color:'#334155',lineHeight:1.7,
-                  }}>{staticDesc}</div>
-                )}
-
-                {/* 부가 정보 grid - 사이드패널과 동일 필드 사용 */}
-                {(feedSpotDetail.openTime || feedSpotDetail.price || feedSpotDetail.duration || feedSpotDetail.hours) && (
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:18}}>
-                    {(feedSpotDetail.duration) && (
-                      <div style={{padding:'12px 14px',background:'#f1f5f9',borderRadius:11}}>
-                        <div style={{fontSize:10,color:'#64748b',fontWeight:700,marginBottom:3}}>⏱ {lang==='ko'?'예상 소요시간':lang==='ja'?'所要時間':lang==='zh'?'预计时长':'Duration'}</div>
-                        <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{translateSpotField(feedSpotDetail.duration, lang)}</div>
-                      </div>
-                    )}
-                    {feedSpotDetail.price && (
-                      <div style={{padding:'12px 14px',background:'#f1f5f9',borderRadius:11}}>
-                        <div style={{fontSize:10,color:'#64748b',fontWeight:700,marginBottom:3}}>💵 {lang==='ko'?'요금':lang==='ja'?'料金':lang==='zh'?'费用':'Price'}</div>
-                        <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{translateSpotField(feedSpotDetail.price, lang)}</div>
-                      </div>
-                    )}
-                    {(feedSpotDetail.openTime || feedSpotDetail.hours) && (
-                      <div style={{padding:'12px 14px',background:'#f1f5f9',borderRadius:11,gridColumn:'1/-1'}}>
-                        <div style={{fontSize:10,color:'#64748b',fontWeight:700,marginBottom:3}}>🕒 {lang==='ko'?'운영시간':lang==='ja'?'営業時間':lang==='zh'?'营业时间':'Hours'}</div>
-                        <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{translateSpotField(feedSpotDetail.openTime || feedSpotDetail.hours, lang)}</div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* 위키피디아 출처 링크 */}
-                {feedSpotWikiSummary && (
-                  <div style={{textAlign:'center',padding:'8px 0',marginBottom:18}}>
-                    <a href={`https://${lang==='ko'?'ko':lang==='ja'?'ja':lang==='zh'?'zh':'en'}.wikipedia.org/wiki/${encodeURIComponent(feedSpotDetail.wikiTitle || feedSpotDetail.name)}`} target="_blank" rel="noopener noreferrer" style={{
-                      fontSize:11,color:'#6366f1',textDecoration:'none',fontWeight:600,
-                    }}>{lang==='ko'?'위키피디아에서 더 보기':lang==='ja'?'ウィキペディアで詳しく見る':lang==='zh'?'在维基百科查看更多':'View on Wikipedia'} ↗</a>
-                  </div>
-                )}
-
-                {/* 지구본에서 이 관광지 보기 */}
-                {feedSpotDetail.lat != null && feedSpotDetail.lng != null && (
-                  <div style={{marginTop:14,padding:'18px',background:'#f8fafc',borderRadius:14,textAlign:'center'}}>
-                    <div style={{fontSize:12,color:'#64748b',marginBottom:10}}>{lang==='ko'?'지구본에서 이 관광지 위치 보기':lang==='ja'?'地球儀でこのスポットの位置を見る':lang==='zh'?'在地球仪上查看此景点位置':'View location on globe'}</div>
-                    <button onClick={()=>{
-                      const target = feedCityDetail
-                      const targetCountry = getCountryFeat(target.countryEn, target.lat, target.lng)
-                      const spotSnapshot = feedSpotDetail
-                      setFeedSpotDetail(null)
-                      setFeedView('main'); setFeedCityList(null); setFeedCityDetail(null); setShowFeed(false)
-                      setSelectedCountry(targetCountry)
-                      setTimeout(() => {
-                        handleCityClick(target)
-                        setTimeout(() => setSelectedSpot(spotSnapshot), 700)
-                      }, 200)
-                    }} style={{
-                      background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',border:'none',color:'white',
-                      padding:'12px 26px',borderRadius:10,fontSize:13,fontWeight:700,cursor:'pointer',
-                      boxShadow:'0 4px 12px rgba(59,130,246,.3)',
-                    }}>🌍 {lang==='ko'?'지구본에서 보기':lang==='ja'?'地球儀で見る':lang==='zh'?'在地球仪上查看':'View on Globe'}</button>
-                  </div>
-                )}
-              </div>
-            </div>
-            )
-          })()}
-
-          {/* ===== 라이트박스 모달 (사진 확대 + 좌우 넘기기) ===== */}
-          {lightbox && (
-            <div onClick={()=>setLightbox(null)} style={{
-              position:'absolute',inset:0,background:'rgba(0,0,0,.92)',zIndex:20,
-              display:'flex',alignItems:'center',justifyContent:'center',
-              animation:'feedFadeIn .15s',cursor:'zoom-out',
-            }}>
-              {/* 닫기 */}
-              <button onClick={(e)=>{e.stopPropagation();setLightbox(null)}} style={{
-                position:'absolute',top:isMobile?'calc(14px + env(safe-area-inset-top))':18,right:18,
-                background:'rgba(255,255,255,.15)',border:'none',width:42,height:42,borderRadius:'50%',cursor:'pointer',
-                display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:20,
-                backdropFilter:'blur(8px)',zIndex:2,
-              }}>✕</button>
-
-              {/* 카운터 */}
-              {lightbox.titles.length > 1 && (
-                <div style={{
-                  position:'absolute',top:isMobile?'calc(20px + env(safe-area-inset-top))':24,left:'50%',transform:'translateX(-50%)',
-                  background:'rgba(0,0,0,.5)',backdropFilter:'blur(8px)',padding:'6px 14px',borderRadius:14,color:'white',
-                  fontSize:12,fontWeight:700,letterSpacing:.5,
-                }}>{lightbox.index + 1} / {lightbox.titles.length}</div>
-              )}
-
-              {/* 좌측 화살표 */}
-              {lightbox.titles.length > 1 && (
-                <button onClick={(e)=>{e.stopPropagation();lightboxPrev()}} style={{
-                  position:'absolute',left:isMobile?10:24,top:'50%',transform:'translateY(-50%)',
-                  background:'rgba(255,255,255,.12)',border:'none',width:isMobile?44:54,height:isMobile?44:54,borderRadius:'50%',cursor:'pointer',
-                  display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:24,
-                  backdropFilter:'blur(8px)',zIndex:2,
-                }}>‹</button>
-              )}
-
-              {/* 사진 */}
-              <div onClick={(e)=>e.stopPropagation()} style={{maxWidth:'94vw',maxHeight:'88vh',display:'flex',flexDirection:'column',alignItems:'center',gap:14}}>
-                <div style={{maxWidth:'94vw',maxHeight:isMobile?'70vh':'78vh',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  <SpotImage
-                    key={lightbox.titles[lightbox.index] + lightbox.index}
-                    wikiTitle={lightbox.titles[lightbox.index]}
-                    spotName={lightbox.titles[lightbox.index]}
-                    cityName=""
-                    alt={lightbox.titles[lightbox.index]}
-                    fallback={getImg('자연')}
-                    style={{maxWidth:'94vw',maxHeight:isMobile?'70vh':'78vh',objectFit:'contain',display:'block',borderRadius:8,boxShadow:'0 12px 48px rgba(0,0,0,.6)'}}
-                  />
-                </div>
-                {/* 캡션 */}
-                <div style={{color:'white',fontSize:13,fontWeight:700,textShadow:'0 1px 4px rgba(0,0,0,.8)',textAlign:'center',padding:'0 20px'}}>{lightbox.titles[lightbox.index]}</div>
-              </div>
-
-              {/* 우측 화살표 */}
-              {lightbox.titles.length > 1 && (
-                <button onClick={(e)=>{e.stopPropagation();lightboxNext()}} style={{
-                  position:'absolute',right:isMobile?10:24,top:'50%',transform:'translateY(-50%)',
-                  background:'rgba(255,255,255,.12)',border:'none',width:isMobile?44:54,height:isMobile?44:54,borderRadius:'50%',cursor:'pointer',
-                  display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:24,
-                  backdropFilter:'blur(8px)',zIndex:2,
-                }}>›</button>
-              )}
-            </div>
-          )}
-
+          <button className="feed-fab" onClick={()=>{
+            if (!currentUser) { setShowLoginModal(true); return }
+            setEditingJournal(null)
+            setJournalForm({ title:'', body:'', cities:[], days:1, rating:0, visibility:'public', photos:[], blocks:[], startDate:'', endDate:'' })
+            setJournalNewPhotos([])
+            setShowJournalEditor(true)
+          }} style={{
+            position:'absolute',right:isMobile?18:26,bottom:isMobile?'calc(22px + env(safe-area-inset-bottom))':28,
+            width:isMobile?54:58,height:isMobile?54:58,borderRadius:'50%',border:'none',cursor:'pointer',
+            background:'linear-gradient(135deg,#ec4899,#f97316)',color:'#fff',fontSize:26,fontWeight:300,
+            display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 6px 20px rgba(236,72,153,.4)',zIndex:20,
+          }}>+</button>
         </div>
         )
       })()}
@@ -5407,20 +4451,36 @@ Write all text in ${langName}.`
               <span style={{fontSize:isMobile?14:16,fontWeight:800,color:'#0f172a'}}>{editingJournal ? t('journalEdit') : t('journalNew')}</span>
               <button disabled={journalSaving} onClick={async()=>{
                 if (!journalForm.title.trim()) { alert(t('journalRequiredTitle')); return }
-                if (!journalForm.body.trim()) { alert(t('journalRequiredBody')); return }
+                const blocksIn = journalForm.blocks||[]
+                const hasPhoto = blocksIn.some(b => b.photo || b.file)
+                if (!hasPhoto) { alert(t('journalRequiredBlock')); return }
                 if (!currentUser) { alert(lang==='ko'?'로그인이 필요합니다':'Login required'); return }
                 setJournalSaving(true)
                 try {
-                  // 사진 업로드
-                  let photoUrls = [...(journalForm.photos||[])]
-                  for (const f of journalNewPhotos) {
-                    const url = await uploadJournalPhoto(f, currentUser.uid, editingJournal?.id || 'new')
-                    photoUrls.push(url)
+                  // 블록별 사진 업로드 → {photo, caption} 배열 구성
+                  const finalBlocks = []
+                  for (const b of blocksIn) {
+                    let url = b.photo || ''
+                    if (b.file) url = await uploadJournalPhoto(b.file, currentUser.uid, editingJournal?.id || 'new')
+                    if (url) finalBlocks.push({ photo: url, caption: (b.caption||'').trim() })
+                  }
+                  const photoUrls = finalBlocks.map(b => b.photo)  // 썸네일/호환용
+                  // 날짜 → 박·일 자동 계산
+                  let days = journalForm.days || 1
+                  if (journalForm.startDate && journalForm.endDate) {
+                    const nights = Math.round((new Date(journalForm.endDate) - new Date(journalForm.startDate)) / 86400000)
+                    if (nights >= 0) days = nights + 1
+                  }
+                  const payload = {
+                    title: journalForm.title, body: journalForm.body||'',
+                    blocks: finalBlocks, photos: photoUrls, cities: journalForm.cities||[],
+                    startDate: journalForm.startDate||'', endDate: journalForm.endDate||'',
+                    days, rating: journalForm.rating||0, visibility: journalForm.visibility||'public',
                   }
                   if (editingJournal) {
-                    await updateJournal(editingJournal.id, { ...journalForm, photos: photoUrls })
+                    await updateJournal(editingJournal.id, payload)
                   } else {
-                    await createJournal(currentUser.uid, { ...journalForm, photos: photoUrls }, currentUser.displayName||currentUser.email, currentUser.photoURL)
+                    await createJournal(currentUser.uid, payload, currentUser.displayName||currentUser.email, currentUser.photoURL)
                   }
                   alert(t('journalSaved'))
                   setShowJournalEditor(false);setEditingJournal(null);setJournalNewPhotos([])
@@ -5499,63 +4559,87 @@ Write all text in ${langName}.`
                 )}
               </div>
 
-              {/* Days + Rating */}
-              <div style={{display:'flex',gap:12,marginBottom:16}}>
-                <div style={{flex:1}}>
-                  <label style={{fontSize:11,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>{t('journalDays')}</label>
-                  <select value={journalForm.days} onChange={e=>setJournalForm({...journalForm,days:Number(e.target.value)})}
-                    style={{width:'100%',padding:'9px 10px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',background:'white'}}>
-                    {[1,2,3,4,5,6,7,8,10,14,21,30].map(n => (
-                      <option key={n} value={n}>{n>1?(n-1)+t('journalDaysUnit')+n+t('journalDaysSeparator'):n+t('journalDaysSeparator')}</option>
-                    ))}
-                  </select>
+              {/* Date range (박·일 자동) + Rating */}
+              <div style={{display:'flex',gap:12,marginBottom:16,flexWrap:'wrap'}}>
+                <div style={{flex:'1 1 200px',minWidth:0}}>
+                  <label style={{fontSize:11,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>
+                    {t('journalDateRange')}
+                    {journalForm.startDate && journalForm.endDate && (()=>{
+                      const n = Math.round((new Date(journalForm.endDate)-new Date(journalForm.startDate))/86400000)
+                      if (n<0) return null
+                      return <span style={{marginLeft:8,color:'#3b82f6',fontWeight:800}}>{n>0?n+t('journalDaysUnit')+(n+1)+t('journalDaysSeparator'):(lang==='ko'?'당일':lang==='ja'?'日帰り':lang==='zh'?'当天':'Day trip')}</span>
+                    })()}
+                  </label>
+                  <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                    <input type="date" value={journalForm.startDate||''}
+                      onChange={e=>{const sd=e.target.value;setJournalForm(f=>({...f,startDate:sd,endDate:(f.endDate&&f.endDate<sd)?sd:f.endDate}))}}
+                      style={{flex:1,minWidth:0,padding:'8px 8px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:12,outline:'none',background:'white',color:'#0f172a'}} />
+                    <span style={{color:'#94a3b8',fontSize:12}}>~</span>
+                    <input type="date" value={journalForm.endDate||''} min={journalForm.startDate||undefined}
+                      onChange={e=>setJournalForm(f=>({...f,endDate:e.target.value}))}
+                      style={{flex:1,minWidth:0,padding:'8px 8px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:12,outline:'none',background:'white',color:'#0f172a'}} />
+                  </div>
                 </div>
-                <div style={{flex:1}}>
+                <div style={{flex:'0 0 auto'}}>
                   <label style={{fontSize:11,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>{t('journalRating')}</label>
-                  <div style={{display:'flex',gap:3,padding:'8px 4px'}}>
+                  <div style={{display:'flex',gap:3,padding:'7px 0'}}>
                     {[1,2,3,4,5].map(n => (
-                      <span key={n} onClick={()=>setJournalForm({...journalForm,rating:n})}
+                      <span key={n} onClick={()=>setJournalForm({...journalForm,rating:journalForm.rating===n?0:n})}
                         style={{fontSize:22,cursor:'pointer',color:journalForm.rating>=n?'#f59e0b':'#cbd5e1',transition:'all .1s',userSelect:'none'}}>★</span>
                     ))}
                   </div>
                 </div>
               </div>
 
-              {/* Photos */}
+              {/* Intro (전체 소개글) */}
               <div style={{marginBottom:16}}>
-                <label style={{fontSize:11,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>{t('journalPhotos')}</label>
-                <input type="file" accept="image/*" multiple onChange={e=>{
-                  const files = [...e.target.files]
-                  const total = (journalForm.photos?.length||0) + journalNewPhotos.length + files.length
-                  if (total > 10) { alert(lang==='ko'?'최대 10장까지':'Max 10 photos'); return }
-                  setJournalNewPhotos([...journalNewPhotos, ...files])
-                }} style={{fontSize:11,color:'#64748b'}} />
-                {(journalForm.photos?.length > 0 || journalNewPhotos.length > 0) && (
-                  <div style={{display:'flex',flexWrap:'wrap',gap:6,marginTop:8}}>
-                    {(journalForm.photos||[]).map((url,i)=>(
-                      <div key={'old-'+i} style={{position:'relative',width:60,height:60,borderRadius:8,overflow:'hidden',border:'1px solid #e2e8f0'}}>
-                        <img src={url} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="" />
-                        <button onClick={()=>setJournalForm({...journalForm,photos:journalForm.photos.filter((_,idx)=>idx!==i)})}
-                          style={{position:'absolute',top:2,right:2,width:18,height:18,borderRadius:'50%',background:'rgba(0,0,0,.6)',border:'none',color:'white',fontSize:10,cursor:'pointer'}}>✕</button>
-                      </div>
-                    ))}
-                    {journalNewPhotos.map((f,i)=>(
-                      <div key={'new-'+i} style={{position:'relative',width:60,height:60,borderRadius:8,overflow:'hidden',border:'1px solid #e2e8f0'}}>
-                        <img src={URL.createObjectURL(f)} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="" />
-                        <button onClick={()=>setJournalNewPhotos(journalNewPhotos.filter((_,idx)=>idx!==i))}
-                          style={{position:'absolute',top:2,right:2,width:18,height:18,borderRadius:'50%',background:'rgba(0,0,0,.6)',border:'none',color:'white',fontSize:10,cursor:'pointer'}}>✕</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <label style={{fontSize:11,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>{t('journalIntro')}</label>
+                <textarea value={journalForm.body} onChange={e=>setJournalForm({...journalForm,body:e.target.value})}
+                  placeholder={t('journalIntroPh')} rows={3}
+                  style={{width:'100%',padding:'10px 12px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box',resize:'vertical',fontFamily:'inherit',lineHeight:1.6}} />
               </div>
 
-              {/* Body */}
+              {/* Blocks (사진 + 설명) — 블로그식 */}
               <div style={{marginBottom:16}}>
-                <label style={{fontSize:11,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>{t('journalBody')}</label>
-                <textarea value={journalForm.body} onChange={e=>setJournalForm({...journalForm,body:e.target.value})}
-                  placeholder={t('journalBodyPh')} rows={8}
-                  style={{width:'100%',padding:'10px 12px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box',resize:'vertical',fontFamily:'inherit',lineHeight:1.6}} />
+                <label style={{fontSize:11,fontWeight:700,color:'#475569',display:'block',marginBottom:8}}>{t('journalBlocks')}</label>
+                <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                  {(journalForm.blocks||[]).map((b,i) => {
+                    const preview = b.file ? URL.createObjectURL(b.file) : (b.photo||'')
+                    return (
+                      <div key={i} style={{border:'1.5px solid #e2e8f0',borderRadius:12,padding:10,background:'#f8fafc',position:'relative'}}>
+                        <button onClick={()=>setJournalForm(f=>({...f,blocks:f.blocks.filter((_,idx)=>idx!==i)}))}
+                          style={{position:'absolute',top:8,right:8,width:22,height:22,borderRadius:'50%',background:'rgba(15,23,42,.55)',border:'none',color:'white',fontSize:12,cursor:'pointer',zIndex:2}}>✕</button>
+                        {preview ? (
+                          <div style={{position:'relative',marginBottom:8}}>
+                            <img src={preview} style={{width:'100%',maxHeight:isMobile?220:260,objectFit:'cover',borderRadius:9,display:'block'}} alt="" />
+                            <label style={{position:'absolute',bottom:8,left:8,background:'rgba(15,23,42,.6)',color:'white',fontSize:11,padding:'4px 10px',borderRadius:8,cursor:'pointer'}}>
+                              {lang==='ko'?'변경':lang==='ja'?'変更':lang==='zh'?'更换':'Change'}
+                              <input type="file" accept="image/*" style={{display:'none'}}
+                                onChange={e=>{const file=e.target.files[0];if(file)setJournalForm(f=>({...f,blocks:f.blocks.map((x,idx)=>idx===i?{...x,file,photo:''}:x)}))}} />
+                            </label>
+                          </div>
+                        ) : (
+                          <label style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:6,height:120,border:'1.5px dashed #cbd5e1',borderRadius:9,cursor:'pointer',marginBottom:8,color:'#94a3b8'}}>
+                            <span style={{fontSize:28}}>📷</span>
+                            <span style={{fontSize:12,fontWeight:600}}>{t('journalBlockPhoto')}</span>
+                            <input type="file" accept="image/*" style={{display:'none'}}
+                              onChange={e=>{const file=e.target.files[0];if(file)setJournalForm(f=>({...f,blocks:f.blocks.map((x,idx)=>idx===i?{...x,file,photo:''}:x)}))}} />
+                          </label>
+                        )}
+                        <textarea value={b.caption||''} onChange={e=>setJournalForm(f=>({...f,blocks:f.blocks.map((x,idx)=>idx===i?{...x,caption:e.target.value}:x)}))}
+                          placeholder={t('journalCaptionPh')} rows={2}
+                          style={{width:'100%',padding:'8px 10px',border:'1.5px solid #e2e8f0',borderRadius:8,fontSize:12.5,outline:'none',boxSizing:'border-box',resize:'vertical',fontFamily:'inherit',lineHeight:1.55,background:'white'}} />
+                      </div>
+                    )
+                  })}
+                </div>
+                <button onClick={()=>{
+                  const total = (journalForm.blocks||[]).length
+                  if (total >= 20) { alert(lang==='ko'?'최대 20개까지':'Max 20 blocks'); return }
+                  setJournalForm(f=>({...f,blocks:[...(f.blocks||[]),{photo:'',caption:'',file:null}]}))
+                }} style={{width:'100%',marginTop:10,padding:'11px',borderRadius:10,border:'1.5px dashed #94a3b8',background:'white',color:'#475569',fontSize:13,fontWeight:700,cursor:'pointer'}}>
+                  {t('journalBlockAdd')}
+                </button>
               </div>
 
               {/* Visibility */}
@@ -5591,8 +4675,12 @@ Write all text in ${langName}.`
                     setJournalForm({
                       title: viewingJournal.title||'', body: viewingJournal.body||'',
                       cities: viewingJournal.cities||[], days: viewingJournal.days||1,
+                      startDate: viewingJournal.startDate||'', endDate: viewingJournal.endDate||'',
                       rating: viewingJournal.rating||0, visibility: viewingJournal.visibility||'public',
-                      photos: viewingJournal.photos||[]
+                      photos: viewingJournal.photos||[],
+                      blocks: (viewingJournal.blocks&&viewingJournal.blocks.length)
+                        ? viewingJournal.blocks.map(b=>({photo:b.photo||'',caption:b.caption||'',file:null}))
+                        : (viewingJournal.photos||[]).map(u=>({photo:u,caption:'',file:null})) // 구버전 호환
                     })
                     setJournalNewPhotos([]);setShowJournalEditor(true);setViewingJournal(null)
                   }} style={{background:'#f1f5f9',border:'none',color:'#475569',padding:'5px 10px',borderRadius:7,fontSize:11,fontWeight:600,cursor:'pointer'}}>✏️</button>
@@ -5617,34 +4705,49 @@ Write all text in ${langName}.`
                 {(viewingJournal.cities||[]).length > 0 && (
                   <span style={{fontSize:12,color:'#3b82f6',fontWeight:600}}>📍 {(viewingJournal.cities||[]).map(c=>getCityName(c.name)).join(' · ')}</span>
                 )}
-                <span style={{fontSize:11,color:'#94a3b8'}}>·</span>
-                <span style={{fontSize:11,color:'#64748b'}}>{viewingJournal.days}{t('journalDaysSeparator')}</span>
+                <span style={{fontSize:11,color:'#cbd5e1'}}>·</span>
+                <span style={{fontSize:11,color:'#64748b'}}>{viewingJournal.days>1?(viewingJournal.days-1)+t('journalDaysUnit')+viewingJournal.days+t('journalDaysSeparator'):viewingJournal.days+t('journalDaysSeparator')}</span>
+                {viewingJournal.startDate && (
+                  <>
+                    <span style={{fontSize:11,color:'#cbd5e1'}}>·</span>
+                    <span style={{fontSize:11,color:'#64748b'}}>{viewingJournal.startDate.slice(5).replace('-','.')}{viewingJournal.endDate?' ~ '+viewingJournal.endDate.slice(5).replace('-','.'):''}</span>
+                  </>
+                )}
                 {viewingJournal.rating > 0 && (
                   <>
-                    <span style={{fontSize:11,color:'#94a3b8'}}>·</span>
+                    <span style={{fontSize:11,color:'#cbd5e1'}}>·</span>
                     <span style={{fontSize:11,color:'#f59e0b',fontWeight:700}}>{'★'.repeat(Math.floor(viewingJournal.rating))} {viewingJournal.rating}</span>
                   </>
                 )}
                 <span style={{fontSize:11,color:'#94a3b8',marginLeft:'auto'}}>{viewingJournal.createdAt?new Date(viewingJournal.createdAt).toLocaleDateString():''}</span>
               </div>
 
-              {/* Photos */}
-              {(viewingJournal.photos||[]).length > 0 && (
-                <div style={{marginBottom:18}}>
-                  <img src={viewingJournal.photos[0]} style={{width:'100%',borderRadius:12,marginBottom:8,maxHeight:isMobile?280:380,objectFit:'cover'}} alt="" />
-                  {viewingJournal.photos.length > 1 && (
-                    <div style={{display:'flex',gap:6,overflowX:'auto'}}>
-                      {viewingJournal.photos.slice(1).map((url,i)=>(
-                        <img key={i} src={url} onClick={()=>window.open(url,'_blank')}
-                          style={{width:90,height:70,objectFit:'cover',borderRadius:8,cursor:'pointer',flexShrink:0,border:'1px solid #e2e8f0'}} alt="" />
-                      ))}
-                    </div>
-                  )}
-                </div>
+              {/* Intro (소개글) */}
+              {viewingJournal.body && (
+                <div style={{fontSize:14.5,color:'#334155',lineHeight:1.8,whiteSpace:'pre-wrap',marginBottom:22,paddingBottom:20,borderBottom:'1px solid #f1f5f9'}}>{viewingJournal.body}</div>
               )}
 
-              {/* Body */}
-              <div style={{fontSize:14,color:'#334155',lineHeight:1.75,whiteSpace:'pre-wrap',marginBottom:20}}>{viewingJournal.body}</div>
+              {/* Blocks (사진 + 설명) — 블로그식 본문 */}
+              {(() => {
+                const blocks = (viewingJournal.blocks&&viewingJournal.blocks.length)
+                  ? viewingJournal.blocks
+                  : (viewingJournal.photos||[]).map(u=>({photo:u,caption:''})) // 구버전 호환
+                return (
+                  <div style={{display:'flex',flexDirection:'column',gap:24,marginBottom:20}}>
+                    {blocks.map((b,i) => (
+                      <div key={i}>
+                        {b.photo && (
+                          <img src={b.photo} onClick={()=>window.open(b.photo,'_blank')}
+                            style={{width:'100%',borderRadius:12,objectFit:'cover',maxHeight:isMobile?420:520,cursor:'zoom-in',display:'block'}} alt="" />
+                        )}
+                        {b.caption && (
+                          <div style={{fontSize:14,color:'#475569',lineHeight:1.75,whiteSpace:'pre-wrap',marginTop:10,padding:'0 2px'}}>{b.caption}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()}
 
               {/* Like button */}
               <div style={{display:'flex',alignItems:'center',gap:14,paddingTop:14,borderTop:'1px solid #e2e8f0',marginBottom:18}}>
