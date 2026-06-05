@@ -168,8 +168,8 @@ export const T = {
   sharePhotos:{ko:'사진 (최대 5장)',en:'Photos (max 5)',ja:'写真（最大5枚）',zh:'照片（最多5张）'},
   uploading:{ko:'업로드 중…',en:'Uploading…',ja:'アップロード中…',zh:'上传中…'},
   // ── 트래블 피드 ──
-  travelFeed:{ko:'트래블 피드',en:'Travel Feed',ja:'トラベルフィード',zh:'旅行动态'},
-  travelFeedDesc:{ko:'다른 여행자들의 여행기와 코스',en:'Journals & courses from other travelers',ja:'他の旅行者の旅行記とコース',zh:'其他旅行者的游记和路线'},
+  travelFeed:{ko:'트래블로그',en:'Travlog',ja:'トラベログ',zh:'旅行日志'},
+  travelFeedDesc:{ko:'다른 여행자들의 여행기를 둘러보세요',en:'Browse travel journals from others',ja:'他の旅行者の旅行記を見る',zh:'浏览其他旅行者的游记'},
   feedTabJournals:{ko:'여행기',en:'Journals',ja:'旅行記',zh:'游记'},
   feedTabCourses:{ko:'코스',en:'Courses',ja:'コース',zh:'路线'},
   feedTabAll:{ko:'전체',en:'All',ja:'全体',zh:'全部'},
