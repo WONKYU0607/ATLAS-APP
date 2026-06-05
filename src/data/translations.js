@@ -204,6 +204,16 @@ export const T = {
   journalRequiredBody:{ko:'본문을 입력해주세요',en:'Please write something',ja:'本文を入力してください',zh:'请输入内容'},
   journalDaysUnit:{ko:'박',en:'N',ja:'泊',zh:'晚'},
   journalDaysSeparator:{ko:'일',en:'D',ja:'日',zh:'天'},
+  journalDateRange:{ko:'여행 기간',en:'Travel dates',ja:'旅行期間',zh:'旅行日期'},
+  journalDateStart:{ko:'시작일',en:'Start',ja:'開始日',zh:'开始'},
+  journalDateEnd:{ko:'종료일',en:'End',ja:'終了日',zh:'结束'},
+  journalIntro:{ko:'소개글',en:'Intro',ja:'紹介文',zh:'简介'},
+  journalIntroPh:{ko:'이 여행을 한 줄로 소개해주세요...',en:'Introduce this trip...',ja:'この旅行を紹介してください...',zh:'简单介绍这次旅行...'},
+  journalBlocks:{ko:'사진 + 설명',en:'Photos + captions',ja:'写真＋説明',zh:'照片＋说明'},
+  journalBlockAdd:{ko:'+ 사진 블록 추가',en:'+ Add photo block',ja:'+ 写真ブロック追加',zh:'+ 添加照片块'},
+  journalBlockPhoto:{ko:'사진 선택',en:'Pick photo',ja:'写真を選択',zh:'选择照片'},
+  journalCaptionPh:{ko:'이 사진에 대한 설명...',en:'Caption for this photo...',ja:'この写真の説明...',zh:'这张照片的说明...'},
+  journalRequiredBlock:{ko:'사진을 1장 이상 추가해주세요',en:'Add at least one photo',ja:'写真を1枚以上追加してください',zh:'请至少添加一张照片'},
 }
 
 // 관광지 유형 번역
