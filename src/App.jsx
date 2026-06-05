@@ -1357,20 +1357,26 @@ function App() {
     stats.forEach((s, i) => {
       const cx = 0.7 + i * (cardW + cardGap)
       cover.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: cx, y: cardY, w: cardW, h: cardH, fill: { color: CARD_FILL }, line: { color: CARD_BORDER, width: 0.5 }, rectRadius: 0.08 })
-      cover.addText(s.label, { x: cx + 0.25, y: cardY + 0.16, w: cardW - 0.5, fontSize: 9, color: ACCENT, fontFace: 'Arial', bold: true, charSpacing: 2 })
-      cover.addText(s.value, { x: cx + 0.25, y: cardY + 0.46, w: cardW - 0.5, fontSize: 14, color: COVER_DARK, fontFace: 'Arial', bold: true })
+      cover.addText([
+        { text: s.label, options: { fontSize: 9, color: ACCENT, bold: true, charSpacing: 2, breakLine: true } },
+        { text: s.value, options: { fontSize: 14, color: COVER_DARK, bold: true } },
+      ], { x: cx, y: cardY, w: cardW, h: cardH, align: 'center', valign: 'middle', fontFace: 'Arial', lineSpacingMultiple: 1.3 })
     })
 
-    // 전체 일정 한눈에 보기 (최대 6일)
-    const ovY = cardY + cardH + 0.32
-    cover.addText(lang==='ko'?'전체 일정':'ITINERARY', { x: 0.72, y: ovY, w: 10, h: 0.3, fontSize: 10, color: COVER_SLATE, fontFace: 'Arial', bold: true, charSpacing: 2, valign: 'top' })
+    // 전체 일정 한눈에 보기 (최대 6일) — 헤딩+줄을 한 박스로 (겹침 방지)
+    const ovY = cardY + cardH + 0.4
     const ovLines = courseDays.slice(0, 6).map((day, di) => {
       const cs = [...new Set(day.items.map(i => getCourseItemCity(i)))].join(', ')
       const dt = courseTripStart ? formatDate(getDayDate(di)) : ''
       return `Day ${di + 1}    ${dt ? dt + '    ' : ''}${cs}`
     })
     if (courseDays.length > 6) ovLines.push(`+ ${courseDays.length - 6} ${lang==='ko'?'일 더':'more days'}`)
-    cover.addText(ovLines.join('\n'), { x: 0.72, y: ovY + 0.5, w: 12, fontSize: 11, color: OV_TEXT, fontFace: 'Arial', lineSpacingMultiple: 1.4 })
+    const ovRuns = [
+      { text: lang==='ko'?'전체 일정':'ITINERARY', options: { fontSize: 10, color: COVER_SLATE, bold: true, charSpacing: 2, breakLine: true } },
+      { text: '', options: { fontSize: 6, breakLine: true } },
+      ...ovLines.map(l => ({ text: l, options: { fontSize: 11, color: OV_TEXT, breakLine: true } })),
+    ]
+    cover.addText(ovRuns, { x: 0.72, y: ovY, w: 12, h: 2.3, fontFace: 'Arial', valign: 'top', lineSpacingMultiple: 1.4 })
 
     cover.addText('ATLAS World Travel Explorer', { x: 0.7, y: 7.12, w: 10, fontSize: 9, color: '475569', fontFace: 'Arial' })
 
@@ -1406,7 +1412,7 @@ function App() {
       if (courseTripStart) headerRight.push(formatDate(getDayDate(di)))
       headerRight.push(`${day.items.length} ${lang==='ko'?'곳':'places'}`)
       if (totalStr) headerRight.push(totalStr)
-      slide.addText(headerRight.join('   ·   '), { x: 6.5, y: 0.12, w: 6.2, h: 0.65, fontSize: 11, color: '64748b', fontFace: 'Arial', align: 'right', valign: 'middle' })
+      slide.addText(headerRight.join('   ·   '), { x: 6.5, y: 0.12, w: 6.2, h: 0.65, fontSize: 11, color: '1F2937', fontFace: 'Arial', align: 'right', valign: 'middle' })
 
       // 테이블 — 행 높이를 장소 수에 맞게 자동 조절
       const itemCount = day.items.length
@@ -1438,9 +1444,9 @@ function App() {
         rows.push([
           { text: `${idx + 1}`, options: { fill: { color: bgColor }, color: ACCENT, bold: true, fontSize: fs, align: 'center', valign: 'middle' } },
           { text: getCourseItemName(item), options: { fill: { color: bgColor }, color: '1a1714', bold: true, fontSize: fs, valign: 'middle' } },
-          ...(singleCity ? [] : [{ text: getCourseItemCity(item), options: { fill: { color: bgColor }, color: '64748b', fontSize: fs - 1, valign: 'middle' } }]),
+          ...(singleCity ? [] : [{ text: getCourseItemCity(item), options: { fill: { color: bgColor }, color: '1F2937', fontSize: fs - 1, valign: 'middle' } }]),
           { text: item.rating ? `★ ${item.rating}` : '-', options: { fill: { color: bgColor }, color: item.rating ? 'b45309' : '94a3b8', fontSize: fs - 1, align: 'center', bold: !!item.rating, valign: 'middle' } },
-          { text: routeText, options: { fill: { color: bgColor }, color: '64748b', fontSize: itemCount > 8 ? 7 : 8, align: 'center', valign: 'middle' } },
+          { text: routeText, options: { fill: { color: bgColor }, color: '1F2937', fontSize: itemCount > 8 ? 7 : 8, align: 'center', valign: 'middle' } },
         ])
       })
 
