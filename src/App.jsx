@@ -1336,21 +1336,44 @@ function App() {
     const dateRange = courseTripStart ? `${formatDate(getDayDate(0))} – ${formatDate(getDayDate(courseDays.length-1))}` : ''
     const transportLabel = courseTransport === 'transit' ? (lang==='ko'?'대중교통':'Transit') : courseTransport === 'walking' ? (lang==='ko'?'도보':'Walking') : (lang==='ko'?'차량':'Driving')
 
+    // ── 색상 팔레트 ──
+    const ACCENT = 'c8856a', NAVY = '0f172a', NAVY2 = '1e293b', MUTED = '94a3b8'
+
     // ── 표지 ──
     const cover = pptx.addSlide()
-    cover.background = { color: '0f172a' }
-    // 장식 바
-    cover.addShape(pptx.shapes.RECTANGLE, { x: 0, y: 0, w: 0.15, h: 7.5, fill: { color: 'c8856a' } })
-    cover.addShape(pptx.shapes.RECTANGLE, { x: 0, y: 6.6, w: 13.33, h: 0.9, fill: { color: '1e293b' } })
-    cover.addText('ATLAS', { x: 0.7, y: 1.5, w: 10, fontSize: 14, color: 'c8856a', fontFace: 'Arial', bold: true, charSpacing: 12 })
-    cover.addText(cityNames.join('  ·  '), { x: 0.7, y: 2.1, w: 11, fontSize: 40, color: 'FFFFFF', fontFace: 'Arial', bold: true, lineSpacingMultiple: 1.2 })
-    cover.addText(`${lang==='ko'?'여행 일정표':'Travel Itinerary'}`, { x: 0.7, y: 3.4, w: 10, fontSize: 18, color: '94a3b8', fontFace: 'Arial' })
-    const infoLines = []
-    if (dateRange) infoLines.push(`●  ${dateRange}`)
-    infoLines.push(`●  ${courseItems.length} ${lang==='ko'?'곳':'places'}  ·  ${courseDays.length} ${lang==='ko'?'일':'days'}`)
-    infoLines.push(`●  ${transportLabel}`)
-    cover.addText(infoLines.join('\n'), { x: 0.7, y: 4.2, w: 10, fontSize: 14, color: '94a3b8', fontFace: 'Arial', lineSpacingMultiple: 1.8 })
-    cover.addText('ATLAS World Travel Explorer', { x: 0.7, y: 6.75, w: 10, fontSize: 10, color: '475569', fontFace: 'Arial' })
+    cover.background = { color: NAVY }
+    cover.addShape(pptx.shapes.RECTANGLE, { x: 0, y: 0, w: 0.18, h: 7.5, fill: { color: ACCENT } })
+    cover.addText('ATLAS', { x: 0.7, y: 1.05, w: 10, fontSize: 13, color: ACCENT, fontFace: 'Arial', bold: true, charSpacing: 14 })
+    cover.addText(cityNames.join('  ·  '), { x: 0.7, y: 1.55, w: 11.8, h: 1.3, fontSize: 38, color: 'FFFFFF', fontFace: 'Arial', bold: true, lineSpacingMultiple: 1.1, valign: 'top' })
+    cover.addShape(pptx.shapes.RECTANGLE, { x: 0.72, y: 2.78, w: 0.9, h: 0.04, fill: { color: ACCENT } })
+    cover.addText(lang==='ko'?'여행 일정표':'Travel Itinerary', { x: 0.72, y: 2.95, w: 10, fontSize: 17, color: MUTED, fontFace: 'Arial' })
+
+    // 통계 카드 3개
+    const stats = [
+      { label: lang==='ko'?'기간':'DURATION', value: dateRange || `${courseDays.length} ${lang==='ko'?'일':'days'}` },
+      { label: lang==='ko'?'장소':'PLACES', value: `${courseItems.length} ${lang==='ko'?'곳':'spots'}` },
+      { label: lang==='ko'?'이동수단':'TRANSPORT', value: transportLabel },
+    ]
+    const cardW = 3.7, cardGap = 0.3, cardY = 3.75, cardH = 1.05
+    stats.forEach((s, i) => {
+      const cx = 0.7 + i * (cardW + cardGap)
+      cover.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: cx, y: cardY, w: cardW, h: cardH, fill: { color: NAVY2 }, line: { color: '334155', width: 0.5 }, rectRadius: 0.08 })
+      cover.addText(s.label, { x: cx + 0.25, y: cardY + 0.16, w: cardW - 0.5, fontSize: 9, color: ACCENT, fontFace: 'Arial', bold: true, charSpacing: 2 })
+      cover.addText(s.value, { x: cx + 0.25, y: cardY + 0.46, w: cardW - 0.5, fontSize: 14, color: 'FFFFFF', fontFace: 'Arial', bold: true })
+    })
+
+    // 전체 일정 한눈에 보기 (최대 6일)
+    const ovY = cardY + cardH + 0.32
+    cover.addText(lang==='ko'?'전체 일정':'ITINERARY', { x: 0.72, y: ovY, w: 10, fontSize: 10, color: ACCENT, fontFace: 'Arial', bold: true, charSpacing: 2 })
+    const ovLines = courseDays.slice(0, 6).map((day, di) => {
+      const cs = [...new Set(day.items.map(i => getCourseItemCity(i)))].join(', ')
+      const dt = courseTripStart ? formatDate(getDayDate(di)) : ''
+      return `Day ${di + 1}    ${dt ? dt + '    ' : ''}${cs}`
+    })
+    if (courseDays.length > 6) ovLines.push(`+ ${courseDays.length - 6} ${lang==='ko'?'일 더':'more days'}`)
+    cover.addText(ovLines.join('\n'), { x: 0.72, y: ovY + 0.3, w: 12, fontSize: 11, color: 'cbd5e1', fontFace: 'Arial', lineSpacingMultiple: 1.4 })
+
+    cover.addText('ATLAS World Travel Explorer', { x: 0.7, y: 7.12, w: 10, fontSize: 9, color: '475569', fontFace: 'Arial' })
 
     // ── Day별 슬라이드 ──
     courseDays.forEach((day, di) => {
@@ -1371,12 +1394,20 @@ function App() {
 
       // Day 헤더 배경
       slide.addShape(pptx.shapes.RECTANGLE, { x: 0, y: 0.08, w: 13.33, h: 0.75, fill: { color: 'faf8f5' } })
-      slide.addText(`Day ${di + 1}`, { x: 0.6, y: 0.12, w: 2, h: 0.65, fontSize: 24, color: 'c8856a', bold: true, fontFace: 'Arial' })
+
+      // 그 날 도시 (단일이면 헤더에 표시 + 표에서 도시 컬럼 생략)
+      const dayCities = [...new Set(day.items.map(i => getCourseItemCity(i)))]
+      const singleCity = dayCities.length === 1
+      slide.addText([
+        { text: `Day ${di + 1}`, options: { fontSize: 24, color: 'c8856a', bold: true } },
+        ...(singleCity ? [{ text: `    ${dayCities[0]}`, options: { fontSize: 15, color: '1a1714', bold: true } }] : []),
+      ], { x: 0.6, y: 0.12, w: 8, h: 0.65, fontFace: 'Arial', valign: 'middle' })
+
       const headerRight = []
       if (courseTripStart) headerRight.push(formatDate(getDayDate(di)))
       headerRight.push(`${day.items.length} ${lang==='ko'?'곳':'places'}`)
       if (totalStr) headerRight.push(totalStr)
-      slide.addText(headerRight.join('   ·   '), { x: 3, y: 0.12, w: 9.5, h: 0.65, fontSize: 11, color: '64748b', fontFace: 'Arial', align: 'right' })
+      slide.addText(headerRight.join('   ·   '), { x: 6.5, y: 0.12, w: 6.2, h: 0.65, fontSize: 11, color: '64748b', fontFace: 'Arial', align: 'right', valign: 'middle' })
 
       // 테이블 — 행 높이를 장소 수에 맞게 자동 조절
       const itemCount = day.items.length
@@ -1384,49 +1415,49 @@ function App() {
       const headerH = 0.32
       const rowH = Math.min(0.6, Math.max(0.35, (maxH - headerH) / itemCount))
 
+      const hOpt = { fill: { color: ACCENT }, color: 'FFFFFF', bold: true, fontSize: 9, valign: 'middle' }
       const rows = []
       rows.push([
-        { text: '#', options: { fill: { color: 'c8856a' }, color: 'FFFFFF', bold: true, fontSize: 9, align: 'center' } },
-        { text: lang==='ko'?'장소':'Place', options: { fill: { color: 'c8856a' }, color: 'FFFFFF', bold: true, fontSize: 9 } },
-        { text: lang==='ko'?'도시':'City', options: { fill: { color: 'c8856a' }, color: 'FFFFFF', bold: true, fontSize: 9 } },
-        { text: lang==='ko'?'유형':'Type', options: { fill: { color: 'c8856a' }, color: 'FFFFFF', bold: true, fontSize: 9, align: 'center' } },
-        { text: lang==='ko'?'별점':'Rating', options: { fill: { color: 'c8856a' }, color: 'FFFFFF', bold: true, fontSize: 9, align: 'center' } },
-        { text: lang==='ko'?'이동':'Route', options: { fill: { color: 'c8856a' }, color: 'FFFFFF', bold: true, fontSize: 9, align: 'center' } },
+        { text: '#', options: { ...hOpt, align: 'center' } },
+        { text: lang==='ko'?'장소':'Place', options: { ...hOpt } },
+        ...(singleCity ? [] : [{ text: lang==='ko'?'도시':'City', options: { ...hOpt } }]),
+        { text: lang==='ko'?'별점':'Rating', options: { ...hOpt, align: 'center' } },
+        { text: lang==='ko'?'다음 이동':'To Next', options: { ...hOpt, align: 'center' } },
       ])
 
       day.items.forEach((item, idx) => {
-        const typeName = item.source === 'spot' ? (lang==='ko'?'관광지':'Attraction') : item.source === 'hotspot' ? (lang==='ko'?'핫플':'Hot Place') : (lang==='ko'?'맛집':'Restaurant')
-        const bgColor = idx % 2 === 0 ? 'FFFFFF' : 'f8f8f6'
+        const bgColor = idx % 2 === 0 ? 'FFFFFF' : 'faf8f5'
         const fs = itemCount > 8 ? 9 : 11
 
-        let routeText = ''
+        let routeText = '—'
         if (idx < day.items.length - 1) {
           const rk = getRouteKey(day.items[idx], day.items[idx + 1], courseTransport)
           const route = routeCache[rk]
-          if (route && !route.noRoute) routeText = `${route.duration}\n${route.distance}`
+          if (route && !route.noRoute) routeText = `${route.duration}  ·  ${route.distance}`
         }
 
         rows.push([
-          { text: `${idx + 1}`, options: { fill: { color: bgColor }, color: 'c8856a', bold: true, fontSize: fs, align: 'center' } },
-          { text: getCourseItemName(item), options: { fill: { color: bgColor }, color: '1a1714', bold: true, fontSize: fs } },
-          { text: getCourseItemCity(item), options: { fill: { color: bgColor }, color: '475569', fontSize: fs - 1 } },
-          { text: typeName, options: { fill: { color: bgColor }, color: '475569', fontSize: fs - 1, align: 'center' } },
-          { text: item.rating ? `★ ${item.rating}` : '-', options: { fill: { color: bgColor }, color: item.rating ? 'b45309' : '94a3b8', fontSize: fs - 1, align: 'center', bold: !!item.rating } },
-          { text: routeText, options: { fill: { color: bgColor }, color: '475569', fontSize: itemCount > 8 ? 7 : 8, align: 'center' } },
+          { text: `${idx + 1}`, options: { fill: { color: bgColor }, color: ACCENT, bold: true, fontSize: fs, align: 'center', valign: 'middle' } },
+          { text: getCourseItemName(item), options: { fill: { color: bgColor }, color: '1a1714', bold: true, fontSize: fs, valign: 'middle' } },
+          ...(singleCity ? [] : [{ text: getCourseItemCity(item), options: { fill: { color: bgColor }, color: '64748b', fontSize: fs - 1, valign: 'middle' } }]),
+          { text: item.rating ? `★ ${item.rating}` : '-', options: { fill: { color: bgColor }, color: item.rating ? 'b45309' : '94a3b8', fontSize: fs - 1, align: 'center', bold: !!item.rating, valign: 'middle' } },
+          { text: routeText, options: { fill: { color: bgColor }, color: '64748b', fontSize: itemCount > 8 ? 7 : 8, align: 'center', valign: 'middle' } },
         ])
       })
 
       slide.addTable(rows, {
-        x: 0.4, y: 1.0, w: 12.5,
-        border: { type: 'solid', pt: 0.5, color: 'e2e8f0' },
-        colW: [0.5, 4.5, 2.5, 1.5, 1.1, 2.4],
+        x: 0.4, y: 1.05, w: 12.5,
+        border: { type: 'solid', pt: 0.5, color: 'e8e2d8' },
+        colW: singleCity ? [0.5, 7.4, 1.4, 3.2] : [0.5, 5.6, 2.8, 1.2, 2.4],
         rowH: [headerH, ...day.items.map(() => rowH)],
         fontFace: 'Arial',
+        valign: 'middle',
         autoPage: false,
       })
 
-      // 하단 워터마크
-      slide.addText('ATLAS World Travel Explorer', { x: 0.5, y: 7.0, w: 12, fontSize: 8, color: 'b0a89e', fontFace: 'Arial' })
+      // 하단 워터마크 + 페이지
+      slide.addText('ATLAS World Travel Explorer', { x: 0.5, y: 7.05, w: 8, fontSize: 8, color: 'b0a89e', fontFace: 'Arial' })
+      slide.addText(`Day ${di + 1} / ${courseDays.length}`, { x: 9, y: 7.05, w: 3.8, fontSize: 8, color: 'b0a89e', fontFace: 'Arial', align: 'right' })
     })
 
     pptx.writeFile({ fileName: `ATLAS_${cityNames[0]||'Trip'}_${courseDays.length}Days.pptx` })
@@ -3334,169 +3365,7 @@ Write all text in ${langName}.`
       {/* Side Panel */}
       {selectedCity && (
         <>
-        {/* 사이드 탭 (핫플 / 맛집) - 패널 왼쪽에 고정 */}
-        {!isMobile && <div style={{position:'absolute',top:120,right:sidePanel?840:420,zIndex:1001,display:'flex',flexDirection:'column',gap:4,transition:'right .3s cubic-bezier(.16,1,.3,1)'}}>
-          <button
-            onClick={() => setSidePanel(sidePanel === 'hotspots' ? null : 'hotspots')}
-            style={{
-              writingMode:'vertical-rl',textOrientation:'mixed',
-              padding:'16px 7px',fontSize:11,fontWeight:600,letterSpacing:'1px',
-              background: sidePanel === 'hotspots' ? '#c8856a' : 'rgba(250,248,245,.92)',
-              color: sidePanel === 'hotspots' ? '#fff' : '#9a8070',
-              border:'none',borderRadius:'10px 0 0 10px',
-              cursor:'pointer',backdropFilter:'blur(8px)',
-              transition:'all .2s',boxShadow:'-2px 2px 12px rgba(0,0,0,.12)'
-            }}
-            onMouseEnter={e=>{if(sidePanel!=='hotspots'){e.currentTarget.style.background='rgba(250,248,245,1)';e.currentTarget.style.color='#c8856a'}}}
-            onMouseLeave={e=>{if(sidePanel!=='hotspots'){e.currentTarget.style.background='rgba(250,248,245,.92)';e.currentTarget.style.color='#9a8070'}}}
-          >{t('hotspots')}</button>
-          <button
-            onClick={() => setSidePanel(sidePanel === 'restaurants' ? null : 'restaurants')}
-            style={{
-              writingMode:'vertical-rl',textOrientation:'mixed',
-              padding:'16px 7px',fontSize:11,fontWeight:600,letterSpacing:'1px',
-              background: sidePanel === 'restaurants' ? '#c8856a' : 'rgba(250,248,245,.92)',
-              color: sidePanel === 'restaurants' ? '#fff' : '#9a8070',
-              border:'none',borderRadius:'10px 0 0 10px',
-              cursor:'pointer',backdropFilter:'blur(8px)',
-              transition:'all .2s',boxShadow:'-2px 2px 12px rgba(0,0,0,.12)'
-            }}
-            onMouseEnter={e=>{if(sidePanel!=='restaurants'){e.currentTarget.style.background='rgba(250,248,245,1)';e.currentTarget.style.color='#c8856a'}}}
-            onMouseLeave={e=>{if(sidePanel!=='restaurants'){e.currentTarget.style.background='rgba(250,248,245,.92)';e.currentTarget.style.color='#9a8070'}}}
-          >{t('foodTab').replace('🍽','').trim()}</button>
-        </div>}
 
-        {/* 사이드 슬라이드 패널 (핫플/맛집 리스트) */}
-        {sidePanel && (
-          <div style={{
-            position:'absolute',top:0,right:isMobile?0:420,bottom:0,width:isMobile?'100%':420,zIndex:isMobile?1002:1000,
-            background:'#faf8f5',borderLeft:isMobile?'none':'1px solid #e8e2da',
-            overflowY:'auto',
-            boxShadow:isMobile?'none':'-8px 0 24px rgba(0,0,0,.08)',
-            animation:'sidePanelIn .3s cubic-bezier(.16,1,.3,1)'
-          }}>
-            {/* 헤더 */}
-            <div style={{position:'sticky',top:0,zIndex:10,padding:'16px 16px 12px',background:'linear-gradient(white 87%,transparent)',borderBottom:'1px solid #f1f5f9'}}>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                <div style={{display:'flex',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:16,fontWeight:700,color:'#1a1714'}}>
-                    {sidePanel === 'hotspots' ? t('hotspots') : foodCategory === 'cafe' ? t('foodCafe') : foodCategory === 'bar' ? t('foodBar') : t('courseRestaurant')}
-                  </span>
-                  <span style={{fontSize:11,color:'#b0a89e',fontWeight:400}}>
-                    {sidePanel === 'hotspots' ? hotspots.length : restaurants.length}{t('coursePlace')}
-                  </span>
-                </div>
-                <button onClick={()=>setSidePanel(null)}
-                  style={{background:'#f5f0ea',border:'none',color:'#b0a89e',width:30,height:30,borderRadius:8,cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
-                  onMouseEnter={e=>e.currentTarget.style.background='#ede7de'}
-                  onMouseLeave={e=>e.currentTarget.style.background='#f5f0ea'}
-                >✕</button>
-              </div>
-              {/* 맛집 카테고리 탭 */}
-              {sidePanel === 'restaurants' && (
-                <div style={{display:'flex',gap:4,marginTop:10,background:'#f5f0ea',borderRadius:8,padding:3}}>
-                  {[
-                    {key:'restaurant', label:t('foodRestaurant')},
-                    {key:'cafe', label:t('foodCafe')},
-                    {key:'bar', label:t('foodBar')},
-                  ].map(cat => (
-                    <button key={cat.key}
-                      onClick={() => setFoodCategory(cat.key)}
-                      style={{
-                        flex:1,padding:'6px 0',fontSize:11,fontWeight:foodCategory===cat.key?600:400,
-                        background:foodCategory===cat.key?'#fff':'none',
-                        color:foodCategory===cat.key?'#1a1714':'#b0a89e',
-                        border:'none',borderRadius:6,cursor:'pointer',transition:'all .15s'
-                      }}
-                    >{cat.label}</button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 리스트 */}
-            <div style={{padding:'12px 14px'}}>
-              {loadingPlaces ? (
-                <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60}}>
-                  <div style={{width:28,height:28,borderRadius:'50%',border:'2px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>
-                </div>
-              ) : (sidePanel === 'hotspots' ? hotspots : restaurants).length > 0 ? (
-                <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                  {(sidePanel === 'hotspots' ? hotspots : restaurants).map((place, idx) => (
-                    <a key={idx}
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id || ''}`}
-                      target="_blank" rel="noopener noreferrer"
-                      style={{
-                        textDecoration:'none',background:'white',
-                        border:'1px solid #ede8e0',borderRadius:10,
-                        overflow:'hidden',cursor:'pointer',transition:'all .2s'
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = '#c8b0a0'
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(51,65,85,0.15)'
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = '#ede8e0'
-                        e.currentTarget.style.boxShadow = 'none'
-                      }}>
-                      <div style={{display:'flex',gap:10,padding:10,alignItems:'center'}}>
-                        {place.photos && place.photos.length > 0 ? (
-                          <img
-                            src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photo_reference=${place.photos[0].photo_reference}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`}
-                            alt={place.name}
-                            style={{width:66,height:66,borderRadius:8,objectFit:'cover',flexShrink:0}}
-                          />
-                        ) : (
-                          <div style={{width:66,height:66,borderRadius:8,background:'#f5f0ea',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,color:'#c8b8a8',flexShrink:0,letterSpacing:'.2px'}}>
-                            {sidePanel === 'hotspots' ? 'Place' : foodCategory === 'cafe' ? 'Café' : foodCategory === 'bar' ? 'Bar' : 'Food'}
-                          </div>
-                        )}
-                        <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontSize:13,fontWeight:600,color:'#1a1714',marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                            {place.name}
-                          </div>
-                          {place.rating && (
-                            <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:3}}>
-                              <span style={{fontSize:11,color:'#c8a870',fontWeight:600}}>★ {place.rating}</span>
-                              {place.user_ratings_total && (
-                                <span style={{fontSize:9,color:'#c8b8a8'}}>({place.user_ratings_total.toLocaleString()})</span>
-                              )}
-                            </div>
-                          )}
-                          {sidePanel === 'restaurants' && place.price_level && (
-                            <div style={{fontSize:10,color:'#c8b8a8',marginBottom:2}}>{'$'.repeat(place.price_level)}</div>
-                          )}
-                          {place.vicinity && (
-                            <div style={{fontSize:10,color:'#b0a89e',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                              {place.vicinity}
-                            </div>
-                          )}
-                          {place.opening_hours && (
-                            <div style={{fontSize:9,color: place.opening_hours.open_now ? '#6fa870' : '#c07060',fontWeight:600,marginTop:3}}>
-                              {place.opening_hours.open_now ? t('openNow') : t('closedNow')}
-                            </div>
-                          )}
-                        </div>
-                        <div style={{display:'flex',flexDirection:'column',gap:4,flexShrink:0}}>
-                          <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:sidePanel==='hotspots'?'hotspot':'restaurant',name:place.name,displayName:place.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:place.rating,place_id:place.place_id,vicinity:place.vicinity,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:sidePanel==='hotspots'?'📍':foodCategory==='cafe'?'☕':foodCategory==='bar'?'🍻':'🍽️',photo_ref:place.photos?.[0]?.photo_reference||null})}}
-                            style={{background:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'#c8856a':'#f5f0ea',border:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'none':'1px solid #e0d9d0',color:isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'white':'#c8b8a8',width:28,height:28,borderRadius:6,cursor:'pointer',fontSize:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
-                            title={t("courseAddToTrip")}>{isInCourse(place.name,sidePanel==='hotspots'?'hotspot':'restaurant')?'✓':'＋'}</button>
-                          <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav({type:sidePanel==='hotspots'?'hotspot':'restaurant',name:place.name,place_id:place.place_id,rating:place.rating,user_ratings_total:place.user_ratings_total,vicinity:place.vicinity,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name)})}}
-                            style={{background:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#fef3c7':'#f5f0ea',border:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'1px solid #f0c040':'1px solid #e0d9d0',color:isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'#c8a020':'#c8b8a8',width:28,height:28,borderRadius:6,cursor:'pointer',fontSize:12,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
-                            title={t("favToggle")}>{isFav(sidePanel==='hotspots'?'hotspot':'restaurant',place.name)?'★':'☆'}</button>
-                        </div>
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <div style={{textAlign:'center',padding:50,color:'#94a3b8',fontSize:13}}>
-                  {sidePanel === 'hotspots' ? t('hotspots') : foodCategory === 'cafe' ? t('foodCafe') : foodCategory === 'bar' ? t('foodBar') : t('courseRestaurant')} {t('noData')}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         <div className="panel" style={{position:'absolute',top:0,right:0,bottom:0,width:isMobile?'100%':420,zIndex:1000,background:'white',borderLeft:isMobile?'none':'1.5px solid #e2e8f0',overflowY:'auto',WebkitOverflowScrolling:'touch',touchAction:'pan-y',boxShadow:isMobile?'none':'-12px 0 40px rgba(0,0,0,.15)'}}>
           <div style={{position:'sticky',top:0,zIndex:10,padding:'20px 20px 14px',background:'linear-gradient(white 87%,transparent)'}}>
@@ -3508,7 +3377,7 @@ Write all text in ${langName}.`
                 <div style={{fontSize:26,fontWeight:800,letterSpacing:'-.5px',color:'#0f172a'}}>{getCityName(selectedCity?._koName || selectedCity?.name) || ''}</div>
               </div>
               <div style={{display:'flex',gap:5,flexShrink:0}}>
-                <button onClick={()=>{const c=allCitiesFlat.find(x=>x.name===(selectedCity?._koName||selectedCity?.name));if(c){setAiCity(c);setShowAiModal(true)}}}
+                <button onClick={()=>{const c=allCitiesFlat.find(x=>x.name===(selectedCity?._koName||selectedCity?.name));if(c){setAiCities([{city:c,days:1}]);setShowAiModal(true)}}}
                   style={{background:'#f5f0ea',border:'1px solid #e0d9d0',color:'#c8856a',width:32,height:32,borderRadius:8,cursor:'pointer',fontSize:9,fontWeight:800,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s',letterSpacing:0}}
                   onMouseEnter={e=>{e.currentTarget.style.background='#c8856a';e.currentTarget.style.color='white';e.currentTarget.style.borderColor='#c8856a'}}
                   onMouseLeave={e=>{e.currentTarget.style.background='#f5f0ea';e.currentTarget.style.color='#c8856a';e.currentTarget.style.borderColor='#e0d9d0'}}
@@ -3542,21 +3411,6 @@ Write all text in ${langName}.`
               </div>
             )}
           </div>
-          {/* 모바일 전용 탭 (핫플/맛집) */}
-          {isMobile && (
-            <div style={{display:'flex',gap:6,padding:'0 20px 10px',borderBottom:'1px solid #f1f5f9'}}>
-              <button onClick={()=>setSidePanel(sidePanel==='hotspots'?null:'hotspots')}
-                style={{flex:1,padding:'8px 0',fontSize:12,fontWeight:600,borderRadius:10,border:'none',cursor:'pointer',
-                  background:sidePanel==='hotspots'?'#c8856a':'#f5f0ea',color:sidePanel==='hotspots'?'#fff':'#9a8070',transition:'all .2s'}}>
-                {t('hotspots')}
-              </button>
-              <button onClick={()=>setSidePanel(sidePanel==='restaurants'?null:'restaurants')}
-                style={{flex:1,padding:'8px 0',fontSize:12,fontWeight:600,borderRadius:10,border:'none',cursor:'pointer',
-                  background:sidePanel==='restaurants'?'#c8856a':'#f5f0ea',color:sidePanel==='restaurants'?'#fff':'#9a8070',transition:'all .2s'}}>
-                {t('foodTab').replace('🍽','').trim()}
-              </button>
-            </div>
-          )}
           <div style={{padding:'0 20px 40px'}}>
             {cityData ? (
               <>
@@ -4036,9 +3890,6 @@ Write all text in ${langName}.`
                             <div style={{fontSize:13,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCourseItemName(item)}</div>
                             <div style={{display:'flex',alignItems:'center',gap:5,marginTop:3}}>
                               <span style={{fontSize:10,color:'#1a1714',fontWeight:500}}>{getCourseItemCity(item)}</span>
-                              <span style={{fontSize:9,padding:'1px 5px',borderRadius:3,background:'#f5efe8',color:'#6b5c4f',fontWeight:500}}>
-                                {item.source==='spot'?t('courseSpot'):item.source==='hotspot'?t('courseHotspot'):t('courseRestaurant')}
-                              </span>
                               {item.rating && <span style={{fontSize:9,color:'#d97706'}}>★{item.rating}</span>}
                             </div>
                           </div>
