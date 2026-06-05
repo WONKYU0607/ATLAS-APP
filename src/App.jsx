@@ -1339,14 +1339,13 @@ function App() {
     // ── 색상 팔레트 ──
     const ACCENT = 'c8856a', NAVY = '0f172a', NAVY2 = '1e293b', MUTED = '94a3b8'
 
-    // ── 표지 ──
+    // ── 표지 (밝은 페리윙클 테마) ──
+    const COVER_BG = 'B4C7E7', COVER_DARK = '111827', COVER_SLATE = '334155', CARD_FILL = 'D6D6D6', CARD_BORDER = 'AEB6C4', OV_TEXT = '1F2937'
     const cover = pptx.addSlide()
-    cover.background = { color: NAVY }
-    cover.addShape(pptx.shapes.RECTANGLE, { x: 0, y: 0, w: 0.18, h: 7.5, fill: { color: ACCENT } })
+    cover.background = { color: COVER_BG }
     cover.addText('ATLAS', { x: 0.7, y: 1.05, w: 10, fontSize: 13, color: ACCENT, fontFace: 'Arial', bold: true, charSpacing: 14 })
-    cover.addText(cityNames.join('  ·  '), { x: 0.7, y: 1.55, w: 11.8, h: 1.3, fontSize: 38, color: 'FFFFFF', fontFace: 'Arial', bold: true, lineSpacingMultiple: 1.1, valign: 'top' })
-    cover.addShape(pptx.shapes.RECTANGLE, { x: 0.72, y: 2.78, w: 0.9, h: 0.04, fill: { color: ACCENT } })
-    cover.addText(lang==='ko'?'여행 일정표':'Travel Itinerary', { x: 0.72, y: 2.95, w: 10, fontSize: 17, color: MUTED, fontFace: 'Arial' })
+    cover.addText(cityNames.join('  ·  '), { x: 0.7, y: 1.55, w: 11.8, h: 1.3, fontSize: 38, color: COVER_DARK, fontFace: 'Arial', bold: true, lineSpacingMultiple: 1.1, valign: 'top' })
+    cover.addText(lang==='ko'?'여행 일정표':'Travel Itinerary', { x: 0.72, y: 2.95, w: 10, fontSize: 17, color: COVER_SLATE, fontFace: 'Arial' })
 
     // 통계 카드 3개
     const stats = [
@@ -1357,21 +1356,21 @@ function App() {
     const cardW = 3.7, cardGap = 0.3, cardY = 3.75, cardH = 1.05
     stats.forEach((s, i) => {
       const cx = 0.7 + i * (cardW + cardGap)
-      cover.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: cx, y: cardY, w: cardW, h: cardH, fill: { color: NAVY2 }, line: { color: '334155', width: 0.5 }, rectRadius: 0.08 })
+      cover.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: cx, y: cardY, w: cardW, h: cardH, fill: { color: CARD_FILL }, line: { color: CARD_BORDER, width: 0.5 }, rectRadius: 0.08 })
       cover.addText(s.label, { x: cx + 0.25, y: cardY + 0.16, w: cardW - 0.5, fontSize: 9, color: ACCENT, fontFace: 'Arial', bold: true, charSpacing: 2 })
-      cover.addText(s.value, { x: cx + 0.25, y: cardY + 0.46, w: cardW - 0.5, fontSize: 14, color: 'FFFFFF', fontFace: 'Arial', bold: true })
+      cover.addText(s.value, { x: cx + 0.25, y: cardY + 0.46, w: cardW - 0.5, fontSize: 14, color: COVER_DARK, fontFace: 'Arial', bold: true })
     })
 
     // 전체 일정 한눈에 보기 (최대 6일)
     const ovY = cardY + cardH + 0.32
-    cover.addText(lang==='ko'?'전체 일정':'ITINERARY', { x: 0.72, y: ovY, w: 10, fontSize: 10, color: ACCENT, fontFace: 'Arial', bold: true, charSpacing: 2 })
+    cover.addText(lang==='ko'?'전체 일정':'ITINERARY', { x: 0.72, y: ovY, w: 10, h: 0.3, fontSize: 10, color: COVER_SLATE, fontFace: 'Arial', bold: true, charSpacing: 2, valign: 'top' })
     const ovLines = courseDays.slice(0, 6).map((day, di) => {
       const cs = [...new Set(day.items.map(i => getCourseItemCity(i)))].join(', ')
       const dt = courseTripStart ? formatDate(getDayDate(di)) : ''
       return `Day ${di + 1}    ${dt ? dt + '    ' : ''}${cs}`
     })
     if (courseDays.length > 6) ovLines.push(`+ ${courseDays.length - 6} ${lang==='ko'?'일 더':'more days'}`)
-    cover.addText(ovLines.join('\n'), { x: 0.72, y: ovY + 0.3, w: 12, fontSize: 11, color: 'cbd5e1', fontFace: 'Arial', lineSpacingMultiple: 1.4 })
+    cover.addText(ovLines.join('\n'), { x: 0.72, y: ovY + 0.5, w: 12, fontSize: 11, color: OV_TEXT, fontFace: 'Arial', lineSpacingMultiple: 1.4 })
 
     cover.addText('ATLAS World Travel Explorer', { x: 0.7, y: 7.12, w: 10, fontSize: 9, color: '475569', fontFace: 'Arial' })
 
