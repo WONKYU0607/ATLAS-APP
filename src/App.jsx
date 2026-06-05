@@ -2854,7 +2854,7 @@ Write all text in ${langName}.`
       {/* Header */}
       <div style={{
         position:'absolute',top:0,left:0,right:isMobile?0:(selectedCity?(sidePanel?840:420):0),zIndex:1000,
-        background:'transparent',borderBottom:'1px solid rgba(255,255,255,.25)',
+        background:'transparent',
         padding:isMobile?'12px 12px 14px':'16px 20px 18px',pointerEvents:'none',
         transition:'right .42s cubic-bezier(.16,1,.3,1)'
       }}>
@@ -4346,7 +4346,7 @@ Write all text in ${langName}.`
               display:'flex',alignItems:'center',justifyContent:'center',color:'#262626',fontSize:22,
             }}>←</button>
             <div style={{display:'flex',alignItems:'center',gap:6}}>
-              <span style={{fontSize:isMobile?17:20,fontWeight:800,color:'#262626',letterSpacing:-0.4,fontFamily:'system-ui,-apple-system,sans-serif'}}>Travel Feed</span>
+              <span style={{fontSize:isMobile?17:20,fontWeight:800,color:'#262626',letterSpacing:-0.4,fontFamily:'system-ui,-apple-system,sans-serif'}}>Travlog</span>
               <span style={{fontSize:11,color:'#a3a3a3',fontWeight:500,marginLeft:2}}>by ATLAS</span>
             </div>
             <div style={{width:36}}></div>
