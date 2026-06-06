@@ -669,7 +669,7 @@ function App() {
       'restaurant','food','cafe','bar','meal_takeaway','meal_delivery','bakery','night_club',
       'travel_agency','real_estate_agency','finance','bank','atm','insurance_agency','hospital','doctor','pharmacy','dentist','gym','beauty_salon','hair_care','spa','gas_station','premise']
     // 관광 신호 타입 (이 중 하나는 있어야 후보로 인정)
-    const TOURISM_POS = ['tourist_attraction','museum','art_gallery','park','natural_feature','zoo','aquarium','amusement_park',
+    const TOURISM_POS = ['tourist_attraction','museum','art_gallery','park','natural_feature','zoo','aquarium','amusement_park','stadium',
       'place_of_worship','church','hindu_temple','mosque','synagogue','monument','historical_landmark','landmark']
     // 2-opt: NN 경로의 교차(지그재그) 제거
     const twoOpt = (route) => {
@@ -887,10 +887,8 @@ function App() {
   const addCourseDay = () => { saveCourseDays([...courseDays, { items: [] }]) }
   const removeCourseDay = (dayIdx) => {
     const days = courseDays.map(d => ({ ...d, items: [...d.items] }))
-    const removed = days.splice(dayIdx, 1)[0].items
-    if (days.length === 0) days.push({ items: removed })
-    else days[Math.min(dayIdx, days.length - 1)].items.push(...removed)
-    saveCourseDays(days)
+    days.splice(dayIdx, 1)               // 그 날을 장소까지 통째로 삭제
+    saveCourseDays(days)                 // 빈 코스면 courseItems도 비워짐 → 체크(✓) 해제
     if (activeDayTab >= days.length) setActiveDayTab(Math.max(0, days.length - 1))
   }
   const reorderInDay = (dayIdx, fromIdx, toIdx) => {
