@@ -642,27 +642,121 @@ function App() {
       saveTripStart(new Date().toISOString().slice(0, 10))
     }
 
-    const perDay = aiHours <= 1 ? 2 : aiHours <= 2 ? 3 : aiHours <= 4 ? 5 : aiHours <= 6 ? 7 : 9
+    // ── 시간예산 + 신뢰도 모델 헬퍼 ──
+    const dayBudgetMin = Math.max(60, aiHours * 60)            // 하루 가용시간(분)
+    const speedKmh = aiTransport === 'walking' ? 4.5 : aiTransport === 'transit' ? 18 : 25
+    const DETOUR = 1.35                                         // 직선→도로 보정계수
+    const travelMin = (a, b) => (haversine(a._lat, a._lng, b._lat, b._lng) * DETOUR / speedKmh) * 60
+    // Google types → 체류시간(분) + 카테고리 버킷
+    const catOf = (types) => {
+      const t = types || []
+      if (t.includes('museum') || t.includes('art_gallery')) return 'museum'
+      if (t.includes('park') || t.includes('natural_feature') || t.includes('aquarium') || t.includes('zoo')) return 'nature'
+      if (t.includes('amusement_park') || t.includes('stadium')) return 'theme'
+      if (t.includes('place_of_worship') || t.includes('church') || t.includes('hindu_temple')) return 'worship'
+      return 'attraction'
+    }
+    const dwellByCat = { museum: 90, nature: 75, theme: 120, worship: 50, attraction: 60 }
+    // 품질 점수 (베이지안 평균) — 리뷰 적은데 별점만 높은 함정 보정
+    const Q_C = 4.3, Q_M = 300
+    const qScore = (rating, reviews) => {
+      const v = reviews || 0, R = rating || 4.0
+      return (v / (v + Q_M)) * R + (Q_M / (v + Q_M)) * Q_C
+    }
+    // 노이즈 타입 (역/주차장/숙소 등은 관광지 아님)
+    const JUNK = ['transit_station','bus_station','subway_station','train_station','parking','lodging','airport','car_rental']
+    // 2-opt: NN 경로의 교차(지그재그) 제거
+    const twoOpt = (route) => {
+      if (route.length < 4) return route
+      const dist = (a, b) => haversine(a._lat, a._lng, b._lat, b._lng)
+      const len = (r) => { let s = 0; for (let i = 0; i < r.length - 1; i++) s += dist(r[i], r[i + 1]); return s }
+      let best = route, improved = true, guard = 0
+      while (improved && guard++ < 50) {
+        improved = false
+        for (let i = 1; i < best.length - 1; i++) {
+          for (let k = i + 1; k < best.length; k++) {
+            const nr = [...best.slice(0, i), ...best.slice(i, k + 1).reverse(), ...best.slice(k + 1)]
+            if (len(nr) < len(best) - 1e-9) { best = nr; improved = true }
+          }
+        }
+      }
+      return best
+    }
+    const orderRoute = (items, sLat, sLng) => twoOpt(sortByProximity(items, sLat, sLng))
+    const routeTotalMin = (items, sLat, sLng) => {
+      const seq = orderRoute(items, sLat, sLng)
+      let total = 0
+      for (let i = 0; i < seq.length; i++) { total += (seq[i].dwell || 60); if (i > 0) total += travelMin(seq[i - 1], seq[i]) }
+      return total
+    }
+    // 간단 k-means (k=일수) — 다일정 도시를 지역 구역으로 분할
+    const kmeans = (pts, k) => {
+      if (pts.length <= k) return pts.map(p => [p])
+      let cent = pts.slice(0, k).map(p => [p._lat, p._lng])
+      const asn = new Array(pts.length).fill(0)
+      for (let it = 0; it < 20; it++) {
+        let changed = false
+        pts.forEach((p, i) => {
+          let md = Infinity, mi = 0
+          cent.forEach((c, ci) => { const d = haversine(p._lat, p._lng, c[0], c[1]); if (d < md) { md = d; mi = ci } })
+          if (asn[i] !== mi) { asn[i] = mi; changed = true }
+        })
+        cent = cent.map((c, ci) => { const g = pts.filter((_, i) => asn[i] === ci); return g.length ? [g.reduce((s, p) => s + p._lat, 0) / g.length, g.reduce((s, p) => s + p._lng, 0) / g.length] : c })
+        if (!changed) break
+      }
+      const cl = Array.from({ length: k }, () => [])
+      pts.forEach((p, i) => cl[asn[i]].push(p))
+      return cl.filter(c => c.length)
+    }
 
-    // 도시 한 곳의 관광지 수집 (핫플만 — 정적 spots 폐기, 패널과 일관)
+    // 하루치 구성: 품질순 그리디 + 카테고리 다양성(≤2) + 예산 컷 + 2-opt 동선 + 시간표
+    const buildDay = (pool, cityLat, cityLng) => {
+      const sorted = [...pool].sort((a, b) => b._q - a._q)
+      const picked = [], catCount = {}
+      while (sorted.length > 0) {
+        const cand = sorted.shift()
+        if ((catCount[cand.cat] || 0) >= 2 && sorted.length > 0) continue // 같은 카테고리 하루 2개까지
+        const total = routeTotalMin([...picked, cand], cityLat, cityLng)
+        if (total > dayBudgetMin && picked.length >= 2) continue           // 예산 초과 → 건너뜀(더 작은 후보 시도)
+        picked.push(cand); catCount[cand.cat] = (catCount[cand.cat] || 0) + 1
+        if (picked.length >= 12) break
+      }
+      // 동선 확정 + 시간표(09:00 기준 도착 오프셋) 계산
+      let ordered = orderRoute(picked, cityLat, cityLng)
+      let clock = 0
+      ordered = ordered.map((it, i) => {
+        if (i > 0) clock += Math.round(travelMin(ordered[i - 1], it))
+        const eta = clock
+        clock += (it.dwell || 60)
+        const { _lat, _lng, _q, ...rest } = it
+        return { ...rest, etaMin: eta, addedAt: Date.now() }
+      })
+      return { items: ordered, endMin: clock }
+    }
+
+    // 도시 한 곳의 관광지 수집 (핫플만, 품질점수·중복·노이즈 정리)
     const collectAttractions = async (cityObj) => {
       const cityKey = cityObj.name || cityObj._koName
       const cityLat = cityObj.lat, cityLng = cityObj.lng
-      let attractions = []
-
-      // Google 핫플 실시간 로드
       const hs = await fetchHotspotsFor(cityObj)
+      const seen = new Set()
+      const attractions = []
       hs.forEach(p => {
+        const types = p.types || []
+        if (types.some(t => JUNK.includes(t))) return                      // 노이즈 제거
+        const key = p.place_id || (p.name || '').toLowerCase().replace(/\s+/g, '')
+        if (seen.has(key)) return; seen.add(key)                           // 중복 제거
+        const cat = catOf(types)
         attractions.push({
-          source:'hotspot', name:p.name, displayName:p.name,
-          cityName:cityKey, cityDisplayName:getCityName(cityKey),
-          rating:p.rating||4.0, place_id:p.place_id, vicinity:p.vicinity,
-          lat:cityLat, lng:cityLng, _lat:p.geometry?.location?.lat||cityLat, _lng:p.geometry?.location?.lng||cityLng,
-          emoji:'📍', photo_ref:p.photos?.[0]?.photo_reference||null
+          source: 'hotspot', name: p.name, displayName: p.name,
+          cityName: cityKey, cityDisplayName: getCityName(cityKey),
+          rating: p.rating || 4.0, reviews: p.user_ratings_total || 0, place_id: p.place_id, vicinity: p.vicinity,
+          lat: cityLat, lng: cityLng, _lat: p.geometry?.location?.lat || cityLat, _lng: p.geometry?.location?.lng || cityLng,
+          cat, dwell: dwellByCat[cat] || 60, _q: qScore(p.rating, p.user_ratings_total),
+          emoji: '📍', photo_ref: p.photos?.[0]?.photo_reference || null
         })
       })
-
-      attractions.sort((a,b) => (b.rating||0) - (a.rating||0))
+      attractions.sort((a, b) => b._q - a._q)
       return { cityKey, cityLat, cityLng, attractions }
     }
 
@@ -685,21 +779,27 @@ function App() {
       orderedCities = sorted
     }
 
-    // 2) 도시별로 days만큼 날짜 채우기 (장소를 일수에 고르게 분배)
+    // 2) 도시별 날짜 채우기 — 다일정은 지역 클러스터링(하루=한 구역)
     const days = []
     for (const { city, days: cityDays } of orderedCities) {
       const { cityLat, cityLng, attractions } = await collectAttractions(city)
-      // 고른 분배: 그 도시 전체 장소를 일수로 나눠 하루치 결정 (단, perDay 상한)
-      const perDayForCity = Math.min(perDay, Math.max(2, Math.ceil(attractions.length / cityDays)))
-      let attrIdx = 0
-      for (let d = 0; d < cityDays; d++) {
-        const picked = []
-        for (let i = 0; i < perDayForCity && attrIdx < attractions.length; i++) {
-          picked.push(attractions[attrIdx]); attrIdx++
+      if (attractions.length === 0) { days.push({ items: [], endMin: 0 }); continue }
+      if (cityDays <= 1) {
+        days.push(buildDay(attractions, cityLat, cityLng))
+      } else {
+        const clusters = kmeans(attractions, cityDays)
+        if (clusters.length >= cityDays) {
+          // 클러스터 중심을 도시 순서대로 NN 정렬해 날짜에 매핑
+          const cl = clusters.map(c => ({ c, _lat: c.reduce((s, p) => s + p._lat, 0) / c.length, _lng: c.reduce((s, p) => s + p._lng, 0) / c.length }))
+          orderRoute(cl, cityLat, cityLng).forEach(o => days.push(buildDay(o.c, cityLat, cityLng)))
+        } else {
+          // 클러스터 부족 시: 품질순 균등분배 (빈 날 방지)
+          const per = Math.ceil(attractions.length / cityDays)
+          for (let d = 0; d < cityDays; d++) {
+            const slice = attractions.slice(d * per, (d + 1) * per)
+            if (slice.length) days.push(buildDay(slice, cityLat, cityLng))
+          }
         }
-        const ordered = sortByProximity(picked, cityLat, cityLng)
-          .map(({_lat,_lng,...rest})=>({...rest, addedAt:Date.now()}))
-        days.push({ items: ordered })
       }
     }
 
@@ -3844,6 +3944,21 @@ Write all text in ${langName}.`
               const totalMin = Math.round(totalSec / 60)
               const totalHr = Math.floor(totalMin / 60)
               const totalMinRem = totalMin % 60
+              // ── 시간표: 09:00 기준 각 정류장 도착시각 (체류 + 실제 이동시간 누적) ──
+              const DAY_START = 9 * 60
+              const hhmm = (m) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.round(m) % 60).padStart(2, '0')}`
+              let acc = DAY_START
+              const schedule = items.map((it, i) => {
+                const arrive = acc
+                acc += (it.dwell || 60)
+                if (i < items.length - 1) {
+                  const rk2 = getRouteKey(items[i], items[i + 1], courseTransport)
+                  const sec = routeCache[rk2]?.durationSec
+                  if (sec) acc += sec / 60
+                }
+                return arrive
+              })
+              const dayEndMin = acc
               return (
                 <>
                   {/* Day 요약 */}
@@ -3855,6 +3970,7 @@ Write all text in ${langName}.`
                     </div>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       {totalMin > 0 && <span style={{fontSize:11,color:'#374151',fontWeight:500}}>{totalHr > 0 ? `${totalHr}${t('courseHour')} ${totalMinRem}${t('courseMin')}` : `${totalMin}${t('courseMin')}`}</span>}
+                      {items.length > 0 && <span style={{fontSize:11,color:'#c8856a',fontWeight:700}}>09:00–{hhmm(dayEndMin)}</span>}
                       {loadingRoutes && <div style={{width:12,height:12,borderRadius:'50%',border:'1.5px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>}
                       {courseDays.length > 1 && (
                         <button onClick={()=>removeCourseDay(activeDayTab)}
@@ -3894,6 +4010,7 @@ Write all text in ${langName}.`
                           <div style={{flex:1,minWidth:0}}>
                             <div style={{fontSize:13,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCourseItemName(item)}</div>
                             <div style={{display:'flex',alignItems:'center',gap:5,marginTop:3}}>
+                              <span style={{fontSize:10,color:'#c8856a',fontWeight:700}}>{hhmm(schedule[idx])}</span>
                               <span style={{fontSize:10,color:'#1a1714',fontWeight:500}}>{getCourseItemCity(item)}</span>
                               {item.rating && <span style={{fontSize:9,color:'#d97706'}}>★{item.rating}</span>}
                             </div>
