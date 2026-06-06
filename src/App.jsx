@@ -2717,10 +2717,15 @@ function App() {
 
   // 임의 도시의 핫플(관광 명소) 배열을 반환 (state 안 건드림, AI 코스용)
   const fetchHotspotsFor = async (city) => {
-    if (!city?.lat || !city?.lng) return []
+    if (!city) return []
+    // Text Search: "{도시명} 관광명소" — 도시 전역에서 prominence 순으로 (반경·중심점 무관)
+    const word = lang === 'ko' ? '관광명소' : lang === 'ja' ? '観光名所' : lang === 'zh' ? '旅游景点' : 'tourist attractions'
+    const cityNm = getCityName(city.name || city._koName)
+    const q = `${cityNm} ${word}`
+    const bias = (city.lat && city.lng) ? `&lat=${city.lat}&lng=${city.lng}` : ''
     try {
       const res = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park&language=${lang==='zh'?'zh-CN':lang}`
+        `/api/places?query=${encodeURIComponent(q)}${bias}&language=${lang==='zh'?'zh-CN':lang}`
       )
       const data = await res.json()
       if (!data.results) return []
@@ -2738,27 +2743,13 @@ function App() {
 
     // 핫플은 추천 관광지와 중복 허용 (언어 무관 개수 안정성 우선)
     try {
-      // 핫플레이스 (관광명소, 박물관, 공원 등)
-      const hotspotRes = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park|point_of_interest&language=${lang==='zh'?'zh-CN':lang}`
-      )
-      const hotspotData = await hotspotRes.json()
-      
-      if (hotspotData.results) {
-        const filterHotspots = (minReviews) => hotspotData.results
-          .filter(p => p.rating && p.rating >= 4.0)
-          .filter(p => p.user_ratings_total && p.user_ratings_total >= minReviews)
-          .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+      // 핫플레이스 = AI 코스와 동일 소스 (Text Search "{도시} 관광명소")
+      const topHotspots = await fetchHotspotsFor(city)
+      setHotspots(topHotspots)
 
-        // 리뷰 100개 이상이면 모두 표시 (리뷰 많은 순, Google 상한 20개)
-        const topHotspots = filterHotspots(100)
-
-        setHotspots(topHotspots)
-      }
-      
       // 맛집도 함께 로드
       await fetchFoodData(city, foodCategory)
-      
+
     } catch (error) {
       console.error('Failed to fetch places:', error)
     } finally {
