@@ -11,7 +11,7 @@
 // ───────────────────────────────────────────────────────────────
 import fs from 'fs'
 
-const KEY = process.env.GOOGLE_API_KEY || 'PUT_YOUR_KEY_HERE'
+const KEY = process.env.GOOGLE_API_KEY || 'AIzaSyB22xcmUhkuWJ6sMa02Yp1u7hHsRIruIBM'
 
 // 튜닝 파라미터 ─ 필요하면 여기만 조절
 const RATIO   = 0.5   // viewport 대각선 × RATIO = 반경
