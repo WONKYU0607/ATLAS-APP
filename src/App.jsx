@@ -663,8 +663,14 @@ function App() {
       const v = reviews || 0, R = rating || 4.0
       return (v / (v + Q_M)) * R + (Q_M / (v + Q_M)) * Q_C
     }
-    // 노이즈 타입 (역/주차장/숙소 등은 관광지 아님)
-    const JUNK = ['transit_station','bus_station','subway_station','train_station','parking','lodging','airport','car_rental']
+    // 노이즈 타입 (관광지 아님 — 후보에서 제외)
+    const JUNK = ['transit_station','bus_station','subway_station','train_station','light_rail_station','parking','lodging','airport','car_rental',
+      'shopping_mall','store','clothing_store','department_store','supermarket','convenience_store','shoe_store','jewelry_store','furniture_store','home_goods_store','electronics_store','book_store',
+      'restaurant','food','cafe','bar','meal_takeaway','meal_delivery','bakery','night_club',
+      'travel_agency','real_estate_agency','finance','bank','atm','insurance_agency','hospital','doctor','pharmacy','dentist','gym','beauty_salon','hair_care','spa','gas_station','premise']
+    // 관광 신호 타입 (이 중 하나는 있어야 후보로 인정)
+    const TOURISM_POS = ['tourist_attraction','museum','art_gallery','park','natural_feature','zoo','aquarium','amusement_park',
+      'place_of_worship','church','hindu_temple','mosque','synagogue','monument','historical_landmark','landmark']
     // 2-opt: NN 경로의 교차(지그재그) 제거
     const twoOpt = (route) => {
       if (route.length < 4) return route
@@ -743,16 +749,18 @@ function App() {
       const attractions = []
       hs.forEach(p => {
         const types = p.types || []
-        if (types.some(t => JUNK.includes(t))) return                      // 노이즈 제거
+        if (types.some(t => JUNK.includes(t))) return                      // 노이즈(상가·식당·역 등) 제거
+        if (!types.some(t => TOURISM_POS.includes(t))) return              // 관광 신호 없는 잡 POI 제거
         const key = p.place_id || (p.name || '').toLowerCase().replace(/\s+/g, '')
         if (seen.has(key)) return; seen.add(key)                           // 중복 제거
         const cat = catOf(types)
+        const landmarkBonus = types.some(t => ['tourist_attraction','historical_landmark','monument'].includes(t)) ? 0.15 : 0
         attractions.push({
           source: 'hotspot', name: p.name, displayName: p.name,
           cityName: cityKey, cityDisplayName: getCityName(cityKey),
           rating: p.rating || 4.0, reviews: p.user_ratings_total || 0, place_id: p.place_id, vicinity: p.vicinity,
           lat: cityLat, lng: cityLng, _lat: p.geometry?.location?.lat || cityLat, _lng: p.geometry?.location?.lng || cityLng,
-          cat, dwell: dwellByCat[cat] || 60, _q: qScore(p.rating, p.user_ratings_total),
+          cat, dwell: dwellByCat[cat] || 60, _q: qScore(p.rating, p.user_ratings_total) + landmarkBonus,
           emoji: '📍', photo_ref: p.photos?.[0]?.photo_reference || null
         })
       })
@@ -2712,7 +2720,7 @@ function App() {
     if (!city?.lat || !city?.lng) return []
     try {
       const res = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park|point_of_interest&language=${lang==='zh'?'zh-CN':lang}`
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park&language=${lang==='zh'?'zh-CN':lang}`
       )
       const data = await res.json()
       if (!data.results) return []
@@ -3944,21 +3952,6 @@ Write all text in ${langName}.`
               const totalMin = Math.round(totalSec / 60)
               const totalHr = Math.floor(totalMin / 60)
               const totalMinRem = totalMin % 60
-              // ── 시간표: 09:00 기준 각 정류장 도착시각 (체류 + 실제 이동시간 누적) ──
-              const DAY_START = 9 * 60
-              const hhmm = (m) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.round(m) % 60).padStart(2, '0')}`
-              let acc = DAY_START
-              const schedule = items.map((it, i) => {
-                const arrive = acc
-                acc += (it.dwell || 60)
-                if (i < items.length - 1) {
-                  const rk2 = getRouteKey(items[i], items[i + 1], courseTransport)
-                  const sec = routeCache[rk2]?.durationSec
-                  if (sec) acc += sec / 60
-                }
-                return arrive
-              })
-              const dayEndMin = acc
               return (
                 <>
                   {/* Day 요약 */}
@@ -3970,7 +3963,6 @@ Write all text in ${langName}.`
                     </div>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       {totalMin > 0 && <span style={{fontSize:11,color:'#374151',fontWeight:500}}>{totalHr > 0 ? `${totalHr}${t('courseHour')} ${totalMinRem}${t('courseMin')}` : `${totalMin}${t('courseMin')}`}</span>}
-                      {items.length > 0 && <span style={{fontSize:11,color:'#c8856a',fontWeight:700}}>09:00–{hhmm(dayEndMin)}</span>}
                       {loadingRoutes && <div style={{width:12,height:12,borderRadius:'50%',border:'1.5px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>}
                       {courseDays.length > 1 && (
                         <button onClick={()=>removeCourseDay(activeDayTab)}
@@ -4010,7 +4002,6 @@ Write all text in ${langName}.`
                           <div style={{flex:1,minWidth:0}}>
                             <div style={{fontSize:13,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCourseItemName(item)}</div>
                             <div style={{display:'flex',alignItems:'center',gap:5,marginTop:3}}>
-                              <span style={{fontSize:10,color:'#c8856a',fontWeight:700}}>{hhmm(schedule[idx])}</span>
                               <span style={{fontSize:10,color:'#1a1714',fontWeight:500}}>{getCourseItemCity(item)}</span>
                               {item.rating && <span style={{fontSize:9,color:'#d97706'}}>★{item.rating}</span>}
                             </div>
