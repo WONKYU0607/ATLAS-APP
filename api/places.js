@@ -43,12 +43,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'lat and lng are required' })
     }
 
-    // ── Nearby Search: type에 '|'가 여러 개면 각각 호출 후 병합(place_id 중복 제거) ──
+    // ── Nearby Search: type에 '|'가 여러 개면 각각 호출(병렬) 후 병합(place_id 중복 제거) ──
     const types = type.split('|').filter(Boolean)
+    const arrays = await Promise.all(types.map(t => fetchType(t)))   // 병렬 호출
     const seen = new Set()
     const merged = []
-    for (const t of types) {
-      const arr = await fetchType(t)
+    for (const arr of arrays) {
       for (const p of arr) {
         if (p.place_id && !seen.has(p.place_id)) { seen.add(p.place_id); merged.push(p) }
       }
