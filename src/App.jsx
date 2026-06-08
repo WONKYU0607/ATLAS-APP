@@ -2722,27 +2722,32 @@ function App() {
   }
   const fetchHotspotsFor = async (city) => {
     if (!city?.lat || !city?.lng) return []
-    // 관광지+박물관 멀티 type(병렬), 1페이지. 동네공원 이름컷 + 적응형 리뷰하한(대도시 잡것컷/소도시 완화) → 리뷰순
+    // 관광지+박물관 멀티 type(병렬, 2페이지). type 화이트리스트로 "관광지 자격" 검증 → 리뷰순 정렬
     const radius = getCityRadius(city)
+    // 관광지로 인정하는 type (하나라도 있으면 통과)
+    const TOURISM = ['tourist_attraction','museum','historical_landmark','place_of_worship','art_gallery','aquarium','zoo','amusement_park','national_park','hindu_temple','church','mosque','synagogue']
+    // 있으면 무조건 컷 (잡것)
+    const BLOCK = ['lodging','store','restaurant','cafe','food','supermarket','shopping_mall','parking','transit_station','bus_station','subway_station','train_station','real_estate_agency','gym','school','hospital','pharmacy']
     try {
       const res = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum&radius=${radius}&pages=1&language=${lang==='zh'?'zh-CN':lang}`
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum&radius=${radius}&pages=2&language=${lang==='zh'?'zh-CN':lang}`
       )
       const data = await res.json()
       if (!data.results) return []
-      // 동네공원·유원지류 이름 컷 (단 리뷰 5000+면 유명 명소로 보고 예외)
-      const JUNK_NAME = /(어린이|근린|체육|마을|동네|구민|주민)공원|유원지|children'?s park|neighborhood park|community park/i
-      const pool = data.results
+      const qualifies = (p) => {
+        const types = p.types || []
+        if (types.some(t => BLOCK.includes(t))) return false       // 잡것 컷
+        if (types.some(t => TOURISM.includes(t))) return true       // 관광지 type 있으면 통과
+        // park만 단독(동네공원) → 컷. 단 tourism type 있으면 위에서 이미 통과
+        return false
+      }
+      const list = data.results
         .filter(p => p.rating && p.rating >= 4.0)
-        .filter(p => !(p.types || []).includes('lodging'))
-        .filter(p => !(JUNK_NAME.test(p.name || '') && (p.user_ratings_total || 0) < 5000))
-      // 적응형 하한: 대도시는 1000+로 잡것 컷, 결과 적으면 자동 완화(소도시 대응)
-      const byMin = (m) => pool.filter(p => (p.user_ratings_total || 0) >= m)
-      let list = byMin(1000)
-      if (list.length < 8) list = byMin(300)
-      if (list.length < 5) list = byMin(100)
-      if (list.length < 3) list = pool
-      return list.sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+        .filter(qualifies)
+      // type 필터 후 너무 적으면(소도시) 완화: rating만 보고 park 허용
+      const final = list.length >= 3 ? list
+        : data.results.filter(p => p.rating && p.rating >= 4.0 && !(p.types||[]).some(t => BLOCK.includes(t)))
+      return final.sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
     } catch { return [] }
   }
 
