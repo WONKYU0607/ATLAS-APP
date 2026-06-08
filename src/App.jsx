@@ -2722,17 +2722,18 @@ function App() {
   }
   const fetchHotspotsFor = async (city) => {
     if (!city?.lat || !city?.lng) return []
-    // Nearby Search: 관광지(type=tourist_attraction)를 도시별 반경에서 → 리뷰 많은 순
+    // 관광지+박물관 멀티 type, 2페이지(최대 40개씩)로 후보 확보 → 호텔 제외 → 리뷰 많은 순
     const radius = getCityRadius(city)
     try {
       const res = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction&radius=${radius}&language=${lang==='zh'?'zh-CN':lang}`
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum&radius=${radius}&pages=2&language=${lang==='zh'?'zh-CN':lang}`
       )
       const data = await res.json()
       if (!data.results) return []
       return data.results
         .filter(p => p.rating && p.rating >= 4.0)
         .filter(p => p.user_ratings_total && p.user_ratings_total >= 100)
+        .filter(p => !(p.types || []).includes('lodging'))   // 호텔 제외
         .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
     } catch { return [] }
   }
