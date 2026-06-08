@@ -2940,7 +2940,7 @@ Write all text in ${langName}.`
       _searchType: 'spot',
     }))
   })
-  const searchItems = [...allCities, ...allSpots]
+  const searchItems = [...allCities]  // 도시·국가만 검색 (명소 spot 제외)
   const filtered = searchQuery.length >= 1
     ? searchItems.filter(c => {
         const q = searchQuery.toLowerCase()
