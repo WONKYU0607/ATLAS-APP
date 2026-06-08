@@ -6,6 +6,7 @@ import { COUNTRY_ISO, COUNTRY_NAME_OVERRIDE, getCountryDisplayName, LANG_OPTIONS
 import { COUNTRY_CITIES } from './data/countryCities'
 import ISLAND_POLYGONS from './data/islandPolygons.json'
 import CITY_PHOTOS, { pickI18n } from './data/cityPhotos'
+import { CITY_RADIUS } from './data/cityRadius'
 
 // 작은 섬나라 라벨 데이터 (폴리곤 없이 라벨 좌표만 사용 — 클릭 시 진입)
 const ISLAND_NAME_ALIAS = { 'Cape Verde': 'Cabo Verde', 'Federated States of Micronesia': 'Micronesia' }
@@ -2714,16 +2715,18 @@ function App() {
 
 
   // 임의 도시의 핫플(관광 명소) 배열을 반환 (state 안 건드림, AI 코스용)
+  // 도시별 검색반경(m) — viewport 기반 자동산출값, 없으면 15km
+  const getCityRadius = (city) => {
+    const km = CITY_RADIUS[city?.name] || CITY_RADIUS[city?._koName] || 15
+    return Math.min(50000, Math.round(km * 1000))
+  }
   const fetchHotspotsFor = async (city) => {
-    if (!city) return []
-    // Text Search: "{도시명} 관광명소" — 도시 전역에서 prominence 순으로 (반경·중심점 무관)
-    const word = lang === 'ko' ? '관광명소' : lang === 'ja' ? '観光名所' : lang === 'zh' ? '旅游景点' : 'tourist attractions'
-    const cityNm = getCityName(city.name || city._koName)
-    const q = `${cityNm} ${word}`
-    const bias = (city.lat && city.lng) ? `&lat=${city.lat}&lng=${city.lng}` : ''
+    if (!city?.lat || !city?.lng) return []
+    // Nearby Search: 관광지(type=tourist_attraction)를 도시별 반경에서 → 리뷰 많은 순
+    const radius = getCityRadius(city)
     try {
       const res = await fetch(
-        `/api/places?query=${encodeURIComponent(q)}${bias}&language=${lang==='zh'?'zh-CN':lang}`
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction&radius=${radius}&language=${lang==='zh'?'zh-CN':lang}`
       )
       const data = await res.json()
       if (!data.results) return []
@@ -2741,7 +2744,7 @@ function App() {
 
     // 핫플은 추천 관광지와 중복 허용 (언어 무관 개수 안정성 우선)
     try {
-      // 핫플레이스 = AI 코스와 동일 소스 (Text Search "{도시} 관광명소")
+      // 핫플레이스 = AI 코스와 동일 소스 (Nearby Search, 도시별 반경, 리뷰순)
       const topHotspots = await fetchHotspotsFor(city)
       setHotspots(topHotspots)
 
