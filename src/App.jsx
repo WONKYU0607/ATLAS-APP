@@ -2722,19 +2722,27 @@ function App() {
   }
   const fetchHotspotsFor = async (city) => {
     if (!city?.lat || !city?.lng) return []
-    // 관광지+박물관 멀티 type, 2페이지(최대 40개씩)로 후보 확보 → 호텔 제외 → 리뷰 많은 순
+    // 관광지+박물관 멀티 type(병렬), 1페이지. 동네공원 이름컷 + 적응형 리뷰하한(대도시 잡것컷/소도시 완화) → 리뷰순
     const radius = getCityRadius(city)
     try {
       const res = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum&radius=${radius}&pages=2&language=${lang==='zh'?'zh-CN':lang}`
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum&radius=${radius}&pages=1&language=${lang==='zh'?'zh-CN':lang}`
       )
       const data = await res.json()
       if (!data.results) return []
-      return data.results
+      // 동네공원·유원지류 이름 컷 (단 리뷰 5000+면 유명 명소로 보고 예외)
+      const JUNK_NAME = /(어린이|근린|체육|마을|동네|구민|주민)공원|유원지|children'?s park|neighborhood park|community park/i
+      const pool = data.results
         .filter(p => p.rating && p.rating >= 4.0)
-        .filter(p => p.user_ratings_total && p.user_ratings_total >= 100)
-        .filter(p => !(p.types || []).includes('lodging'))   // 호텔 제외
-        .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+        .filter(p => !(p.types || []).includes('lodging'))
+        .filter(p => !(JUNK_NAME.test(p.name || '') && (p.user_ratings_total || 0) < 5000))
+      // 적응형 하한: 대도시는 1000+로 잡것 컷, 결과 적으면 자동 완화(소도시 대응)
+      const byMin = (m) => pool.filter(p => (p.user_ratings_total || 0) >= m)
+      let list = byMin(1000)
+      if (list.length < 8) list = byMin(300)
+      if (list.length < 5) list = byMin(100)
+      if (list.length < 3) list = pool
+      return list.sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
     } catch { return [] }
   }
 
