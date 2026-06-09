@@ -2728,7 +2728,7 @@ function App() {
     const isPark = (p) => (p.types || []).includes('park') && !(p.types||[]).some(t => ['tourist_attraction','museum','historical_landmark','amusement_park','zoo','aquarium'].includes(t))
     try {
       const res = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum&radius=${radius}&pages=2&language=${lang==='zh'?'zh-CN':lang}`
+        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park&radius=${radius}&pages=2&language=${lang==='zh'?'zh-CN':lang}`
       )
       const data = await res.json()
       if (!data.results) return []
