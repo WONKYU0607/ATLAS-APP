@@ -2722,32 +2722,33 @@ function App() {
   }
   const fetchHotspotsFor = async (city) => {
     if (!city?.lat || !city?.lng) return []
-    // 관광지+박물관 멀티 type(병렬, 2페이지). type 화이트리스트로 "관광지 자격" 검증 → 리뷰순 정렬
+    // 신뢰도=유명세(리뷰 수) 기반. 공원은 더 높은 하한(동네공원 컷). 대도시 1000+ 보장, 소도시만 완화. 리뷰순 상위 25.
     const radius = getCityRadius(city)
-    // 관광지로 인정하는 type (하나라도 있으면 통과)
-    const TOURISM = ['tourist_attraction','museum','historical_landmark','place_of_worship','art_gallery','aquarium','zoo','amusement_park','national_park','hindu_temple','church','mosque','synagogue']
-    // 있으면 무조건 컷 (잡것)
-    const BLOCK = ['lodging','store','restaurant','cafe','food','supermarket','shopping_mall','parking','transit_station','bus_station','subway_station','train_station','real_estate_agency','gym','school','hospital','pharmacy']
+    const BLOCK = ['lodging','store','restaurant','cafe','food','supermarket','shopping_mall','parking','transit_station','bus_station','subway_station','train_station','real_estate_agency','gym','school','hospital','pharmacy','convenience_store','gas_station']
+    const isPark = (p) => (p.types || []).includes('park') && !(p.types||[]).some(t => ['tourist_attraction','museum','historical_landmark','amusement_park','zoo','aquarium'].includes(t))
     try {
       const res = await fetch(
         `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum&radius=${radius}&pages=2&language=${lang==='zh'?'zh-CN':lang}`
       )
       const data = await res.json()
       if (!data.results) return []
-      const qualifies = (p) => {
-        const types = p.types || []
-        if (types.some(t => BLOCK.includes(t))) return false       // 잡것 컷
-        if (types.some(t => TOURISM.includes(t))) return true       // 관광지 type 있으면 통과
-        // park만 단독(동네공원) → 컷. 단 tourism type 있으면 위에서 이미 통과
-        return false
-      }
-      const list = data.results
-        .filter(p => p.rating && p.rating >= 4.0)
-        .filter(qualifies)
-      // type 필터 후 너무 적으면(소도시) 완화: rating만 보고 park 허용
-      const final = list.length >= 3 ? list
-        : data.results.filter(p => p.rating && p.rating >= 4.0 && !(p.types||[]).some(t => BLOCK.includes(t)))
-      return final.sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+      // 1차: 잡것 type 컷 + 평점 3.5+ (평점 없으면 통과)
+      const base = data.results
+        .filter(p => !(p.types || []).some(t => BLOCK.includes(t)))
+        .filter(p => p.rating === undefined || p.rating >= 3.5)
+      // 리뷰 수(유명세) 하한 — 공원은 3000, 일반은 normalMin
+      const pick = (normalMin, parkMin) => base.filter(p => {
+        const rv = p.user_ratings_total || 0
+        return rv >= (isPark(p) ? parkMin : normalMin)
+      })
+      // 대도시 기준 (일반1000/공원3000). 5개 이상이면 확정(대도시 → 1000 밑 안 나옴)
+      let list = pick(1000, 3000)
+      if (list.length < 5) list = pick(300, 1000)   // 소도시 완화
+      if (list.length < 5) list = pick(100, 500)
+      if (list.length < 3) list = base               // 그래도 적으면 평점순 다
+      return list
+        .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+        .slice(0, 25)                                 // 상위 25개만 (도배 방지)
     } catch { return [] }
   }
 
