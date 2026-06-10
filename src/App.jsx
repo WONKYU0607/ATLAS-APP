@@ -438,6 +438,7 @@ function App() {
   const lastPovKeyRef = useRef('') // hideBackLabels idle 스킵용 (라벨 재생성 시 리셋)
   const hasTouchedRef = useRef(false) // 페이지에 첫 터치 발생하면 true → 호버 영구 비활성 (모바일 확정)
   const [countries, setCountries] = useState([])
+  const [borderPaths, setBorderPaths] = useState([])  // 50m 국경선(선) — pathsData용
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [selectedCity, setSelectedCity] = useState(null)
     const [activeTab, setActiveTab] = useState('hotspots')
@@ -1612,6 +1613,34 @@ function App() {
     load110m().then(processGeo).catch(err => console.error('[ATLAS] Polygon load failed:', err))
   }, [])
 
+  // 50m 국경선 로드 → pathsData용 선 좌표로 변환 (정밀 국경선, 면 아님 / 클릭 판정은 110m 폴리곤이 담당)
+  useEffect(() => {
+    const validRing = (ring) => {
+      if (!ring || ring.length < 4) return false
+      const lngs = ring.map(c => c[0])
+      return (Math.max(...lngs) - Math.min(...lngs)) <= 180
+    }
+    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson')
+      .then(r => r.json())
+      .then(data => {
+        const paths = []
+        data.features.forEach(feat => {
+          const name = feat.properties?.NAME
+          const geom = feat.geometry
+          if (!geom) return
+          const polys = geom.type === 'Polygon' ? [geom.coordinates]
+            : geom.type === 'MultiPolygon' ? geom.coordinates : []
+          polys.forEach(poly => poly.forEach(ring => {
+            if (!validRing(ring)) return
+            paths.push({ name, coords: ring.map(c => [c[1], c[0]]) })  // [lat,lng]
+          }))
+        })
+        console.log('[ATLAS] Loaded', paths.length, 'border paths (50m)')
+        setBorderPaths(paths)
+      })
+      .catch(err => console.error('[ATLAS] Border load failed:', err))
+  }, [])
+
   // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
   useEffect(() => {
     if (globeRef.current || !globeContainerRef.current) return
@@ -2064,6 +2093,18 @@ function App() {
       .polygonsTransitionDuration(0)
   }, [countries])
 
+  // A-2: 국경선 pathsData(50m 선) — 무거운 데이터라 1회만 세팅 (색/굵기는 effect B에서)
+  useEffect(() => {
+    if (!globeRef.current || borderPaths.length === 0) return
+    globeRef.current
+      .pathsData(borderPaths)
+      .pathPoints(d => d.coords)
+      .pathPointLat(p => p[0])
+      .pathPointLng(p => p[1])
+      .pathPointAlt(0.004)
+      .pathTransitionDuration(0)
+  }, [borderPaths])
+
   // B: hover/select 변경 시 accessor만 재설정 (가벼움)
   useEffect(() => {
     if (!globeRef.current || countries.length === 0) return
@@ -2169,32 +2210,25 @@ function App() {
     }
 
     globe
-      .polygonCapColor(feat => {
-        const name = feat.properties.NAME
-        if (hasSelection) {
-          if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.22)'
-          if (hoveredCountry === name) return 'rgba(255,220,50,0.35)'
-          return 'rgba(0,0,0,0)'
-        }
-        if (hoveredCountry === name) return 'rgba(255,220,50,0.35)'
-        return COUNTRY_CITIES[name] ? 'rgba(34,197,94,0.08)' : 'rgba(200,220,180,0.04)'
-      })
+      // 면·테두리 모두 투명 — 각진 110m 폴리곤은 안 보이게(클릭 판정용으로만 유지)
+      .polygonCapColor(() => 'rgba(0,0,0,0)')
       .polygonSideColor(() => 'rgba(0,0,0,0)')
-      .polygonStrokeColor(feat => {
-        const name = feat.properties.NAME
+      .polygonStrokeColor(() => 'rgba(0,0,0,0)')
+      .polygonAltitude(() => 0)
+      // 보이는 국경선 = 50m pathsData(선). 선택/호버 시 색·굵기만 변경
+      .pathColor(d => {
         if (hasSelection) {
-          if (selectedCountry?.properties.NAME === name) return 'rgba(59,130,246,0.7)'
-          if (hoveredCountry === name) return 'rgba(255,220,50,0.7)'
-          return 'rgba(255,255,255,0.12)'
+          if (selectedCountry?.properties.NAME === d.name) return 'rgba(59,130,246,0.95)'
+          if (hoveredCountry === d.name) return 'rgba(255,220,50,0.9)'
+          return 'rgba(255,255,255,0.45)'
         }
-        if (hoveredCountry === name) return 'rgba(255,220,50,0.7)'
-        return 'rgba(255,255,255,0.35)'
+        if (hoveredCountry === d.name) return 'rgba(255,220,50,0.9)'
+        return 'rgba(255,255,255,0.5)'
       })
-      .polygonAltitude(feat => {
-        const name = feat.properties.NAME
-        if (hasSelection && selectedCountry?.properties.NAME === name) return 0.006
-        if (hoveredCountry === name) return 0.005
-        return 0.003
+      .pathStroke(d => {
+        if (hasSelection && selectedCountry?.properties.NAME === d.name) return 1.6
+        if (hoveredCountry === d.name) return 1.3
+        return 0.5
       })
       .polygonLabel(() => '')
       .onPolygonHover(feat => {
