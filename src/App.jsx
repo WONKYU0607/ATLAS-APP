@@ -1937,7 +1937,7 @@ function App() {
     globe
       .htmlLat(d => d.lat)
       .htmlLng(d => d.lng)
-      .htmlAltitude(d => d._type === 'city' ? 0.012 : d._type === 'ocean' ? 0.003 : d._type === 'geoline' ? 0.002 : 0.005)
+      .htmlAltitude(d => d._type === 'city' ? 0.002 : d._type === 'ocean' ? 0.001 : d._type === 'geoline' ? 0.001 : 0.0015)
       .htmlElement(d => {
         const el = document.createElement('div')
         el.dataset.lat = d.lat
