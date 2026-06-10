@@ -2739,9 +2739,16 @@ function App() {
       for (const arr of arrays) for (const p of arr) {
         if (p.place_id && !seen.has(p.place_id)) { seen.add(p.place_id); merged.push(p) }
       }
+      // 오염 제거: 결과 주소에 해당 도시명(한/영/일/중)이 든 것만 — 타지 명소(예: 인천에 뜨는 경복궁) 차단
+      const cityNames = [cityKey, ...(CITY_I18N[cityKey] || [])].filter(Boolean)
+      const inCity = (p) => {
+        const addr = (p.vicinity || '') + ' ' + (p.formatted_address || '')
+        return cityNames.some(n => addr.includes(n))
+      }
       const list = merged
         .filter(p => p.user_ratings_total)                       // 리뷰 있는 곳만
         .filter(p => p.rating === undefined || p.rating >= 3.5)  // 저평점 컷
+        .filter(inCity)                                          // 오염(타지 명소) 제거
         .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))  // 리뷰순(유명세)
         .slice(0, 30)
       return list
