@@ -2890,8 +2890,9 @@ function App() {
   // 음식 문화 AI 생성 (localStorage 캐싱)
   const fetchFoodCulture = async (city) => {
     const cityKey = city._koName || city.name
-    const cacheKey = `foodCulture_${cityKey}_${lang}`
-    // 캐시 확인
+    const cacheKey = `foodCulture3_${cityKey}_${lang}`
+    const canonKey = `foodCulture3_${cityKey}_ko`  // 원본=한국어 (음식·순서의 단일 출처)
+    // 현재 언어 캐시 확인
     try {
       const cached = localStorage.getItem(cacheKey)
       if (cached) { setFoodCulture(JSON.parse(cached)); return }
@@ -2899,26 +2900,46 @@ function App() {
 
     setLoadingFoodCulture(true)
     setFoodCulture(null)
-    const cityName = getCityName(cityKey) || city.name
-    const langName = lang === 'ko' ? '한국어' : lang === 'ja' ? '日本語' : lang === 'zh' ? '中文' : 'English'
-    const prompt = `You are a travel food culture curator. Introduce the food culture of "${cityName}" to travelers.
-Pick 3-4 representative dishes plus 1-2 famous local drinks or alcoholic beverages (include the drinks as items in the same list). For each item, provide: name, a 2-3 sentence description covering its origin/history, why it developed in this region, its taste/characteristics, and an approximate price range in local currency.
-Exclude specific restaurant names or locations — focus on the food itself.
-Respond ONLY with valid JSON (no markdown, no code fences) in this exact format:
-{"intro":"1-2 sentence overview of the city's food culture","dishes":[{"emoji":"🍜","name":"dish name","desc":"origin, history, why developed, taste","price":"approximate price range"}]}
-Write all text in ${langName}.`
 
-    try {
+    const callChat = async (prompt) => {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt })
       })
       const data = await res.json()
-      let txt = (data.text || '').trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim()
-      const parsed = JSON.parse(txt)
-      setFoodCulture(parsed)
-      try { localStorage.setItem(cacheKey, JSON.stringify(parsed)) } catch {}
+      const txt = (data.text || '').trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim()
+      return JSON.parse(txt)
+    }
+
+    try {
+      // 1) 원본(한국어) 확보 — 없으면 한 번만 생성 (음식·가격·순서의 단일 출처)
+      let canon = null
+      try { const c = localStorage.getItem(canonKey); if (c) canon = JSON.parse(c) } catch {}
+      if (!canon) {
+        const genPrompt = `You are a travel food culture curator. Introduce the food culture of "${cityKey}" to travelers.
+Pick 3-4 representative dishes plus 1-2 famous local drinks or alcoholic beverages (include the drinks as items in the same list). For each item, provide: name, a 2-3 sentence description covering its origin/history, why it developed in this region, and its taste/characteristics. Do NOT include any prices.
+Exclude specific restaurant names or locations — focus on the food itself.
+Respond ONLY with valid JSON (no markdown, no code fences) in this exact format:
+{"intro":"1-2 sentence overview of the city's food culture","dishes":[{"name":"dish name","desc":"origin, history, why developed, taste"}]}
+Write all text in 한국어.`
+        canon = await callChat(genPrompt)
+        try { localStorage.setItem(canonKey, JSON.stringify(canon)) } catch {}
+      }
+
+      // 2) 한국어면 원본 그대로 / 그 외 언어는 번역만 (가격·구조 절대 변경 금지)
+      if (lang === 'ko') {
+        setFoodCulture(canon)
+      } else {
+        const langName = lang === 'ja' ? '日本語' : lang === 'zh' ? '中文' : 'English'
+        const trPrompt = `Translate the "intro" and each dish's "name" and "desc" of the following food JSON into ${langName}.
+CRITICAL: keep the JSON structure and the number and order of dishes EXACTLY the same. Only translate the intro/name/desc text.
+Respond ONLY with valid JSON in the same format (no markdown, no code fences).
+JSON: ${JSON.stringify(canon)}`
+        const translated = await callChat(trPrompt)
+        setFoodCulture(translated)
+        try { localStorage.setItem(cacheKey, JSON.stringify(translated)) } catch {}
+      }
     } catch (e) {
       console.error('Food culture fetch error:', e)
       setFoodCulture({ error: true })
@@ -3723,10 +3744,7 @@ Write all text in ${langName}.`
                             {(foodCulture.dishes||[]).map((dish,idx)=>(
                               <div key={idx} style={{background:'white',border:'1px solid #ede8e0',borderRadius:12,padding:'13px 14px'}}>
                                 <div style={{fontSize:14.5,fontWeight:700,color:'#1a1714',marginBottom:6}}>{idx+1}. {dish.name}</div>
-                                <div style={{fontSize:12.5,color:'#6b5d52',lineHeight:1.65,marginBottom:dish.price?8:0}}>{dish.desc}</div>
-                                {dish.price && (
-                                  <div style={{display:'inline-block',fontSize:11,fontWeight:600,color:'#c8856a',background:'#f7efe9',borderRadius:6,padding:'3px 9px'}}>{dish.price}</div>
-                                )}
+                                <div style={{fontSize:12.5,color:'#6b5d52',lineHeight:1.65}}>{dish.desc}</div>
                               </div>
                             ))}
                             <div style={{fontSize:9.5,color:'#c8b8a8',textAlign:'center',marginTop:4,fontStyle:'italic'}}>{lang==='ko'?'AI가 생성한 정보로 가격은 대략적입니다':lang==='ja'?'AI生成・価格は目安':lang==='zh'?'AI生成·价格仅供参考':'AI-generated · prices are approximate'}</div>
