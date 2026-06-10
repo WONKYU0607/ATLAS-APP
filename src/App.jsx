@@ -6,7 +6,6 @@ import { COUNTRY_ISO, COUNTRY_NAME_OVERRIDE, getCountryDisplayName, LANG_OPTIONS
 import { COUNTRY_CITIES } from './data/countryCities'
 import ISLAND_POLYGONS from './data/islandPolygons.json'
 import CITY_PHOTOS, { pickI18n } from './data/cityPhotos'
-import { CITY_RADIUS } from './data/cityRadius'
 
 // 작은 섬나라 라벨 데이터 (폴리곤 없이 라벨 좌표만 사용 — 클릭 시 진입)
 const ISLAND_NAME_ALIAS = { 'Cape Verde': 'Cabo Verde', 'Federated States of Micronesia': 'Micronesia' }
@@ -2715,40 +2714,37 @@ function App() {
 
 
   // 임의 도시의 핫플(관광 명소) 배열을 반환 (state 안 건드림, AI 코스용)
-  // 도시별 검색반경(m) — viewport 기반 자동산출값, 없으면 15km
-  const getCityRadius = (city) => {
-    const km = CITY_RADIUS[city?.name] || CITY_RADIUS[city?._koName] || 15
-    return Math.min(50000, Math.round(km * 1000))
-  }
   const fetchHotspotsFor = async (city) => {
     if (!city?.lat || !city?.lng) return []
-    // 신뢰도=유명세(리뷰 수) 기반. 공원은 더 높은 하한(동네공원 컷). 대도시 1000+ 보장, 소도시만 완화. 리뷰순 상위 25.
-    const radius = getCityRadius(city)
-    const BLOCK = ['lodging','store','restaurant','cafe','food','supermarket','shopping_mall','parking','transit_station','bus_station','subway_station','train_station','real_estate_agency','gym','school','hospital','pharmacy','convenience_store','gas_station']
-    const isPark = (p) => (p.types || []).includes('park') && !(p.types||[]).some(t => ['tourist_attraction','museum','historical_landmark','amusement_park','zoo','aquarium'].includes(t))
+    const langParam = lang === 'zh' ? 'zh-CN' : lang
+    const cityKey = city._koName || city.name
+    const cityName = getCityName(cityKey)   // 현재 언어 도시명
+    // ── 관광 유형별 분산 Text Search (전 세계 보편 8종) — 반경 의존 제거로 외곽 명소 누락 방지 ──
+    const CATS = {
+      ko: ['관광명소','랜드마크','유적지','종교 사원 성당','공원 정원','박물관 미술관','광장 시장 거리','전망대 자연경관'],
+      en: ['top attractions','landmarks','historic sites','temples churches mosques','parks gardens','museums galleries','squares markets','viewpoints nature'],
+      ja: ['観光スポット','ランドマーク','史跡 遺跡','寺院 神社 教会','公園 庭園','博物館 美術館','広場 市場 通り','展望台 自然'],
+      zh: ['旅游景点','地标','古迹遗址','寺庙 教堂','公园 花园','博物馆 美术馆','广场 市场','观景台 自然景观'],
+    }
+    const cats = CATS[lang] || CATS.en
     try {
-      const res = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=tourist_attraction|museum|park&radius=${radius}&pages=2&language=${lang==='zh'?'zh-CN':lang}`
-      )
-      const data = await res.json()
-      if (!data.results) return []
-      // 1차: 잡것 type 컷 + 평점 3.5+ (평점 없으면 통과)
-      const base = data.results
-        .filter(p => !(p.types || []).some(t => BLOCK.includes(t)))
-        .filter(p => p.rating === undefined || p.rating >= 3.5)
-      // 리뷰 수(유명세) 하한 — 공원은 3000, 일반은 normalMin
-      const pick = (normalMin, parkMin) => base.filter(p => {
-        const rv = p.user_ratings_total || 0
-        return rv >= (isPark(p) ? parkMin : normalMin)
-      })
-      // 대도시 기준 (일반1000/공원3000). 5개 이상이면 확정(대도시 → 1000 밑 안 나옴)
-      let list = pick(1000, 3000)
-      if (list.length < 5) list = pick(300, 1000)   // 소도시 완화
-      if (list.length < 5) list = pick(100, 500)
-      if (list.length < 3) list = base               // 그래도 적으면 평점순 다
+      const arrays = await Promise.all(cats.map(async (cat) => {
+        try {
+          const r = await fetch(`/api/places?query=${encodeURIComponent(cityName + ' ' + cat)}&lat=${city.lat}&lng=${city.lng}&language=${langParam}`)
+          const d = await r.json()
+          return d.results || []
+        } catch { return [] }
+      }))
+      const seen = new Set(); const merged = []
+      for (const arr of arrays) for (const p of arr) {
+        if (p.place_id && !seen.has(p.place_id)) { seen.add(p.place_id); merged.push(p) }
+      }
+      const list = merged
+        .filter(p => p.user_ratings_total)                       // 리뷰 있는 곳만
+        .filter(p => p.rating === undefined || p.rating >= 3.5)  // 저평점 컷
+        .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))  // 리뷰순(유명세)
+        .slice(0, 30)
       return list
-        .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
-        .slice(0, 25)                                 // 상위 25개만 (도배 방지)
     } catch { return [] }
   }
 
