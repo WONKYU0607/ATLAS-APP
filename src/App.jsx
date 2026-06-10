@@ -440,9 +440,6 @@ function App() {
   const hasTouchedRef = useRef(false) // 페이지에 첫 터치 발생하면 true → 호버 영구 비활성 (모바일 확정)
   const [countries, setCountries] = useState([])
   const [borderPaths, setBorderPaths] = useState([])  // 50m 국경선(선) — pathsData용
-  const paths50Ref = useRef([])    // LOD 근거리(50m 정밀)
-  const paths110Ref = useRef([])   // LOD 원거리(110m 가벼움)
-  const lodRef = useRef(null)      // 현재 LOD 레벨 ('low'=110m / 'high'=50m)
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [selectedCity, setSelectedCity] = useState(null)
     const [activeTab, setActiveTab] = useState('hotspots')
@@ -2110,56 +2107,17 @@ function App() {
       .polygonsTransitionDuration(0)
   }, [countries])
 
-  // A-2: 국경선 LOD — 110m 선(원거리) ↔ 50m 선(근거리) 줌 따라 전환
-  // 110m 선 좌표 빌드 (countries에서) → 원거리용
+  // A-2: 국경선 pathsData(50m 선 고정) — 무거운 데이터라 1회만 세팅 (색/굵기는 effect B)
   useEffect(() => {
-    if (countries.length === 0) return
-    const validRing = (ring) => {
-      if (!ring || ring.length < 4) return false
-      const lngs = ring.map(c => c[0])
-      return (Math.max(...lngs) - Math.min(...lngs)) <= 180
-    }
-    const paths = []
-    countries.forEach(feat => {
-      const name = feat.properties?.NAME
-      const geom = feat.geometry
-      if (!geom) return
-      const polys = geom.type === 'Polygon' ? [geom.coordinates]
-        : geom.type === 'MultiPolygon' ? geom.coordinates : []
-      polys.forEach(poly => poly.forEach(ring => {
-        if (!validRing(ring)) return
-        paths.push({ name, coords: ring.map(c => [c[1], c[0]]) })
-      }))
-    })
-    paths110Ref.current = paths
-  }, [countries])
-
-  useEffect(() => { paths50Ref.current = borderPaths }, [borderPaths])
-
-  // LOD 적용 + 줌 시 전환 (임계 altitude 위=110m 원거리, 아래=50m 근거리)
-  useEffect(() => {
-    if (!globeRef.current) return
-    if (paths50Ref.current.length === 0 && paths110Ref.current.length === 0) return
-    const globe = globeRef.current
-    const LOD_THRESHOLD = 0.6
-    globe
+    if (!globeRef.current || borderPaths.length === 0) return
+    globeRef.current
+      .pathsData(borderPaths)
       .pathPoints(d => d.coords)
       .pathPointLat(p => p[0])
       .pathPointLng(p => p[1])
       .pathPointAlt(0.0012)
       .pathTransitionDuration(0)
-    const applyLOD = () => {
-      const alt = globe.pointOfView().altitude
-      const want = alt > LOD_THRESHOLD ? 'low' : 'high'
-      if (want === lodRef.current) return
-      const data = want === 'high' ? paths50Ref.current : paths110Ref.current
-      if (!data.length) return
-      lodRef.current = want
-      globe.pathsData(data)
-    }
-    applyLOD()
-    globe.onZoom(() => applyLOD())
-  }, [borderPaths, countries])
+  }, [borderPaths])
 
   // B: hover/select 변경 시 accessor만 재설정 (가벼움)
   useEffect(() => {
