@@ -2608,7 +2608,7 @@ function App() {
     setSelectedCity(null)
     setCityData(null)
     setHoveredCountry(null)
-    setShowCountryInfo(true)  // 국가 진입 시 정보 패널 자동 표시
+    setShowCountryInfo(false)  // 다른 국가 선택 시 정보 패널 닫힘
 
     const center = getCountryCenter(feat)
     const altitude = getCountryAltitude(feat)
@@ -2721,10 +2721,10 @@ function App() {
     const cityName = getCityName(cityKey)   // 현재 언어 도시명
     // ── 관광 유형별 분산 Text Search (전 세계 보편 8종) — 반경 의존 제거로 외곽 명소 누락 방지 ──
     const CATS = {
-      ko: ['관광명소','랜드마크','유적지','종교 사원 성당','공원 정원','박물관 미술관','광장 시장 거리','전망대 자연경관'],
-      en: ['top attractions','landmarks','historic sites','temples churches mosques','parks gardens','museums galleries','squares markets','viewpoints nature'],
-      ja: ['観光スポット','ランドマーク','史跡 遺跡','寺院 神社 教会','公園 庭園','博物館 美術館','広場 市場 通り','展望台 自然'],
-      zh: ['旅游景点','地标','古迹遗址','寺庙 教堂','公园 花园','博物馆 美术馆','广场 市场','观景台 自然景观'],
+      ko: ['관광명소','명소','랜드마크','궁궐','성','유적','사찰','성당','사원','공원','정원','박물관','미술관','전망대','시장'],
+      en: ['tourist attractions','landmarks','monuments','palace','castle','historic site','temple','church','mosque','park','garden','museum','gallery','viewpoint','market'],
+      ja: ['観光スポット','名所','ランドマーク','城','史跡','遺跡','寺','神社','教会','公園','庭園','博物館','美術館','展望台','市場'],
+      zh: ['旅游景点','名胜','地标','宫殿','城堡','古迹','寺庙','教堂','公园','花园','博物馆','美术馆','观景台','市场','广场'],
     }
     const cats = CATS[lang] || CATS.en
     try {
@@ -2847,7 +2847,7 @@ function App() {
     const cityName = getCityName(cityKey) || city.name
     const langName = lang === 'ko' ? '한국어' : lang === 'ja' ? '日本語' : lang === 'zh' ? '中文' : 'English'
     const prompt = `You are a travel food culture curator. Introduce the food culture of "${cityName}" to travelers.
-Pick 3-4 representative dishes. For each dish, provide: name, a 2-3 sentence description covering its origin/history, why it developed in this region, its taste/characteristics, and an approximate price range in local currency.
+Pick 3-4 representative dishes plus 1-2 famous local drinks or alcoholic beverages (include the drinks as items in the same list). For each item, provide: name, a 2-3 sentence description covering its origin/history, why it developed in this region, its taste/characteristics, and an approximate price range in local currency.
 Exclude specific restaurant names or locations — focus on the food itself.
 Respond ONLY with valid JSON (no markdown, no code fences) in this exact format:
 {"intro":"1-2 sentence overview of the city's food culture","dishes":[{"emoji":"🍜","name":"dish name","desc":"origin, history, why developed, taste","price":"approximate price range"}]}
@@ -3670,7 +3670,7 @@ Write all text in ${langName}.`
                                 <div style={{fontSize:14.5,fontWeight:700,color:'#1a1714',marginBottom:6}}>{idx+1}. {dish.name}</div>
                                 <div style={{fontSize:12.5,color:'#6b5d52',lineHeight:1.65,marginBottom:dish.price?8:0}}>{dish.desc}</div>
                                 {dish.price && (
-                                  <div style={{display:'inline-block',fontSize:11,fontWeight:600,color:'#c8856a',background:'#f7efe9',borderRadius:6,padding:'3px 9px'}}>💰 {dish.price}</div>
+                                  <div style={{display:'inline-block',fontSize:11,fontWeight:600,color:'#c8856a',background:'#f7efe9',borderRadius:6,padding:'3px 9px'}}>{dish.price}</div>
                                 )}
                               </div>
                             ))}
