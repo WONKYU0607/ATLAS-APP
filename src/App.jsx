@@ -2132,7 +2132,7 @@ function App() {
       .pathPoints(d => d.coords)
       .pathPointLat(p => p[0])
       .pathPointLng(p => p[1])
-      .pathPointAlt(0.004)
+      .pathPointAlt(0.0012)
       .pathTransitionDuration(0)
     const applyLOD = () => {
       const alt = globe.pointOfView().altitude
