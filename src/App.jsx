@@ -2228,7 +2228,7 @@ function App() {
       .polygonCapColor(() => 'rgba(0,0,0,0)')
       .polygonSideColor(() => 'rgba(0,0,0,0)')
       .polygonStrokeColor(() => 'rgba(0,0,0,0)')
-      .polygonAltitude(() => 0)
+      .polygonAltitude(() => 0.0015)
       // 보이는 국경선 = 50m pathsData(선). 선택/호버 시 색·굵기만 변경
       .pathColor(d => {
         if (hasSelection) {
