@@ -436,6 +436,7 @@ function App() {
   const pendingPanelRef = useRef(false) // 직전이 줌-only였으면 true → 다음 탭은 무조건 패널 (의도 단계 추적)
   const foodReqRef = useRef(0) // 음식점 fetch 경쟁 상태 방지 (최신 요청만 반영)
   const lastPovKeyRef = useRef('') // hideBackLabels idle 스킵용 (라벨 재생성 시 리셋)
+  const labelCacheRef = useRef({ t: 0, items: [] }) // 라벨 DOM+좌표 캐시 (querySelectorAll 매틱 방지)
   const hasTouchedRef = useRef(false) // 페이지에 첫 터치 발생하면 true → 호버 영구 비활성 (모바일 확정)
   const [countries, setCountries] = useState([])
   const [borderPaths, setBorderPaths] = useState([])  // 50m 국경선(선) — pathsData용
@@ -1746,24 +1747,37 @@ function App() {
 
       const container = globeContainerRef.current
       if (!container) return
-      container.querySelectorAll('[data-lat]').forEach(el => {
-        const lat = parseFloat(el.dataset.lat) * Math.PI / 180
-        const lng = parseFloat(el.dataset.lng) * Math.PI / 180
+      // 라벨 목록·좌표 캐시: 매 틱 querySelectorAll/parseFloat 대신 ~1초마다 갱신
+      const cache = labelCacheRef.current
+      const now = performance.now()
+      if (now - cache.t > 1000 || cache.items.length === 0) {
+        const els = container.querySelectorAll('[data-lat]')
+        if (els.length) {
+          cache.items = Array.from(els).map(el => ({
+            el,
+            lat: parseFloat(el.dataset.lat) * Math.PI / 180,
+            lng: parseFloat(el.dataset.lng) * Math.PI / 180,
+          }))
+          cache.t = now
+        }
+      }
+      for (const it of cache.items) {
         const angle = Math.acos(Math.max(-1, Math.min(1,
-          Math.sin(camLat) * Math.sin(lat) +
-          Math.cos(camLat) * Math.cos(lat) * Math.cos(lng - camLng)
+          Math.sin(camLat) * Math.sin(it.lat) +
+          Math.cos(camLat) * Math.cos(it.lat) * Math.cos(it.lng - camLng)
         )))
-        // transition은 최초 1회만 설정 (매 틱 재설정 제거)
+        const el = it.el
+        // transition은 최초 1회만 설정
         if (!el.dataset.tInit) {
           el.style.transition = 'opacity 0.3s'
           el.dataset.tInit = '1'
         }
-        // opacity가 실제로 바뀔 때만 써서 불필요한 리플로우 방지
+        // opacity가 실제로 바뀔 때만 (불필요한 리플로우 방지)
         const next = angle < maxAngle ? '1' : '0'
         if (el.style.opacity !== next) el.style.opacity = next
-      })
+      }
     }
-    const labelInterval = setInterval(hideBackLabels, 100)
+    const labelInterval = setInterval(hideBackLabels, 150)
 
     const onResize = () => {
       globe.width(window.innerWidth)
@@ -1852,7 +1866,7 @@ function App() {
         _hasCities: !!COUNTRY_CITIES[d.nameEn],
       }))
       globe.htmlElementsData([...labelItems, ...islandLabels, ...OCEAN_LABELS])
-      lastPovKeyRef.current = '' // 라벨 새로 생성됨 → 다음 틱에 강제 재처리
+      lastPovKeyRef.current = ''; labelCacheRef.current = { t: 0, items: [] } // 라벨 새로 생성됨 → idle스킵 해제 + 캐시 무효화
       return
     }
 
@@ -1878,7 +1892,7 @@ function App() {
       }))
 
     globe.htmlElementsData([...countryLabels, ...otherIslandLabels, ...cities, ...OCEAN_LABELS])
-    lastPovKeyRef.current = '' // 라벨 새로 생성됨 → 다음 틱에 강제 재처리
+    lastPovKeyRef.current = ''; labelCacheRef.current = { t: 0, items: [] } // 라벨 새로 생성됨 → idle스킵 해제 + 캐시 무효화
     // selectedCity는 deps에서 제외: cities 배열이 selectedCity에 의존 안 하고,
     // 포함하면 도시 나갈 때 라벨 데이터가 재생성되어 줌아웃 중 라벨이 튐
   }, [selectedCountry, countries, lang])
