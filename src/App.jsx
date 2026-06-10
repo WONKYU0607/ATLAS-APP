@@ -1948,7 +1948,7 @@ function App() {
     globe
       .htmlLat(d => d.lat)
       .htmlLng(d => d.lng)
-      .htmlAltitude(d => d._type === 'city' ? 0.002 : d._type === 'ocean' ? 0.001 : d._type === 'geoline' ? 0.001 : 0.0015)
+      .htmlAltitude(d => d._type === 'ocean' ? 0.001 : d._type === 'geoline' ? 0.001 : 0.0015)
       .htmlElement(d => {
         const el = document.createElement('div')
         el.dataset.lat = d.lat
@@ -2115,7 +2115,7 @@ function App() {
       .pathPoints(d => d.coords)
       .pathPointLat(p => p[0])
       .pathPointLng(p => p[1])
-      .pathPointAlt(0.0012)
+      .pathPointAlt(0.002)
       .pathTransitionDuration(0)
   }, [borderPaths])
 
@@ -2228,7 +2228,7 @@ function App() {
       .polygonCapColor(() => 'rgba(0,0,0,0)')
       .polygonSideColor(() => 'rgba(0,0,0,0)')
       .polygonStrokeColor(() => 'rgba(0,0,0,0)')
-      .polygonAltitude(() => 0.0015)
+      .polygonAltitude(() => 0.0008)
       // 보이는 국경선 = 50m pathsData(선). 선택/호버 시 색·굵기만 변경
       .pathColor(d => {
         if (hasSelection) {
