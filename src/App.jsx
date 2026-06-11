@@ -3256,7 +3256,6 @@ Write all text in ${langName}.`
                             <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
                               onMouseEnter={e=>e.currentTarget.style.background='#ede8e0'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}
                               onClick={()=>{const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>cs.map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f._koName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300)};setShowHamburger(false)}}>
-                              <span style={{fontSize:16}}>{f.emoji||''}</span>
                               <div style={{flex:1,minWidth:0}}>
                                 <div style={{fontSize:12,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCityName(f._koName||f.name)||f.displayName||f.name}</div>
                                 <div style={{fontSize:10,color:'#9a8070'}}>{f.countryEn?getCountryName(f.countryEn):(f.countryName||'')}</div>
