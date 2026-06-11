@@ -497,6 +497,9 @@ function App() {
   const [selectedSpot, setSelectedSpot] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [showDrop, setShowDrop] = useState(false)
+  const [spotSearchQuery, setSpotSearchQuery] = useState('')      // 추천탭: 장소 검색해 코스 추가
+  const [spotSearchResults, setSpotSearchResults] = useState([])
+  const [spotSearchLoading, setSpotSearchLoading] = useState(false)
   const [hoveredCountry, setHoveredCountry] = useState(null)
   const [showCountryInfo, setShowCountryInfo] = useState(false)
   const [infoExpanded, setInfoExpanded] = useState(false) // A안: 컴팩트(헤더만) ↔ 전체 펼침
@@ -1899,6 +1902,7 @@ function App() {
       setFoodCategory('restaurant')
       setFoodCulture(null)
       setActiveTab('hotspots')   // 새 도시 진입 시 항상 추천 관광지부터
+      setSpotSearchQuery(''); setSpotSearchResults([])   // 장소 검색 초기화
       prefetchFoodCulture(selectedCity)   // 음식문화 미리 생성(백그라운드) → 탭 누를 때 즉시
     } else {
       setHotspots([])
@@ -3000,6 +3004,20 @@ Write all text in ${langName}.`
     } catch {}  // prefetch 실패는 조용히 무시 (탭 누를 때 정식 fetch가 재시도)
   }
 
+  // 추천탭: 장소 직접 검색 → 코스 추가용 (검색 범위는 도시 좌표 그대로)
+  const searchSpotsForCourse = async () => {
+    const q = spotSearchQuery.trim()
+    if (!q || !selectedCity) return
+    setSpotSearchLoading(true)
+    try {
+      const langParam = lang === 'zh' ? 'zh-CN' : lang
+      const r = await fetch(`/api/places?query=${encodeURIComponent(q)}&lat=${selectedCity.lat}&lng=${selectedCity.lng}&language=${langParam}`)
+      const d = await r.json()
+      setSpotSearchResults((d.results || []).slice(0, 8))
+    } catch { setSpotSearchResults([]) }
+    finally { setSpotSearchLoading(false) }
+  }
+
   const fetchCityData = async (city) => {
     try {
       // 1. 사전 데이터 (정적) 즉시 표시
@@ -3728,7 +3746,48 @@ Write all text in ${langName}.`
 
                       {/* 추천 관광지 목록 */}
                       {activeTab==='hotspots' && (
-                        loadingPlaces ? (
+                        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                          {/* 장소 검색 → 코스 추가 */}
+                          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                            <div style={{display:'flex',gap:6}}>
+                              <input value={spotSearchQuery} onChange={e=>setSpotSearchQuery(e.target.value)}
+                                onKeyDown={e=>{if(e.key==='Enter')searchSpotsForCourse()}}
+                                placeholder={lang==='ko'?'장소 검색해서 코스에 추가':lang==='ja'?'場所を検索してコースに追加':lang==='zh'?'搜索地点添加到行程':'Search a place to add'}
+                                style={{flex:1,minWidth:0,padding:'9px 12px',borderRadius:9,border:'1px solid #e0d9d0',fontSize:12.5,outline:'none',background:'#faf7f3',color:'#1a1714'}}/>
+                              <button onClick={searchSpotsForCourse}
+                                style={{padding:'0 14px',borderRadius:9,border:'none',background:'#c8856a',color:'white',fontSize:12.5,fontWeight:600,cursor:'pointer',flexShrink:0}}>
+                                {lang==='ko'?'검색':lang==='ja'?'検索':lang==='zh'?'搜索':'Search'}</button>
+                            </div>
+                            {spotSearchLoading && (
+                              <div style={{display:'flex',justifyContent:'center',padding:14}}>
+                                <div style={{width:22,height:22,borderRadius:'50%',border:'2px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>
+                              </div>
+                            )}
+                            {!spotSearchLoading && spotSearchResults.length>0 && (
+                              <div style={{display:'flex',flexDirection:'column',gap:8,paddingBottom:10,borderBottom:'1px solid #ede8e0'}}>
+                                {spotSearchResults.map((r,i)=>(
+                                  <div key={i} style={{display:'flex',gap:10,padding:8,alignItems:'center',background:'#faf7f3',border:'1px solid #ede8e0',borderRadius:10}}>
+                                    {r.photos&&r.photos.length>0 ? (
+                                      <img src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=160&photo_reference=${r.photos[0].photo_reference}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`}
+                                        alt={r.name} style={{width:54,height:54,borderRadius:8,objectFit:'cover',flexShrink:0}}/>
+                                    ) : (
+                                      <div style={{width:54,height:54,borderRadius:8,background:'#f0e9e1',flexShrink:0}}/>
+                                    )}
+                                    <div style={{flex:1,minWidth:0}}>
+                                      <div style={{fontSize:12.5,fontWeight:700,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.name}</div>
+                                      {r.rating && <div style={{fontSize:11,color:'#c8a870',fontWeight:600,marginTop:2}}>★ {r.rating}{r.user_ratings_total?` (${r.user_ratings_total.toLocaleString()})`:''}</div>}
+                                      {(r.vicinity||r.formatted_address) && <div style={{fontSize:9.5,color:'#b0a89e',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:2}}>{r.vicinity||r.formatted_address}</div>}
+                                    </div>
+                                    <button onClick={()=>addToCourse({source:'hotspot',name:r.name,displayName:r.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:r.rating,place_id:r.place_id,vicinity:r.vicinity||r.formatted_address,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:'📍',photo_ref:r.photos?.[0]?.photo_reference||null})}
+                                      style={{background:isInCourse(r.name,'hotspot')?'#c8856a':'#f5f0ea',border:isInCourse(r.name,'hotspot')?'none':'1px solid #e0d9d0',color:isInCourse(r.name,'hotspot')?'white':'#c8b8a8',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:14,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}
+                                      title={t("courseAddToTrip")}>{isInCourse(r.name,'hotspot')?'✓':'＋'}</button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          {/* 추천 관광지 목록 */}
+                          {loadingPlaces ? (
                           <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:50}}>
                             <div style={{width:28,height:28,borderRadius:'50%',border:'2px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>
                           </div>
@@ -3773,7 +3832,8 @@ Write all text in ${langName}.`
                           </div>
                         ) : (
                           <div style={{textAlign:'center',padding:40,color:'#94a3b8',fontSize:13}}>{t('noData')}</div>
-                        )
+                        )}
+                        </div>
                       )}
 
                       {/* 음식 문화 (AI 생성) */}
