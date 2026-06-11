@@ -2048,7 +2048,27 @@ function App() {
             if (!_downXY) return
             const moved = Math.hypot(ev.clientX - _downXY[0], ev.clientY - _downXY[1])
             _downXY = null
-            if (moved > 8) return  // 드래그(회전)면 진입 안 함
+            if (moved > 8) return  // 드래그(회전)면 무시
+            // 겹침 체크: 화면상 가까운 다른 라벨이 있으면 먼저 분리 줌, 단독이면 진입
+            const cont = globeContainerRef.current
+            const myR = el.getBoundingClientRect()
+            const mx = myR.left + myR.width / 2, my = myR.top + myR.height / 2
+            let minD = Infinity
+            cont?.querySelectorAll('[data-lat]').forEach(o => {
+              if (o === el || o.style.opacity === '0') return
+              const r = o.getBoundingClientRect()
+              const dd = Math.hypot((r.left + r.width / 2) - mx, (r.top + r.height / 2) - my)
+              if (dd < minD) minD = dd
+            })
+            const OVERLAP_PX = 55, SEP_TARGET = 170
+            if (isFinite(minD) && minD < OVERLAP_PX && globeRef.current) {
+              // 겹침 → 분리 줌인 (이 라벨 중심으로, 이웃이 충분히 떨어지게)
+              const pov = globeRef.current.pointOfView()
+              const newAlt = Math.max(0.05, pov.altitude * (minD / SEP_TARGET))
+              globeRef.current.pointOfView({ lat: d.lat, lng: d.lng, altitude: newAlt }, 700)
+              return
+            }
+            // 단독 → 진입
             let feat = countries.find(f => f.properties && f.properties.NAME === d.nameEn)
             if (!feat) feat = { type: 'Feature', properties: { NAME: d.nameEn, LABEL_X: d.lng, LABEL_Y: d.lat }, geometry: null }
             handleCountryClickRef.current?.(feat)
