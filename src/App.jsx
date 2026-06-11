@@ -1877,18 +1877,8 @@ function App() {
       _type: 'country',
       _hasCities: !!COUNTRY_CITIES[feat.properties.NAME],
     })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn && !HIDDEN_COUNTRY_LABELS.has(d.nameEn) && !ISLAND_NAMES.has(d.nameEn) && !ISLAND_NAMES_NORM.has(normCountryName(d.nameEn)))
-    const otherIslandLabels = ISLAND_LABEL_DATA
-      .filter(d => d.nameEn !== countryEn)
-      .map(d => ({
-        lat: d.lat,
-        lng: d.lng,
-        name: getCountryName(d.nameEn),
-        nameEn: d.nameEn,
-        _type: 'island',
-        _hasCities: !!COUNTRY_CITIES[d.nameEn],
-      }))
-
-    globe.htmlElementsData([...countryLabels, ...otherIslandLabels, ...cities, ...OCEAN_LABELS])
+    // 마이크로국가(산마리노·바티칸 등)는 국가단위라 국가뷰(도시 표시)에선 숨김 — 세계뷰에서만 표시/클릭
+    globe.htmlElementsData([...countryLabels, ...cities, ...OCEAN_LABELS])
     lastPovKeyRef.current = ''; labelCacheRef.current = { t: 0, items: [] } // 라벨 새로 생성됨 → idle스킵 해제 + 캐시 무효화
     // selectedCity는 deps에서 제외: cities 배열이 selectedCity에 의존 안 하고,
     // 포함하면 도시 나갈 때 라벨 데이터가 재생성되어 줌아웃 중 라벨이 튐
