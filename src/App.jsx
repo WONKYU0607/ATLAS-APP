@@ -2811,6 +2811,7 @@ function App() {
       '베이징': { queries: ['만리장성 바다링', '만리장성 무톈위'], allow: ['만리장성','Great Wall','长城','Badaling','Mutianyu','바다링','무톈위'] },
       '아테네': { queries: ['수니온 포세이돈 신전', 'Temple of Poseidon Sounion'], allow: ['수니온','Sounion','Sounio','Poseidon','포세이돈'] },
       '마추픽추': { queries: ['마추픽추'], allow: ['마추픽추','마추 픽추','Machu Picchu','Machupicchu'] },
+      '가마쿠라': { queries: ['에노시마', '江ノ島 신사'], allow: ['에노시마','江の島','江ノ島','Enoshima'] },
     }
     const extra = EXTRA_SPOTS[cityKey]
     try {
@@ -3763,6 +3764,11 @@ Write all text in ${langName}.`
                               <button onClick={searchSpotsForCourse}
                                 style={{padding:'0 14px',borderRadius:9,border:'none',background:'#c8856a',color:'white',fontSize:12.5,fontWeight:600,cursor:'pointer',flexShrink:0}}>
                                 {lang==='ko'?'검색':lang==='ja'?'検索':lang==='zh'?'搜索':'Search'}</button>
+                              {(spotSearchResults.length>0 || spotSearchQuery) && (
+                                <button onClick={()=>{setSpotSearchQuery('');setSpotSearchResults([])}}
+                                  style={{padding:'0 12px',borderRadius:9,border:'1px solid #e0d9d0',background:'#f5f0ea',color:'#9a8070',fontSize:13,cursor:'pointer',flexShrink:0}}
+                                  title={lang==='ko'?'닫기':'Close'}>✕</button>
+                              )}
                             </div>
                             {spotSearchLoading && (
                               <div style={{display:'flex',justifyContent:'center',padding:14}}>
