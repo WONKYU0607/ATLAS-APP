@@ -1754,11 +1754,17 @@ function App() {
             el,
             lat: parseFloat(el.dataset.lat) * Math.PI / 180,
             lng: parseFloat(el.dataset.lng) * Math.PI / 180,
+            tier: parseInt(el.dataset.tier || '1', 10),
           }))
           cache.t = now
         }
       }
+      const alt = pov.altitude
       for (const it of cache.items) {
+        // 줌 등급 게이트: 멀면 작은 라벨 숨김 (구글어스식 + 라벨 수 감소로 성능↑)
+        let tierOk = true
+        if (it.tier === 2) tierOk = alt < 1.8        // 일반 국가: 중간 줌부터
+        else if (it.tier === 3) tierOk = alt < 0.6   // 마이크로국가: 근접해야
         const angle = Math.acos(Math.max(-1, Math.min(1,
           Math.sin(camLat) * Math.sin(it.lat) +
           Math.cos(camLat) * Math.cos(it.lat) * Math.cos(it.lng - camLng)
@@ -1770,7 +1776,7 @@ function App() {
           el.dataset.tInit = '1'
         }
         // opacity가 실제로 바뀔 때만 (불필요한 리플로우 방지)
-        const next = angle < maxAngle ? '1' : '0'
+        const next = (tierOk && angle < maxAngle) ? '1' : '0'
         if (el.style.opacity !== next) el.style.opacity = next
       }
     }
@@ -1945,6 +1951,10 @@ function App() {
         const el = document.createElement('div')
         el.dataset.lat = d.lat
         el.dataset.lng = d.lng
+        // 줌 등급: 1=주요국/도시(항상) 2=일반국가(중간줌+) 3=마이크로국가(근접)
+        el.dataset.tier = (d._type === 'island') ? '3'
+          : (d._type === 'country' && !d._hasCities) ? '2'
+          : '1'
 
         if (d._type === 'geoline') {
           el.style.cssText = 'pointer-events:none;'
