@@ -1910,6 +1910,8 @@ function App() {
       setSidePanel(null)
       setFoodCategory('restaurant')
       setFoodCulture(null)
+      setActiveTab('hotspots')   // 새 도시 진입 시 항상 추천 관광지부터
+      prefetchFoodCulture(selectedCity)   // 음식문화 미리 생성(백그라운드) → 탭 누를 때 즉시
     } else {
       setHotspots([])
       setRestaurants([])
@@ -2891,8 +2893,7 @@ function App() {
   const fetchFoodCulture = async (city) => {
     const cityKey = city._koName || city.name
     const cacheKey = `foodCulture3_${cityKey}_${lang}`
-    const canonKey = `foodCulture3_${cityKey}_ko`  // 원본=한국어 (음식·순서의 단일 출처)
-    // 현재 언어 캐시 확인
+    // 캐시 확인
     try {
       const cached = localStorage.getItem(cacheKey)
       if (cached) { setFoodCulture(JSON.parse(cached)); return }
@@ -2900,8 +2901,16 @@ function App() {
 
     setLoadingFoodCulture(true)
     setFoodCulture(null)
+    const cityName = getCityName(cityKey) || city.name
+    const langName = lang === 'ko' ? '한국어' : lang === 'ja' ? '日本語' : lang === 'zh' ? '中文' : 'English'
+    const prompt = `You are a travel food culture curator. Introduce the food culture of "${cityName}" to travelers.
+Pick 3-4 representative dishes plus 1-2 famous local drinks or alcoholic beverages (include the drinks as items in the same list). For each item, provide: name, a 2-3 sentence description covering its origin/history, why it developed in this region, and its taste/characteristics. Do NOT include any prices.
+Exclude specific restaurant names or locations — focus on the food itself.
+Respond ONLY with valid JSON (no markdown, no code fences) in this exact format:
+{"intro":"1-2 sentence overview of the city's food culture","dishes":[{"name":"dish name","desc":"origin, history, why developed, taste"}]}
+Write all text in ${langName}.`
 
-    const callChat = async (prompt) => {
+    try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2909,43 +2918,42 @@ function App() {
       })
       const data = await res.json()
       const txt = (data.text || '').trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim()
-      return JSON.parse(txt)
-    }
-
-    try {
-      // 1) 원본(한국어) 확보 — 없으면 한 번만 생성 (음식·가격·순서의 단일 출처)
-      let canon = null
-      try { const c = localStorage.getItem(canonKey); if (c) canon = JSON.parse(c) } catch {}
-      if (!canon) {
-        const genPrompt = `You are a travel food culture curator. Introduce the food culture of "${cityKey}" to travelers.
-Pick 3-4 representative dishes plus 1-2 famous local drinks or alcoholic beverages (include the drinks as items in the same list). For each item, provide: name, a 2-3 sentence description covering its origin/history, why it developed in this region, and its taste/characteristics. Do NOT include any prices.
-Exclude specific restaurant names or locations — focus on the food itself.
-Respond ONLY with valid JSON (no markdown, no code fences) in this exact format:
-{"intro":"1-2 sentence overview of the city's food culture","dishes":[{"name":"dish name","desc":"origin, history, why developed, taste"}]}
-Write all text in 한국어.`
-        canon = await callChat(genPrompt)
-        try { localStorage.setItem(canonKey, JSON.stringify(canon)) } catch {}
-      }
-
-      // 2) 한국어면 원본 그대로 / 그 외 언어는 번역만 (가격·구조 절대 변경 금지)
-      if (lang === 'ko') {
-        setFoodCulture(canon)
-      } else {
-        const langName = lang === 'ja' ? '日本語' : lang === 'zh' ? '中文' : 'English'
-        const trPrompt = `Translate the "intro" and each dish's "name" and "desc" of the following food JSON into ${langName}.
-CRITICAL: keep the JSON structure and the number and order of dishes EXACTLY the same. Only translate the intro/name/desc text.
-Respond ONLY with valid JSON in the same format (no markdown, no code fences).
-JSON: ${JSON.stringify(canon)}`
-        const translated = await callChat(trPrompt)
-        setFoodCulture(translated)
-        try { localStorage.setItem(cacheKey, JSON.stringify(translated)) } catch {}
-      }
+      const parsed = JSON.parse(txt)
+      setFoodCulture(parsed)
+      try { localStorage.setItem(cacheKey, JSON.stringify(parsed)) } catch {}
     } catch (e) {
       console.error('Food culture fetch error:', e)
       setFoodCulture({ error: true })
     } finally {
       setLoadingFoodCulture(false)
     }
+  }
+
+  // prefetch: 도시 진입 시 음식문화를 백그라운드로 미리 생성 (캐시에 저장만, UI 상태 안 건드림)
+  const prefetchFoodCulture = async (city) => {
+    if (!city) return
+    const cityKey = city._koName || city.name
+    const cacheKey = `foodCulture3_${cityKey}_${lang}`
+    try { if (localStorage.getItem(cacheKey)) return } catch {}  // 이미 캐시 있으면 스킵
+    const cityName = getCityName(cityKey) || city.name
+    const langName = lang === 'ko' ? '한국어' : lang === 'ja' ? '日本語' : lang === 'zh' ? '中文' : 'English'
+    const prompt = `You are a travel food culture curator. Introduce the food culture of "${cityName}" to travelers.
+Pick 3-4 representative dishes plus 1-2 famous local drinks or alcoholic beverages (include the drinks as items in the same list). For each item, provide: name, a 2-3 sentence description covering its origin/history, why it developed in this region, and its taste/characteristics. Do NOT include any prices.
+Exclude specific restaurant names or locations — focus on the food itself.
+Respond ONLY with valid JSON (no markdown, no code fences) in this exact format:
+{"intro":"1-2 sentence overview of the city's food culture","dishes":[{"name":"dish name","desc":"origin, history, why developed, taste"}]}
+Write all text in ${langName}.`
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      })
+      const data = await res.json()
+      const txt = (data.text || '').trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim()
+      const parsed = JSON.parse(txt)
+      try { localStorage.setItem(cacheKey, JSON.stringify(parsed)) } catch {}
+    } catch {}  // prefetch 실패는 조용히 무시 (탭 누를 때 정식 fetch가 재시도)
   }
 
   const fetchCityData = async (city) => {
