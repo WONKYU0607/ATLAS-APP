@@ -22,7 +22,7 @@ const HIDDEN_COUNTRY_LABELS = new Set(['W. Sahara', 'Falkland Is.', 'Greenland',
 // 이름 정규화: "Solomon Is." ↔ "Solomon Islands" 같은 약자 변형 매칭용
 const normCountryName = (s) => String(s || '').toLowerCase().replace(/\bis\.?\b/g, 'islands').replace(/&/g, 'and').replace(/[^a-z]/g, '')
 const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.nameEn)))
-import { useState, useEffect, useRef, Component } from 'react'
+import { useState, useEffect, useRef, useMemo, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
 import { AUTO_I18N } from './auto-i18n'
@@ -1847,6 +1847,34 @@ function App() {
     { lat: 10, lng: 175, name: lang==='ko'?'날짜변경선':lang==='ja'?'日付変更線':lang==='zh'?'国际日期变更线':'International Date Line', _type: 'geoline' },
   ]
 
+  // 국가 면적(폴리곤 좌표로 자동 계산) → 라벨 줌 등급. 외울 필요 없음, 데이터 추가 없음
+  const countryTierOf = useMemo(() => {
+    const ringArea = (ring) => {
+      let a = 0
+      for (let i = 0, n = ring.length; i < n; i++) {
+        const [x1, y1] = ring[i]
+        const [x2, y2] = ring[(i + 1) % n]
+        a += (x2 - x1) * (2 + Math.sin(y1 * Math.PI / 180) + Math.sin(y2 * Math.PI / 180))
+      }
+      return Math.abs(a)
+    }
+    const featArea = (geom) => {
+      if (!geom) return 0
+      const polys = geom.type === 'Polygon' ? [geom.coordinates]
+        : geom.type === 'MultiPolygon' ? geom.coordinates : []
+      let s = 0
+      polys.forEach(poly => { if (poly[0]) s += ringArea(poly[0]) })
+      return s
+    }
+    const areas = {}
+    countries.forEach(f => { areas[f.properties.NAME] = featArea(f.geometry) })
+    const sorted = Object.values(areas).filter(a => a > 0).sort((a, b) => a - b)
+    if (!sorted.length) return () => 1
+    const q = (p) => sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))]
+    const t2 = q(0.35), t1 = q(0.68)  // 하위35%=tier3(근접), 중간=tier2, 상위32%=tier1(항상)
+    return (name) => { const a = areas[name] || 0; return a >= t1 ? 1 : a >= t2 ? 2 : 3 }
+  }, [countries])
+
   useEffect(() => {
     if (!globeRef.current) return
     const globe = globeRef.current
@@ -1859,6 +1887,7 @@ function App() {
         nameEn: feat.properties.NAME,
         _type: 'country',
         _hasCities: !!COUNTRY_CITIES[feat.properties.NAME],
+        _tier: countryTierOf(feat.properties.NAME),
       })).filter(d => (d.lat !== 0 || d.lng !== 0) && !HIDDEN_COUNTRY_LABELS.has(d.nameEn) && !ISLAND_NAMES.has(d.nameEn) && !ISLAND_NAMES_NORM.has(normCountryName(d.nameEn)))
       const islandLabels = ISLAND_LABEL_DATA.map(d => ({
         lat: d.lat,
@@ -1882,6 +1911,7 @@ function App() {
       nameEn: feat.properties.NAME,
       _type: 'country',
       _hasCities: !!COUNTRY_CITIES[feat.properties.NAME],
+      _tier: countryTierOf(feat.properties.NAME),
     })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn && !HIDDEN_COUNTRY_LABELS.has(d.nameEn) && !ISLAND_NAMES.has(d.nameEn) && !ISLAND_NAMES_NORM.has(normCountryName(d.nameEn)))
     // 마이크로국가(산마리노·바티칸 등)는 국가단위라 국가뷰(도시 표시)에선 숨김 — 세계뷰에서만 표시/클릭
     globe.htmlElementsData([...countryLabels, ...cities, ...OCEAN_LABELS])
@@ -1951,10 +1981,8 @@ function App() {
         const el = document.createElement('div')
         el.dataset.lat = d.lat
         el.dataset.lng = d.lng
-        // 줌 등급: 1=주요국/도시(항상) 2=일반국가(중간줌+) 3=마이크로국가(근접)
-        el.dataset.tier = (d._type === 'island') ? '3'
-          : (d._type === 'country' && !d._hasCities) ? '2'
-          : '1'
+        // 줌 등급: 면적 기반 _tier (도시/바다/기준선은 항상=1, 마이크로국가=3)
+        el.dataset.tier = String(d._tier || (d._type === 'island' ? 3 : 1))
 
         if (d._type === 'geoline') {
           el.style.cssText = 'pointer-events:none;'
