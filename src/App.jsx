@@ -2789,11 +2789,22 @@ function App() {
       for (const arr of arrays) for (const p of arr) {
         if (p.place_id && !seen.has(p.place_id)) { seen.add(p.place_id); merged.push(p) }
       }
-      // 오염 제거: 결과 주소에 해당 도시명(한/영/일/중)이 든 것만 — 타지 명소(예: 인천에 뜨는 경복궁) 차단
+      // 오염 제거: 결과 주소에 도시명(한/영/일/중)이 든 것만 — 타지 명소(예: 인천에 뜨는 경복궁) 차단
+      // 예외: 행정구역은 다르지만 그 도시 여행의 핵심 명소(피라미드·만리장성 등)는 허용키워드로 통과
+      const EXTRA_SPOTS = {
+        '카이로': ['기자', 'Giza', '피라미드', 'Pyramid', '스핑크스', 'Sphinx'],
+        '베이징': ['만리장성', 'Great Wall', '长城', '바다링', 'Badaling', '무톈위', 'Mutianyu'],
+        '아테네': ['수니온', 'Sounion', 'Sounio'],
+        '마추픽추': ['마추픽추', '마추 픽추', 'Machu Picchu', 'Machupicchu'],
+      }
       const cityNames = [cityKey, ...(CITY_I18N[cityKey] || [])].filter(Boolean)
+      const allow = EXTRA_SPOTS[cityKey] || []
       const inCity = (p) => {
         const addr = (p.vicinity || '') + ' ' + (p.formatted_address || '')
-        return cityNames.some(n => addr.includes(n))
+        if (cityNames.some(n => addr.includes(n))) return true
+        // 허용키워드: 이름 또는 주소에 있으면 통과 (주소에 도시명 없어도)
+        const hay = (p.name || '') + ' ' + addr
+        return allow.some(k => hay.includes(k))
       }
       const list = merged
         .filter(p => p.user_ratings_total)                       // 리뷰 있는 곳만
