@@ -1754,15 +1754,11 @@ function App() {
             el,
             lat: parseFloat(el.dataset.lat) * Math.PI / 180,
             lng: parseFloat(el.dataset.lng) * Math.PI / 180,
-            tier: parseInt(el.dataset.tier || '1', 10),
           }))
           cache.t = now
         }
       }
-      const alt = pov.altitude
       for (const it of cache.items) {
-        // 줌 등급 게이트: 멀면 작은/덜중요 나라 숨김 (도시개수 기반, 구글어스식)
-        const tierOk = it.tier === 1 ? true : it.tier === 2 ? alt < 1.8 : alt < 0.6
         const angle = Math.acos(Math.max(-1, Math.min(1,
           Math.sin(camLat) * Math.sin(it.lat) +
           Math.cos(camLat) * Math.cos(it.lat) * Math.cos(it.lng - camLng)
@@ -1772,7 +1768,7 @@ function App() {
           el.style.transition = 'opacity 0.3s'
           el.dataset.tInit = '1'
         }
-        const next = (tierOk && angle < maxAngle) ? '1' : '0'
+        const next = angle < maxAngle ? '1' : '0'
         if (el.style.opacity !== next) el.style.opacity = next
       }
     }
@@ -1843,18 +1839,6 @@ function App() {
     { lat: 10, lng: 175, name: lang==='ko'?'날짜변경선':lang==='ja'?'日付変更線':lang==='zh'?'国际日期变更线':'International Date Line', _type: 'geoline' },
   ]
 
-  // 도시 개수 기반 중요도 등급 (1=항상/주요국, 2=중간줌, 3=근접). 정적 데이터라 1회만 계산
-  const tierFnRef = useRef(null)
-  if (!tierFnRef.current) {
-    const counts = {}
-    Object.keys(COUNTRY_CITIES || {}).forEach(k => { counts[k] = (COUNTRY_CITIES[k] || []).length })
-    tierFnRef.current = (name) => {
-      const c = counts[name] || 0
-      return c >= 5 ? 1 : c >= 1 ? 2 : 3
-    }
-  }
-  const countryTierOf = tierFnRef.current
-
   useEffect(() => {
     if (!globeRef.current) return
     const globe = globeRef.current
@@ -1867,7 +1851,6 @@ function App() {
         nameEn: feat.properties.NAME,
         _type: 'country',
         _hasCities: !!COUNTRY_CITIES[feat.properties.NAME],
-        _tier: countryTierOf(feat.properties.NAME),
       })).filter(d => (d.lat !== 0 || d.lng !== 0) && !HIDDEN_COUNTRY_LABELS.has(d.nameEn) && !ISLAND_NAMES.has(d.nameEn) && !ISLAND_NAMES_NORM.has(normCountryName(d.nameEn)))
       const islandLabels = ISLAND_LABEL_DATA.map(d => ({
         lat: d.lat,
@@ -1891,7 +1874,6 @@ function App() {
       nameEn: feat.properties.NAME,
       _type: 'country',
       _hasCities: !!COUNTRY_CITIES[feat.properties.NAME],
-      _tier: countryTierOf(feat.properties.NAME),
     })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn && !HIDDEN_COUNTRY_LABELS.has(d.nameEn) && !ISLAND_NAMES.has(d.nameEn) && !ISLAND_NAMES_NORM.has(normCountryName(d.nameEn)))
     // 마이크로국가(산마리노·바티칸 등)는 국가단위라 국가뷰(도시 표시)에선 숨김 — 세계뷰에서만 표시/클릭
     globe.htmlElementsData([...countryLabels, ...cities, ...OCEAN_LABELS])
@@ -1961,12 +1943,6 @@ function App() {
         const el = document.createElement('div')
         el.dataset.lat = d.lat
         el.dataset.lng = d.lng
-        // 줌 등급(도시개수 기반) + 초기 opacity도 등급 맞춰 세팅 (터치 전에도 솎임)
-        const _tier = d._tier || (d._type === 'island' ? 3 : 1)
-        el.dataset.tier = String(_tier)
-        const _alt = globeRef.current?.pointOfView?.().altitude ?? 2.5
-        const _show = _tier === 1 ? true : _tier === 2 ? _alt < 1.8 : _alt < 0.6
-        el.style.opacity = _show ? '1' : '0'
 
         if (d._type === 'geoline') {
           el.style.cssText = 'pointer-events:none;'
