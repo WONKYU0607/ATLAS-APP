@@ -2039,6 +2039,20 @@ function App() {
               user-select:none;
             ">${d.name}</div>`
           }
+          // 국가/섬 라벨 탭 → 진입 (작은 나라 폴리곤 클릭 어려움 해결). 드래그(회전)는 무시
+          el.style.pointerEvents = 'auto'
+          el.style.cursor = 'pointer'
+          let _downXY = null
+          el.addEventListener('pointerdown', (ev) => { _downXY = [ev.clientX, ev.clientY] })
+          el.addEventListener('pointerup', (ev) => {
+            if (!_downXY) return
+            const moved = Math.hypot(ev.clientX - _downXY[0], ev.clientY - _downXY[1])
+            _downXY = null
+            if (moved > 8) return  // 드래그(회전)면 진입 안 함
+            let feat = countries.find(f => f.properties && f.properties.NAME === d.nameEn)
+            if (!feat) feat = { type: 'Feature', properties: { NAME: d.nameEn, LABEL_X: d.lng, LABEL_Y: d.lat }, geometry: null }
+            handleCountryClickRef.current?.(feat)
+          })
         }
         return el
       })
@@ -2676,9 +2690,11 @@ function App() {
       setCityData(null)
       setShowCountryInfo(false)
       fetchCityData(city)
-      // 도시로 카메라 슬라이드만 (줌 레벨은 그대로 유지)
+      // 멀리(지구뷰)서 진입하면 도시로 줌인, 이미 가까우면 줌 유지하고 슬라이드만
       const pov = globeRef.current.pointOfView()
-      globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: pov.altitude }, 900)
+      const cityAlt = window.innerWidth <= 768 ? 0.32 : 0.22
+      const targetAlt = pov.altitude > 0.5 ? cityAlt : pov.altitude
+      globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: targetAlt }, 900)
     } catch(e) { console.error('city click error:', e) }
   }
 
@@ -2777,32 +2793,41 @@ function App() {
       zh: ['旅游景点','名胜','地标','宫殿','城堡','古迹','寺庙','教堂','公园','花园','博物馆','美术馆','观景台','市场','广场'],
     }
     const cats = CATS[lang] || CATS.en
+    // 행정구역이 달라 분산쿼리에 안 잡히는 핵심 명소 — 이름으로 직접 검색해 추가(queries) + 오염필터 통과(allow)
+    const EXTRA_SPOTS = {
+      '카이로': { queries: ['기자 피라미드', '스핑크스 기자'], allow: ['기자','Giza','피라미드','Pyramid','스핑크스','Sphinx'] },
+      '베이징': { queries: ['만리장성 바다링', '만리장성 무톈위'], allow: ['만리장성','Great Wall','长城','Badaling','Mutianyu','바다링','무톈위'] },
+      '아테네': { queries: ['수니온 포세이돈 신전', 'Temple of Poseidon Sounion'], allow: ['수니온','Sounion','Sounio','Poseidon','포세이돈'] },
+      '마추픽추': { queries: ['마추픽추'], allow: ['마추픽추','마추 픽추','Machu Picchu','Machupicchu'] },
+    }
+    const extra = EXTRA_SPOTS[cityKey]
     try {
-      const arrays = await Promise.all(cats.map(async (cat) => {
+      const catFetches = cats.map(async (cat) => {
         try {
           const r = await fetch(`/api/places?query=${encodeURIComponent(cityName + ' ' + cat)}&lat=${city.lat}&lng=${city.lng}&language=${langParam}`)
           const d = await r.json()
           return d.results || []
         } catch { return [] }
-      }))
+      })
+      const extraFetches = (extra?.queries || []).map(async (q) => {
+        try {
+          const r = await fetch(`/api/places?query=${encodeURIComponent(q)}&lat=${city.lat}&lng=${city.lng}&language=${langParam}`)
+          const d = await r.json()
+          return d.results || []
+        } catch { return [] }
+      })
+      const arrays = await Promise.all([...catFetches, ...extraFetches])
       const seen = new Set(); const merged = []
       for (const arr of arrays) for (const p of arr) {
         if (p.place_id && !seen.has(p.place_id)) { seen.add(p.place_id); merged.push(p) }
       }
-      // 오염 제거: 결과 주소에 도시명(한/영/일/중)이 든 것만 — 타지 명소(예: 인천에 뜨는 경복궁) 차단
-      // 예외: 행정구역은 다르지만 그 도시 여행의 핵심 명소(피라미드·만리장성 등)는 허용키워드로 통과
-      const EXTRA_SPOTS = {
-        '카이로': ['기자', 'Giza', '피라미드', 'Pyramid', '스핑크스', 'Sphinx'],
-        '베이징': ['만리장성', 'Great Wall', '长城', '바다링', 'Badaling', '무톈위', 'Mutianyu'],
-        '아테네': ['수니온', 'Sounion', 'Sounio'],
-        '마추픽추': ['마추픽추', '마추 픽추', 'Machu Picchu', 'Machupicchu'],
-      }
+      // 오염 제거: 결과 주소에 도시명(한/영/일/중)이 든 것만 — 타지 명소(예: 인천 경복궁) 차단
+      // 예외: 행정구역 다른 핵심 명소(피라미드·만리장성·수니온 등)는 allow 키워드로 통과
       const cityNames = [cityKey, ...(CITY_I18N[cityKey] || [])].filter(Boolean)
-      const allow = EXTRA_SPOTS[cityKey] || []
+      const allow = extra?.allow || []
       const inCity = (p) => {
         const addr = (p.vicinity || '') + ' ' + (p.formatted_address || '')
         if (cityNames.some(n => addr.includes(n))) return true
-        // 허용키워드: 이름 또는 주소에 있으면 통과 (주소에 도시명 없어도)
         const hay = (p.name || '') + ' ' + addr
         return allow.some(k => hay.includes(k))
       }
