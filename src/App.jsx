@@ -1761,21 +1761,17 @@ function App() {
       }
       const alt = pov.altitude
       for (const it of cache.items) {
-        // 줌 등급 게이트: 멀면 작은 라벨 숨김 (구글어스식 + 라벨 수 감소로 성능↑)
-        let tierOk = true
-        if (it.tier === 2) tierOk = alt < 1.8        // 일반 국가: 중간 줌부터
-        else if (it.tier === 3) tierOk = alt < 0.6   // 마이크로국가: 근접해야
+        // 줌 등급 게이트: 멀면 작은/덜중요 나라 숨김 (도시개수 기반, 구글어스식)
+        const tierOk = it.tier === 1 ? true : it.tier === 2 ? alt < 1.8 : alt < 0.6
         const angle = Math.acos(Math.max(-1, Math.min(1,
           Math.sin(camLat) * Math.sin(it.lat) +
           Math.cos(camLat) * Math.cos(it.lat) * Math.cos(it.lng - camLng)
         )))
         const el = it.el
-        // transition은 최초 1회만 설정
         if (!el.dataset.tInit) {
           el.style.transition = 'opacity 0.3s'
           el.dataset.tInit = '1'
         }
-        // opacity가 실제로 바뀔 때만 (불필요한 리플로우 방지)
         const next = (tierOk && angle < maxAngle) ? '1' : '0'
         if (el.style.opacity !== next) el.style.opacity = next
       }
@@ -1847,33 +1843,17 @@ function App() {
     { lat: 10, lng: 175, name: lang==='ko'?'날짜변경선':lang==='ja'?'日付変更線':lang==='zh'?'国际日期变更线':'International Date Line', _type: 'geoline' },
   ]
 
-  // 국가 면적(폴리곤 좌표로 자동 계산) → 라벨 줌 등급. 외울 필요 없음, 데이터 추가 없음
-  const countryTierOf = useMemo(() => {
-    const ringArea = (ring) => {
-      let a = 0
-      for (let i = 0, n = ring.length; i < n; i++) {
-        const [x1, y1] = ring[i]
-        const [x2, y2] = ring[(i + 1) % n]
-        a += (x2 - x1) * (2 + Math.sin(y1 * Math.PI / 180) + Math.sin(y2 * Math.PI / 180))
-      }
-      return Math.abs(a)
+  // 도시 개수 기반 중요도 등급 (1=항상/주요국, 2=중간줌, 3=근접). 정적 데이터라 1회만 계산
+  const tierFnRef = useRef(null)
+  if (!tierFnRef.current) {
+    const counts = {}
+    Object.keys(COUNTRY_CITIES || {}).forEach(k => { counts[k] = (COUNTRY_CITIES[k] || []).length })
+    tierFnRef.current = (name) => {
+      const c = counts[name] || 0
+      return c >= 5 ? 1 : c >= 1 ? 2 : 3
     }
-    const featArea = (geom) => {
-      if (!geom) return 0
-      const polys = geom.type === 'Polygon' ? [geom.coordinates]
-        : geom.type === 'MultiPolygon' ? geom.coordinates : []
-      let s = 0
-      polys.forEach(poly => { if (poly[0]) s += ringArea(poly[0]) })
-      return s
-    }
-    const areas = {}
-    countries.forEach(f => { areas[f.properties.NAME] = featArea(f.geometry) })
-    const sorted = Object.values(areas).filter(a => a > 0).sort((a, b) => a - b)
-    if (!sorted.length) return () => 1
-    const q = (p) => sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))]
-    const t2 = q(0.35), t1 = q(0.68)  // 하위35%=tier3(근접), 중간=tier2, 상위32%=tier1(항상)
-    return (name) => { const a = areas[name] || 0; return a >= t1 ? 1 : a >= t2 ? 2 : 3 }
-  }, [countries])
+  }
+  const countryTierOf = tierFnRef.current
 
   useEffect(() => {
     if (!globeRef.current) return
@@ -1981,8 +1961,12 @@ function App() {
         const el = document.createElement('div')
         el.dataset.lat = d.lat
         el.dataset.lng = d.lng
-        // 줌 등급: 면적 기반 _tier (도시/바다/기준선은 항상=1, 마이크로국가=3)
-        el.dataset.tier = String(d._tier || (d._type === 'island' ? 3 : 1))
+        // 줌 등급(도시개수 기반) + 초기 opacity도 등급 맞춰 세팅 (터치 전에도 솎임)
+        const _tier = d._tier || (d._type === 'island' ? 3 : 1)
+        el.dataset.tier = String(_tier)
+        const _alt = globeRef.current?.pointOfView?.().altitude ?? 2.5
+        const _show = _tier === 1 ? true : _tier === 2 ? _alt < 1.8 : _alt < 0.6
+        el.style.opacity = _show ? '1' : '0'
 
         if (d._type === 'geoline') {
           el.style.cssText = 'pointer-events:none;'
