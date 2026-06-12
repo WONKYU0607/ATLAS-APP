@@ -1775,10 +1775,12 @@ function App() {
             el,
             lat: parseFloat(el.dataset.lat) * Math.PI / 180,
             lng: parseFloat(el.dataset.lng) * Math.PI / 180,
+            island: el.dataset.island === '1',
           }))
           cache.t = now
         }
       }
+      const alt = pov.altitude
       for (const it of cache.items) {
         const angle = Math.acos(Math.max(-1, Math.min(1,
           Math.sin(camLat) * Math.sin(it.lat) +
@@ -1789,7 +1791,8 @@ function App() {
           el.style.transition = 'opacity 0.3s'
           el.dataset.tInit = '1'
         }
-        const next = angle < maxAngle ? '1' : '0'
+        // 작은 나라/섬(island)은 어느 정도 줌인(alt<0.7) 했을 때만 표시 — 유럽 등 빽빽함 정리
+        const next = (angle < maxAngle && (!it.island || alt < 0.7)) ? '1' : '0'
         if (el.style.opacity !== next) el.style.opacity = next
       }
     }
@@ -1965,6 +1968,7 @@ function App() {
         const el = document.createElement('div')
         el.dataset.lat = d.lat
         el.dataset.lng = d.lng
+        if (d._type === 'island') el.dataset.island = '1'   // 작은 나라/섬 — 줌인 시에만 표시
 
         if (d._type === 'geoline') {
           el.style.cssText = 'pointer-events:none;'
