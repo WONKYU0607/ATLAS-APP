@@ -877,6 +877,23 @@ function App() {
   const isInCourse = (name, source) => courseItems.some(c => c.name === name && c.source === source)
   const reorderCourse = (fromIdx, toIdx) => { const arr = [...courseItems]; const [m] = arr.splice(fromIdx, 1); arr.splice(toIdx, 0, m); saveCourse(arr) }
 
+  // 코스 → 구글지도 길찾기 URL로 열기 (경유지 번호순, 이동수단=courseTransport). 구글에서 노선·교통편 표시
+  const openCourseInGmaps = (items) => {
+    const pts = (items || []).filter(it => it && it.lat && it.lng)
+    if (pts.length === 0) return
+    const coord = it => `${it.lat},${it.lng}`
+    const origin = coord(pts[0]), destination = coord(pts[pts.length - 1])
+    const mids = pts.slice(1, -1).slice(0, 9)   // 구글 경유지 최대 9개
+    const mode = courseTransport || 'transit'
+    let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=${mode}`
+    if (mids.length) url += `&waypoints=${mids.map(coord).join('|')}`
+    if (pts.every(it => it.place_id)) {   // place_id 다 있으면 장소명으로 표시
+      url += `&origin_place_id=${pts[0].place_id}&destination_place_id=${pts[pts.length - 1].place_id}`
+      if (mids.length) url += `&waypoint_place_ids=${mids.map(it => it.place_id).join('|')}`
+    }
+    window.open(url, '_blank')
+  }
+
   // 코스 플래너 helpers
   const saveCourseDays = (days) => {
     setCourseDays(days); localStorage.setItem('atlas_course_days', JSON.stringify(days))
@@ -4109,6 +4126,17 @@ Write all text in ${langName}.`
                   border:'none',borderRadius:6,cursor:'pointer',transition:'all .15s'
                 }}>{m.label}</button>
               ))}
+            </div>
+
+            {/* 구글지도 길찾기 열기 (이동수단=위 선택값, 경유지 번호순/노선은 구글에서 표시) */}
+            <div style={{display:'flex',gap:6,marginBottom:14,alignItems:'center'}}>
+              <span style={{fontSize:11,color:'#1a1714',fontWeight:600,flexShrink:0}}>{lang==='ko'?'구글지도':lang==='ja'?'Googleマップ':lang==='zh'?'谷歌地图':'Google Maps'}</span>
+              <button onClick={()=>openCourseInGmaps(courseDays[activeDayTab]?.items)}
+                style={{flex:1,padding:'7px 0',fontSize:11,fontWeight:600,background:'#f0ebe4',color:'#1a1714',border:'1px solid #e0d9d0',borderRadius:7,cursor:'pointer'}}>
+                {lang==='ko'?'이 Day 열기':lang==='ja'?'この日':lang==='zh'?'本日路线':'This day'}</button>
+              <button onClick={()=>openCourseInGmaps(courseDays.flatMap(d=>d.items))}
+                style={{flex:1,padding:'7px 0',fontSize:11,fontWeight:600,background:'#c8856a',color:'#fff',border:'none',borderRadius:7,cursor:'pointer'}}>
+                {lang==='ko'?'전체 열기':lang==='ja'?'全体':lang==='zh'?'全部路线':'All days'}</button>
             </div>
 
             {/* Day 탭 */}
