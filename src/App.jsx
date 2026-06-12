@@ -2317,15 +2317,12 @@ function App() {
       .pathColor(d => {
         if (hasSelection) {
           if (selectedCountry?.properties.NAME === d.name) return 'rgba(59,130,246,0.95)'
-          if (hoveredCountryRef.current === d.name) return 'rgba(255,220,50,0.9)'
           return 'rgba(255,255,255,0.45)'
         }
-        if (hoveredCountryRef.current === d.name) return 'rgba(255,220,50,0.9)'
         return 'rgba(255,255,255,0.5)'
       })
       .pathStroke(d => {
         if (hasSelection && selectedCountry?.properties.NAME === d.name) return 1.6
-        if (hoveredCountryRef.current === d.name) return 1.3
         return 0.5
       })
       .polygonLabel(() => '')
@@ -2337,12 +2334,7 @@ function App() {
           tt.style.visibility = 'hidden'
           tt.style.pointerEvents = 'none'
         }
-        if (hasSelection) return
-        if (!supportsHover) return  // 모바일: 드래그가 호버로 오인되어 잘못된 노란색 들어오는 것 방지
-        hoveredCountryRef.current = feat ? feat.properties.NAME : null
-        // 색만 즉시 재적용 (effect 재실행/리렌더 없이 국경선 색만 재계산 → 유럽 드래그 렉 방지)
-        const g = globeRef.current
-        if (g) { g.pathColor(g.pathColor()).pathStroke(g.pathStroke()) }
+        // 호버 노란색 하이라이트 제거: 50m 국경선 재계산이 무거워 렉 유발 → 비활성화. 선택(파란색)만 유지
       })
       .onPolygonClick((feat, ev, coords) => {
         if (justClickedCityRef.current) return
