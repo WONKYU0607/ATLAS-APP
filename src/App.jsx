@@ -1670,6 +1670,13 @@ function App() {
   useEffect(() => {
     if (globeRef.current || !globeContainerRef.current) return
 
+    // three-globe 호버 툴팁(마우스 따라다니는 검은 박스) 영구 숨김 — 클래스 기반 글로벌 CSS
+    if (!document.getElementById('atlas-hide-globe-tooltip')) {
+      const stl = document.createElement('style')
+      stl.id = 'atlas-hide-globe-tooltip'
+      stl.textContent = '.scene-tooltip{display:none !important;}'
+      document.head.appendChild(stl)
+    }
     const globe = Globe()(globeContainerRef.current)
       .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
       .showAtmosphere(true)
@@ -3232,46 +3239,16 @@ Write all text in ${langName}.`
               <div style={{position:'absolute',top:'calc(100% + 10px)',left:0,background:'rgba(252,250,247,.98)',backdropFilter:'blur(20px)',border:'1px solid #e0d9d0',borderRadius:16,overflow:'hidden',zIndex:2001,boxShadow:'0 16px 48px rgba(0,0,0,.5)',width:isMobile?Math.min(340,window.innerWidth-24):340,maxHeight:'75vh',overflowY:'auto'}}>
                 {/* 저장된 코스 */}
                 <div style={{padding:'16px 16px 10px',borderBottom:'1px solid #ede8e0'}}>
-                  {/* AI 코스 */}
+                  {/* 저장된 코스 (AI·수동 통합) */}
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
-                    <span style={{fontSize:13,fontWeight:700,color:'#1a1714'}}>AI {t('menuSavedCourses')}</span>
-                    <span style={{fontSize:11,color:'#9a8070'}}>{savedCourses.filter(sc=>sc.type==='ai').length}</span>
+                    <span style={{fontSize:13,fontWeight:700,color:'#1a1714'}}>{t('menuSavedCourses')}</span>
+                    <span style={{fontSize:11,color:'#9a8070'}}>{savedCourses.length}</span>
                   </div>
-                  {savedCourses.filter(sc=>sc.type==='ai').length === 0 ? (
-                    <div style={{padding:'10px 0',textAlign:'center',color:'#9a8070',fontSize:11}}>{t('menuNoSaved')}</div>
-                  ) : (
-                    <div style={{display:'flex',flexDirection:'column',gap:5,marginBottom:6}}>
-                      {savedCourses.filter(sc=>sc.type==='ai').map((sc) => (
-                        <div key={sc.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,background:'rgba(200,133,106,.08)',border:'1px solid rgba(200,133,106,.2)'}}>
-                          <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontSize:13,fontWeight:600,color:'#1a1714',lineHeight:1.4}}>{(() => {
-                              const cities = [...new Set((sc.days||[]).flatMap(d=>(d.items||[]).map(it=>getCityName(it.cityName||it.name))).filter(Boolean))]
-                              return cities.length > 0 ? `${cities.join(' · ')} ${(sc.days||[]).length}${lang==='ko'?'일':'D'}` : sc.name
-                            })()}</div>
-                            <div style={{fontSize:10,color:'#9a8070',marginTop:2}}>{(sc.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('coursePlace')} · {(sc.days||[]).length}{t('courseDay')}</div>
-                          </div>
-                          <button onClick={()=>loadSavedCourse(sc)} style={{background:'#f5efe8',border:'1px solid #e8dcd0',color:'#1a1714',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
-                          <button onClick={()=>{
-                            if (!currentUser) { setShowLoginModal(true); setShowHamburger(false); return }
-                            setShareModalCourse({ days: sc.days||[], transport: sc.transport||'transit', type: 'ai' })
-                            setShowHamburger(false)
-                          }} title={t('shareBtn')} style={{background:'#f5efe8',border:'1px solid #e8dcd0',color:'#1a1714',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('shareBtn')}</button>
-                          <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:11,fontWeight:600,cursor:'pointer',padding:'2px 6px'}}>{t('courseDelete')}</button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* 수동 코스 */}
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8,marginTop:14}}>
-                    <span style={{fontSize:13,fontWeight:700,color:'#1a1714'}}>{t('courseTypeManual')} {t('menuSavedCourses')}</span>
-                    <span style={{fontSize:11,color:'#9a8070'}}>{savedCourses.filter(sc=>sc.type!=='ai').length}</span>
-                  </div>
-                  {savedCourses.filter(sc=>sc.type!=='ai').length === 0 ? (
+                  {savedCourses.length === 0 ? (
                     <div style={{padding:'10px 0',textAlign:'center',color:'#9a8070',fontSize:11}}>{t('menuNoSaved')}</div>
                   ) : (
                     <div style={{display:'flex',flexDirection:'column',gap:5}}>
-                      {savedCourses.filter(sc=>sc.type!=='ai').map((sc) => (
+                      {savedCourses.map((sc) => (
                         <div key={sc.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,background:'rgba(200,133,106,.08)',border:'1px solid rgba(200,133,106,.2)'}}>
                           <div style={{flex:1,minWidth:0}}>
                             <div style={{fontSize:13,fontWeight:600,color:'#1a1714',lineHeight:1.4}}>{(() => {
@@ -3283,7 +3260,7 @@ Write all text in ${langName}.`
                           <button onClick={()=>loadSavedCourse(sc)} style={{background:'#f5efe8',border:'1px solid #e8dcd0',color:'#1a1714',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('courseLoad')}</button>
                           <button onClick={()=>{
                             if (!currentUser) { setShowLoginModal(true); setShowHamburger(false); return }
-                            setShareModalCourse({ days: sc.days||[], transport: sc.transport||'transit', type: 'manual' })
+                            setShareModalCourse({ days: sc.days||[], transport: sc.transport||'transit', type: sc.type||'manual' })
                             setShowHamburger(false)
                           }} title={t('shareBtn')} style={{background:'#f5efe8',border:'1px solid #e8dcd0',color:'#1a1714',padding:'4px 10px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>{t('shareBtn')}</button>
                           <button onClick={()=>{if(confirm(t('courseDeleteConfirm')))deleteSavedCourse(sc.id)}} style={{background:'none',border:'none',color:'#ef4444',fontSize:11,fontWeight:600,cursor:'pointer',padding:'2px 6px'}}>{t('courseDelete')}</button>
@@ -4171,7 +4148,7 @@ Write all text in ${langName}.`
 
             {/* 구글지도 길찾기 — 모든 이동수단 구간별 (구글 대중교통 경유지 미지원 + 구간별이 보기 편함) */}
             <div style={{marginBottom:14}}>
-              <div style={{fontSize:11,color:'#1a1714',fontWeight:600,marginBottom:6}}>{lang==='ko'?'구글지도 길찾기':lang==='ja'?'Googleマップ経路':lang==='zh'?'谷歌地图路线':'Google Maps'}</div>
+              <div style={{fontSize:11,color:'#1a1714',fontWeight:600,marginBottom:6}}>{lang==='ko'?'길 찾기(구글 연동)':lang==='ja'?'Googleマップ経路':lang==='zh'?'谷歌地图路线':'Google Maps'}</div>
               {(() => {
                 const items = (courseDays[activeDayTab]?.items || []).filter(it=>it && (it.name||it.place_id))
                 if (items.length < 2) return <div style={{fontSize:10.5,color:'#b0a89e'}}>{lang==='ko'?'이 Day에 장소를 2곳 이상 담으면 구간 경로가 생겨요':lang==='ja'?'2か所以上で区間表示':lang==='zh'?'2个以上地点显示路段':'Add 2+ places for segments'}</div>
