@@ -4129,15 +4129,34 @@ Write all text in ${langName}.`
               ))}
             </div>
 
-            {/* 구글지도 길찾기 열기 (이동수단=위 선택값, 경유지 번호순/노선은 구글에서 표시) */}
-            <div style={{display:'flex',gap:6,marginBottom:14,alignItems:'center'}}>
-              <span style={{fontSize:11,color:'#1a1714',fontWeight:600,flexShrink:0}}>{lang==='ko'?'구글지도':lang==='ja'?'Googleマップ':lang==='zh'?'谷歌地图':'Google Maps'}</span>
-              <button onClick={()=>openCourseInGmaps(courseDays[activeDayTab]?.items)}
-                style={{flex:1,padding:'7px 0',fontSize:11,fontWeight:600,background:'#f0ebe4',color:'#1a1714',border:'1px solid #e0d9d0',borderRadius:7,cursor:'pointer'}}>
-                {lang==='ko'?'이 Day 열기':lang==='ja'?'この日':lang==='zh'?'本日路线':'This day'}</button>
-              <button onClick={()=>openCourseInGmaps(courseDays.flatMap(d=>d.items))}
-                style={{flex:1,padding:'7px 0',fontSize:11,fontWeight:600,background:'#c8856a',color:'#fff',border:'none',borderRadius:7,cursor:'pointer'}}>
-                {lang==='ko'?'전체 열기':lang==='ja'?'全体':lang==='zh'?'全部路线':'All days'}</button>
+            {/* 구글지도 길찾기 — 대중교통은 구간별(구글이 transit 경유지 미지원), 그 외는 전체 경로 */}
+            <div style={{marginBottom:14}}>
+              <div style={{fontSize:11,color:'#1a1714',fontWeight:600,marginBottom:6}}>{lang==='ko'?'구글지도 길찾기':lang==='ja'?'Googleマップ経路':lang==='zh'?'谷歌地图路线':'Google Maps'}</div>
+              {courseTransport==='transit' ? (() => {
+                const items = (courseDays[activeDayTab]?.items || []).filter(it=>it && (it.name||it.place_id))
+                if (items.length < 2) return <div style={{fontSize:10.5,color:'#b0a89e'}}>{lang==='ko'?'이 Day에 장소를 2곳 이상 담으면 구간 경로가 생겨요':lang==='ja'?'2か所以上で区間表示':lang==='zh'?'2个以上地点显示路段':'Add 2+ places for segments'}</div>
+                return (
+                  <div style={{display:'flex',flexDirection:'column',gap:5}}>
+                    <div style={{fontSize:9.5,color:'#b0a89e'}}>{lang==='ko'?'대중교통은 구간별로 열려요 (구글 제한)':lang==='ja'?'公共交通は区間ごと':lang==='zh'?'公共交通分段':'Transit opens per segment'}</div>
+                    {items.slice(0,-1).map((it,i)=>(
+                      <button key={i} onClick={()=>openCourseInGmaps([items[i],items[i+1]])}
+                        style={{textAlign:'left',padding:'7px 10px',fontSize:11,fontWeight:600,background:'#f0ebe4',color:'#1a1714',border:'1px solid #e0d9d0',borderRadius:7,cursor:'pointer',display:'flex',alignItems:'center',gap:7}}>
+                        <span style={{width:18,height:18,borderRadius:'50%',background:'#c8856a',color:'#fff',fontSize:10,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{i+1}</span>
+                        <span style={{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{(it.displayName||it.name)} → {(items[i+1].displayName||items[i+1].name)}</span>
+                      </button>
+                    ))}
+                  </div>
+                )
+              })() : (
+                <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                  <button onClick={()=>openCourseInGmaps(courseDays[activeDayTab]?.items)}
+                    style={{flex:1,padding:'7px 0',fontSize:11,fontWeight:600,background:'#f0ebe4',color:'#1a1714',border:'1px solid #e0d9d0',borderRadius:7,cursor:'pointer'}}>
+                    {lang==='ko'?'이 Day 열기':lang==='ja'?'この日':lang==='zh'?'本日路线':'This day'}</button>
+                  <button onClick={()=>openCourseInGmaps(courseDays.flatMap(d=>d.items))}
+                    style={{flex:1,padding:'7px 0',fontSize:11,fontWeight:600,background:'#c8856a',color:'#fff',border:'none',borderRadius:7,cursor:'pointer'}}>
+                    {lang==='ko'?'전체 열기':lang==='ja'?'全体':lang==='zh'?'全部路线':'All days'}</button>
+                </div>
+              )}
             </div>
 
             {/* Day 탭 */}
