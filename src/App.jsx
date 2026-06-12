@@ -2049,7 +2049,9 @@ function App() {
               user-select:none;
             ">${d.name}</div>`
           }
-          // 국가/섬 라벨 탭 → 진입 (작은 나라 폴리곤 클릭 어려움 해결). 드래그(회전)는 무시
+          // 라벨 탭 진입은 마이크로국가(섬/점만 한 나라)에만 — 큰 나라는 폴리곤 클릭으로 진입 가능하므로
+          // 라벨 pointer-events:auto가 회전 드래그를 가로채는 문제 방지 (큰 나라 라벨 위 드래그=회전 정상)
+          if (d._type === 'island') {
           el.style.pointerEvents = 'auto'
           el.style.cursor = 'pointer'
           let _downXY = null
@@ -2083,6 +2085,7 @@ function App() {
             if (!feat) feat = { type: 'Feature', properties: { NAME: d.nameEn, LABEL_X: d.lng, LABEL_Y: d.lat }, geometry: null }
             handleCountryClickRef.current?.(feat)
           })
+          }
         }
         return el
       })
