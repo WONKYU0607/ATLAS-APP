@@ -19,6 +19,9 @@ const ISLAND_LABEL_DATA = ((ISLAND_POLYGONS && ISLAND_POLYGONS.features) || [])
 const ISLAND_NAMES = new Set(ISLAND_LABEL_DATA.map(d => d.nameEn))
 // 데이터 없고 클릭 불가한 폴리곤(속령·분쟁지·남극 등) — 라벨 숨김
 const HIDDEN_COUNTRY_LABELS = new Set(['W. Sahara', 'Falkland Is.', 'Greenland', 'Fr. S. Antarctic Lands', 'Puerto Rico', 'New Caledonia', 'Antarctica', 'N. Cyprus', 'Somaliland'])
+// 면적 작은 나라(섬나라 제외 하위 30%, 단 이스라엘·벨기에·대만·네덜란드·덴마크·스위스·크로아티아·아일랜드 제외)
+// → 섬나라처럼 줌인(alt<0.7) 했을 때만 라벨 표시. 유럽 등 작은 나라 밀집 정리용
+const SMALL_COUNTRY = new Set(["Luxembourg","N. Cyprus","Palestine","Cyprus","Vanuatu","Trinidad and Tobago","Puerto Rico","Lebanon","Brunei","Kosovo","Qatar","Fr. S. Antarctic Lands","Jamaica","Montenegro","Gambia","Timor-Leste","Bahamas","Falkland Is.","Kuwait","eSwatini","Slovenia","Fiji","El Salvador","Djibouti","Belize","New Caledonia","Rwanda","Solomon Is.","North Macedonia","Burundi","Eq. Guinea","Lesotho","Armenia","Haiti","Albania","Moldova","Guinea-Bissau","Bhutan","Estonia","Slovakia","Dominican Rep.","Bosnia and Herz.","Costa Rica","Togo","Lithuania","Latvia"])
 // 이름 정규화: "Solomon Is." ↔ "Solomon Islands" 같은 약자 변형 매칭용
 const normCountryName = (s) => String(s || '').toLowerCase().replace(/\bis\.?\b/g, 'islands').replace(/&/g, 'and').replace(/[^a-z]/g, '')
 const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.nameEn)))
@@ -1775,7 +1778,8 @@ function App() {
             el,
             lat: parseFloat(el.dataset.lat) * Math.PI / 180,
             lng: parseFloat(el.dataset.lng) * Math.PI / 180,
-            island: el.dataset.island === '1',
+            gated: el.dataset.gated === '1',
+            micro: el.dataset.micro === '1',
           }))
           cache.t = now
         }
@@ -1791,9 +1795,15 @@ function App() {
           el.style.transition = 'opacity 0.3s'
           el.dataset.tInit = '1'
         }
-        // 작은 나라/섬(island)은 어느 정도 줌인(alt<0.7) 했을 때만 표시 — 유럽 등 빽빽함 정리
-        const next = (angle < maxAngle && (!it.island || alt < 0.7)) ? '1' : '0'
+        // 섬나라/작은나라(gated)는 줌인(alt<0.7) 했을 때만 표시 — 유럽 등 빽빽함 정리
+        const show = angle < maxAngle && (!it.gated || alt < 0.7)
+        const next = show ? '1' : '0'
         if (el.style.opacity !== next) el.style.opacity = next
+        // 섬나라 라벨(micro)은 숨김 시 pointer-events도 꺼야 투명 박스가 터치/드래그를 안 막음
+        if (it.micro) {
+          const pe = show ? 'auto' : 'none'
+          if (el.style.pointerEvents !== pe) el.style.pointerEvents = pe
+        }
       }
     }
     const labelInterval = setInterval(hideBackLabels, 150)
@@ -1968,7 +1978,9 @@ function App() {
         const el = document.createElement('div')
         el.dataset.lat = d.lat
         el.dataset.lng = d.lng
-        if (d._type === 'island') el.dataset.island = '1'   // 작은 나라/섬 — 줌인 시에만 표시
+        // gated: 줌인 시에만 표시 (섬나라 + 작은 나라) / micro: 터치 핸들러 달린 섬나라(아래 pointer-events 토글 대상)
+        if (d._type === 'island') { el.dataset.gated = '1'; el.dataset.micro = '1' }
+        else if (d._type === 'country' && SMALL_COUNTRY.has(d.nameEn)) { el.dataset.gated = '1' }
 
         if (d._type === 'geoline') {
           el.style.cssText = 'pointer-events:none;'
