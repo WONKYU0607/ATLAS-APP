@@ -1757,8 +1757,9 @@ function App() {
       if (!globeRef.current) return
       const pov = globeRef.current.pointOfView()
       // POV가 직전 틱과 동일하면(정지 상태) 통째로 스킵 — idle 비용 0
+      // 단, 라벨을 한 번이라도 숨김 처리(settled)한 뒤부터만. 초기엔 라벨이 DOM에 늦게 생기므로 계속 처리해야 함
       const povKey = `${pov.lat.toFixed(3)},${pov.lng.toFixed(3)},${pov.altitude.toFixed(3)}`
-      if (povKey === lastPovKeyRef.current) return
+      if (povKey === lastPovKeyRef.current && labelCacheRef.current.settled) return
       lastPovKeyRef.current = povKey
 
       const camLat = pov.lat * Math.PI / 180
@@ -1805,6 +1806,8 @@ function App() {
           if (el.style.pointerEvents !== pe) el.style.pointerEvents = pe
         }
       }
+      // 라벨이 실제로 존재해 한 번 처리됨 → 이후로는 idle 스킵 허용
+      if (cache.items.length > 0) cache.settled = true
     }
     const labelInterval = setInterval(hideBackLabels, 150)
 
@@ -2311,6 +2314,13 @@ function App() {
       })
       .polygonLabel(() => '')
       .onPolygonHover(feat => {
+        // 마우스 따라다니는 three-globe 호버 툴팁(빈 검은 박스) 영구 숨김
+        // three-globe는 display만 토글하므로 visibility:hidden은 유지됨 → 한 번 숨기면 계속 안 보임
+        const tt = globeContainerRef.current?.querySelector(':scope > div:last-of-type')
+        if (tt && tt.style?.position === 'absolute' && tt.style.visibility !== 'hidden') {
+          tt.style.visibility = 'hidden'
+          tt.style.pointerEvents = 'none'
+        }
         if (hasSelection) return
         if (!supportsHover) return  // 모바일: 드래그가 호버로 오인되어 잘못된 노란색 들어오는 것 방지
         setHoveredCountry(feat ? feat.properties.NAME : null)
