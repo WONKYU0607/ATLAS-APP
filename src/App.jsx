@@ -2796,7 +2796,8 @@ function App() {
     if (!city?.lat || !city?.lng) return []
     const langParam = lang === 'zh' ? 'zh-CN' : lang
     const cityKey = city._koName || city.name
-    const cityName = getCityName(cityKey)   // 현재 언어 도시명
+    const cityName = getCityName(cityKey)   // 현재 언어 도시명 (UI/필터용)
+    const cityNameEn = (CITY_I18N[cityKey] && CITY_I18N[cityKey][0]) || cityName   // 검색 쿼리는 영어로 (Google 범용)
     // ── 관광 유형별 분산 Text Search (전 세계 보편 8종) — 반경 의존 제거로 외곽 명소 누락 방지 ──
     const CATS = {
       ko: ['관광명소','명소','랜드마크','궁궐','성','유적','사찰','성당','사원','공원','정원','박물관','미술관','전망대','시장'],
@@ -2804,7 +2805,7 @@ function App() {
       ja: ['観光スポット','名所','ランドマーク','城','史跡','遺跡','寺','神社','教会','公園','庭園','博物館','美術館','展望台','市場'],
       zh: ['旅游景点','名胜','地标','宫殿','城堡','古迹','寺庙','教堂','公园','花园','博物馆','美术馆','观景台','市场','广场'],
     }
-    const cats = CATS[lang] || CATS.en
+    const cats = CATS.en   // 검색은 영어 카테고리로 통일 (Google 영어가 전세계 가장 잘 잡힘)
     // 행정구역이 달라 분산쿼리에 안 잡히는 핵심 명소 — 이름으로 직접 검색해 추가(queries) + 오염필터 통과(allow)
     const EXTRA_SPOTS = {
       '카이로': { queries: ['기자 피라미드', '스핑크스 기자'], allow: ['기자','Giza','피라미드','Pyramid','스핑크스','Sphinx'] },
@@ -2817,7 +2818,7 @@ function App() {
     try {
       const catFetches = cats.map(async (cat) => {
         try {
-          const r = await fetch(`/api/places?query=${encodeURIComponent(cityName + ' ' + cat)}&lat=${city.lat}&lng=${city.lng}&language=${langParam}`)
+          const r = await fetch(`/api/places?query=${encodeURIComponent(cityNameEn + ' ' + cat)}&lat=${city.lat}&lng=${city.lng}&language=${langParam}`)
           const d = await r.json()
           return d.results || []
         } catch { return [] }
@@ -3013,8 +3014,8 @@ Write all text in ${langName}.`
     try {
       const langParam = lang === 'zh' ? 'zh-CN' : lang
       const cityKey = selectedCity._koName || selectedCity.name
-      const cityName = getCityName(cityKey)
-      const r = await fetch(`/api/places?query=${encodeURIComponent(cityName + ' ' + q)}&lat=${selectedCity.lat}&lng=${selectedCity.lng}&language=${langParam}`)
+      const cityNameEn = (CITY_I18N[cityKey] && CITY_I18N[cityKey][0]) || getCityName(cityKey)   // 도시명 영어로 (검색 정확도)
+      const r = await fetch(`/api/places?query=${encodeURIComponent(cityNameEn + ' ' + q)}&lat=${selectedCity.lat}&lng=${selectedCity.lng}&language=${langParam}`)
       const d = await r.json()
       const sorted = (d.results || [])
         .filter(p => p.user_ratings_total)
