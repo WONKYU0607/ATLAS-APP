@@ -503,7 +503,7 @@ function App() {
   const [spotSearchQuery, setSpotSearchQuery] = useState('')      // 추천탭: 장소 검색해 코스 추가
   const [spotSearchResults, setSpotSearchResults] = useState([])
   const [spotSearchLoading, setSpotSearchLoading] = useState(false)
-  const [hoveredCountry, setHoveredCountry] = useState(null)
+  const hoveredCountryRef = useRef(null)  // hover 하이라이트: state 대신 ref (effect 재실행 없이 색만 갱신 → 드래그 렉 방지)
   const [showCountryInfo, setShowCountryInfo] = useState(false)
   const [infoExpanded, setInfoExpanded] = useState(false) // A안: 컴팩트(헤더만) ↔ 전체 펼침
   const [lang, setLang] = useState('en')
@@ -1897,7 +1897,15 @@ function App() {
         _type: 'island',
         _hasCities: !!COUNTRY_CITIES[d.nameEn],
       }))
-      globe.htmlElementsData([...labelItems, ...islandLabels, ...OCEAN_LABELS])
+      // 하와이: 미국 영토지만 멀리 떨어진 섬 → 별도 라벨, 탭하면 미국 컨텍스트 세팅 후 하와이 도시 패널 진입
+      const hawaiiLabel = {
+        lat: 21.31, lng: -157.85,
+        name: lang === 'ko' ? '하와이' : 'Hawaii',
+        nameEn: 'Hawaii', _type: 'hawaii', _hasCities: true,
+        _city: { name: '하와이', lat: 21.31, lng: -157.85, emoji: '', _koName: '하와이', countryEn: 'United States of America' },
+      }
+      globe.htmlElementsData([...labelItems, ...islandLabels, hawaiiLabel, ...OCEAN_LABELS])
+      labelCacheRef.current.items = []; labelCacheRef.current.settled = false  // 새 라벨 즉시 줌-숨김 처리되게 캐시 리셋
       lastPovKeyRef.current = ''; labelCacheRef.current = { t: 0, items: [] } // 라벨 새로 생성됨 → idle스킵 해제 + 캐시 무효화
       return
     }
@@ -2035,8 +2043,8 @@ function App() {
           inner.textContent = d.name
           el.appendChild(inner)
         } else {
-          const hasCities = COUNTRY_CITIES[d.nameEn]
-          const isIsland = ISLAND_NAMES.has(d.nameEn)
+          const hasCities = d._hasCities ?? COUNTRY_CITIES[d.nameEn]
+          const isIsland = ISLAND_NAMES.has(d.nameEn) || d._type === 'hawaii'
           if (isIsland) {
             // 섬나라 라벨: 터치 투명(pointer-events:none) → 회전/줌 안 막힘. 선택은 폴리곤/추후 onGlobeClick
             el.style.cssText = 'pointer-events:none;'
@@ -2070,7 +2078,7 @@ function App() {
           }
           // 라벨 탭 진입은 마이크로국가(섬/점만 한 나라)에만 — 큰 나라는 폴리곤 클릭으로 진입 가능하므로
           // 라벨 pointer-events:auto가 회전 드래그를 가로채는 문제 방지 (큰 나라 라벨 위 드래그=회전 정상)
-          if (d._type === 'island') {
+          if (d._type === 'island' || d._type === 'hawaii') {
           el.style.pointerEvents = 'auto'
           el.style.cursor = 'pointer'
           let _downXY = null
@@ -2100,6 +2108,14 @@ function App() {
               return
             }
             // 단독 → 진입
+            if (d._type === 'hawaii') {
+              // 미국 컨텍스트 세팅 후 하와이 도시 패널 진입 (햄버거 도시진입과 동일 패턴)
+              const usaFeat = countries.find(f => f.properties && f.properties.NAME === 'United States of America')
+              if (usaFeat) setSelectedCountry(usaFeat)
+              const hc = d._city
+              setTimeout(() => handleCityClickRef.current?.(hc), 300)
+              return
+            }
             let feat = countries.find(f => f.properties && f.properties.NAME === d.nameEn)
             if (!feat) feat = { type: 'Feature', properties: { NAME: d.nameEn, LABEL_X: d.lng, LABEL_Y: d.lat }, geometry: null }
             handleCountryClickRef.current?.(feat)
@@ -2301,15 +2317,15 @@ function App() {
       .pathColor(d => {
         if (hasSelection) {
           if (selectedCountry?.properties.NAME === d.name) return 'rgba(59,130,246,0.95)'
-          if (hoveredCountry === d.name) return 'rgba(255,220,50,0.9)'
+          if (hoveredCountryRef.current === d.name) return 'rgba(255,220,50,0.9)'
           return 'rgba(255,255,255,0.45)'
         }
-        if (hoveredCountry === d.name) return 'rgba(255,220,50,0.9)'
+        if (hoveredCountryRef.current === d.name) return 'rgba(255,220,50,0.9)'
         return 'rgba(255,255,255,0.5)'
       })
       .pathStroke(d => {
         if (hasSelection && selectedCountry?.properties.NAME === d.name) return 1.6
-        if (hoveredCountry === d.name) return 1.3
+        if (hoveredCountryRef.current === d.name) return 1.3
         return 0.5
       })
       .polygonLabel(() => '')
@@ -2323,7 +2339,10 @@ function App() {
         }
         if (hasSelection) return
         if (!supportsHover) return  // 모바일: 드래그가 호버로 오인되어 잘못된 노란색 들어오는 것 방지
-        setHoveredCountry(feat ? feat.properties.NAME : null)
+        hoveredCountryRef.current = feat ? feat.properties.NAME : null
+        // 색만 즉시 재적용 (effect 재실행/리렌더 없이 국경선 색만 재계산 → 유럽 드래그 렉 방지)
+        const g = globeRef.current
+        if (g) { g.pathColor(g.pathColor()).pathStroke(g.pathStroke()) }
       })
       .onPolygonClick((feat, ev, coords) => {
         if (justClickedCityRef.current) return
@@ -2364,7 +2383,7 @@ function App() {
           selectNearestIsland(ev)
         }
       })
-  }, [hoveredCountry, selectedCountry, lang, countries])
+  }, [selectedCountry, lang, countries])
 
 
   // 국가별 최적 줌 레벨 (수동 튜닝)
@@ -2711,7 +2730,7 @@ function App() {
 
     // 툴팁 숨김 (DOM 삭제X, display:none만)
     globe.polygonLabel(() => '')
-    setHoveredCountry(null)
+    hoveredCountryRef.current = null
     if (globeContainerRef.current) {
       const tooltip = globeContainerRef.current.querySelector(':scope > div:last-of-type')
       if (tooltip && tooltip.style?.position === 'absolute') {
@@ -2730,7 +2749,7 @@ function App() {
     setSelectedCountry(feat)
     setSelectedCity(null)
     setCityData(null)
-    setHoveredCountry(null)
+    hoveredCountryRef.current = null
     setShowCountryInfo(false)  // 다른 국가 선택 시 정보 패널 닫힘
 
     const center = getCountryCenter(feat)
