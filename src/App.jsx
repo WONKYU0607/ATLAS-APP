@@ -3844,17 +3844,17 @@ Write all text in ${langName}.`
                                         {place.user_ratings_total && <span style={{fontSize:9,color:'#c8b8a8'}}>({place.user_ratings_total.toLocaleString()})</span>}
                                       </div>
                                     )}
-                                    {place.vicinity && <div style={{fontSize:10,color:'#b0a89e',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{place.vicinity}</div>}
+                                    {(place.vicinity||place.formatted_address) && <div style={{fontSize:10,color:'#b0a89e',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{place.vicinity||place.formatted_address}</div>}
                                     {place.opening_hours && (
                                       <div style={{fontSize:9,color:place.opening_hours.open_now?'#6fa870':'#c07060',fontWeight:600,marginTop:3}}>
                                         {place.opening_hours.open_now?t('openNow'):t('closedNow')}</div>
                                     )}
                                   </div>
                                   <div style={{display:'flex',flexDirection:'column',gap:4,flexShrink:0}}>
-                                    <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:'hotspot',name:place.name,displayName:place.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:place.rating,place_id:place.place_id,vicinity:place.vicinity,lat:place.geometry?.location?.lat??selectedCity?.lat,lng:place.geometry?.location?.lng??selectedCity?.lng,emoji:'📍',photo_ref:place.photos?.[0]?.photo_reference||null})}}
+                                    <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:'hotspot',name:place.name,displayName:place.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:place.rating,place_id:place.place_id,vicinity:place.vicinity||place.formatted_address,lat:place.geometry?.location?.lat??selectedCity?.lat,lng:place.geometry?.location?.lng??selectedCity?.lng,emoji:'📍',photo_ref:place.photos?.[0]?.photo_reference||null})}}
                                       style={{background:isInCourse(place.name,'hotspot')?'#c8856a':'#f5f0ea',border:isInCourse(place.name,'hotspot')?'none':'1px solid #e0d9d0',color:isInCourse(place.name,'hotspot')?'white':'#c8b8a8',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:14,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
                                       title={t("courseAddToTrip")}>{isInCourse(place.name,'hotspot')?'✓':'＋'}</button>
-                                    <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav({type:'hotspot',name:place.name,place_id:place.place_id,rating:place.rating,user_ratings_total:place.user_ratings_total,vicinity:place.vicinity,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name)})}}
+                                    <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav({type:'hotspot',name:place.name,place_id:place.place_id,rating:place.rating,user_ratings_total:place.user_ratings_total,vicinity:place.vicinity||place.formatted_address,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name)})}}
                                       style={{background:isFav('hotspot',place.name)?'#fef3c7':'#f5f0ea',border:isFav('hotspot',place.name)?'1px solid #f0c040':'1px solid #e0d9d0',color:isFav('hotspot',place.name)?'#c8a020':'#c8b8a8',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:12,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
                                       title={t("favToggle")}>{isFav('hotspot',place.name)?'★':'☆'}</button>
                                   </div>
@@ -4129,15 +4129,14 @@ Write all text in ${langName}.`
               ))}
             </div>
 
-            {/* 구글지도 길찾기 — 대중교통은 구간별(구글이 transit 경유지 미지원), 그 외는 전체 경로 */}
+            {/* 구글지도 길찾기 — 모든 이동수단 구간별 (구글 대중교통 경유지 미지원 + 구간별이 보기 편함) */}
             <div style={{marginBottom:14}}>
               <div style={{fontSize:11,color:'#1a1714',fontWeight:600,marginBottom:6}}>{lang==='ko'?'구글지도 길찾기':lang==='ja'?'Googleマップ経路':lang==='zh'?'谷歌地图路线':'Google Maps'}</div>
-              {courseTransport==='transit' ? (() => {
+              {(() => {
                 const items = (courseDays[activeDayTab]?.items || []).filter(it=>it && (it.name||it.place_id))
                 if (items.length < 2) return <div style={{fontSize:10.5,color:'#b0a89e'}}>{lang==='ko'?'이 Day에 장소를 2곳 이상 담으면 구간 경로가 생겨요':lang==='ja'?'2か所以上で区間表示':lang==='zh'?'2个以上地点显示路段':'Add 2+ places for segments'}</div>
                 return (
                   <div style={{display:'flex',flexDirection:'column',gap:5}}>
-                    <div style={{fontSize:9.5,color:'#b0a89e'}}>{lang==='ko'?'대중교통은 구간별로 열려요 (구글 제한)':lang==='ja'?'公共交通は区間ごと':lang==='zh'?'公共交通分段':'Transit opens per segment'}</div>
                     {items.slice(0,-1).map((it,i)=>(
                       <button key={i} onClick={()=>openCourseInGmaps([items[i],items[i+1]])}
                         style={{textAlign:'left',padding:'7px 10px',fontSize:11,fontWeight:600,background:'#f0ebe4',color:'#1a1714',border:'1px solid #e0d9d0',borderRadius:7,cursor:'pointer',display:'flex',alignItems:'center',gap:7}}>
@@ -4147,16 +4146,7 @@ Write all text in ${langName}.`
                     ))}
                   </div>
                 )
-              })() : (
-                <div style={{display:'flex',gap:6,alignItems:'center'}}>
-                  <button onClick={()=>openCourseInGmaps(courseDays[activeDayTab]?.items)}
-                    style={{flex:1,padding:'7px 0',fontSize:11,fontWeight:600,background:'#f0ebe4',color:'#1a1714',border:'1px solid #e0d9d0',borderRadius:7,cursor:'pointer'}}>
-                    {lang==='ko'?'이 Day 열기':lang==='ja'?'この日':lang==='zh'?'本日路线':'This day'}</button>
-                  <button onClick={()=>openCourseInGmaps(courseDays.flatMap(d=>d.items))}
-                    style={{flex:1,padding:'7px 0',fontSize:11,fontWeight:600,background:'#c8856a',color:'#fff',border:'none',borderRadius:7,cursor:'pointer'}}>
-                    {lang==='ko'?'전체 열기':lang==='ja'?'全体':lang==='zh'?'全部路线':'All days'}</button>
-                </div>
-              )}
+              })()}
             </div>
 
             {/* Day 탭 */}
