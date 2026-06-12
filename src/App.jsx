@@ -879,18 +879,19 @@ function App() {
 
   // 코스 → 구글지도 길찾기 URL로 열기 (경유지 번호순, 이동수단=courseTransport). 구글에서 노선·교통편 표시
   const openCourseInGmaps = (items) => {
-    const pts = (items || []).filter(it => it && it.lat && it.lng)
+    const pts = (items || []).filter(it => it && (it.name || it.place_id))
     if (pts.length === 0) return
-    const coord = it => `${it.lat},${it.lng}`
-    const origin = coord(pts[0]), destination = coord(pts[pts.length - 1])
+    // 좌표 대신 장소명(+도시) 텍스트로 — 구글이 자기 DB에서 찾음. place_id 있으면 정확히 지정
+    const label = it => encodeURIComponent(`${it.displayName || it.name || ''} ${it.cityDisplayName || ''}`.trim())
+    const origin = pts[0], destination = pts[pts.length - 1]
     const mids = pts.slice(1, -1).slice(0, 9)   // 구글 경유지 최대 9개
     const mode = courseTransport || 'transit'
-    let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=${mode}`
-    if (mids.length) url += `&waypoints=${mids.map(coord).join('|')}`
-    if (pts.every(it => it.place_id)) {   // place_id 다 있으면 장소명으로 표시
-      url += `&origin_place_id=${pts[0].place_id}&destination_place_id=${pts[pts.length - 1].place_id}`
-      if (mids.length) url += `&waypoint_place_ids=${mids.map(it => it.place_id).join('|')}`
-    }
+    let url = `https://www.google.com/maps/dir/?api=1&origin=${label(origin)}&destination=${label(destination)}&travelmode=${mode}`
+    if (mids.length) url += `&waypoints=${mids.map(label).join('|')}`
+    // place_id로 정확히 지정 (있는 것만; 경유지는 전부 있을 때만 — 1:1 정렬 필요)
+    if (origin.place_id) url += `&origin_place_id=${origin.place_id}`
+    if (destination.place_id) url += `&destination_place_id=${destination.place_id}`
+    if (mids.length && mids.every(it => it.place_id)) url += `&waypoint_place_ids=${mids.map(it => it.place_id).join('|')}`
     window.open(url, '_blank')
   }
 
@@ -3809,7 +3810,7 @@ Write all text in ${langName}.`
                                       {r.rating && <div style={{fontSize:11,color:'#c8a870',fontWeight:600,marginTop:2}}>★ {r.rating}{r.user_ratings_total?` (${r.user_ratings_total.toLocaleString()})`:''}</div>}
                                       {(r.vicinity||r.formatted_address) && <div style={{fontSize:9.5,color:'#b0a89e',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:2}}>{r.vicinity||r.formatted_address}</div>}
                                     </div>
-                                    <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:'hotspot',name:r.name,displayName:r.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:r.rating,place_id:r.place_id,vicinity:r.vicinity||r.formatted_address,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:'📍',photo_ref:r.photos?.[0]?.photo_reference||null})}}
+                                    <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:'hotspot',name:r.name,displayName:r.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:r.rating,place_id:r.place_id,vicinity:r.vicinity||r.formatted_address,lat:r.geometry?.location?.lat??selectedCity?.lat,lng:r.geometry?.location?.lng??selectedCity?.lng,emoji:'📍',photo_ref:r.photos?.[0]?.photo_reference||null})}}
                                       style={{background:isInCourse(r.name,'hotspot')?'#c8856a':'#f5f0ea',border:isInCourse(r.name,'hotspot')?'none':'1px solid #e0d9d0',color:isInCourse(r.name,'hotspot')?'white':'#c8b8a8',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:14,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}
                                       title={t("courseAddToTrip")}>{isInCourse(r.name,'hotspot')?'✓':'＋'}</button>
                                   </a>
@@ -3850,7 +3851,7 @@ Write all text in ${langName}.`
                                     )}
                                   </div>
                                   <div style={{display:'flex',flexDirection:'column',gap:4,flexShrink:0}}>
-                                    <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:'hotspot',name:place.name,displayName:place.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:place.rating,place_id:place.place_id,vicinity:place.vicinity,lat:selectedCity?.lat,lng:selectedCity?.lng,emoji:'📍',photo_ref:place.photos?.[0]?.photo_reference||null})}}
+                                    <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:'hotspot',name:place.name,displayName:place.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:place.rating,place_id:place.place_id,vicinity:place.vicinity,lat:place.geometry?.location?.lat??selectedCity?.lat,lng:place.geometry?.location?.lng??selectedCity?.lng,emoji:'📍',photo_ref:place.photos?.[0]?.photo_reference||null})}}
                                       style={{background:isInCourse(place.name,'hotspot')?'#c8856a':'#f5f0ea',border:isInCourse(place.name,'hotspot')?'none':'1px solid #e0d9d0',color:isInCourse(place.name,'hotspot')?'white':'#c8b8a8',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:14,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
                                       title={t("courseAddToTrip")}>{isInCourse(place.name,'hotspot')?'✓':'＋'}</button>
                                     <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav({type:'hotspot',name:place.name,place_id:place.place_id,rating:place.rating,user_ratings_total:place.user_ratings_total,vicinity:place.vicinity,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name)})}}
