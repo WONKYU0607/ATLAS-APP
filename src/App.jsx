@@ -903,6 +903,47 @@ function App() {
     setCourseDays(days); localStorage.setItem('atlas_course_days', JSON.stringify(days))
     const flat = days.flatMap(d => d.items); saveCourse(flat)
   }
+  // 현재 Day 동선 최적화 (A방식): 도시별 그룹 → 도시 내부 nearest-neighbor + 2-opt → 시간표 재계산
+  // 여러 도시가 섞여도 도시 내부에서만 정렬(도시 넘나드는 동선 방지). AI 코스 알고리즘 재활용
+  const optimizeDay = (dayIndex) => {
+    const day = courseDays[dayIndex]
+    if (!day || (day.items || []).length < 2) return
+    const speedKmh = courseTransport === 'walking' ? 4.5 : courseTransport === 'driving' ? 25 : 18
+    const xy = (it) => [it._lat ?? it.lat, it._lng ?? it.lng]
+    const dist = (a, b) => { const [a1, a2] = xy(a), [b1, b2] = xy(b); return haversine(a1, a2, b1, b2) }
+    const routeLen = (r) => { let s = 0; for (let i = 0; i < r.length - 1; i++) s += dist(r[i], r[i + 1]); return s }
+    const twoOpt = (route) => {
+      if (route.length < 4) return route
+      let best = route, improved = true, guard = 0
+      while (improved && guard++ < 60) {
+        improved = false
+        for (let i = 1; i < best.length - 1; i++) for (let k = i + 1; k < best.length; k++) {
+          const nr = [...best.slice(0, i), ...best.slice(i, k + 1).reverse(), ...best.slice(k + 1)]
+          if (routeLen(nr) < routeLen(best) - 1e-9) { best = nr; improved = true }
+        }
+      }
+      return best
+    }
+    const nn = (g) => {
+      const sorted = []; const rem = [...g]
+      let cur = rem.shift(); sorted.push(cur)
+      while (rem.length) { let md = Infinity, mi = 0; rem.forEach((it, i) => { const d = dist(cur, it); if (d < md) { md = d; mi = i } }); cur = rem.splice(mi, 1)[0]; sorted.push(cur) }
+      return sorted
+    }
+    const order = []; const groups = {}
+    for (const it of day.items) { const k = it.cityName || '__'; if (!groups[k]) { groups[k] = []; order.push(k) } groups[k].push(it) }
+    let optimized = []
+    for (const k of order) optimized = optimized.concat(twoOpt(nn(groups[k])))
+    // 시간표(etaMin) 재계산 — 누적 이동시간(도로보정 1.35) + 체류시간
+    let clock = 0
+    const finalItems = optimized.map((it, i) => {
+      if (i > 0) clock += Math.round((dist(optimized[i - 1], it) * 1.35 / speedKmh) * 60)
+      const eta = clock; clock += (it.dwell || 60)
+      return { ...it, etaMin: eta }
+    })
+    saveCourseDays(courseDays.map((d, i) => i === dayIndex ? { ...d, items: finalItems } : d))
+    setActiveDayTab(dayIndex)
+  }
   const openCoursePlanner = () => {
     if (courseDays.length === 0 && courseItems.length > 0) {
       const days = [{ items: [...courseItems] }]
@@ -4268,6 +4309,14 @@ Write all text in ${langName}.`
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       {totalMin > 0 && <span style={{fontSize:11,color:'#374151',fontWeight:500}}>{totalHr > 0 ? `${totalHr}${t('courseHour')} ${totalMinRem}${t('courseMin')}` : `${totalMin}${t('courseMin')}`}</span>}
                       {loadingRoutes && <div style={{width:12,height:12,borderRadius:'50%',border:'1.5px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>}
+                      {items.length >= 2 && (
+                        <button onClick={()=>optimizeDay(activeDayTab)}
+                          title={lang==='ko'?'동선 최적화':'Optimize route'}
+                          style={{fontSize:10,background:'#c8856a',border:'1px solid #c8856a',color:'#fff',padding:'3px 9px',borderRadius:5,cursor:'pointer',fontWeight:700,transition:'all .15s'}}
+                          onMouseEnter={e=>{e.currentTarget.style.background='#b5734f';e.currentTarget.style.borderColor='#b5734f'}}
+                          onMouseLeave={e=>{e.currentTarget.style.background='#c8856a';e.currentTarget.style.borderColor='#c8856a'}}
+                        >{lang==='ko'?'동선 최적화':lang==='ja'?'ルート最適化':lang==='zh'?'路线优化':'Optimize'}</button>
+                      )}
                       {courseDays.length > 1 && (
                         <button onClick={()=>removeCourseDay(activeDayTab)}
                           style={{fontSize:10,background:'none',border:'1px solid #e0d9d0',color:'#1a1714',padding:'3px 8px',borderRadius:5,cursor:'pointer',transition:'all .15s'}}
