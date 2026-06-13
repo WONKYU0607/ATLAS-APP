@@ -924,16 +924,28 @@ function App() {
       }
       return best
     }
-    const nn = (g) => {
-      const sorted = []; const rem = [...g]
-      let cur = rem.shift(); sorted.push(cur)
+    const nn = (g, startIdx) => {
+      const rem = [...g]
+      const sorted = [rem.splice(startIdx, 1)[0]]
+      let cur = sorted[0]
       while (rem.length) { let md = Infinity, mi = 0; rem.forEach((it, i) => { const d = dist(cur, it); if (d < md) { md = d; mi = i } }); cur = rem.splice(mi, 1)[0]; sorted.push(cur) }
       return sorted
+    }
+    // 모든 시작점에서 NN+2-opt 돌려 가장 짧은 동선 선택 (1번 고정 안 함 — 전체 최단)
+    const bestRoute = (g) => {
+      if (g.length <= 2) return g
+      let best = null, bestLen = Infinity
+      for (let s = 0; s < g.length; s++) {
+        const r = twoOpt(nn(g, s))
+        const l = routeLen(r)
+        if (l < bestLen) { bestLen = l; best = r }
+      }
+      return best
     }
     const order = []; const groups = {}
     for (const it of day.items) { const k = it.cityName || '__'; if (!groups[k]) { groups[k] = []; order.push(k) } groups[k].push(it) }
     let optimized = []
-    for (const k of order) optimized = optimized.concat(twoOpt(nn(groups[k])))
+    for (const k of order) optimized = optimized.concat(bestRoute(groups[k]))
     // 시간표(etaMin) 재계산 — 누적 이동시간(도로보정 1.35) + 체류시간
     let clock = 0
     const finalItems = optimized.map((it, i) => {
