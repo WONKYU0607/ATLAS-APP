@@ -2783,6 +2783,7 @@ function App() {
     setCityData(null)
     hoveredCountryRef.current = null
     setShowCountryInfo(false)  // 다른 국가 선택 시 정보 패널 닫힘
+    setInfoExpanded(false)  // 항상 접힌(헤더만) 상태로 시작 — 사용자가 헤더 탭하면 펼쳐짐
 
     const center = getCountryCenter(feat)
     const altitude = getCountryAltitude(feat)
@@ -2937,9 +2938,22 @@ function App() {
       // 예외: 행정구역 다른 핵심 명소(피라미드·만리장성·수니온 등)는 allow 키워드로 통과
       const cityNames = [cityKey, ...(CITY_I18N[cityKey] || [])].filter(Boolean)
       const allow = extra?.allow || []
+      // 현지 표기 자동 학습: 도시명으로 검색한 결과 다수가 공유하는 지역 표기(예: København)를 추출해 허용
+      // → København·München·Praha 같은 현지어 주소를 수동등록·반경 없이 자동 통과. 타지 명소(소수)는 학습 안 됨
+      const localityTally = {}
+      for (const p of merged) {
+        const segs = (p.formatted_address || '').split(',').map(s => s.trim()).filter(Boolean)
+        if (segs.length >= 2) {
+          const loc = segs[segs.length - 2].replace(/[0-9]+/g, '').trim()  // 국가 앞 세그먼트, 우편번호 제거
+          if (loc.length >= 2) localityTally[loc] = (localityTally[loc] || 0) + 1
+        }
+      }
+      const learnThreshold = Math.max(3, merged.length * 0.25)
+      const learnedLocalities = Object.entries(localityTally).filter(([, c]) => c >= learnThreshold).map(([k]) => k)
+      const acceptNames = [...cityNames, ...learnedLocalities]
       const inCity = (p) => {
         const addr = (p.vicinity || '') + ' ' + (p.formatted_address || '')
-        if (cityNames.some(n => addr.includes(n))) return true
+        if (acceptNames.some(n => addr.includes(n))) return true
         const hay = (p.name || '') + ' ' + addr
         return allow.some(k => hay.includes(k))
       }
@@ -3583,21 +3597,8 @@ Write all text in ${langName}.`
         const cities = COUNTRY_CITIES[cName]
         return (
           <>
-            {/* 국가정보 패널: 기본 닫힘. 닫혀있을 땐 작은 열기 버튼만 표시 (사용자가 열 때만 패널 표시) */}
-            {info && !showCountryInfo && (
-              <div style={{position:'absolute',bottom:isMobile?'calc(60px + env(safe-area-inset-bottom))':24,left:'50%',transform:'translateX(-50%)',zIndex:1000,display:'flex',alignItems:'center',gap:8,background:'rgba(255,255,255,.97)',backdropFilter:'blur(16px)',border:'1.5px solid #e2e8f0',borderRadius:14,boxShadow:'0 8px 32px rgba(0,0,0,.18)',padding:'7px 10px'}}>
-                <button onClick={()=>{setShowCountryInfo(true);setInfoExpanded(true)}} style={{display:'flex',alignItems:'center',gap:7,background:'none',border:'none',cursor:'pointer',padding:0,minWidth:0}}>
-                  <span style={{fontSize:16}}>{info.emoji}</span>
-                  <div style={{textAlign:'left',minWidth:0}}>
-                    <div style={{fontSize:13,fontWeight:800,color:'#0f172a',whiteSpace:'nowrap'}}>{countryKo}</div>
-                    <div style={{fontSize:9,color:'#64748b',fontWeight:600}}>{lang==='ko'?'국가정보 보기':lang==='ja'?'国の情報':lang==='zh'?'查看国家信息':'Country info'}</div>
-                  </div>
-                </button>
-                <button onClick={(e)=>{e.stopPropagation();closeCountry()}} style={{background:'#f1f5f9',border:'none',borderRadius:12,width:22,height:22,padding:0,cursor:'pointer',fontSize:11,color:'#64748b',fontWeight:700,flexShrink:0}} aria-label="close">✕</button>
-              </div>
-            )}
             {/* Country Info Panel (단일 통합 UI — 하단 바 역할 겸함) */}
-            {info && showCountryInfo && (
+            {info && (
               <div className="countryInfoPanel" style={{
                 position:'absolute',bottom:isMobile?'calc(60px + env(safe-area-inset-bottom))':24,left:'50%',transform:'translateX(-50%)',
                 zIndex:1000,width:isMobile?'78vw':480,maxWidth:'95vw',
@@ -3622,7 +3623,7 @@ Write all text in ${langName}.`
                     </div>
                     <span style={{fontSize:11,color:'#94a3b8',flexShrink:0,marginLeft:2}}>{infoExpanded ? '▼' : '▲'}</span>
                     <button
-                      onClick={(e) => { e.stopPropagation(); setShowCountryInfo(false) }}
+                      onClick={(e) => { e.stopPropagation(); closeCountry() }}
                       style={{background:'#f1f5f9',border:'none',borderRadius:12,width:20,height:20,padding:0,cursor:'pointer',fontSize:10,color:'#64748b',fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}
                       aria-label="close">✕</button>
                   </div>
