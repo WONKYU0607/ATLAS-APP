@@ -1402,7 +1402,8 @@ function App() {
       if (tr?.name) return tr.name
       if (item.wikiTitle && lang !== 'ko') return item.wikiTitle
     }
-    // hotspot/restaurant → 현재 언어로 로드된 데이터에서 place_id로 매칭
+    // hotspot/restaurant → 저장된 언어별 캐시 우선, 없으면 현재 로드된 데이터에서 place_id로 매칭
+    if (item.nameI18n && item.nameI18n[lang]) return item.nameI18n[lang]
     if (item.place_id) {
       const current = [...hotspots, ...restaurants].find(p => p.place_id === item.place_id)
       if (current?.name) return current.name
@@ -1410,6 +1411,32 @@ function App() {
     return item.displayName || item.name
   }
   const getCourseItemCity = (item) => getCityName(item.cityName || item.name)
+
+  // 코스 핫플/맛집 이름 다국어 lazy 캐시(B방식): 현재 언어 이름이 없으면 place_id로 그 언어 결과를 받아 nameI18n에 저장.
+  // 한 번 받으면 캐시되어 언어 바꿔도 재호출 없음. spot(정적 큐레이션)은 trSpot로 번역되므로 제외.
+  useEffect(() => {
+    const targets = courseItems.filter(it => it.place_id && (it.source === 'hotspot' || it.source === 'restaurant') && !(it.nameI18n && it.nameI18n[lang]))
+    if (targets.length === 0) return
+    let cancelled = false
+    const langParam = lang === 'zh' ? 'zh-CN' : lang
+    ;(async () => {
+      const resolved = {}
+      for (const it of targets) {
+        try {
+          const q = it.displayName || it.name
+          const r = await fetch(`/api/places?query=${encodeURIComponent(q)}&lat=${it.lat}&lng=${it.lng}&language=${langParam}`)
+          const d = await r.json()
+          const hit = (d.results || []).find(p => p.place_id === it.place_id)  // place_id 정확 매칭만 (오번역 방지)
+          if (hit?.name) resolved[it.place_id] = hit.name
+        } catch {}
+      }
+      if (cancelled || Object.keys(resolved).length === 0) return
+      const apply = (arr) => arr.map(it => (it.place_id && resolved[it.place_id]) ? { ...it, nameI18n: { ...(it.nameI18n || {}), [lang]: resolved[it.place_id] } } : it)
+      setCourseItems(prev => { const n = apply(prev); localStorage.setItem('atlas_course', JSON.stringify(n)); return n })
+      setCourseDays(prev => { const n = prev.map(day => ({ ...day, items: apply(day.items || []) })); localStorage.setItem('atlas_course_days', JSON.stringify(n)); return n })
+    })()
+    return () => { cancelled = true }
+  }, [courseItems, lang])
 
   // ── 다국어 코스 빌더 (커뮤니티 공유 시) ──
   const buildItemI18n = (item) => {
@@ -1674,7 +1701,7 @@ function App() {
     if (!document.getElementById('atlas-hide-globe-tooltip')) {
       const stl = document.createElement('style')
       stl.id = 'atlas-hide-globe-tooltip'
-      stl.textContent = '.scene-tooltip{display:none !important;}'
+      stl.textContent = '.float-tooltip-kap{display:none !important;}'
       document.head.appendChild(stl)
     }
     const globe = Globe()(globeContainerRef.current)
@@ -1911,7 +1938,13 @@ function App() {
         nameEn: 'Hawaii', _type: 'hawaii', _hasCities: true,
         _city: { name: '하와이', lat: 21.31, lng: -157.85, emoji: '', _koName: '하와이', countryEn: 'United States of America' },
       }
-      globe.htmlElementsData([...labelItems, ...islandLabels, hawaiiLabel, ...OCEAN_LABELS])
+      // 괌: 폴리곤 없는 미국령 섬 → 섬 라벨로 추가(탭하면 Guam 도시뷰=괌·사이판 진입). _type='island'이라 기존 섬 탭 핸들러로 진입
+      const guamLabel = {
+        lat: 13.47, lng: 144.75,
+        name: lang === 'ko' ? '괌' : 'Guam',
+        nameEn: 'Guam', _type: 'island', _hasCities: true,
+      }
+      globe.htmlElementsData([...labelItems, ...islandLabels, hawaiiLabel, guamLabel, ...OCEAN_LABELS])
       labelCacheRef.current.items = []; labelCacheRef.current.settled = false  // 새 라벨 즉시 줌-숨김 처리되게 캐시 리셋
       lastPovKeyRef.current = ''; labelCacheRef.current = { t: 0, items: [] } // 라벨 새로 생성됨 → idle스킵 해제 + 캐시 무효화
       return
@@ -2051,7 +2084,7 @@ function App() {
           el.appendChild(inner)
         } else {
           const hasCities = d._hasCities ?? COUNTRY_CITIES[d.nameEn]
-          const isIsland = ISLAND_NAMES.has(d.nameEn) || d._type === 'hawaii'
+          const isIsland = ISLAND_NAMES.has(d.nameEn) || d._type === 'hawaii' || d._type === 'island'
           if (isIsland) {
             // 섬나라 라벨: 터치 투명(pointer-events:none) → 회전/줌 안 막힘. 선택은 폴리곤/추후 onGlobeClick
             el.style.cssText = 'pointer-events:none;'
@@ -3550,8 +3583,21 @@ Write all text in ${langName}.`
         const cities = COUNTRY_CITIES[cName]
         return (
           <>
+            {/* 국가정보 패널: 기본 닫힘. 닫혀있을 땐 작은 열기 버튼만 표시 (사용자가 열 때만 패널 표시) */}
+            {info && !showCountryInfo && (
+              <div style={{position:'absolute',bottom:isMobile?'calc(60px + env(safe-area-inset-bottom))':24,left:'50%',transform:'translateX(-50%)',zIndex:1000,display:'flex',alignItems:'center',gap:8,background:'rgba(255,255,255,.97)',backdropFilter:'blur(16px)',border:'1.5px solid #e2e8f0',borderRadius:14,boxShadow:'0 8px 32px rgba(0,0,0,.18)',padding:'7px 10px'}}>
+                <button onClick={()=>{setShowCountryInfo(true);setInfoExpanded(true)}} style={{display:'flex',alignItems:'center',gap:7,background:'none',border:'none',cursor:'pointer',padding:0,minWidth:0}}>
+                  <span style={{fontSize:16}}>{info.emoji}</span>
+                  <div style={{textAlign:'left',minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:800,color:'#0f172a',whiteSpace:'nowrap'}}>{countryKo}</div>
+                    <div style={{fontSize:9,color:'#64748b',fontWeight:600}}>{lang==='ko'?'국가정보 보기':lang==='ja'?'国の情報':lang==='zh'?'查看国家信息':'Country info'}</div>
+                  </div>
+                </button>
+                <button onClick={(e)=>{e.stopPropagation();closeCountry()}} style={{background:'#f1f5f9',border:'none',borderRadius:12,width:22,height:22,padding:0,cursor:'pointer',fontSize:11,color:'#64748b',fontWeight:700,flexShrink:0}} aria-label="close">✕</button>
+              </div>
+            )}
             {/* Country Info Panel (단일 통합 UI — 하단 바 역할 겸함) */}
-            {info && (
+            {info && showCountryInfo && (
               <div className="countryInfoPanel" style={{
                 position:'absolute',bottom:isMobile?'calc(60px + env(safe-area-inset-bottom))':24,left:'50%',transform:'translateX(-50%)',
                 zIndex:1000,width:isMobile?'78vw':480,maxWidth:'95vw',
@@ -3576,7 +3622,7 @@ Write all text in ${langName}.`
                     </div>
                     <span style={{fontSize:11,color:'#94a3b8',flexShrink:0,marginLeft:2}}>{infoExpanded ? '▼' : '▲'}</span>
                     <button
-                      onClick={(e) => { e.stopPropagation(); closeCountry() }}
+                      onClick={(e) => { e.stopPropagation(); setShowCountryInfo(false) }}
                       style={{background:'#f1f5f9',border:'none',borderRadius:12,width:20,height:20,padding:0,cursor:'pointer',fontSize:10,color:'#64748b',fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}
                       aria-label="close">✕</button>
                   </div>
@@ -4158,7 +4204,7 @@ Write all text in ${langName}.`
                       <button key={i} onClick={()=>openCourseInGmaps([items[i],items[i+1]])}
                         style={{textAlign:'left',padding:'7px 10px',fontSize:11,fontWeight:600,background:'#f0ebe4',color:'#1a1714',border:'1px solid #e0d9d0',borderRadius:7,cursor:'pointer',display:'flex',alignItems:'center',gap:7}}>
                         <span style={{width:18,height:18,borderRadius:'50%',background:'#c8856a',color:'#fff',fontSize:10,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{i+1}</span>
-                        <span style={{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{(it.displayName||it.name)} → {(items[i+1].displayName||items[i+1].name)}</span>
+                        <span style={{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCourseItemName(it)} → {getCourseItemName(items[i+1])}</span>
                       </button>
                     ))}
                   </div>
