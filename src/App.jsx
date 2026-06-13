@@ -4241,7 +4241,7 @@ Write all text in ${langName}.`
                 const items = (courseDays[activeDayTab]?.items || []).filter(it=>it && (it.name||it.place_id))
                 if (items.length < 2) return <div style={{fontSize:10.5,color:'#b0a89e'}}>{lang==='ko'?'이 Day에 장소를 2곳 이상 담으면 구간 경로가 생겨요':lang==='ja'?'2か所以上で区間表示':lang==='zh'?'2个以上地点显示路段':'Add 2+ places for segments'}</div>
                 return (
-                  <div style={{display:'flex',flexDirection:'column',gap:5}}>
+                  <div style={{display:'flex',flexDirection:'column',gap:5,maxHeight:108,overflowY:'auto',paddingRight:items.length>4?4:0}}>
                     {items.slice(0,-1).map((it,i)=>(
                       <button key={i} onClick={()=>openCourseInGmaps([items[i],items[i+1]])}
                         style={{textAlign:'left',padding:'7px 10px',fontSize:11,fontWeight:600,background:'#f0ebe4',color:'#1a1714',border:'1px solid #e0d9d0',borderRadius:7,cursor:'pointer',display:'flex',alignItems:'center',gap:7}}>
