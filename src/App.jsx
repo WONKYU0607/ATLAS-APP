@@ -512,6 +512,10 @@ function App() {
   const [showFavorites, setShowFavorites] = useState(false)
   const [showHamburger, setShowHamburger] = useState(false)
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768)
+  // 모바일 코스↔도시 패널 책넘기기 스와이프 상태
+  const [cityPeek, setCityPeek] = useState(false)
+  const cityPanelRef = useRef(null)
+  const peekDragRef = useRef({ active:false, mode:null, sx:0, sy:0, multi:false })
   const [savedCourses, setSavedCourses] = useState(() => {
     try { return JSON.parse(localStorage.getItem('atlas_saved_courses') || '[]') } catch { return [] }
   })
@@ -1028,6 +1032,9 @@ function App() {
       if (hasUncached) fetchAllRoutes(courseDays, courseTransport)
     }
   }, [showCoursePlanner, courseDays, courseTransport])
+
+  // 코스 플래너가 닫히거나 선택 도시가 없어지면 책넘기기 상태 해제
+  useEffect(() => { if (!showCoursePlanner || !selectedCity) setCityPeek(false) }, [showCoursePlanner, selectedCity])
 
   // 언어 변경 시 경로 캐시 초기화 (Directions API 응답 언어가 다름)
   useEffect(() => { setRouteCache({}) }, [lang])
@@ -3244,6 +3251,70 @@ Write all text in ${langName}.`
   }
 
 
+  // ── 모바일 코스↔도시 패널 책넘기기 스와이프 (오른쪽 엣지 → 실시간 추적) ──
+  const peekW = () => cityPanelRef.current?.offsetWidth || (typeof window !== 'undefined' ? window.innerWidth : 360)
+  const PEEK_TRANS = 'transform .32s cubic-bezier(.16,1,.3,1)'
+  // 코스 오른쪽 엣지에서 좌향으로 끌어 도시 패널 당겨오기
+  const onPeekPullStart = (e) => {
+    if (!selectedCity) return
+    if (e.touches.length > 1) { peekDragRef.current.multi = true; return }
+    const t = e.touches[0]
+    peekDragRef.current = { active:true, mode:'pull', sx:t.clientX, sy:t.clientY, multi:false }
+    if (cityPanelRef.current) cityPanelRef.current.style.transition = 'none'
+  }
+  const onPeekPullMove = (e) => {
+    const d = peekDragRef.current
+    if (!d.active || d.multi || d.mode !== 'pull') return
+    const t = e.touches[0]
+    const w = peekW()
+    const pulled = Math.min(Math.max(0, d.sx - t.clientX), w)
+    if (cityPanelRef.current) cityPanelRef.current.style.transform = `translateX(${w - pulled}px)`
+  }
+  const onPeekPullEnd = (e) => {
+    const d = peekDragRef.current
+    if (d.active && !d.multi && d.mode === 'pull') {
+      const t = e.changedTouches[0]
+      const open = Math.max(0, d.sx - t.clientX) > peekW() * 0.4
+      if (cityPanelRef.current) {
+        cityPanelRef.current.style.transition = PEEK_TRANS
+        cityPanelRef.current.style.transform = open ? 'translateX(0)' : 'translateX(100%)'
+      }
+      setCityPeek(open)
+    }
+    peekDragRef.current.active = false; peekDragRef.current.multi = false
+  }
+  // 도시 패널에서 우향으로 밀어 코스로 복귀 (세로 스크롤과 구분)
+  const onPeekDismissStart = (e) => {
+    if (!cityPeek) return
+    if (e.touches.length > 1) { peekDragRef.current.multi = true; return }
+    const t = e.touches[0]
+    peekDragRef.current = { active:true, mode:null, sx:t.clientX, sy:t.clientY, multi:false }
+  }
+  const onPeekDismissMove = (e) => {
+    const d = peekDragRef.current
+    if (!cityPeek || !d.active || d.multi) return
+    const t = e.touches[0]
+    const dx = t.clientX - d.sx, dy = t.clientY - d.sy
+    if (d.mode === null) {
+      if (Math.abs(dx) > Math.abs(dy) + 6 && dx > 0) { d.mode = 'dismiss'; if (cityPanelRef.current) cityPanelRef.current.style.transition = 'none' }
+      else if (Math.abs(dy) > Math.abs(dx)) { d.mode = 'scroll' }
+    }
+    if (d.mode === 'dismiss' && cityPanelRef.current) cityPanelRef.current.style.transform = `translateX(${Math.max(0, dx)}px)`
+  }
+  const onPeekDismissEnd = (e) => {
+    const d = peekDragRef.current
+    if (cityPeek && d.active && d.mode === 'dismiss') {
+      const t = e.changedTouches[0]
+      const close = Math.max(0, t.clientX - d.sx) > peekW() * 0.4
+      if (cityPanelRef.current) {
+        cityPanelRef.current.style.transition = PEEK_TRANS
+        cityPanelRef.current.style.transform = close ? 'translateX(100%)' : 'translateX(0)'
+      }
+      if (close) setCityPeek(false)
+    }
+    peekDragRef.current.active = false; peekDragRef.current.multi = false
+  }
+
   const closePanel = () => {
     // 줌 그대로 유지 — 도시 패널은 줌 상태에 영향 주지 않음
     setSelectedCity(null); setCityData(null); setSelectedSpot(null); setSidePanel(null)
@@ -3771,7 +3842,9 @@ Write all text in ${langName}.`
         <>
 
 
-        <div className="panel" style={{position:'absolute',top:0,right:0,bottom:0,width:isMobile?'100%':420,zIndex:1000,background:'white',borderLeft:isMobile?'none':'1.5px solid #e2e8f0',overflowY:'auto',WebkitOverflowScrolling:'touch',touchAction:'pan-y',boxShadow:isMobile?'none':'-12px 0 40px rgba(0,0,0,.15)'}}>
+        <div ref={cityPanelRef} className="panel"
+          onTouchStart={onPeekDismissStart} onTouchMove={onPeekDismissMove} onTouchEnd={onPeekDismissEnd}
+          style={{position:'absolute',top:0,right:0,bottom:0,width:isMobile?'100%':420,zIndex:(isMobile&&showCoursePlanner&&cityPeek)?1200:1000,transform:(isMobile&&showCoursePlanner)?(cityPeek?'translateX(0)':'translateX(100%)'):'translateX(0)',transition:'transform .32s cubic-bezier(.16,1,.3,1)',background:'white',borderLeft:isMobile?'none':'1.5px solid #e2e8f0',overflowY:'auto',WebkitOverflowScrolling:'touch',touchAction:'pan-y',boxShadow:isMobile?'none':'-12px 0 40px rgba(0,0,0,.15)'}}>
           <div style={{position:'sticky',top:0,zIndex:10,padding:'20px 20px 14px',background:'linear-gradient(white 87%,transparent)'}}>
             <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
               <div>
@@ -4183,6 +4256,14 @@ Write all text in ${langName}.`
       {/* ── 코스 플래너 패널 (Warm Cream) ── */}
       {showCoursePlanner && courseDays.length > 0 && (
         <div style={{position:'absolute',top:isMobile?0:72,left:0,bottom:0,width:isMobile?'100%':Math.min(500,typeof window!=='undefined'?window.innerWidth-30:480),zIndex:1100,background:'#faf8f5',borderRight:isMobile?'none':'1px solid #e8e2da',boxShadow:isMobile?'none':'16px 0 48px rgba(0,0,0,.1)',display:'flex',flexDirection:'column',animation:'coursePlannerIn .35s cubic-bezier(.16,1,.3,1)'}}>
+
+          {/* 모바일: 오른쪽 엣지에서 끌면 도시 패널(추천 관광지) 책넘기듯 등장 */}
+          {isMobile && selectedCity && !cityPeek && (
+            <div onTouchStart={onPeekPullStart} onTouchMove={onPeekPullMove} onTouchEnd={onPeekPullEnd}
+              style={{position:'absolute',top:0,right:0,bottom:0,width:24,zIndex:1150,display:'flex',alignItems:'center',justifyContent:'flex-end',touchAction:'pan-y'}}>
+              <div style={{width:4,height:46,borderRadius:3,background:'#c8856a',opacity:.45,marginRight:3}}/>
+            </div>
+          )}
 
           {/* 헤더 */}
           <div style={{padding:'20px 20px 0',flexShrink:0}}>
