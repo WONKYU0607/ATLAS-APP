@@ -503,6 +503,12 @@ function App() {
   const [spotSearchQuery, setSpotSearchQuery] = useState('')      // 추천탭: 장소 검색해 코스 추가
   const [spotSearchResults, setSpotSearchResults] = useState([])
   const [spotSearchLoading, setSpotSearchLoading] = useState(false)
+  // 숙소(호텔/에어비앤비 등) — Day별 설정, 최근 기록으로 빠른 재선택
+  const [hotelSearchQuery, setHotelSearchQuery] = useState('')
+  const [hotelSearchResults, setHotelSearchResults] = useState([])
+  const [hotelSearchLoading, setHotelSearchLoading] = useState(false)
+  const [hotelSearchDayIdx, setHotelSearchDayIdx] = useState(null)  // 숙소 설정 패널 열린 Day (null=닫힘)
+  const [recentHotels, setRecentHotels] = useState(() => { try { return JSON.parse(localStorage.getItem('atlas_recent_hotels') || '[]') } catch { return [] } })
   const hoveredCountryRef = useRef(null)  // hover 하이라이트: state 대신 ref (effect 재실행 없이 색만 갱신 → 드래그 렉 방지)
   const [showCountryInfo, setShowCountryInfo] = useState(false)
   const [infoExpanded, setInfoExpanded] = useState(false) // A안: 컴팩트(헤더만) ↔ 전체 펼침
@@ -952,9 +958,16 @@ function App() {
       return best
     }
     const order = []; const groups = {}
-    for (const it of day.items) { const k = it.cityName || '__'; if (!groups[k]) { groups[k] = []; order.push(k) } groups[k].push(it) }
     let optimized = []
-    for (const k of order) optimized = optimized.concat(bestRoute(groups[k]))
+    if (day.hotel && day.hotel.lat != null) {
+      // 숙소를 시작점으로 고정 → 숙소에서 가까운 순으로 관광지 정렬 (숙소 노드는 결과에서 제외)
+      const h = { _lat: day.hotel.lat, _lng: day.hotel.lng, lat: day.hotel.lat, lng: day.hotel.lng, __hotel: true }
+      const seq = twoOpt(nn([h, ...day.items], 0))
+      optimized = seq.filter(x => !x.__hotel)
+    } else {
+      for (const it of day.items) { const k = it.cityName || '__'; if (!groups[k]) { groups[k] = []; order.push(k) } groups[k].push(it) }
+      for (const k of order) optimized = optimized.concat(bestRoute(groups[k]))
+    }
     // 시간표(etaMin) 재계산 — 누적 이동시간(도로보정 1.35) + 체류시간
     let clock = 0
     const finalItems = optimized.map((it, i) => {
@@ -999,15 +1012,22 @@ function App() {
   // Directions API
   const getDirQuery = (item) => item.place_id ? `place_id:${item.place_id}` : `${item.wikiTitle || item.name}, ${item.cityDisplayName || item.cityName}`
   const getRouteKey = (a, b, mode) => `${getDirQuery(a)}|${getDirQuery(b)}|${mode}`
+  // 숙소 설정 시 Day 동선 = 숙소 → 관광지들 → 숙소 (앞뒤 숙소 구간 추가). 미설정이면 관광지만
+  const courseSeq = (day) => {
+    const its = (day?.items || []).filter(it => it && (it.name || it.place_id))
+    if (day?.hotel && (day.hotel.place_id || day.hotel.name) && day.hotel.lat != null) return [day.hotel, ...its, day.hotel]
+    return its
+  }
 
   const fetchAllRoutes = async (days, mode) => {
     setLoadingRoutes(true)
     const results = {}; const fetches = []
     days.forEach(day => {
-      for (let i = 0; i < day.items.length - 1; i++) {
-        const key = getRouteKey(day.items[i], day.items[i + 1], mode)
+      const seq = courseSeq(day)
+      for (let i = 0; i < seq.length - 1; i++) {
+        const key = getRouteKey(seq[i], seq[i + 1], mode)
         if (!routeCache[key] && !fetches.some(f => f.key === key)) {
-          fetches.push({ key, o: getDirQuery(day.items[i]), d: getDirQuery(day.items[i + 1]) })
+          fetches.push({ key, o: getDirQuery(seq[i]), d: getDirQuery(seq[i + 1]) })
         }
       }
     })
@@ -1029,8 +1049,9 @@ function App() {
   useEffect(() => {
     if (showCoursePlanner && courseDays.length > 0) {
       const hasUncached = courseDays.some(day => {
-        for (let i = 0; i < day.items.length - 1; i++) {
-          if (!routeCache[getRouteKey(day.items[i], day.items[i + 1], courseTransport)]) return true
+        const seq = courseSeq(day)
+        for (let i = 0; i < seq.length - 1; i++) {
+          if (!routeCache[getRouteKey(seq[i], seq[i + 1], courseTransport)]) return true
         }
         return false
       })
@@ -3203,6 +3224,49 @@ Write all text in ${langName}.`
     finally { setSpotSearchLoading(false) }
   }
 
+  // 숙소 검색 (관광지 검색과 동일한 Google Places, 도시 컨텍스트 기준)
+  const searchHotelsForCourse = async () => {
+    const q = hotelSearchQuery.trim()
+    if (!q || !selectedCity) return
+    setHotelSearchLoading(true)
+    try {
+      const langParam = lang === 'zh' ? 'zh-CN' : lang
+      const cityKey = selectedCity._koName || selectedCity.name
+      const cityNameEn = (CITY_I18N[cityKey] && CITY_I18N[cityKey][0]) || getCityName(cityKey)
+      const r = await fetch(`/api/places?query=${encodeURIComponent(cityNameEn + ' ' + q)}&lat=${selectedCity.lat}&lng=${selectedCity.lng}&language=${langParam}`)
+      const d = await r.json()
+      const sorted = (d.results || []).filter(p => p.user_ratings_total).sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0)).slice(0, 8)
+      setHotelSearchResults(sorted)
+    } catch { setHotelSearchResults([]) }
+    finally { setHotelSearchLoading(false) }
+  }
+  // 최근 숙소 기록에 추가 (place_id 중복 제거, 최근 앞, 최대 8개)
+  const pushRecentHotel = (hotel) => {
+    const next = [hotel, ...recentHotels.filter(h => h.place_id !== hotel.place_id)].slice(0, 8)
+    setRecentHotels(next); localStorage.setItem('atlas_recent_hotels', JSON.stringify(next))
+  }
+  // 검색 결과(place)를 Day 숙소로 설정 (place=null이면 삭제)
+  const setDayHotel = (dayIdx, place) => {
+    const cityKey = selectedCity?._koName || selectedCity?.name || ''
+    const hotel = place ? {
+      name: place.name, displayName: place.name,
+      cityName: cityKey, cityDisplayName: getCityName(cityKey),
+      place_id: place.place_id,
+      lat: place.geometry?.location?.lat, lng: place.geometry?.location?.lng,
+      vicinity: place.vicinity || place.formatted_address || '',
+      rating: place.rating ?? null
+    } : null
+    saveCourseDays(courseDays.map((d, i) => i === dayIdx ? { ...d, hotel } : d))
+    if (hotel) pushRecentHotel(hotel)
+    setHotelSearchDayIdx(null); setHotelSearchQuery(''); setHotelSearchResults([])
+  }
+  // 최근 기록의 숙소를 Day에 바로 적용 (검색 없이)
+  const applyRecentHotel = (dayIdx, hotel) => {
+    saveCourseDays(courseDays.map((d, i) => i === dayIdx ? { ...d, hotel } : d))
+    pushRecentHotel(hotel)
+    setHotelSearchDayIdx(null); setHotelSearchQuery(''); setHotelSearchResults([])
+  }
+
   const fetchCityData = async (city) => {
     try {
       // 1. 사전 데이터 (정적) 즉시 표시
@@ -4338,15 +4402,15 @@ Write all text in ${langName}.`
             <div style={{marginBottom:14}}>
               <div style={{fontSize:11,color:'#1a1714',fontWeight:600,marginBottom:6}}>{lang==='ko'?'길 찾기(구글 연동)':lang==='ja'?'Googleマップ経路':lang==='zh'?'谷歌地图路线':'Google Maps'}</div>
               {(() => {
-                const items = (courseDays[activeDayTab]?.items || []).filter(it=>it && (it.name||it.place_id))
-                if (items.length < 2) return <div style={{fontSize:10.5,color:'#b0a89e'}}>{lang==='ko'?'이 Day에 장소를 2곳 이상 담으면 구간 경로가 생겨요':lang==='ja'?'2か所以上で区間表示':lang==='zh'?'2个以上地点显示路段':'Add 2+ places for segments'}</div>
+                const seq = courseSeq(courseDays[activeDayTab])
+                if (seq.length < 2) return <div style={{fontSize:10.5,color:'#b0a89e'}}>{lang==='ko'?'이 Day에 장소를 2곳 이상 담으면 구간 경로가 생겨요':lang==='ja'?'2か所以上で区間表示':lang==='zh'?'2个以上地点显示路段':'Add 2+ places for segments'}</div>
                 return (
-                  <div style={{display:'flex',flexDirection:'column',gap:5,maxHeight:108,overflowY:'auto',paddingRight:items.length>4?4:0}}>
-                    {items.slice(0,-1).map((it,i)=>(
-                      <button key={i} onClick={()=>openCourseInGmaps([items[i],items[i+1]])}
+                  <div style={{display:'flex',flexDirection:'column',gap:5,maxHeight:108,overflowY:'auto',paddingRight:seq.length>4?4:0}}>
+                    {seq.slice(0,-1).map((it,i)=>(
+                      <button key={i} onClick={()=>openCourseInGmaps([seq[i],seq[i+1]])}
                         style={{textAlign:'left',padding:'7px 10px',fontSize:11,fontWeight:600,background:'#f0ebe4',color:'#1a1714',border:'1px solid #e0d9d0',borderRadius:7,cursor:'pointer',display:'flex',alignItems:'center',gap:7}}>
                         <span style={{width:18,height:18,borderRadius:'50%',background:'#c8856a',color:'#fff',fontSize:10,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{i+1}</span>
-                        <span style={{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCourseItemName(it)} → {getCourseItemName(items[i+1])}</span>
+                        <span style={{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCourseItemName(it)} → {getCourseItemName(seq[i+1])}</span>
                       </button>
                     ))}
                   </div>
@@ -4378,6 +4442,62 @@ Write all text in ${langName}.`
 
           {/* Day 내용 */}
           <div style={{flex:1,overflowY:'auto',minHeight:0,padding:'16px 20px'}}>
+            {/* 숙소 설정 (Day별, 선택적) — 설정 시 출발·도착이 숙소로 고정 */}
+            {(() => {
+              const day = courseDays[activeDayTab]
+              const hotel = day?.hotel
+              const searching = hotelSearchDayIdx === activeDayTab
+              return (
+                <div style={{marginBottom:14,padding:'11px 13px',background:'#f5efe8',borderRadius:11,border:'1px solid #ece4d8'}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+                    <span style={{fontSize:11,fontWeight:700,color:'#8a7a68',letterSpacing:'.3px'}}>{lang==='ko'?'숙소':lang==='ja'?'宿泊':lang==='zh'?'住宿':'Stay'}</span>
+                    {hotel ? (
+                      <div style={{display:'flex',gap:6}}>
+                        <button onClick={()=>{setHotelSearchDayIdx(searching?null:activeDayTab);setHotelSearchQuery('');setHotelSearchResults([])}} style={{fontSize:10,fontWeight:600,padding:'4px 9px',background:'#fff',border:'1px solid #e0d9d0',borderRadius:6,color:'#8a7a68',cursor:'pointer'}}>{lang==='ko'?'변경':lang==='ja'?'変更':lang==='zh'?'更改':'Change'}</button>
+                        <button onClick={()=>setDayHotel(activeDayTab,null)} style={{fontSize:10,fontWeight:600,padding:'4px 9px',background:'#fff',border:'1px solid #e8d0d0',borderRadius:6,color:'#bd6b6b',cursor:'pointer'}}>{lang==='ko'?'삭제':lang==='ja'?'削除':lang==='zh'?'删除':'Remove'}</button>
+                      </div>
+                    ) : (
+                      <button onClick={()=>{setHotelSearchDayIdx(searching?null:activeDayTab);setHotelSearchQuery('');setHotelSearchResults([])}} style={{fontSize:11,fontWeight:700,padding:'5px 11px',background:searching?'#fff':'#c8856a',border:searching?'1px solid #e0d9d0':'none',borderRadius:7,color:searching?'#8a7a68':'#fff',cursor:'pointer'}}>{searching?(lang==='ko'?'닫기':'Close'):(lang==='ko'?'숙소 설정':lang==='ja'?'設定':lang==='zh'?'设置':'Set')}</button>
+                    )}
+                  </div>
+                  {hotel && !searching && (
+                    <div style={{marginTop:7,fontSize:13.5,fontWeight:700,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{hotel.displayName||hotel.name}</div>
+                  )}
+                  {searching && (
+                    <div style={{marginTop:9}}>
+                      {recentHotels.length>0 && (
+                        <div style={{marginBottom:9}}>
+                          <div style={{fontSize:10,color:'#a89a88',fontWeight:600,marginBottom:5}}>{lang==='ko'?'최근 숙소':lang==='ja'?'最近の宿泊':lang==='zh'?'最近住宿':'Recent'}</div>
+                          <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+                            {recentHotels.map((h,i)=>(
+                              <button key={i} onClick={()=>applyRecentHotel(activeDayTab,h)} style={{fontSize:11,fontWeight:600,padding:'5px 10px',background:'#fff',border:'1px solid #e0d9d0',borderRadius:15,color:'#1a1714',cursor:'pointer',maxWidth:170,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{h.displayName||h.name}</button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <div style={{display:'flex',gap:6}}>
+                        <input value={hotelSearchQuery} onChange={e=>setHotelSearchQuery(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')searchHotelsForCourse()}}
+                          placeholder={selectedCity?(lang==='ko'?'숙소 이름 검색':'Search stay name'):(lang==='ko'?'도시를 먼저 선택하세요':'Select a city first')}
+                          disabled={!selectedCity}
+                          style={{flex:1,minWidth:0,padding:'9px 11px',fontSize:12,border:'1px solid #e0d9d0',borderRadius:8,outline:'none',background:selectedCity?'#fff':'#f0ece6',color:'#1a1714'}}/>
+                        <button onClick={searchHotelsForCourse} disabled={!selectedCity} style={{padding:'9px 13px',fontSize:12,fontWeight:700,background:selectedCity?'#c8856a':'#d8cfc4',color:'#fff',border:'none',borderRadius:8,cursor:selectedCity?'pointer':'default',flexShrink:0}}>{lang==='ko'?'검색':'Go'}</button>
+                      </div>
+                      {hotelSearchLoading && <div style={{fontSize:11,color:'#b0a89e',marginTop:7}}>{lang==='ko'?'검색 중…':'Searching…'}</div>}
+                      {!hotelSearchLoading && hotelSearchResults.length>0 && (
+                        <div style={{display:'flex',flexDirection:'column',gap:4,marginTop:7,maxHeight:170,overflowY:'auto'}}>
+                          {hotelSearchResults.map((p,i)=>(
+                            <button key={i} onClick={()=>setDayHotel(activeDayTab,p)} style={{textAlign:'left',padding:'8px 11px',fontSize:12,background:'#fff',border:'1px solid #e8dcd0',borderRadius:8,cursor:'pointer'}}>
+                              <div style={{fontWeight:700,color:'#1a1714'}}>{p.name}</div>
+                              {(p.vicinity||p.formatted_address) && <div style={{fontSize:10,color:'#9a8c7c',marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.vicinity||p.formatted_address}</div>}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
             {(() => {
               const day = courseDays[activeDayTab]
               if (!day) return null
