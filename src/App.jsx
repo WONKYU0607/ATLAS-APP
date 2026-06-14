@@ -4289,7 +4289,7 @@ Write all text in ${langName}.`
           </div>
 
           {/* Day 내용 */}
-          <div style={{flex:1,overflowY:'auto',padding:'16px 20px'}}>
+          <div style={{flex:1,overflowY:'auto',minHeight:0,padding:'16px 20px'}}>
             {(() => {
               const day = courseDays[activeDayTab]
               if (!day) return null
@@ -4324,7 +4324,7 @@ Write all text in ${langName}.`
                       {items.length >= 2 && (
                         <button onClick={()=>optimizeDay(activeDayTab)}
                           title={lang==='ko'?'동선 최적화':'Optimize route'}
-                          style={{fontSize:10,background:'#c8856a',border:'1px solid #c8856a',color:'#fff',padding:'3px 9px',borderRadius:5,cursor:'pointer',fontWeight:700,transition:'all .15s'}}
+                          style={{fontSize:12,background:'#c8856a',border:'1px solid #c8856a',color:'#fff',padding:'7px 14px',borderRadius:7,cursor:'pointer',fontWeight:700,transition:'all .15s'}}
                           onMouseEnter={e=>{e.currentTarget.style.background='#b5734f';e.currentTarget.style.borderColor='#b5734f'}}
                           onMouseLeave={e=>{e.currentTarget.style.background='#c8856a';e.currentTarget.style.borderColor='#c8856a'}}
                         >{lang==='ko'?'동선 최적화':lang==='ja'?'ルート最適化':lang==='zh'?'路线优化':'Optimize'}</button>
