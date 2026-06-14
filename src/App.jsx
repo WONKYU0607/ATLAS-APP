@@ -4259,6 +4259,9 @@ Write all text in ${langName}.`
       {showCoursePlanner && courseDays.length > 0 && (
         <div style={{position:'absolute',top:isMobile?0:72,left:0,bottom:0,width:isMobile?'100%':Math.min(500,typeof window!=='undefined'?window.innerWidth-30:480),zIndex:1100,background:'#faf8f5',borderRight:isMobile?'none':'1px solid #e8e2da',boxShadow:isMobile?'none':'16px 0 48px rgba(0,0,0,.1)',display:'flex',flexDirection:'column',animation:'coursePlannerIn .35s cubic-bezier(.16,1,.3,1)'}}>
 
+          {/* DEBUG — 진단용, 제거 예정 */}
+          <div style={{position:'absolute',top:2,left:2,zIndex:99999,background:'#e11',color:'#fff',fontSize:12,fontWeight:800,padding:'3px 7px',borderRadius:5,pointerEvents:'none',fontFamily:'monospace'}}>M{isMobile?1:0} S{selectedCity?1:0} P{cityPeek?1:0} C{showCoursePlanner?1:0}</div>
+
           {/* 모바일: 오른쪽 엣지에서 끌면 도시 패널(추천 관광지) 책넘기듯 등장 */}
           {isMobile && selectedCity && !cityPeek && (
             <div onTouchStart={onPeekPullStart} onTouchMove={onPeekPullMove} onTouchEnd={onPeekPullEnd}
@@ -4372,7 +4375,7 @@ Write all text in ${langName}.`
           </div>
 
           {/* Day 내용 */}
-          <div style={{flex:1,overflowY:'auto',minHeight:0,padding:'16px 20px'}}>
+          <div style={{flex:1,overflowY:'auto',minHeight:0,padding:'16px 20px',background:'rgba(255,0,0,.08)'}}>
             {(() => {
               const day = courseDays[activeDayTab]
               if (!day) return null
