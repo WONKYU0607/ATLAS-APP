@@ -3259,7 +3259,7 @@ Write all text in ${langName}.`
     if (!selectedCity) return
     if (e.touches.length > 1) { peekDragRef.current.multi = true; return }
     const t = e.touches[0]
-    peekDragRef.current = { active:true, mode:'pull', sx:t.clientX, sy:t.clientY, multi:false }
+    peekDragRef.current = { active:true, mode:'pull', sx:t.clientX, sy:t.clientY, multi:false, st:Date.now() }
     if (cityPanelRef.current) cityPanelRef.current.style.transition = 'none'
   }
   const onPeekPullMove = (e) => {
@@ -3274,7 +3274,8 @@ Write all text in ${langName}.`
     const d = peekDragRef.current
     if (d.active && !d.multi && d.mode === 'pull') {
       const t = e.changedTouches[0]
-      const open = Math.max(0, d.sx - t.clientX) > peekW() * 0.4
+      const dist = Math.max(0, d.sx - t.clientX), vel = dist / Math.max(1, Date.now() - d.st)
+      const open = dist > peekW() * 0.2 || (vel > 0.4 && dist > 24)
       if (cityPanelRef.current) {
         cityPanelRef.current.style.transition = PEEK_TRANS
         cityPanelRef.current.style.transform = open ? 'translateX(0)' : 'translateX(100%)'
@@ -3288,7 +3289,7 @@ Write all text in ${langName}.`
     if (!cityPeek) return
     if (e.touches.length > 1) { peekDragRef.current.multi = true; return }
     const t = e.touches[0]
-    peekDragRef.current = { active:true, mode:null, sx:t.clientX, sy:t.clientY, multi:false }
+    peekDragRef.current = { active:true, mode:null, sx:t.clientX, sy:t.clientY, multi:false, st:Date.now() }
   }
   const onPeekDismissMove = (e) => {
     const d = peekDragRef.current
@@ -3305,7 +3306,8 @@ Write all text in ${langName}.`
     const d = peekDragRef.current
     if (cityPeek && d.active && d.mode === 'dismiss') {
       const t = e.changedTouches[0]
-      const close = Math.max(0, t.clientX - d.sx) > peekW() * 0.4
+      const dist = Math.max(0, t.clientX - d.sx), vel = dist / Math.max(1, Date.now() - d.st)
+      const close = dist > peekW() * 0.2 || (vel > 0.4 && dist > 24)
       if (cityPanelRef.current) {
         cityPanelRef.current.style.transition = PEEK_TRANS
         cityPanelRef.current.style.transform = close ? 'translateX(100%)' : 'translateX(0)'
@@ -3844,7 +3846,7 @@ Write all text in ${langName}.`
 
         <div ref={cityPanelRef} className="panel"
           onTouchStart={onPeekDismissStart} onTouchMove={onPeekDismissMove} onTouchEnd={onPeekDismissEnd}
-          style={{position:'absolute',top:0,right:0,bottom:0,width:isMobile?'100%':420,zIndex:(isMobile&&showCoursePlanner&&cityPeek)?1200:1000,transform:(isMobile&&showCoursePlanner)?(cityPeek?'translateX(0)':'translateX(100%)'):'translateX(0)',transition:'transform .32s cubic-bezier(.16,1,.3,1)',background:'white',borderLeft:isMobile?'none':'1.5px solid #e2e8f0',overflowY:'auto',WebkitOverflowScrolling:'touch',touchAction:'pan-y',boxShadow:isMobile?'none':'-12px 0 40px rgba(0,0,0,.15)'}}>
+          style={{position:'absolute',top:0,right:0,bottom:0,width:isMobile?'100%':420,zIndex:(isMobile&&showCoursePlanner)?1200:1000,pointerEvents:(isMobile&&showCoursePlanner&&!cityPeek)?'none':'auto',transform:(isMobile&&showCoursePlanner)?(cityPeek?'translateX(0)':'translateX(100%)'):'translateX(0)',transition:'transform .32s cubic-bezier(.16,1,.3,1)',background:'white',borderLeft:isMobile?'none':'1.5px solid #e2e8f0',overflowY:'auto',WebkitOverflowScrolling:'touch',touchAction:'pan-y',boxShadow:isMobile?'none':'-12px 0 40px rgba(0,0,0,.15)'}}>
           <div style={{position:'sticky',top:0,zIndex:10,padding:'20px 20px 14px',background:'linear-gradient(white 87%,transparent)'}}>
             <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
               <div>
