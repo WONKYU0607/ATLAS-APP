@@ -4461,7 +4461,22 @@ Write all text in ${langName}.`
                     )}
                   </div>
                   {hotel && !searching && (
-                    <div style={{marginTop:7,fontSize:13.5,fontWeight:700,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{hotel.displayName||hotel.name}</div>
+                    <div style={{marginTop:7}}>
+                      <div style={{fontSize:13.5,fontWeight:700,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{hotel.displayName||hotel.name}</div>
+                      {(() => {
+                        const its = (day.items||[]).filter(it=>it&&(it.name||it.place_id))
+                        if (its.length===0) return null
+                        const toFirst = routeCache[getRouteKey(hotel, its[0], courseTransport)]
+                        const fromLast = routeCache[getRouteKey(its[its.length-1], hotel, courseTransport)]
+                        if (!toFirst?.duration && !fromLast?.duration) return null
+                        return (
+                          <div style={{marginTop:6,display:'flex',flexDirection:'column',gap:3}}>
+                            {toFirst?.duration && <div style={{fontSize:10.5,color:'#9a8c7c',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{lang==='ko'?'숙소':lang==='ja'?'宿泊':lang==='zh'?'住宿':'Stay'} → {getCourseItemName(its[0])} · {toFirst.duration}</div>}
+                            {fromLast?.duration && <div style={{fontSize:10.5,color:'#9a8c7c',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCourseItemName(its[its.length-1])} → {lang==='ko'?'숙소':lang==='ja'?'宿泊':lang==='zh'?'住宿':'Stay'} · {fromLast.duration}</div>}
+                          </div>
+                        )
+                      })()}
+                    </div>
                   )}
                   {searching && (
                     <div style={{marginTop:9}}>
@@ -4509,9 +4524,10 @@ Write all text in ${langName}.`
                   <span style={{fontSize:11,color:'#d8cfc4'}}>{t('courseEmptyDesc')}</span>
                 </div>
               )
+              const seqT = courseSeq(day)
               let totalSec = 0
-              for (let i = 0; i < items.length - 1; i++) {
-                const rk = getRouteKey(items[i], items[i+1], courseTransport)
+              for (let i = 0; i < seqT.length - 1; i++) {
+                const rk = getRouteKey(seqT[i], seqT[i+1], courseTransport)
                 if (routeCache[rk]?.durationSec) totalSec += routeCache[rk].durationSec
               }
               const totalMin = Math.round(totalSec / 60)
