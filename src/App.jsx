@@ -545,6 +545,11 @@ function App() {
     const flat = days.flatMap(d => d.items || []); saveCourse(flat)
     setCourseTransport(saved.transport || 'transit')
     if (saved.tripStart) saveTripStart(saved.tripStart)
+    // 책넘기기 핸들/스와이프가 selectedCity에 의존 → 코스의 도시를 복원
+    const cityItem = flat.find(it => it && it.source === 'city') || flat.find(it => it && it.cityName)
+    if (cityItem && cityItem.cityName) {
+      setSelectedCity({ name:cityItem.cityName, _koName:cityItem.cityName, lat:cityItem.lat, lng:cityItem.lng, emoji:cityItem.emoji||'📍', countryEn:cityItem.countryEn||'' })
+    }
     setActiveDayTab(0); setShowCoursePlanner(true); setShowHamburger(false)
     setCourseSource(saved.type || 'manual')
   }
@@ -4257,10 +4262,7 @@ Write all text in ${langName}.`
 
       {/* ── 코스 플래너 패널 (Warm Cream) ── */}
       {showCoursePlanner && courseDays.length > 0 && (
-        <div style={{position:'absolute',top:isMobile?0:72,left:0,bottom:0,width:isMobile?'100%':Math.min(500,typeof window!=='undefined'?window.innerWidth-30:480),zIndex:1100,background:'#faf8f5',borderRight:isMobile?'none':'1px solid #e8e2da',boxShadow:isMobile?'none':'16px 0 48px rgba(0,0,0,.1)',display:'flex',flexDirection:'column',animation:'coursePlannerIn .35s cubic-bezier(.16,1,.3,1)'}}>
-
-          {/* DEBUG — 진단용, 제거 예정 */}
-          <div style={{position:'absolute',top:2,left:2,zIndex:99999,background:'#e11',color:'#fff',fontSize:12,fontWeight:800,padding:'3px 7px',borderRadius:5,pointerEvents:'none',fontFamily:'monospace'}}>M{isMobile?1:0} S{selectedCity?1:0} P{cityPeek?1:0} C{showCoursePlanner?1:0}</div>
+        <div style={{position:'absolute',top:isMobile?0:72,left:0,bottom:isMobile?undefined:0,height:isMobile?'100dvh':undefined,width:isMobile?'100%':Math.min(500,typeof window!=='undefined'?window.innerWidth-30:480),zIndex:1100,background:'#faf8f5',borderRight:isMobile?'none':'1px solid #e8e2da',boxShadow:isMobile?'none':'16px 0 48px rgba(0,0,0,.1)',display:'flex',flexDirection:'column',animation:'coursePlannerIn .35s cubic-bezier(.16,1,.3,1)'}}>
 
           {/* 모바일: 오른쪽 엣지에서 끌면 도시 패널(추천 관광지) 책넘기듯 등장 */}
           {isMobile && selectedCity && !cityPeek && (
@@ -4375,7 +4377,7 @@ Write all text in ${langName}.`
           </div>
 
           {/* Day 내용 */}
-          <div style={{flex:1,overflowY:'auto',minHeight:0,padding:'16px 20px',background:'rgba(255,0,0,.08)'}}>
+          <div style={{flex:1,overflowY:'auto',minHeight:0,padding:'16px 20px'}}>
             {(() => {
               const day = courseDays[activeDayTab]
               if (!day) return null
