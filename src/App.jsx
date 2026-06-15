@@ -520,6 +520,7 @@ function App() {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768)
   // 모바일 코스↔도시 패널 책넘기기 스와이프 상태
   const [cityPeek, setCityPeek] = useState(false)
+  const [showSwipeHint, setShowSwipeHint] = useState(false)
   const cityPanelRef = useRef(null)
   const peekDragRef = useRef({ active:false, mode:null, sx:0, sy:0, multi:false })
   const [savedCourses, setSavedCourses] = useState(() => {
@@ -1062,6 +1063,21 @@ function App() {
 
   // 코스 플래너가 닫히거나 선택 도시가 없어지면 책넘기기 상태 해제
   useEffect(() => { if (!showCoursePlanner || !selectedCity) setCityPeek(false) }, [showCoursePlanner, selectedCity])
+
+  // 스와이프 첫 사용 힌트 (한 번만 표시, 6초 후 자동 숨김)
+  useEffect(() => {
+    if (isMobile && showCoursePlanner && selectedCity && !cityPeek) {
+      try {
+        if (!localStorage.getItem('atlas_swipe_hint_seen')) {
+          setShowSwipeHint(true)
+          localStorage.setItem('atlas_swipe_hint_seen', '1')
+          const t = setTimeout(() => setShowSwipeHint(false), 6000)
+          return () => clearTimeout(t)
+        }
+      } catch {}
+    }
+  }, [isMobile, showCoursePlanner, selectedCity])
+  useEffect(() => { if (cityPeek) setShowSwipeHint(false) }, [cityPeek])
 
   // 언어 변경 시 경로 캐시 초기화 (Directions API 응답 언어가 다름)
   useEffect(() => { setRouteCache({}) }, [lang])
@@ -3443,6 +3459,7 @@ Write all text in ${langName}.`
         @keyframes coursePop{0%{transform:scale(1)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
         @keyframes courseSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
         @keyframes coursePlannerIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+        @keyframes swipeHintNudge{0%,100%{transform:translateY(-50%) translateX(0)}50%{transform:translateY(-50%) translateX(-7px)}}
         @keyframes aiModalIn{from{opacity:0;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
         @keyframes aiPulse{0%,100%{opacity:.6}50%{opacity:1}}
         .drag-over{border-color:#3b82f6!important;background:#eff6ff!important}
@@ -4343,6 +4360,14 @@ Write all text in ${langName}.`
             <div onTouchStart={onPeekPullStart} onTouchMove={onPeekPullMove} onTouchEnd={onPeekPullEnd}
               style={{position:'absolute',top:0,right:0,bottom:0,width:24,zIndex:1150,display:'flex',alignItems:'center',justifyContent:'flex-end',touchAction:'pan-y'}}>
               <div style={{width:4,height:46,borderRadius:3,background:'#c8856a',opacity:.45,marginRight:3}}/>
+            </div>
+          )}
+          {/* 스와이프 첫 사용 안내 말풍선 */}
+          {isMobile && selectedCity && !cityPeek && showSwipeHint && (
+            <div onClick={()=>setShowSwipeHint(false)}
+              style={{position:'absolute',right:36,top:'50%',zIndex:1160,background:'#1a1714',color:'#fff',padding:'11px 15px',borderRadius:11,fontSize:12.5,fontWeight:600,lineHeight:1.4,maxWidth:210,boxShadow:'0 6px 22px rgba(0,0,0,.3)',cursor:'pointer',animation:'swipeHintNudge 1.4s ease-in-out infinite'}}>
+              ← {lang==='ko'?`왼쪽으로 끌면 ${getCityName(selectedCity._koName||selectedCity.name)} 추천이 펼쳐져요`:lang==='ja'?`左にスワイプで${getCityName(selectedCity._koName||selectedCity.name)}のおすすめ`:lang==='zh'?`向左滑动展开${getCityName(selectedCity._koName||selectedCity.name)}推荐`:`Swipe left for ${getCityName(selectedCity._koName||selectedCity.name)} picks`}
+              <div style={{position:'absolute',right:-7,top:'50%',transform:'translateY(-50%)',width:0,height:0,borderTop:'7px solid transparent',borderBottom:'7px solid transparent',borderLeft:'7px solid #1a1714'}}/>
             </div>
           )}
 
