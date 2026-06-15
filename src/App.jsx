@@ -579,6 +579,9 @@ function App() {
   const [courseTransport, setCourseTransport] = useState('transit')
   const [dragItem, setDragItem] = useState(null)
   const [courseCompact, setCourseCompact] = useState(false)  // 코스 관광지 컴팩트(한눈에 보기) 토글
+  const scrollAreaRef = useRef(null)        // 코스 관광지 스크롤 영역 (드래그 자동 스크롤용)
+  const autoScrollRef = useRef(null)
+  const dragScrollDirRef = useRef(0)
   const [activeDayTab, setActiveDayTab] = useState(0)
   const [courseTripStart, setCourseTripStart] = useState(() => {
     const today = new Date().toISOString().slice(0, 10)
@@ -994,6 +997,28 @@ function App() {
     saveCourseDays(days)                 // 빈 코스면 courseItems도 비워짐 → 체크(✓) 해제
     if (activeDayTab >= days.length) setActiveDayTab(Math.max(0, days.length - 1))
   }
+  // 드래그 중 스크롤 영역 상/하단 가장자리에서 자동 스크롤
+  const handleDragAutoScroll = (e) => {
+    e.preventDefault()
+    const el = scrollAreaRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const edge = 72
+    const y = e.clientY
+    dragScrollDirRef.current = y < rect.top + edge ? -1 : y > rect.bottom - edge ? 1 : 0
+    if (dragScrollDirRef.current !== 0 && !autoScrollRef.current) {
+      autoScrollRef.current = setInterval(() => {
+        if (scrollAreaRef.current && dragScrollDirRef.current !== 0) scrollAreaRef.current.scrollTop += dragScrollDirRef.current * 9
+      }, 16)
+    } else if (dragScrollDirRef.current === 0 && autoScrollRef.current) {
+      clearInterval(autoScrollRef.current); autoScrollRef.current = null
+    }
+  }
+  const stopDragAutoScroll = () => {
+    if (autoScrollRef.current) { clearInterval(autoScrollRef.current); autoScrollRef.current = null }
+    dragScrollDirRef.current = 0
+  }
+
   const reorderInDay = (dayIdx, fromIdx, toIdx) => {
     if (fromIdx === toIdx) return
     const days = courseDays.map(d => ({ ...d, items: [...d.items] }))
@@ -3262,6 +3287,10 @@ Write all text in ${langName}.`
     const next = [hotel, ...recentHotels.filter(h => h.place_id !== hotel.place_id)].slice(0, 8)
     setRecentHotels(next); localStorage.setItem('atlas_recent_hotels', JSON.stringify(next))
   }
+  const removeRecentHotel = (hotel) => {
+    const next = recentHotels.filter(h => h.place_id !== hotel.place_id)
+    setRecentHotels(next); localStorage.setItem('atlas_recent_hotels', JSON.stringify(next))
+  }
   // 검색 결과(place)를 Day 숙소로 설정 (place=null이면 삭제)
   const setDayHotel = (dayIdx, place) => {
     const cityKey = selectedCity?._koName || selectedCity?.name || ''
@@ -4355,12 +4384,10 @@ Write all text in ${langName}.`
       {showCoursePlanner && courseDays.length > 0 && (
         <div style={{position:'absolute',top:isMobile?0:72,left:0,bottom:isMobile?undefined:0,height:isMobile?'100dvh':undefined,width:isMobile?'100%':Math.min(500,typeof window!=='undefined'?window.innerWidth-30:480),zIndex:1100,background:'#faf8f5',borderRight:isMobile?'none':'1px solid #e8e2da',boxShadow:isMobile?'none':'16px 0 48px rgba(0,0,0,.1)',display:'flex',flexDirection:'column',animation:'coursePlannerIn .35s cubic-bezier(.16,1,.3,1)'}}>
 
-          {/* 모바일: 오른쪽 엣지에서 끌면 도시 패널(추천 관광지) 책넘기듯 등장 */}
+          {/* 모바일: 오른쪽 엣지에서 끌면 도시 패널(추천 관광지) 책넘기듯 등장 (시각 핸들바 없이 터치 영역만) */}
           {isMobile && selectedCity && !cityPeek && (
             <div onTouchStart={onPeekPullStart} onTouchMove={onPeekPullMove} onTouchEnd={onPeekPullEnd}
-              style={{position:'absolute',top:0,right:0,bottom:0,width:24,zIndex:1150,display:'flex',alignItems:'center',justifyContent:'flex-end',touchAction:'pan-y'}}>
-              <div style={{width:4,height:46,borderRadius:3,background:'#c8856a',opacity:.45,marginRight:3}}/>
-            </div>
+              style={{position:'absolute',top:0,right:0,bottom:0,width:24,zIndex:1150,touchAction:'pan-y'}}/>
           )}
           {/* 스와이프 첫 사용 안내 말풍선 */}
           {isMobile && selectedCity && !cityPeek && showSwipeHint && (
@@ -4476,7 +4503,7 @@ Write all text in ${langName}.`
           </div>
 
           {/* Day 내용 */}
-          <div style={{flex:1,overflowY:'auto',minHeight:0,padding:'16px 20px'}}>
+          <div ref={scrollAreaRef} onDragOver={handleDragAutoScroll} onDrop={stopDragAutoScroll} style={{flex:1,overflowY:'auto',minHeight:0,padding:'16px 20px'}}>
             {/* 숙소 설정 (Day별, 선택적) — 설정 시 출발·도착이 숙소로 고정 */}
             {(() => {
               const day = courseDays[activeDayTab]
@@ -4520,7 +4547,10 @@ Write all text in ${langName}.`
                           <div style={{fontSize:10,color:'#a89a88',fontWeight:600,marginBottom:5}}>{lang==='ko'?'최근 숙소':lang==='ja'?'最近の宿泊':lang==='zh'?'最近住宿':'Recent'}</div>
                           <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
                             {recentHotels.map((h,i)=>(
-                              <button key={i} onClick={()=>applyRecentHotel(activeDayTab,h)} style={{fontSize:11,fontWeight:600,padding:'5px 10px',background:'#fff',border:'1px solid #e0d9d0',borderRadius:15,color:'#1a1714',cursor:'pointer',maxWidth:170,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{h.displayName||h.name}</button>
+                              <div key={i} style={{display:'inline-flex',alignItems:'center',background:'#fff',border:'1px solid #e0d9d0',borderRadius:15,overflow:'hidden'}}>
+                                <span onClick={()=>applyRecentHotel(activeDayTab,h)} style={{fontSize:11,fontWeight:600,padding:'5px 4px 5px 11px',color:'#1a1714',cursor:'pointer',maxWidth:150,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{h.displayName||h.name}</span>
+                                <span onClick={()=>removeRecentHotel(h)} style={{fontSize:13,color:'#b0a89e',cursor:'pointer',padding:'4px 9px 4px 3px',lineHeight:1}}>×</span>
+                              </div>
                             ))}
                           </div>
                         </div>
@@ -4618,7 +4648,7 @@ Write all text in ${langName}.`
                           onDragOver={e=>{e.preventDefault();e.currentTarget.style.background='#f0ebe4'}}
                           onDragLeave={e=>e.currentTarget.style.background='#fff'}
                           onDrop={e=>{e.preventDefault();e.currentTarget.style.background='#fff';try{const from=JSON.parse(e.dataTransfer.getData('text/plain'));if(from.dayIdx===activeDayTab)reorderInDay(activeDayTab,from.itemIdx,idx);else moveToDayFn(from.dayIdx,from.itemIdx,activeDayTab)}catch{};setDragItem(null)}}
-                          onDragEnd={()=>setDragItem(null)}
+                          onDragEnd={()=>{setDragItem(null);stopDragAutoScroll()}}
                           style={{
                             display:'flex',alignItems:'center',gap:10,padding:courseCompact?'7px 12px':'11px 12px',
                             background:'#fff',borderRadius:10,border:'1px solid #ede8e0',
