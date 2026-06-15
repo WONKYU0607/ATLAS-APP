@@ -1448,6 +1448,13 @@ function App() {
     return ko !== undefined ? ko : key
   }
   const getCountryName = (enName) => getCountryDisplayName(enName, lang)
+  // 추천 여행시기 "Mar–May" / "Mar–May, Sep–Nov" → "3월~5월" 등 (en일 땐 원본 유지)
+  const translateBestSeason = (s) => {
+    if (!s || lang === 'en') return s
+    const M = { Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12 }
+    const suf = lang === 'ko' ? '월' : '月'
+    return s.replace(/Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/g, m => M[m] + suf).replace(/[–—-]/g, '~')
+  }
   const getCityName = (koName) => {
     if (lang === 'ko') return koName
     const tr = CITY_I18N[koName]
@@ -3488,7 +3495,7 @@ Write all text in ${langName}.`
         @keyframes coursePop{0%{transform:scale(1)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
         @keyframes courseSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
         @keyframes coursePlannerIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
-        @keyframes swipeHintNudge{0%,100%{transform:translateY(-50%) translateX(0)}50%{transform:translateY(-50%) translateX(-7px)}}
+        @keyframes swipeFingerMove{0%{transform:translateX(12px)}50%{transform:translateX(-16px)}100%{transform:translateX(12px)}}
         @keyframes aiModalIn{from{opacity:0;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
         @keyframes aiPulse{0%,100%{opacity:.6}50%{opacity:1}}
         .drag-over{border-color:#3b82f6!important;background:#eff6ff!important}
@@ -3884,7 +3891,7 @@ Write all text in ${langName}.`
                       { icon:'🗣️', label:t('lLang'), value:info.lang },
                       { icon:'💰', label:t('lCurrency'), value:info.currency },
                       { icon:'🕐', label:t('lTimezone'), value:info.timezone },
-                      { icon:'🌤️', label:t('lBestSeason'), value:info.bestSeason },
+                      { icon:'🌤️', label:t('lBestSeason'), value: translateBestSeason(info.bestSeason) },
                       { icon:'🌍', label:t('lContinent'), value:info.continent },
                       { icon:'🔌', label:t('lVoltage'), value:info.voltage },
                       { icon:'📞', label:t('lCallCode'), value:info.callCode },
@@ -4389,12 +4396,15 @@ Write all text in ${langName}.`
             <div onTouchStart={onPeekPullStart} onTouchMove={onPeekPullMove} onTouchEnd={onPeekPullEnd}
               style={{position:'absolute',top:0,right:0,bottom:0,width:24,zIndex:1150,touchAction:'pan-y'}}/>
           )}
-          {/* 스와이프 첫 사용 안내 말풍선 */}
+          {/* 스와이프 첫 사용 안내 — 손가락 제스처 + 좌우 모션 */}
           {isMobile && selectedCity && !cityPeek && showSwipeHint && (
             <div onClick={()=>setShowSwipeHint(false)}
-              style={{position:'absolute',right:36,top:'50%',zIndex:1160,background:'#1a1714',color:'#fff',padding:'11px 15px',borderRadius:11,fontSize:12.5,fontWeight:600,lineHeight:1.4,maxWidth:210,boxShadow:'0 6px 22px rgba(0,0,0,.3)',cursor:'pointer',animation:'swipeHintNudge 1.4s ease-in-out infinite'}}>
-              ← {lang==='ko'?`왼쪽으로 끌면 ${getCityName(selectedCity._koName||selectedCity.name)} 추천이 펼쳐져요`:lang==='ja'?`左にスワイプで${getCityName(selectedCity._koName||selectedCity.name)}のおすすめ`:lang==='zh'?`向左滑动展开${getCityName(selectedCity._koName||selectedCity.name)}推荐`:`Swipe left for ${getCityName(selectedCity._koName||selectedCity.name)} picks`}
-              <div style={{position:'absolute',right:-7,top:'50%',transform:'translateY(-50%)',width:0,height:0,borderTop:'7px solid transparent',borderBottom:'7px solid transparent',borderLeft:'7px solid #1a1714'}}/>
+              style={{position:'absolute',right:24,top:'50%',transform:'translateY(-50%)',zIndex:1160,display:'flex',flexDirection:'column',alignItems:'center',gap:7,cursor:'pointer',pointerEvents:'auto'}}>
+              <div style={{display:'flex',alignItems:'center',gap:2,animation:'swipeFingerMove 1.3s ease-in-out 2'}}>
+                <span style={{fontSize:20,color:'#c8856a',opacity:.5,fontWeight:800,letterSpacing:-3}}>‹‹‹</span>
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="#c8856a" style={{filter:'drop-shadow(0 2px 5px rgba(0,0,0,.25))'}}><path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/></svg>
+              </div>
+              <div style={{fontSize:10.5,fontWeight:700,color:'#5a4a3a',background:'rgba(252,250,247,.94)',padding:'4px 10px',borderRadius:9,whiteSpace:'nowrap',boxShadow:'0 2px 10px rgba(0,0,0,.13)',border:'1px solid #e8dcd0'}}>{lang==='ko'?'왼쪽으로 넘기기':lang==='ja'?'左にスワイプ':lang==='zh'?'向左滑动':'Swipe left'}</div>
             </div>
           )}
 
@@ -4864,7 +4874,8 @@ Write all text in ${langName}.`
               {(() => {
                 const continents = {}
                 Object.entries(COUNTRY_CITIES).forEach(([country, cities]) => {
-                  const cont = COUNTRY_INFO[country]?.continent || (lang==='ko'?'기타':'Other')
+                  const _rawCont = COUNTRY_INFO[country]?.continent || ''
+                  const cont = _rawCont ? _rawCont.replace(/\(.*?\)/g,'').split('/')[0].trim() : (lang==='ko'?'기타':'Other')
                   if (!continents[cont]) continents[cont] = []
                   const vc = cities.filter(c => (visited.cities||[]).includes(c.name))
                   if (vc.length > 0) continents[cont].push({ country, cities, visitedCities: vc })
@@ -5742,8 +5753,8 @@ Write all text in ${langName}.`
       {showCurrencyCalc && (
         <>
           <div onClick={()=>setShowCurrencyCalc(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
-          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'92vw':380,background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden'}}>
-            <div style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'92vw':380,background:'#fcfaf7',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden',border:'1px solid #e0d9d0'}}>
+            <div style={{background:'linear-gradient(135deg,#c8856a,#b07355)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
               <div style={{display:'flex',alignItems:'center',gap:8}}>
                 <span style={{fontSize:17,fontWeight:800,color:'white'}}>{t('currCalc')}</span>
               </div>
@@ -5751,28 +5762,28 @@ Write all text in ${langName}.`
             </div>
             <div style={{padding:'20px 22px 24px'}}>
               <div style={{marginBottom:14}}>
-                <label style={{fontSize:11,fontWeight:600,color:'#64748b',display:'block',marginBottom:4}}>{t('currAmount')}</label>
+                <label style={{fontSize:11,fontWeight:600,color:'#9a8070',display:'block',marginBottom:4}}>{t('currAmount')}</label>
                 <input type="number" value={currAmount} onChange={e=>setCurrAmount(e.target.value)}
-                  style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:18,fontWeight:700,color:'#0f172a',outline:'none',boxSizing:'border-box'}}
-                  onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'} />
+                  style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e0d9d0',borderRadius:10,fontSize:18,fontWeight:700,color:'#1a1714',outline:'none',boxSizing:'border-box'}}
+                  onFocus={e=>e.target.style.borderColor='#c8856a'} onBlur={e=>e.target.style.borderColor='#e0d9d0'} />
               </div>
               <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16}}>
                 <div style={{flex:1}}>
-                  <label style={{fontSize:11,fontWeight:600,color:'#64748b',display:'block',marginBottom:4}}>{t('currFrom')}</label>
+                  <label style={{fontSize:11,fontWeight:600,color:'#9a8070',display:'block',marginBottom:4}}>{t('currFrom')}</label>
                   <select value={currFrom} onChange={e=>setCurrFrom(e.target.value)}
-                    style={{width:'100%',padding:'9px 10px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,fontWeight:600,color:'#0f172a',background:'white',cursor:'pointer'}}>
+                    style={{width:'100%',padding:'9px 10px',border:'1.5px solid #e0d9d0',borderRadius:10,fontSize:14,fontWeight:600,color:'#1a1714',background:'white',cursor:'pointer'}}>
                     {['KRW','USD','EUR','JPY','GBP','CNY','THB','VND','AUD','CAD','CHF','SGD','HKD','TWD','MYR','PHP','IDR','INR','AED','TRY','BRL','MXN','SEK','NOK','DKK','NZD','CZK','PLN','HUF','ZAR','EGP','SAR','RUB','ILS'].map(c=>(
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
                 </div>
                 <button onClick={()=>{const tmp=currFrom;setCurrFrom(currTo);setCurrTo(tmp);setCurrResult(null)}}
-                  style={{marginTop:16,background:'#f1f5f9',border:'none',width:36,height:36,borderRadius:10,cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
-                  onMouseEnter={e=>e.currentTarget.style.background='#e2e8f0'} onMouseLeave={e=>e.currentTarget.style.background='#f1f5f9'}>⇄</button>
+                  style={{marginTop:16,background:'#f5f0ea',border:'none',width:36,height:36,borderRadius:10,cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
+                  onMouseEnter={e=>e.currentTarget.style.background='#e0d9d0'} onMouseLeave={e=>e.currentTarget.style.background='#f5f0ea'}>⇄</button>
                 <div style={{flex:1}}>
-                  <label style={{fontSize:11,fontWeight:600,color:'#64748b',display:'block',marginBottom:4}}>{t('currTo')}</label>
+                  <label style={{fontSize:11,fontWeight:600,color:'#9a8070',display:'block',marginBottom:4}}>{t('currTo')}</label>
                   <select value={currTo} onChange={e=>setCurrTo(e.target.value)}
-                    style={{width:'100%',padding:'9px 10px',border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:14,fontWeight:600,color:'#0f172a',background:'white',cursor:'pointer'}}>
+                    style={{width:'100%',padding:'9px 10px',border:'1.5px solid #e0d9d0',borderRadius:10,fontSize:14,fontWeight:600,color:'#1a1714',background:'white',cursor:'pointer'}}>
                     {['USD','KRW','EUR','JPY','GBP','CNY','THB','VND','AUD','CAD','CHF','SGD','HKD','TWD','MYR','PHP','IDR','INR','AED','TRY','BRL','MXN','SEK','NOK','DKK','NZD','CZK','PLN','HUF','ZAR','EGP','SAR','RUB','ILS'].map(c=>(
                       <option key={c} value={c}>{c}</option>
                     ))}
@@ -5780,19 +5791,19 @@ Write all text in ${langName}.`
                 </div>
               </div>
               <button onClick={()=>fetchCurrencyRate(currFrom,currTo,currAmount||1)}
-                style={{width:'100%',padding:'12px',background:'linear-gradient(135deg,#2563eb,#7c3aed)',border:'none',borderRadius:12,color:'white',fontSize:15,fontWeight:700,cursor:'pointer',transition:'opacity .15s'}}
+                style={{width:'100%',padding:'12px',background:'linear-gradient(135deg,#c8856a,#b07355)',border:'none',borderRadius:12,color:'white',fontSize:15,fontWeight:700,cursor:'pointer',transition:'opacity .15s'}}
                 onMouseEnter={e=>e.currentTarget.style.opacity='0.9'} onMouseLeave={e=>e.currentTarget.style.opacity='1'}>
                 {currLoading ? t('currLoading') : t('currConvert')}
               </button>
               {currResult !== null && (
-                <div style={{marginTop:16,padding:'16px',background:'linear-gradient(135deg,#f0fdf4,#ecfdf5)',border:'1.5px solid #bbf7d0',borderRadius:14,textAlign:'center'}}>
+                <div style={{marginTop:16,padding:'16px',background:'linear-gradient(135deg,#f5f0ea,#ede8e0)',border:'1.5px solid #e0d9d0',borderRadius:14,textAlign:'center'}}>
                   {currResult === 'error' ? (
                     <span style={{color:'#ef4444',fontSize:13,fontWeight:600}}>{t('currError')}</span>
                   ) : (
                     <>
-                      <div style={{fontSize:13,color:'#64748b',marginBottom:4}}>{Number(currAmount||0).toLocaleString()} {currFrom} =</div>
-                      <div style={{fontSize:26,fontWeight:800,color:'#059669'}}>{Number(currResult).toLocaleString(undefined,{maximumFractionDigits:2})} <span style={{fontSize:16,fontWeight:600}}>{currTo}</span></div>
-                      <div style={{fontSize:10,color:'#94a3b8',marginTop:6}}>1 {currFrom} ≈ {currRates?.[currTo] ? currRates[currTo].toFixed(4) : '—'} {currTo}</div>
+                      <div style={{fontSize:13,color:'#9a8070',marginBottom:4}}>{Number(currAmount||0).toLocaleString()} {currFrom} =</div>
+                      <div style={{fontSize:26,fontWeight:800,color:'#a86d52'}}>{Number(currResult).toLocaleString(undefined,{maximumFractionDigits:2})} <span style={{fontSize:16,fontWeight:600}}>{currTo}</span></div>
+                      <div style={{fontSize:10,color:'#b0a89e',marginTop:6}}>1 {currFrom} ≈ {currRates?.[currTo] ? currRates[currTo].toFixed(4) : '—'} {currTo}</div>
                     </>
                   )}
                 </div>
