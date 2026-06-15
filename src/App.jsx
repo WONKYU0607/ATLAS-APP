@@ -577,6 +577,7 @@ function App() {
   const [loadingRoutes, setLoadingRoutes] = useState(false)
   const [courseTransport, setCourseTransport] = useState('transit')
   const [dragItem, setDragItem] = useState(null)
+  const [courseCompact, setCourseCompact] = useState(false)  // 코스 관광지 컴팩트(한눈에 보기) 토글
   const [activeDayTab, setActiveDayTab] = useState(0)
   const [courseTripStart, setCourseTripStart] = useState(() => {
     const today = new Date().toISOString().slice(0, 10)
@@ -880,8 +881,8 @@ function App() {
       const days = [{ items: [newItem] }]
       setCourseDays(days); localStorage.setItem('atlas_course_days', JSON.stringify(days))
     }
-    // 플래너 자동 표시
-    setShowCoursePlanner(true)
+    // 플래너 자동 표시 (모바일은 도시 패널 유지하며 연속 담기 → '코스 보기' 버튼으로 진입)
+    if (!isMobile) setShowCoursePlanner(true)
     setCourseSource('manual')
   }
   const removeFromCourse = (idx) => {
@@ -4324,6 +4325,15 @@ Write all text in ${langName}.`
         </>
       )}
 
+      {/* 모바일: 도시 패널에서 담는 중 코스 진입 (자동전환 대신 플로팅 버튼) */}
+      {isMobile && selectedCity && !showCoursePlanner && courseItems.length > 0 && (
+        <button onClick={openCoursePlanner}
+          style={{position:'fixed',bottom:22,right:18,zIndex:1500,background:'#c8856a',color:'#fff',border:'none',borderRadius:24,padding:'12px 18px',fontSize:13,fontWeight:700,boxShadow:'0 6px 20px rgba(200,133,106,.42)',cursor:'pointer',display:'flex',alignItems:'center',gap:7}}>
+          {lang==='ko'?'코스 보기':lang==='ja'?'コース':lang==='zh'?'查看行程':'View course'}
+          <span style={{background:'#fff',color:'#c8856a',borderRadius:11,minWidth:20,height:20,fontSize:11,fontWeight:800,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:'0 5px'}}>{courseItems.length}</span>
+        </button>
+      )}
+
       {/* ── 코스 플래너 패널 (Warm Cream) ── */}
       {showCoursePlanner && courseDays.length > 0 && (
         <div style={{position:'absolute',top:isMobile?0:72,left:0,bottom:isMobile?undefined:0,height:isMobile?'100dvh':undefined,width:isMobile?'100%':Math.min(500,typeof window!=='undefined'?window.innerWidth-30:480),zIndex:1100,background:'#faf8f5',borderRight:isMobile?'none':'1px solid #e8e2da',boxShadow:isMobile?'none':'16px 0 48px rgba(0,0,0,.1)',display:'flex',flexDirection:'column',animation:'coursePlannerIn .35s cubic-bezier(.16,1,.3,1)'}}>
@@ -4563,6 +4573,14 @@ Write all text in ${langName}.`
                     </div>
                   </div>
 
+                  {/* 한눈에 보기(컴팩트) 토글 — 관광지 많을 때 */}
+                  {items.length >= 4 && (
+                    <div style={{display:'flex',justifyContent:'flex-end',marginBottom:8}}>
+                      <button onClick={()=>setCourseCompact(c=>!c)} style={{fontSize:11,fontWeight:600,padding:'5px 11px',background:courseCompact?'#c8856a':'#fff',border:courseCompact?'none':'1px solid #e0d9d0',borderRadius:7,color:courseCompact?'#fff':'#8a7a68',cursor:'pointer'}}>
+                        {courseCompact?(lang==='ko'?'펼치기':lang==='ja'?'展開':lang==='zh'?'展开':'Expand'):(lang==='ko'?'한눈에 보기':lang==='ja'?'一覧':lang==='zh'?'紧凑':'Compact')}
+                      </button>
+                    </div>
+                  )}
                   {/* 장소 리스트 */}
                   {items.map((item, idx) => {
                     const rk = idx < items.length - 1 ? getRouteKey(items[idx], items[idx+1], courseTransport) : null
@@ -4577,7 +4595,7 @@ Write all text in ${langName}.`
                           onDrop={e=>{e.preventDefault();e.currentTarget.style.background='#fff';try{const from=JSON.parse(e.dataTransfer.getData('text/plain'));if(from.dayIdx===activeDayTab)reorderInDay(activeDayTab,from.itemIdx,idx);else moveToDayFn(from.dayIdx,from.itemIdx,activeDayTab)}catch{};setDragItem(null)}}
                           onDragEnd={()=>setDragItem(null)}
                           style={{
-                            display:'flex',alignItems:'center',gap:10,padding:'11px 12px',
+                            display:'flex',alignItems:'center',gap:10,padding:courseCompact?'7px 12px':'11px 12px',
                             background:'#fff',borderRadius:10,border:'1px solid #ede8e0',
                             cursor:'grab',transition:'background .1s',
                             opacity:dragItem?.dayIdx===activeDayTab&&dragItem?.itemIdx===idx?0.35:1
@@ -4590,10 +4608,12 @@ Write all text in ${langName}.`
                           {/* 정보 */}
                           <div style={{flex:1,minWidth:0}}>
                             <div style={{fontSize:13,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCourseItemName(item)}</div>
-                            <div style={{display:'flex',alignItems:'center',gap:5,marginTop:3}}>
-                              <span style={{fontSize:10,color:'#1a1714',fontWeight:500}}>{getCourseItemCity(item)}</span>
-                              {item.rating && <span style={{fontSize:9,color:'#d97706'}}>★{item.rating}</span>}
-                            </div>
+                            {!courseCompact && (
+                              <div style={{display:'flex',alignItems:'center',gap:5,marginTop:3}}>
+                                <span style={{fontSize:10,color:'#1a1714',fontWeight:500}}>{getCourseItemCity(item)}</span>
+                                {item.rating && <span style={{fontSize:9,color:'#d97706'}}>★{item.rating}</span>}
+                              </div>
+                            )}
                           </div>
                           {/* 이동 버튼 → 데스크탑: 구글맵 / 모바일: 도시 패널 */}
                           <button onClick={()=>{
@@ -4630,7 +4650,7 @@ Write all text in ${langName}.`
                         </div>
 
                         {/* 경로 */}
-                        {idx < items.length - 1 && (
+                        {!courseCompact && idx < items.length - 1 && (
                           <div style={{display:'flex',alignItems:'center',gap:6,padding:'5px 0 5px 34px'}}>
                             {route ? (
                               <span style={{fontSize:10,color:'#1a1714',fontWeight:600}}>
