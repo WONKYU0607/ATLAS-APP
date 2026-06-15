@@ -8,7 +8,7 @@ import ISLAND_POLYGONS from './data/islandPolygons.json'
 import CITY_PHOTOS, { pickI18n } from './data/cityPhotos'
 
 // 작은 섬나라 라벨 데이터 (폴리곤 없이 라벨 좌표만 사용 — 클릭 시 진입)
-const ISLAND_NAME_ALIAS = { 'Cape Verde': 'Cabo Verde', 'Federated States of Micronesia': 'Micronesia' }
+const ISLAND_NAME_ALIAS = { 'Cape Verde': 'Cabo Verde', 'Federated States of Micronesia': 'Micronesia', 'Equatorial Guinea': 'Eq. Guinea' }
 const ISLAND_LABEL_DATA = ((ISLAND_POLYGONS && ISLAND_POLYGONS.features) || [])
   .map(f => ({
     nameEn: (f && f.properties && (ISLAND_NAME_ALIAS[f.properties.NAME] || f.properties.NAME)),
@@ -512,7 +512,7 @@ function App() {
   const hoveredCountryRef = useRef(null)  // hover 하이라이트: state 대신 ref (effect 재실행 없이 색만 갱신 → 드래그 렉 방지)
   const [showCountryInfo, setShowCountryInfo] = useState(false)
   const [infoExpanded, setInfoExpanded] = useState(false) // A안: 컴팩트(헤더만) ↔ 전체 펼침
-  const [lang, setLang] = useState('en')
+  const [lang, setLang] = useState(() => { try { return localStorage.getItem('atlas_lang') || 'ko' } catch { return 'ko' } })
   const [showLangMenu, setShowLangMenu] = useState(false)
   const [sidePanel, setSidePanel] = useState(null) // 'hotspots' | 'restaurants' | null
   const [showFavorites, setShowFavorites] = useState(false)
@@ -4440,6 +4440,8 @@ Write all text in ${langName}.`
               </div>
             </div>
 
+            {/* 한눈에 보기일 땐 날짜·이동수단·길찾기 숨겨서 관광지 리스트에 공간 양보 */}
+            {!courseCompact && (<>
             {/* 날짜 */}
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12,padding:'8px 12px',background:'#f0ebe4',borderRadius:8,border:'1px solid #e0d9d0'}}>
               <span style={{fontSize:11,color:'#1a1714',fontWeight:600,flexShrink:0}}>{t('courseDeparture')}</span>
@@ -4479,6 +4481,7 @@ Write all text in ${langName}.`
                 )
               })()}
             </div>
+            </>)}
 
             {/* Day 탭 */}
             <div style={{display:'flex',gap:4,overflowX:'auto',paddingBottom:16,borderBottom:'1px solid #e8e2da'}}>
@@ -4509,6 +4512,7 @@ Write all text in ${langName}.`
               const day = courseDays[activeDayTab]
               const hotel = day?.hotel
               const searching = hotelSearchDayIdx === activeDayTab
+              if (courseCompact) return null
               return (
                 <div style={{marginBottom:14,padding:'11px 13px',background:'#f5efe8',borderRadius:11,border:'1px solid #ece4d8'}}>
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
@@ -4650,7 +4654,7 @@ Write all text in ${langName}.`
                           onDrop={e=>{e.preventDefault();e.currentTarget.style.background='#fff';try{const from=JSON.parse(e.dataTransfer.getData('text/plain'));if(from.dayIdx===activeDayTab)reorderInDay(activeDayTab,from.itemIdx,idx);else moveToDayFn(from.dayIdx,from.itemIdx,activeDayTab)}catch{};setDragItem(null)}}
                           onDragEnd={()=>{setDragItem(null);stopDragAutoScroll()}}
                           style={{
-                            display:'flex',alignItems:'center',gap:10,padding:courseCompact?'7px 12px':'11px 12px',
+                            display:'flex',alignItems:'center',gap:10,padding:'11px 12px',
                             background:'#fff',borderRadius:10,border:'1px solid #ede8e0',
                             cursor:'grab',transition:'background .1s',
                             opacity:dragItem?.dayIdx===activeDayTab&&dragItem?.itemIdx===idx?0.35:1
@@ -4663,12 +4667,10 @@ Write all text in ${langName}.`
                           {/* 정보 */}
                           <div style={{flex:1,minWidth:0}}>
                             <div style={{fontSize:13,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{getCourseItemName(item)}</div>
-                            {!courseCompact && (
-                              <div style={{display:'flex',alignItems:'center',gap:5,marginTop:3}}>
-                                <span style={{fontSize:10,color:'#1a1714',fontWeight:500}}>{getCourseItemCity(item)}</span>
-                                {item.rating && <span style={{fontSize:9,color:'#d97706'}}>★{item.rating}</span>}
-                              </div>
-                            )}
+                            <div style={{display:'flex',alignItems:'center',gap:5,marginTop:3}}>
+                              <span style={{fontSize:10,color:'#1a1714',fontWeight:500}}>{getCourseItemCity(item)}</span>
+                              {item.rating && <span style={{fontSize:9,color:'#d97706'}}>★{item.rating}</span>}
+                            </div>
                           </div>
                           {/* 이동 버튼 → 데스크탑: 구글맵 / 모바일: 도시 패널 */}
                           <button onClick={()=>{
@@ -4705,7 +4707,7 @@ Write all text in ${langName}.`
                         </div>
 
                         {/* 경로 */}
-                        {!courseCompact && idx < items.length - 1 && (
+                        {idx < items.length - 1 && (
                           <div style={{display:'flex',alignItems:'center',gap:6,padding:'5px 0 5px 34px'}}>
                             {route ? (
                               <span style={{fontSize:10,color:'#1a1714',fontWeight:600}}>
