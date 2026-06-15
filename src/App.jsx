@@ -21,7 +21,7 @@ const ISLAND_NAMES = new Set(ISLAND_LABEL_DATA.map(d => d.nameEn))
 const HIDDEN_COUNTRY_LABELS = new Set(['W. Sahara', 'Falkland Is.', 'Greenland', 'Fr. S. Antarctic Lands', 'Puerto Rico', 'New Caledonia', 'Antarctica', 'N. Cyprus', 'Somaliland'])
 // 면적 작은 나라(섬나라 제외 하위 30%, 단 이스라엘·벨기에·대만·네덜란드·덴마크·스위스·크로아티아·아일랜드 제외)
 // → 섬나라처럼 줌인(alt<0.7) 했을 때만 라벨 표시. 유럽 등 작은 나라 밀집 정리용
-const SMALL_COUNTRY = new Set(["Luxembourg","N. Cyprus","Palestine","Cyprus","Vanuatu","Trinidad and Tobago","Puerto Rico","Lebanon","Brunei","Kosovo","Qatar","Fr. S. Antarctic Lands","Jamaica","Montenegro","Gambia","Timor-Leste","Bahamas","Falkland Is.","Kuwait","eSwatini","Slovenia","Fiji","El Salvador","Djibouti","Belize","New Caledonia","Rwanda","Solomon Is.","North Macedonia","Burundi","Eq. Guinea","Lesotho","Armenia","Haiti","Albania","Moldova","Guinea-Bissau","Bhutan","Estonia","Slovakia","Dominican Rep.","Bosnia and Herz.","Costa Rica","Togo","Lithuania","Latvia"])
+const SMALL_COUNTRY = new Set(["Luxembourg","N. Cyprus","Palestine","Cyprus","Vanuatu","Trinidad and Tobago","Puerto Rico","Lebanon","Brunei","Kosovo","Qatar","Fr. S. Antarctic Lands","Jamaica","Montenegro","Gambia","Timor-Leste","Bahamas","Falkland Is.","Kuwait","eSwatini","Slovenia","Fiji","El Salvador","Djibouti","Belize","New Caledonia","Rwanda","Solomon Is.","North Macedonia","Burundi","Eq. Guinea","Lesotho","Armenia","Haiti","Albania","Moldova","Guinea-Bissau","Bhutan","Estonia","Slovakia","Dominican Rep.","Bosnia and Herz.","Costa Rica","Togo","Lithuania","Latvia","Croatia","Azerbaijan","Turkmenistan","Jordan","Liberia","Sierra Leone","Congo","Honduras"])
 // 이름 정규화: "Solomon Is." ↔ "Solomon Islands" 같은 약자 변형 매칭용
 const normCountryName = (s) => String(s || '').toLowerCase().replace(/\bis\.?\b/g, 'islands').replace(/&/g, 'and').replace(/[^a-z]/g, '')
 const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.nameEn)))
@@ -2158,7 +2158,7 @@ function App() {
         el.dataset.lat = d.lat
         el.dataset.lng = d.lng
         // gated: 줌인 시에만 표시 (섬나라 + 작은 나라) / micro: 터치 핸들러 달린 섬나라(아래 pointer-events 토글 대상)
-        if (d._type === 'island') { el.dataset.gated = '1'; el.dataset.micro = '1' }
+        if (d._type === 'island') { el.dataset.micro = '1'; if (d.nameEn !== 'Guam') el.dataset.gated = '1' }
         else if (d._type === 'country' && SMALL_COUNTRY.has(d.nameEn)) { el.dataset.gated = '1' }
 
         if (d._type === 'geoline') {
@@ -4636,7 +4636,7 @@ Write all text in ${langName}.`
                   {items.length >= 4 && (
                     <div style={{display:'flex',justifyContent:'flex-end',marginBottom:8}}>
                       <button onClick={()=>setCourseCompact(c=>!c)} style={{fontSize:11,fontWeight:600,padding:'5px 11px',background:courseCompact?'#c8856a':'#fff',border:courseCompact?'none':'1px solid #e0d9d0',borderRadius:7,color:courseCompact?'#fff':'#8a7a68',cursor:'pointer'}}>
-                        {courseCompact?(lang==='ko'?'펼치기':lang==='ja'?'展開':lang==='zh'?'展开':'Expand'):(lang==='ko'?'한눈에 보기':lang==='ja'?'一覧':lang==='zh'?'紧凑':'Compact')}
+                        {courseCompact?(lang==='ko'?'닫기':lang==='ja'?'閉じる':lang==='zh'?'收起':'Close'):(lang==='ko'?'펼치기':lang==='ja'?'展開':lang==='zh'?'展开':'Expand')}
                       </button>
                     </div>
                   )}
