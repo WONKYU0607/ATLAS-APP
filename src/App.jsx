@@ -1089,20 +1089,14 @@ function App() {
   // 코스 플래너가 닫히거나 선택 도시가 없어지면 책넘기기 상태 해제
   useEffect(() => { if (!showCoursePlanner || !selectedCity) setCityPeek(false) }, [showCoursePlanner, selectedCity])
 
-  // 스와이프 첫 사용 힌트 (한 번만 표시, 6초 후 자동 숨김)
+  // 스와이프 안내: 코스 플래너 열 때마다 표시 ("다시 안 보기" 누르면 영구 숨김)
   useEffect(() => {
-    if (isMobile && showCoursePlanner && selectedCity && !cityPeek) {
-      try {
-        if (!localStorage.getItem('atlas_swipe_hint_seen')) {
-          setShowSwipeHint(true)
-          localStorage.setItem('atlas_swipe_hint_seen', '1')
-          const t = setTimeout(() => setShowSwipeHint(false), 6000)
-          return () => clearTimeout(t)
-        }
-      } catch {}
+    if (isMobile && showCoursePlanner && selectedCity) {
+      try { setShowSwipeHint(!localStorage.getItem('atlas_swipe_hint_seen')) } catch { setShowSwipeHint(true) }
+    } else {
+      setShowSwipeHint(false)
     }
   }, [isMobile, showCoursePlanner, selectedCity])
-  useEffect(() => { if (cityPeek) setShowSwipeHint(false) }, [cityPeek])
 
   // 언어 변경 시 경로 캐시 초기화 (Directions API 응답 언어가 다름)
   useEffect(() => { setRouteCache({}) }, [lang])
@@ -4396,15 +4390,15 @@ Write all text in ${langName}.`
             <div onTouchStart={onPeekPullStart} onTouchMove={onPeekPullMove} onTouchEnd={onPeekPullEnd}
               style={{position:'absolute',top:0,right:0,bottom:0,width:24,zIndex:1150,touchAction:'pan-y'}}/>
           )}
-          {/* 스와이프 첫 사용 안내 — 손가락 제스처 + 좌우 모션 */}
+          {/* 스와이프 안내 — 손가락 제스처 + 좌우 모션 + 다시 안 보기 */}
           {isMobile && selectedCity && !cityPeek && showSwipeHint && (
-            <div onClick={()=>setShowSwipeHint(false)}
-              style={{position:'absolute',right:24,top:'50%',transform:'translateY(-50%)',zIndex:1160,display:'flex',flexDirection:'column',alignItems:'center',gap:7,cursor:'pointer',pointerEvents:'auto'}}>
+            <div style={{position:'absolute',right:24,top:'50%',transform:'translateY(-50%)',zIndex:1160,display:'flex',flexDirection:'column',alignItems:'center',gap:6,pointerEvents:'none'}}>
               <div style={{display:'flex',alignItems:'center',gap:2,animation:'swipeFingerMove 1.3s ease-in-out 2'}}>
                 <span style={{fontSize:20,color:'#c8856a',opacity:.5,fontWeight:800,letterSpacing:-3}}>‹‹‹</span>
                 <svg width="34" height="34" viewBox="0 0 24 24" fill="#c8856a" style={{filter:'drop-shadow(0 2px 5px rgba(0,0,0,.25))'}}><path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/></svg>
               </div>
               <div style={{fontSize:10.5,fontWeight:700,color:'#5a4a3a',background:'rgba(252,250,247,.94)',padding:'4px 10px',borderRadius:9,whiteSpace:'nowrap',boxShadow:'0 2px 10px rgba(0,0,0,.13)',border:'1px solid #e8dcd0'}}>{lang==='ko'?'왼쪽으로 넘기기':lang==='ja'?'左にスワイプ':lang==='zh'?'向左滑动':'Swipe left'}</div>
+              <div onClick={(e)=>{e.stopPropagation();setShowSwipeHint(false);try{localStorage.setItem('atlas_swipe_hint_seen','1')}catch{}}} style={{fontSize:9.5,color:'#9a8070',cursor:'pointer',pointerEvents:'auto',padding:'3px 8px',textDecoration:'underline',background:'rgba(252,250,247,.7)',borderRadius:7}}>{lang==='ko'?'다시 안 보기 ✕':lang==='ja'?'今後表示しない ✕':lang==='zh'?'不再显示 ✕':"Don't show again ✕"}</div>
             </div>
           )}
 
@@ -5754,7 +5748,7 @@ Write all text in ${langName}.`
         <>
           <div onClick={()=>setShowCurrencyCalc(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3000}} />
           <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3001,width:isMobile?'92vw':380,background:'#fcfaf7',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden',border:'1px solid #e0d9d0'}}>
-            <div style={{background:'linear-gradient(135deg,#c8856a,#b07355)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <div style={{background:'linear-gradient(135deg,#d49e86,#c08a6e)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
               <div style={{display:'flex',alignItems:'center',gap:8}}>
                 <span style={{fontSize:17,fontWeight:800,color:'white'}}>{t('currCalc')}</span>
               </div>
@@ -5765,7 +5759,7 @@ Write all text in ${langName}.`
                 <label style={{fontSize:11,fontWeight:600,color:'#9a8070',display:'block',marginBottom:4}}>{t('currAmount')}</label>
                 <input type="number" value={currAmount} onChange={e=>setCurrAmount(e.target.value)}
                   style={{width:'100%',padding:'10px 14px',border:'1.5px solid #e0d9d0',borderRadius:10,fontSize:18,fontWeight:700,color:'#1a1714',outline:'none',boxSizing:'border-box'}}
-                  onFocus={e=>e.target.style.borderColor='#c8856a'} onBlur={e=>e.target.style.borderColor='#e0d9d0'} />
+                  onFocus={e=>e.target.style.borderColor='#d49e86'} onBlur={e=>e.target.style.borderColor='#e0d9d0'} />
               </div>
               <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16}}>
                 <div style={{flex:1}}>
@@ -5791,7 +5785,7 @@ Write all text in ${langName}.`
                 </div>
               </div>
               <button onClick={()=>fetchCurrencyRate(currFrom,currTo,currAmount||1)}
-                style={{width:'100%',padding:'12px',background:'linear-gradient(135deg,#c8856a,#b07355)',border:'none',borderRadius:12,color:'white',fontSize:15,fontWeight:700,cursor:'pointer',transition:'opacity .15s'}}
+                style={{width:'100%',padding:'12px',background:'linear-gradient(135deg,#d49e86,#c08a6e)',border:'none',borderRadius:12,color:'white',fontSize:15,fontWeight:700,cursor:'pointer',transition:'opacity .15s'}}
                 onMouseEnter={e=>e.currentTarget.style.opacity='0.9'} onMouseLeave={e=>e.currentTarget.style.opacity='1'}>
                 {currLoading ? t('currLoading') : t('currConvert')}
               </button>
@@ -5802,7 +5796,7 @@ Write all text in ${langName}.`
                   ) : (
                     <>
                       <div style={{fontSize:13,color:'#9a8070',marginBottom:4}}>{Number(currAmount||0).toLocaleString()} {currFrom} =</div>
-                      <div style={{fontSize:26,fontWeight:800,color:'#a86d52'}}>{Number(currResult).toLocaleString(undefined,{maximumFractionDigits:2})} <span style={{fontSize:16,fontWeight:600}}>{currTo}</span></div>
+                      <div style={{fontSize:26,fontWeight:800,color:'#b8826a'}}>{Number(currResult).toLocaleString(undefined,{maximumFractionDigits:2})} <span style={{fontSize:16,fontWeight:600}}>{currTo}</span></div>
                       <div style={{fontSize:10,color:'#b0a89e',marginTop:6}}>1 {currFrom} ≈ {currRates?.[currTo] ? currRates[currTo].toFixed(4) : '—'} {currTo}</div>
                     </>
                   )}
