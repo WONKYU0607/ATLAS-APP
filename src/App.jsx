@@ -4392,11 +4392,11 @@ Write all text in ${langName}.`
           )}
           {/* 스와이프 안내 — 엄지로 미는 제스처 + x 닫기 */}
           {isMobile && selectedCity && !cityPeek && showSwipeHint && (
-            <div style={{position:'absolute',right:0,top:'62%',transform:'translateY(-50%)',zIndex:1160,display:'flex',flexDirection:'column',alignItems:'flex-end',gap:3,pointerEvents:'none'}}>
-              <div onClick={(e)=>{e.stopPropagation();setShowSwipeHint(false);try{localStorage.setItem('atlas_swipe_hint_dismissed','1')}catch{}}} style={{pointerEvents:'auto',width:22,height:22,borderRadius:'50%',background:'rgba(252,250,247,.96)',border:'1px solid #e0d9d0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'#9a8070',cursor:'pointer',boxShadow:'0 1px 5px rgba(0,0,0,.18)',marginRight:6}}>✕</div>
+            <div style={{position:'absolute',right:0,top:'75%',transform:'translateY(-50%)',zIndex:1160,display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4,pointerEvents:'none'}}>
+              <div onClick={(e)=>{e.stopPropagation();setShowSwipeHint(false);try{localStorage.setItem('atlas_swipe_hint_dismissed','1')}catch{}}} style={{pointerEvents:'auto',width:23,height:23,borderRadius:'50%',background:'rgba(255,255,255,.97)',border:'1px solid #1a1714',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'#1a1714',cursor:'pointer',boxShadow:'0 1px 5px rgba(0,0,0,.22)',marginRight:6}}>✕</div>
               <div style={{display:'flex',alignItems:'center',gap:1,paddingRight:4,animation:'swipePush 2.1s cubic-bezier(.4,0,.2,1) infinite'}}>
-                <span style={{fontSize:20,color:'#c8856a',opacity:.5,fontWeight:800,letterSpacing:-3}}>‹‹‹</span>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="#c8856a" style={{filter:'drop-shadow(0 2px 6px rgba(0,0,0,.28))',transform:'rotate(-90deg)'}}><path d="M23 5.5V20c0 2.2-1.8 4-4 4h-7.3c-1.08 0-2.1-.43-2.85-1.19L1 14.83s1.26-1.24 1.3-1.25c.22-.19.49-.29.79-.29.22 0 .42.06.6.16.04.01 4.31 2.46 4.31 2.46V4c0-.83.67-1.5 1.5-1.5S11 3.17 11 4v7h1V1.5c0-.83.67-1.5 1.5-1.5S15 .67 15 1.5V11h1V2.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5V11h1V5.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5z"/></svg>
+                <span style={{fontSize:24,color:'#1a1714',opacity:.55,fontWeight:800,letterSpacing:-4}}>‹‹‹</span>
+                <svg width="54" height="54" viewBox="0 0 24 24" fill="white" stroke="#1a1714" strokeWidth="1.1" strokeLinejoin="round" style={{filter:'drop-shadow(0 2px 7px rgba(0,0,0,.32))',transform:'rotate(-90deg)'}}><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
               </div>
             </div>
           )}
