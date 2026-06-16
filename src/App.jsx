@@ -1450,6 +1450,21 @@ function App() {
     const suf = lang === 'ko' ? '월' : '月'
     return s.replace(/Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/g, m => M[m] + suf).replace(/[–—-]/g, '~')
   }
+  // 라벨 게이팅 1회 강제 적용 (첫 상호작용 전에도 줌/시야각 기준 라벨 정리)
+  const forceGatingNow = () => {
+    const g = globeRef.current, c = globeContainerRef.current
+    if (!g || !c || typeof g.pointOfView !== 'function') return
+    const pov = g.pointOfView()
+    const cLat = pov.lat * Math.PI / 180, cLng = pov.lng * Math.PI / 180
+    const maxA = Math.min(0.75, 0.35 + pov.altitude * 0.18), alt = pov.altitude
+    c.querySelectorAll('[data-lat]').forEach(el => {
+      const la = parseFloat(el.dataset.lat) * Math.PI / 180, ln = parseFloat(el.dataset.lng) * Math.PI / 180
+      const ang = Math.acos(Math.max(-1, Math.min(1, Math.sin(cLat) * Math.sin(la) + Math.cos(cLat) * Math.cos(la) * Math.cos(ln - cLng))))
+      const sh = ang < maxA && (el.dataset.gated !== '1' || alt < 0.7)
+      el.style.opacity = sh ? '1' : '0'
+      if (el.dataset.micro === '1') el.style.pointerEvents = sh ? 'auto' : 'none'
+    })
+  }
   const getCityName = (koName) => {
     if (lang === 'ko') return koName
     const tr = CITY_I18N[koName]
@@ -2054,6 +2069,11 @@ function App() {
     { lat:40, lng:134, _type:'sea', name: lang==='ko'?'동해':lang==='ja'?'東海':lang==='zh'?'东海':'East Sea' },
     { lat:14, lng:89, _type:'sea', name: lang==='ko'?'벵골만':lang==='ja'?'ベンガル湾':lang==='zh'?'孟加拉湾':'Bay of Bengal' },
     { lat:25, lng:-90, _type:'sea', name: lang==='ko'?'멕시코만':lang==='ja'?'メキシコ湾':lang==='zh'?'墨西哥湾':'Gulf of Mexico' },
+    { lat:38, lng:25, _type:'sea', name: lang==='ko'?'에게해':lang==='ja'?'エーゲ海':lang==='zh'?'爱琴海':'Aegean Sea' },
+    { lat:29, lng:125, _type:'sea', name: lang==='ko'?'동중국해':lang==='ja'?'東シナ海':lang==='zh'?'东中国海':'East China Sea' },
+    { lat:53, lng:148, _type:'sea', name: lang==='ko'?'오호츠크해':lang==='ja'?'オホーツク海':lang==='zh'?'鄂霍次克海':'Sea of Okhotsk' },
+    { lat:27, lng:51, _type:'sea', name: lang==='ko'?'페르시아만':lang==='ja'?'ペルシャ湾':lang==='zh'?'波斯湾':'Persian Gulf' },
+    { lat:43, lng:15, _type:'sea', name: lang==='ko'?'아드리아해':lang==='ja'?'アドリア海':lang==='zh'?'亚得里亚海':'Adriatic Sea' },
   ]
 
   useEffect(() => {
@@ -2093,6 +2113,7 @@ function App() {
       globe.htmlElementsData([...labelItems, ...islandLabels, hawaiiLabel, guamLabel, ...OCEAN_LABELS, ...SEA_LABELS])
       labelCacheRef.current.items = []; labelCacheRef.current.settled = false  // 새 라벨 즉시 줌-숨김 처리되게 캐시 리셋
       lastPovKeyRef.current = ''; labelCacheRef.current = { t: 0, items: [] } // 라벨 새로 생성됨 → idle스킵 해제 + 캐시 무효화
+      setTimeout(forceGatingNow, 180); setTimeout(forceGatingNow, 550)  // 첫 상호작용 전에도 게이팅 적용
       return
     }
 
@@ -2109,6 +2130,7 @@ function App() {
     // 마이크로국가(산마리노·바티칸 등)는 국가단위라 국가뷰(도시 표시)에선 숨김 — 세계뷰에서만 표시/클릭
     globe.htmlElementsData([...countryLabels, ...cities, ...OCEAN_LABELS, ...SEA_LABELS])
     lastPovKeyRef.current = ''; labelCacheRef.current = { t: 0, items: [] } // 라벨 새로 생성됨 → idle스킵 해제 + 캐시 무효화
+    setTimeout(forceGatingNow, 180); setTimeout(forceGatingNow, 550)  // 첫 상호작용 전에도 게이팅 적용
     // selectedCity는 deps에서 제외: cities 배열이 selectedCity에 의존 안 하고,
     // 포함하면 도시 나갈 때 라벨 데이터가 재생성되어 줌아웃 중 라벨이 튐
   }, [selectedCountry, countries, lang])
