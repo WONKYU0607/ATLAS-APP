@@ -5,7 +5,6 @@ import { CITY_DATA, DEFAULT_CITY_DATA, TYPE_EMOJI, getImg, TYPE_COLORS } from '.
 import { COUNTRY_ISO, COUNTRY_NAME_OVERRIDE, getCountryDisplayName, LANG_OPTIONS, getFlagImg, COUNTRY_INFO, EMERGENCY_CONTACTS, extractCurrencyCode } from './data/countryInfo'
 import { COUNTRY_CITIES } from './data/countryCities'
 import ISLAND_POLYGONS from './data/islandPolygons.json'
-import CITY_PHOTOS, { pickI18n } from './data/cityPhotos'
 
 // 작은 섬나라 라벨 데이터 (폴리곤 없이 라벨 좌표만 사용 — 클릭 시 진입)
 const ISLAND_NAME_ALIAS = { 'Cape Verde': 'Cabo Verde', 'Federated States of Micronesia': 'Micronesia', 'Equatorial Guinea': 'Eq. Guinea' }
@@ -1107,59 +1106,6 @@ function App() {
     const onFirstTouch = () => { hasTouchedRef.current = true }
     document.addEventListener('touchstart', onFirstTouch, { once: true, passive: true })
     return () => { document.removeEventListener('touchstart', onFirstTouch) }
-  }, [])
-
-  // ── Google Places 커버리지 진단 (개발용) ──────────────────────
-  // 콘솔에서 실행:
-  //   await window.__diagnoseGoogle()            → 트래블 피드 인기 도시만 (빠름)
-  //   await window.__diagnoseGoogle({all:true})  → COUNTRY_CITIES 전체 (느림, 비용 주의)
-  //   await window.__diagnoseGoogle({limit:100}) → 앞 100개만
-  useEffect(() => {
-    window.__diagnoseGoogle = async (opts = {}) => {
-      const { all = false, limit = null, minPhotos = 2, delay = 120 } = opts
-      // 도시 수집
-      let allCities = []
-      Object.entries(COUNTRY_CITIES).forEach(([country, cities]) => {
-        (cities || []).forEach(c => { if (c.lat && c.lng) allCities.push({ name: c.name, lat: c.lat, lng: c.lng, country }) })
-      })
-      // 기본: 트래블 피드/큐레이션 인기 도시 우선 (cityPhotos 키 기준)
-      if (!all) {
-        const popular = Object.keys(CITY_PHOTOS)
-        const popularSet = new Set(popular)
-        allCities = allCities.filter(c => popularSet.has(c.name))
-      }
-      if (limit) allCities = allCities.slice(0, limit)
-
-      console.log(`%c🔍 Google Places 진단 시작: ${allCities.length}개 도시`, 'font-weight:bold;color:#3b82f6')
-      const poor = [], ok = [], failed = []
-      for (let i = 0; i < allCities.length; i++) {
-        const c = allCities[i]
-        try {
-          const res = await fetch(`/api/places?lat=${c.lat}&lng=${c.lng}&type=tourist_attraction|museum|park|point_of_interest&language=ko`)
-          const data = await res.json()
-          const total = data.results?.length || 0
-          const withPhotos = (data.results || []).filter(p => p.photos?.length > 0).length
-          const row = { city: c.name, country: c.country, total, withPhotos }
-          if (withPhotos < minPhotos) { poor.push(row); console.warn(`⚠️ ${c.country}/${c.name}: 결과 ${total}개, 사진 ${withPhotos}개`) }
-          else ok.push(row)
-        } catch (e) {
-          failed.push({ city: c.name, country: c.country, error: e.message })
-          console.error(`❌ ${c.country}/${c.name}: ${e.message}`)
-        }
-        if (i % 10 === 0 && i > 0) console.log(`  ...진행 ${i}/${allCities.length}`)
-        await new Promise(r => setTimeout(r, delay))
-      }
-      console.log(`%c\n=== 진단 완료 ===`, 'font-weight:bold;color:#10b981')
-      console.log(`✅ 양호: ${ok.length}개  |  ⚠️ 부족(사진<${minPhotos}): ${poor.length}개  |  ❌ 실패: ${failed.length}개`)
-      if (poor.length) {
-        console.log(`%c\n📋 Google 데이터 부족 도시 (복사해서 전달):`, 'font-weight:bold;color:#f59e0b')
-        console.log(poor.map(p => `${p.country}/${p.city} (사진 ${p.withPhotos}/${p.total})`).join('\n'))
-      }
-      window.__googlePoor = poor
-      window.__googleDiagFull = { ok, poor, failed }
-      return { total: allCities.length, ok: ok.length, poor: poor.length, failed: failed.length, poorList: poor }
-    }
-    console.log('%c💡 사진 진단 사용법: await window.__diagnoseGoogle() — 인기 도시 / await window.__diagnoseGoogle({all:true}) — 전체', 'color:#6366f1')
   }, [])
 
   // 모바일 감지
