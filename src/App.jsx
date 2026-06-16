@@ -1089,10 +1089,10 @@ function App() {
   // 코스 플래너가 닫히거나 선택 도시가 없어지면 책넘기기 상태 해제
   useEffect(() => { if (!showCoursePlanner || !selectedCity) setCityPeek(false) }, [showCoursePlanner, selectedCity])
 
-  // 스와이프 안내: 코스 플래너 열 때마다 표시 (디버깅 중 — localStorage 무시하고 항상 표시)
+  // 스와이프 안내: x 누르기 전까지 매번 표시, x 누르면 영구 숨김
   useEffect(() => {
     if (isMobile && showCoursePlanner && selectedCity) {
-      setShowSwipeHint(true)  // TODO 완성 후 복구: setShowSwipeHint(!localStorage.getItem('atlas_swipe_hint_dismissed'))
+      try { setShowSwipeHint(!localStorage.getItem('atlas_swipe_hint_v3')) } catch { setShowSwipeHint(true) }
     } else {
       setShowSwipeHint(false)
     }
@@ -3489,7 +3489,7 @@ Write all text in ${langName}.`
         @keyframes coursePop{0%{transform:scale(1)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
         @keyframes courseSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
         @keyframes coursePlannerIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
-        @keyframes swipePush{0%,45%,100%{transform:rotate(0deg) translateX(0)}65%{transform:rotate(-20deg) translateX(-6px)}80%{transform:rotate(-20deg) translateX(-6px)}}
+        @keyframes swipeFingerMove{0%{transform:translateX(10px)}50%{transform:translateX(-14px)}100%{transform:translateX(10px)}}
         @keyframes aiModalIn{from{opacity:0;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
         @keyframes aiPulse{0%,100%{opacity:.6}50%{opacity:1}}
         .drag-over{border-color:#3b82f6!important;background:#eff6ff!important}
@@ -4390,25 +4390,15 @@ Write all text in ${langName}.`
             <div onTouchStart={onPeekPullStart} onTouchMove={onPeekPullMove} onTouchEnd={onPeekPullEnd}
               style={{position:'absolute',top:0,right:0,bottom:0,width:24,zIndex:1150,touchAction:'pan-y'}}/>
           )}
-          {/* 스와이프 안내 — 엄지로 미는 제스처 + x 닫기 */}
+          {/* 스와이프 안내 — 손가락 제스처 + x 닫기 */}
           {isMobile && selectedCity && !cityPeek && showSwipeHint && (
-            <div style={{position:'absolute',right:0,top:'75%',transform:'translateY(-50%)',zIndex:1160,display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4,pointerEvents:'none'}}>
-              <div onClick={(e)=>{e.stopPropagation();setShowSwipeHint(false)/* TODO 완성 후: localStorage.setItem('atlas_swipe_hint_dismissed','1') */}} style={{pointerEvents:'auto',width:23,height:23,borderRadius:'50%',background:'rgba(255,255,255,.97)',border:'1px solid #b0b0b0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'#888',cursor:'pointer',boxShadow:'0 1px 4px rgba(0,0,0,.15)',marginRight:8}}>✕</div>
-              <div style={{position:'relative',width:88,height:172,marginRight:6,pointerEvents:'none'}}>
-                {/* 손톱 위 곡선 화살표 (왼쪽 향) */}
-                <svg style={{position:'absolute',top:0,left:4,width:80,height:38}} viewBox="0 0 84 40" fill="none">
-                  <path d="M62 26 Q42 12 18 22" stroke="#a8a8a8" strokeWidth="2.8" strokeLinecap="round" fill="none"/>
-                  <path d="M18 22 L26 17" stroke="#a8a8a8" strokeWidth="2.8" strokeLinecap="round"/>
-                  <path d="M18 22 L24 29" stroke="#a8a8a8" strokeWidth="2.8" strokeLinecap="round"/>
-                </svg>
-                {/* 엄지손가락 (기울며 미는 모션) */}
-                <svg style={{position:'absolute',top:34,left:0,width:88,height:139,animation:'swipePush 2.2s ease-in-out infinite',transformOrigin:'48% 96%',filter:'drop-shadow(0 1px 4px rgba(0,0,0,.14))'}} viewBox="0 0 100 158">
-                  <path d="M47 8 C37 8 33 16 33 26 C32 48 32 76 33 103 C33 120 35 136 41 146 C45 153 53 154 60 152 L86 152 C80 140 73 120 69 103 C68 76 67 48 67 26 C66 16 57 8 51 8 C49 8 48 8 47 8 Z" fill="#ffffff" stroke="#a8a8a8" strokeWidth="2.8" strokeLinejoin="round"/>
-                  <path d="M39 15 C39 9 53 9 53 15 C54 26 52 35 46 35 C40 35 38 26 39 15 Z" fill="none" stroke="#a8a8a8" strokeWidth="2.2"/>
-                  <path d="M37 42 Q46 46 54 42" fill="none" stroke="#a8a8a8" strokeWidth="1.8"/>
-                  <path d="M38 49 Q46 52 53 49" fill="none" stroke="#a8a8a8" strokeWidth="1.8"/>
-                </svg>
+            <div style={{position:'absolute',right:5,top:'45%',transform:'translateY(-50%)',zIndex:1160,display:'flex',flexDirection:'column',alignItems:'center',gap:6,pointerEvents:'none'}}>
+              <div style={{display:'flex',alignItems:'center',gap:2,animation:'swipeFingerMove 1.3s ease-in-out 2'}}>
+                <span style={{fontSize:20,color:'#c8856a',opacity:.5,fontWeight:800,letterSpacing:-3}}>‹‹‹</span>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="#c8856a" style={{filter:'drop-shadow(0 2px 5px rgba(0,0,0,.25))'}}><path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/></svg>
               </div>
+              <div style={{fontSize:10.5,fontWeight:700,color:'#5a4a3a',background:'rgba(252,250,247,.94)',padding:'4px 10px',borderRadius:9,whiteSpace:'nowrap',boxShadow:'0 2px 10px rgba(0,0,0,.13)',border:'1px solid #e8dcd0'}}>{lang==='ko'?'스와이프':lang==='ja'?'スワイプ':lang==='zh'?'滑动':'Swipe'}</div>
+              <div onClick={(e)=>{e.stopPropagation();setShowSwipeHint(false);try{localStorage.setItem('atlas_swipe_hint_v3','1')}catch{}}} style={{position:'absolute',top:-13,right:-3,pointerEvents:'auto',width:20,height:20,borderRadius:'50%',background:'rgba(255,255,255,.97)',border:'1px solid #c8a890',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:'#9a8070',cursor:'pointer',boxShadow:'0 1px 4px rgba(0,0,0,.18)'}}>✕</div>
             </div>
           )}
 
