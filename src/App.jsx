@@ -3489,7 +3489,7 @@ Write all text in ${langName}.`
         @keyframes coursePop{0%{transform:scale(1)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
         @keyframes courseSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
         @keyframes coursePlannerIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
-        @keyframes swipePush{0%,55%,100%{transform:translateX(8px)}72%{transform:translateX(-20px)}84%{transform:translateX(-20px)}}
+        @keyframes swipePush{0%,45%,100%{transform:rotate(0deg) translateX(0)}65%{transform:rotate(-20deg) translateX(-6px)}80%{transform:rotate(-20deg) translateX(-6px)}}
         @keyframes aiModalIn{from{opacity:0;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
         @keyframes aiPulse{0%,100%{opacity:.6}50%{opacity:1}}
         .drag-over{border-color:#3b82f6!important;background:#eff6ff!important}
@@ -4393,10 +4393,21 @@ Write all text in ${langName}.`
           {/* 스와이프 안내 — 엄지로 미는 제스처 + x 닫기 */}
           {isMobile && selectedCity && !cityPeek && showSwipeHint && (
             <div style={{position:'absolute',right:0,top:'75%',transform:'translateY(-50%)',zIndex:1160,display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4,pointerEvents:'none'}}>
-              <div onClick={(e)=>{e.stopPropagation();setShowSwipeHint(false);try{localStorage.setItem('atlas_swipe_hint_dismissed','1')}catch{}}} style={{pointerEvents:'auto',width:23,height:23,borderRadius:'50%',background:'rgba(255,255,255,.97)',border:'1px solid #1a1714',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'#1a1714',cursor:'pointer',boxShadow:'0 1px 5px rgba(0,0,0,.22)',marginRight:6}}>✕</div>
-              <div style={{display:'flex',alignItems:'center',gap:1,paddingRight:4,animation:'swipePush 2.1s cubic-bezier(.4,0,.2,1) infinite'}}>
-                <span style={{fontSize:24,color:'#1a1714',opacity:.55,fontWeight:800,letterSpacing:-4}}>‹‹‹</span>
-                <svg width="54" height="54" viewBox="0 0 24 24" fill="white" stroke="#1a1714" strokeWidth="1.1" strokeLinejoin="round" style={{filter:'drop-shadow(0 2px 7px rgba(0,0,0,.32))',transform:'rotate(-90deg)'}}><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
+              <div onClick={(e)=>{e.stopPropagation();setShowSwipeHint(false);try{localStorage.setItem('atlas_swipe_hint_dismissed','1')}catch{}}} style={{pointerEvents:'auto',width:23,height:23,borderRadius:'50%',background:'rgba(255,255,255,.97)',border:'1px solid #1a1714',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'#1a1714',cursor:'pointer',boxShadow:'0 1px 5px rgba(0,0,0,.22)',marginRight:8}}>✕</div>
+              <div style={{position:'relative',width:92,height:148,marginRight:6,pointerEvents:'none'}}>
+                {/* 손톱 위 곡선 화살표 (왼쪽 향) */}
+                <svg style={{position:'absolute',top:0,left:2,width:84,height:40}} viewBox="0 0 84 40" fill="none">
+                  <path d="M64 28 Q42 12 16 24" stroke="#1a1714" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
+                  <path d="M16 24 L25 18" stroke="#1a1714" strokeWidth="3.5" strokeLinecap="round"/>
+                  <path d="M16 24 L23 31" stroke="#1a1714" strokeWidth="3.5" strokeLinecap="round"/>
+                </svg>
+                {/* 엄지손가락 (기울며 미는 모션) */}
+                <svg style={{position:'absolute',top:36,left:0,width:92,height:110,animation:'swipePush 2.2s ease-in-out infinite',transformOrigin:'48% 96%',filter:'drop-shadow(0 2px 6px rgba(0,0,0,.25))'}} viewBox="0 0 100 120">
+                  <path d="M45 6 C40 6 35 9 33 16 C31 28 30 45 30 62 C30 78 32 95 38 108 C42 116 50 120 60 120 L90 120 C80 112 70 95 66 78 C64 62 63 45 62 30 C61 18 56 8 50 7 C48 6 46 6 45 6 Z" fill="white" stroke="#1a1714" strokeWidth="3.5" strokeLinejoin="round"/>
+                  <path d="M38 14 C38 8 52 8 52 14 C53 24 51 32 45 32 C39 32 37 24 38 14 Z" fill="none" stroke="#1a1714" strokeWidth="2.5"/>
+                  <path d="M37 40 Q45 44 53 40" fill="none" stroke="#1a1714" strokeWidth="2"/>
+                  <path d="M38 47 Q45 50 52 47" fill="none" stroke="#1a1714" strokeWidth="2"/>
+                </svg>
               </div>
             </div>
           )}
