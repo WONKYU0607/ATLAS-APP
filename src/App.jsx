@@ -1089,10 +1089,10 @@ function App() {
   // 코스 플래너가 닫히거나 선택 도시가 없어지면 책넘기기 상태 해제
   useEffect(() => { if (!showCoursePlanner || !selectedCity) setCityPeek(false) }, [showCoursePlanner, selectedCity])
 
-  // 스와이프 안내: 코스 플래너 열 때마다 표시 (x 누르면 영구 숨김)
+  // 스와이프 안내: 코스 플래너 열 때마다 표시 (디버깅 중 — localStorage 무시하고 항상 표시)
   useEffect(() => {
     if (isMobile && showCoursePlanner && selectedCity) {
-      try { setShowSwipeHint(!localStorage.getItem('atlas_swipe_hint_dismissed')) } catch { setShowSwipeHint(true) }
+      setShowSwipeHint(true)  // TODO 완성 후 복구: setShowSwipeHint(!localStorage.getItem('atlas_swipe_hint_dismissed'))
     } else {
       setShowSwipeHint(false)
     }
@@ -4393,7 +4393,7 @@ Write all text in ${langName}.`
           {/* 스와이프 안내 — 엄지로 미는 제스처 + x 닫기 */}
           {isMobile && selectedCity && !cityPeek && showSwipeHint && (
             <div style={{position:'absolute',right:0,top:'75%',transform:'translateY(-50%)',zIndex:1160,display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4,pointerEvents:'none'}}>
-              <div onClick={(e)=>{e.stopPropagation();setShowSwipeHint(false);try{localStorage.setItem('atlas_swipe_hint_dismissed','1')}catch{}}} style={{pointerEvents:'auto',width:23,height:23,borderRadius:'50%',background:'rgba(255,255,255,.97)',border:'1px solid #1a1714',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'#1a1714',cursor:'pointer',boxShadow:'0 1px 5px rgba(0,0,0,.22)',marginRight:8}}>✕</div>
+              <div onClick={(e)=>{e.stopPropagation();setShowSwipeHint(false)/* TODO 완성 후: localStorage.setItem('atlas_swipe_hint_dismissed','1') */}} style={{pointerEvents:'auto',width:23,height:23,borderRadius:'50%',background:'rgba(255,255,255,.97)',border:'1px solid #1a1714',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'#1a1714',cursor:'pointer',boxShadow:'0 1px 5px rgba(0,0,0,.22)',marginRight:8}}>✕</div>
               <div style={{position:'relative',width:92,height:148,marginRight:6,pointerEvents:'none'}}>
                 {/* 손톱 위 곡선 화살표 (왼쪽 향) */}
                 <svg style={{position:'absolute',top:0,left:2,width:84,height:40}} viewBox="0 0 84 40" fill="none">
