@@ -879,7 +879,8 @@ function App() {
     // courseDays에도 추가 (없으면 Day 1 자동 생성)
     if (courseDays.length > 0) {
       const days = courseDays.map(d => ({ ...d, items: [...d.items] }))
-      days[days.length - 1].items.push(newItem)
+      const ti = (activeDayTab >= 0 && activeDayTab < days.length) ? activeDayTab : days.length - 1
+      days[ti].items.push(newItem)
       setCourseDays(days); localStorage.setItem('atlas_course_days', JSON.stringify(days))
     } else {
       const days = [{ items: [newItem] }]
@@ -2038,6 +2039,22 @@ function App() {
     { lat: 0.8, lng: 50, name: lang==='ko'?'적도 (Equator)':lang==='ja'?'赤道':'Equator', _type: 'geoline' },
     { lat: 10, lng: 175, name: lang==='ko'?'날짜변경선':lang==='ja'?'日付変更線':lang==='zh'?'国际日期变更线':'International Date Line', _type: 'geoline' },
   ]
+  // 바다/만 — 줌인 시에만 표시 (gated)
+  const SEA_LABELS = [
+    { lat:35, lng:18, _type:'sea', name: lang==='ko'?'지중해':lang==='ja'?'地中海':lang==='zh'?'地中海':'Mediterranean Sea' },
+    { lat:43, lng:34, _type:'sea', name: lang==='ko'?'흑해':lang==='ja'?'黒海':lang==='zh'?'黑海':'Black Sea' },
+    { lat:35, lng:123, _type:'sea', name: lang==='ko'?'황해':lang==='ja'?'黄海':lang==='zh'?'黄海':'Yellow Sea' },
+    { lat:20, lng:38, _type:'sea', name: lang==='ko'?'홍해':lang==='ja'?'紅海':lang==='zh'?'红海':'Red Sea' },
+    { lat:15, lng:-75, _type:'sea', name: lang==='ko'?'카리브해':lang==='ja'?'カリブ海':lang==='zh'?'加勒比海':'Caribbean Sea' },
+    { lat:13, lng:114, _type:'sea', name: lang==='ko'?'남중국해':lang==='ja'?'南シナ海':lang==='zh'?'南海':'South China Sea' },
+    { lat:58, lng:20, _type:'sea', name: lang==='ko'?'발트해':lang==='ja'?'バルト海':lang==='zh'?'波罗的海':'Baltic Sea' },
+    { lat:15, lng:64, _type:'sea', name: lang==='ko'?'아라비아해':lang==='ja'?'アラビア海':lang==='zh'?'阿拉伯海':'Arabian Sea' },
+    { lat:42, lng:51, _type:'sea', name: lang==='ko'?'카스피해':lang==='ja'?'カスピ海':lang==='zh'?'里海':'Caspian Sea' },
+    { lat:56, lng:3, _type:'sea', name: lang==='ko'?'북해':lang==='ja'?'北海':lang==='zh'?'北海':'North Sea' },
+    { lat:40, lng:134, _type:'sea', name: lang==='ko'?'동해':lang==='ja'?'東海':lang==='zh'?'东海':'East Sea' },
+    { lat:14, lng:89, _type:'sea', name: lang==='ko'?'벵골만':lang==='ja'?'ベンガル湾':lang==='zh'?'孟加拉湾':'Bay of Bengal' },
+    { lat:25, lng:-90, _type:'sea', name: lang==='ko'?'멕시코만':lang==='ja'?'メキシコ湾':lang==='zh'?'墨西哥湾':'Gulf of Mexico' },
+  ]
 
   useEffect(() => {
     if (!globeRef.current) return
@@ -2073,7 +2090,7 @@ function App() {
         name: lang === 'ko' ? '괌' : 'Guam',
         nameEn: 'Guam', _type: 'island', _hasCities: true,
       }
-      globe.htmlElementsData([...labelItems, ...islandLabels, hawaiiLabel, guamLabel, ...OCEAN_LABELS])
+      globe.htmlElementsData([...labelItems, ...islandLabels, hawaiiLabel, guamLabel, ...OCEAN_LABELS, ...SEA_LABELS])
       labelCacheRef.current.items = []; labelCacheRef.current.settled = false  // 새 라벨 즉시 줌-숨김 처리되게 캐시 리셋
       lastPovKeyRef.current = ''; labelCacheRef.current = { t: 0, items: [] } // 라벨 새로 생성됨 → idle스킵 해제 + 캐시 무효화
       return
@@ -2090,7 +2107,7 @@ function App() {
       _hasCities: !!COUNTRY_CITIES[feat.properties.NAME],
     })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn && !HIDDEN_COUNTRY_LABELS.has(d.nameEn) && !ISLAND_NAMES.has(d.nameEn) && !ISLAND_NAMES_NORM.has(normCountryName(d.nameEn)))
     // 마이크로국가(산마리노·바티칸 등)는 국가단위라 국가뷰(도시 표시)에선 숨김 — 세계뷰에서만 표시/클릭
-    globe.htmlElementsData([...countryLabels, ...cities, ...OCEAN_LABELS])
+    globe.htmlElementsData([...countryLabels, ...cities, ...OCEAN_LABELS, ...SEA_LABELS])
     lastPovKeyRef.current = ''; labelCacheRef.current = { t: 0, items: [] } // 라벨 새로 생성됨 → idle스킵 해제 + 캐시 무효화
     // selectedCity는 deps에서 제외: cities 배열이 selectedCity에 의존 안 하고,
     // 포함하면 도시 나갈 때 라벨 데이터가 재생성되어 줌아웃 중 라벨이 튐
@@ -2153,7 +2170,7 @@ function App() {
     globe
       .htmlLat(d => d.lat)
       .htmlLng(d => d.lng)
-      .htmlAltitude(d => d._type === 'ocean' ? 0.001 : d._type === 'geoline' ? 0.001 : 0.0015)
+      .htmlAltitude(d => d._type === 'ocean' ? 0.001 : d._type === 'geoline' ? 0.001 : d._type === 'sea' ? 0.001 : 0.0015)
       .htmlElement(d => {
         const el = document.createElement('div')
         el.dataset.lat = d.lat
@@ -2161,6 +2178,7 @@ function App() {
         // gated: 줌인 시에만 표시 (섬나라 + 작은 나라) / micro: 터치 핸들러 달린 섬나라(아래 pointer-events 토글 대상)
         if (d._type === 'island') { el.dataset.micro = '1'; if (d.nameEn !== 'Guam') el.dataset.gated = '1' }
         else if (d._type === 'country' && SMALL_COUNTRY.has(d.nameEn)) { el.dataset.gated = '1' }
+        else if (d._type === 'sea') { el.dataset.gated = '1' }
 
         if (d._type === 'geoline') {
           el.style.cssText = 'pointer-events:none;'
@@ -2187,6 +2205,20 @@ function App() {
             letter-spacing:6px;
             color:rgba(130,190,255,0.6);
             text-shadow:0 0 8px rgba(0,40,100,0.5);
+            white-space:nowrap;
+            user-select:none;
+          ">${d.name}</div>`
+        } else if (d._type === 'sea') {
+          el.style.cssText = 'pointer-events:none;'
+          el.innerHTML = `<div style="
+            transform:translate(-50%,-50%);
+            font-family:Pretendard,Inter,sans-serif;
+            font-size:9px;
+            font-weight:500;
+            font-style:italic;
+            letter-spacing:3px;
+            color:rgba(120,180,250,0.72);
+            text-shadow:0 0 6px rgba(0,40,100,0.5);
             white-space:nowrap;
             user-select:none;
           ">${d.name}</div>`
