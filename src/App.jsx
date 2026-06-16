@@ -4393,20 +4393,20 @@ Write all text in ${langName}.`
           {/* 스와이프 안내 — 엄지로 미는 제스처 + x 닫기 */}
           {isMobile && selectedCity && !cityPeek && showSwipeHint && (
             <div style={{position:'absolute',right:0,top:'75%',transform:'translateY(-50%)',zIndex:1160,display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4,pointerEvents:'none'}}>
-              <div onClick={(e)=>{e.stopPropagation();setShowSwipeHint(false)/* TODO 완성 후: localStorage.setItem('atlas_swipe_hint_dismissed','1') */}} style={{pointerEvents:'auto',width:23,height:23,borderRadius:'50%',background:'rgba(255,255,255,.97)',border:'1px solid #1a1714',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'#1a1714',cursor:'pointer',boxShadow:'0 1px 5px rgba(0,0,0,.22)',marginRight:8}}>✕</div>
-              <div style={{position:'relative',width:92,height:148,marginRight:6,pointerEvents:'none'}}>
+              <div onClick={(e)=>{e.stopPropagation();setShowSwipeHint(false)/* TODO 완성 후: localStorage.setItem('atlas_swipe_hint_dismissed','1') */}} style={{pointerEvents:'auto',width:23,height:23,borderRadius:'50%',background:'rgba(255,255,255,.97)',border:'1px solid #b0b0b0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'#888',cursor:'pointer',boxShadow:'0 1px 4px rgba(0,0,0,.15)',marginRight:8}}>✕</div>
+              <div style={{position:'relative',width:88,height:172,marginRight:6,pointerEvents:'none'}}>
                 {/* 손톱 위 곡선 화살표 (왼쪽 향) */}
-                <svg style={{position:'absolute',top:0,left:2,width:84,height:40}} viewBox="0 0 84 40" fill="none">
-                  <path d="M64 28 Q42 12 16 24" stroke="#1a1714" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
-                  <path d="M16 24 L25 18" stroke="#1a1714" strokeWidth="3.5" strokeLinecap="round"/>
-                  <path d="M16 24 L23 31" stroke="#1a1714" strokeWidth="3.5" strokeLinecap="round"/>
+                <svg style={{position:'absolute',top:0,left:4,width:80,height:38}} viewBox="0 0 84 40" fill="none">
+                  <path d="M62 26 Q42 12 18 22" stroke="#a8a8a8" strokeWidth="2.8" strokeLinecap="round" fill="none"/>
+                  <path d="M18 22 L26 17" stroke="#a8a8a8" strokeWidth="2.8" strokeLinecap="round"/>
+                  <path d="M18 22 L24 29" stroke="#a8a8a8" strokeWidth="2.8" strokeLinecap="round"/>
                 </svg>
                 {/* 엄지손가락 (기울며 미는 모션) */}
-                <svg style={{position:'absolute',top:36,left:0,width:92,height:110,animation:'swipePush 2.2s ease-in-out infinite',transformOrigin:'48% 96%',filter:'drop-shadow(0 2px 6px rgba(0,0,0,.25))'}} viewBox="0 0 100 120">
-                  <path d="M45 6 C40 6 35 9 33 16 C31 28 30 45 30 62 C30 78 32 95 38 108 C42 116 50 120 60 120 L90 120 C80 112 70 95 66 78 C64 62 63 45 62 30 C61 18 56 8 50 7 C48 6 46 6 45 6 Z" fill="white" stroke="#1a1714" strokeWidth="3.5" strokeLinejoin="round"/>
-                  <path d="M38 14 C38 8 52 8 52 14 C53 24 51 32 45 32 C39 32 37 24 38 14 Z" fill="none" stroke="#1a1714" strokeWidth="2.5"/>
-                  <path d="M37 40 Q45 44 53 40" fill="none" stroke="#1a1714" strokeWidth="2"/>
-                  <path d="M38 47 Q45 50 52 47" fill="none" stroke="#1a1714" strokeWidth="2"/>
+                <svg style={{position:'absolute',top:34,left:0,width:88,height:139,animation:'swipePush 2.2s ease-in-out infinite',transformOrigin:'48% 96%',filter:'drop-shadow(0 1px 4px rgba(0,0,0,.14))'}} viewBox="0 0 100 158">
+                  <path d="M47 8 C37 8 33 16 33 26 C32 48 32 76 33 103 C33 120 35 136 41 146 C45 153 53 154 60 152 L86 152 C80 140 73 120 69 103 C68 76 67 48 67 26 C66 16 57 8 51 8 C49 8 48 8 47 8 Z" fill="#ffffff" stroke="#a8a8a8" strokeWidth="2.8" strokeLinejoin="round"/>
+                  <path d="M39 15 C39 9 53 9 53 15 C54 26 52 35 46 35 C40 35 38 26 39 15 Z" fill="none" stroke="#a8a8a8" strokeWidth="2.2"/>
+                  <path d="M37 42 Q46 46 54 42" fill="none" stroke="#a8a8a8" strokeWidth="1.8"/>
+                  <path d="M38 49 Q46 52 53 49" fill="none" stroke="#a8a8a8" strokeWidth="1.8"/>
                 </svg>
               </div>
             </div>
