@@ -1460,7 +1460,8 @@ function App() {
     c.querySelectorAll('[data-lat]').forEach(el => {
       const la = parseFloat(el.dataset.lat) * Math.PI / 180, ln = parseFloat(el.dataset.lng) * Math.PI / 180
       const ang = Math.acos(Math.max(-1, Math.min(1, Math.sin(cLat) * Math.sin(la) + Math.cos(cLat) * Math.cos(la) * Math.cos(ln - cLng))))
-      const sh = ang < maxA && (el.dataset.gated !== '1' || alt < 0.7)
+      const altOk = el.dataset.seaGate === '1' ? alt < 0.45 : (el.dataset.gated !== '1' || alt < 0.7)
+      const sh = ang < maxA && altOk
       el.style.opacity = sh ? '1' : '0'
       if (el.dataset.micro === '1') el.style.pointerEvents = sh ? 'auto' : 'none'
     })
@@ -1960,6 +1961,7 @@ function App() {
             lng: parseFloat(el.dataset.lng) * Math.PI / 180,
             gated: el.dataset.gated === '1',
             micro: el.dataset.micro === '1',
+            seaGate: el.dataset.seaGate === '1',
           }))
           cache.t = now
         }
@@ -1975,8 +1977,9 @@ function App() {
           el.style.transition = 'opacity 0.3s'
           el.dataset.tInit = '1'
         }
-        // 섬나라/작은나라(gated)는 줌인(alt<0.7) 했을 때만 표시 — 유럽 등 빽빽함 정리
-        const show = angle < maxAngle && (!it.gated || alt < 0.7)
+        // 섬나라/작은나라(gated)는 alt<0.7, 바다(seaGate)는 더 깊게 alt<0.45에서만 표시
+        const altOk = it.seaGate ? alt < 0.45 : (it.gated ? alt < 0.7 : true)
+        const show = angle < maxAngle && altOk
         const next = show ? '1' : '0'
         if (el.style.opacity !== next) el.style.opacity = next
         // 섬나라 라벨(micro)은 숨김 시 pointer-events도 꺼야 투명 박스가 터치/드래그를 안 막음
@@ -2200,7 +2203,7 @@ function App() {
         // gated: 줌인 시에만 표시 (섬나라 + 작은 나라) / micro: 터치 핸들러 달린 섬나라(아래 pointer-events 토글 대상)
         if (d._type === 'island') { el.dataset.micro = '1'; if (d.nameEn !== 'Guam') el.dataset.gated = '1' }
         else if (d._type === 'country' && SMALL_COUNTRY.has(d.nameEn)) { el.dataset.gated = '1' }
-        else if (d._type === 'sea') { el.dataset.gated = '1' }
+        else if (d._type === 'sea') { el.dataset.seaGate = '1' }
 
         if (d._type === 'geoline') {
           el.style.cssText = 'pointer-events:none;'
@@ -2235,12 +2238,12 @@ function App() {
           el.innerHTML = `<div style="
             transform:translate(-50%,-50%);
             font-family:Pretendard,Inter,sans-serif;
-            font-size:9px;
-            font-weight:500;
+            font-size:12px;
+            font-weight:600;
             font-style:italic;
             letter-spacing:3px;
-            color:rgba(120,180,250,0.72);
-            text-shadow:0 0 6px rgba(0,40,100,0.5);
+            color:rgba(120,180,250,0.78);
+            text-shadow:0 0 7px rgba(0,40,100,0.55);
             white-space:nowrap;
             user-select:none;
           ">${d.name}</div>`
