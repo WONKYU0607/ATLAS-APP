@@ -525,6 +525,7 @@ function App() {
   const [savedCourses, setSavedCourses] = useState(() => {
     try { return JSON.parse(localStorage.getItem('atlas_saved_courses') || '[]') } catch { return [] }
   })
+  const [loadedCourseId, setLoadedCourseId] = useState(null) // 저장 코스를 불러왔을 때 그 id 기억 → 삭제 시 저장 목록에서도 제거
   const saveCourseToList = (courseType = 'manual') => {
     // courseDays가 비어있으면 courseItems로부터 자동 생성
     let days = courseDays
@@ -560,6 +561,7 @@ function App() {
     }
     setActiveDayTab(0); setShowCoursePlanner(true); setShowHamburger(false)
     setCourseSource(saved.type || 'manual')
+    setLoadedCourseId(saved.id)
   }
   const deleteSavedCourse = (id) => {
     const newList = savedCourses.filter(c => c.id !== id)
@@ -2013,7 +2015,7 @@ function App() {
     { lat:29, lng:125, _type:'sea', name: lang==='ko'?'동중국해':lang==='ja'?'東シナ海':lang==='zh'?'东中国海':'East China Sea' },
     { lat:53, lng:148, _type:'sea', name: lang==='ko'?'오호츠크해':lang==='ja'?'オホーツク海':lang==='zh'?'鄂霍次克海':'Sea of Okhotsk' },
     { lat:27, lng:51, _type:'sea', name: lang==='ko'?'페르시아만':lang==='ja'?'ペルシャ湾':lang==='zh'?'波斯湾':'Persian Gulf' },
-    { lat:42.5, lng:14.5, _type:'sea', name: lang==='ko'?'아드리아해':lang==='ja'?'アドリア海':lang==='zh'?'亚得里亚海':'Adriatic Sea' },
+    { lat:42, lng:16.8, _type:'sea', name: lang==='ko'?'아드리아해':lang==='ja'?'アドリア海':lang==='zh'?'亚得里亚海':'Adriatic Sea' },
   ]
 
   useEffect(() => {
@@ -3308,6 +3310,19 @@ Write all text in ${langName}.`
     setHotelSearchDayIdx(null); setHotelSearchQuery(''); setHotelSearchResults([])
   }
 
+  const fetchCityDescription = async (cityKey, countryEn, lng) => {
+    const cacheKey = `atlas_citydesc_${cityKey}_${lng}`
+    try { const c = localStorage.getItem(cacheKey); if (c) return c } catch {}
+    const langName = lng === 'ja' ? '日本語' : lng === 'zh' ? '中文(简体)' : lng === 'en' ? 'English' : '한국어'
+    const prompt = `Write a 2-3 sentence travel introduction for the city "${cityKey}"${countryEn ? ` (${countryEn})` : ''} in ${langName}. Use a natural tone without exaggeration, and highlight what makes the city appealing to travelers. Output ONLY the introduction text — no quotation marks, no title, no extra explanation.`
+    try {
+      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt }) })
+      const data = await res.json()
+      const txt = (data.text || '').trim().replace(/^["'「『]+|["'」』]+$/g, '').trim()
+      if (txt) { try { localStorage.setItem(cacheKey, txt) } catch {}; return txt }
+    } catch (e) { console.error('city description error:', e) }
+    return null
+  }
   const fetchCityData = async (city) => {
     try {
       // 1. 사전 데이터 (정적) 즉시 표시
@@ -3315,8 +3330,17 @@ Write all text in ${langName}.`
       const staticData = CITY_DATA[cityKey]
       const base = staticData ? { ...staticData } : DEFAULT_CITY_DATA(cityKey)
       if (!base.weather) base.weather = { temp: '—', condition: '...', icon: '🌤️', humidity: '—' }
+      // 소개글은 AI로 생성 (정적/제네릭 대신) — 캐시 있으면 즉시, 없으면 비워두고 아래서 생성
+      let cachedDesc = null
+      try { cachedDesc = localStorage.getItem(`atlas_citydesc_${cityKey}_${lang}`) } catch {}
+      base.description = cachedDesc || ''
       setCityData(base)
       setLoading(false)
+      if (!cachedDesc) {
+        fetchCityDescription(cityKey, city.countryEn || '', lang).then(d => {
+          if (d) setCityData(prev => prev ? { ...prev, description: d } : prev)
+        })
+      }
       fetchWeather(city.lat, city.lng).then(w => {
         if (w) setCityData(prev => prev ? { ...prev, weather: w } : prev)
       }).catch(() => {})
@@ -4024,17 +4048,18 @@ Write all text in ${langName}.`
                   </div>
                 ) : (
                   <>
-                    {/* 도시 설명 - 번역 있으면 표시, ko모드면 한국어, 번역 없으면 숨김 */}
+                    {/* 도시 설명 - AI 생성 (언어별), 생성 중이면 로딩 표시 */}
                     {(() => {
-                      const cityKey = selectedCity?._koName || selectedCity?.name
-                      const desc = lang === 'ko'
-                        ? cityData.description
-                        : (trDesc(cityKey) || null)
+                      const desc = cityData.description
                       return desc ? (
                         <p style={{fontSize:13.5,color:'#475569',lineHeight:1.8,margin:'0 0 20px',borderLeft:`3px solid ${selectedCity?.color||'#3b82f6'}`,paddingLeft:14}}>
                           {desc}
                         </p>
-                      ) : null
+                      ) : (
+                        <p style={{fontSize:13.5,color:'#94a3b8',lineHeight:1.8,margin:'0 0 20px',borderLeft:`3px solid ${selectedCity?.color||'#3b82f6'}`,paddingLeft:14,fontStyle:'italic'}}>
+                          {lang==='ko'?'소개글 불러오는 중…':lang==='ja'?'紹介文を読み込み中…':lang==='zh'?'正在加载介绍…':'Loading description…'}
+                        </p>
+                      )
                     })()}
 
                     {/* 공유 버튼 */}
@@ -4423,7 +4448,8 @@ Write all text in ${langName}.`
                 >{t('shareBtn')}</button>
                 <button
                   onClick={()=>{if(confirm(lang==='ko'?'현재 코스를 삭제할까요?':lang==='ja'?'現在のコースを削除しますか？':lang==='zh'?'删除当前行程？':'Delete current course?')){
-                    saveCourse([]);saveCourseDays([]);setRouteCache({});
+                    if(loadedCourseId)deleteSavedCourse(loadedCourseId);
+                    saveCourse([]);saveCourseDays([]);setRouteCache({});setLoadedCourseId(null);
                     setShowCoursePlanner(false);closePanel()
                   }}}
                   style={{padding:'5px 10px',borderRadius:6,border:'1px solid #e0d9d0',background:'none',fontSize:11,fontWeight:500,color:'#1a1714',cursor:'pointer',transition:'all .15s'}}
@@ -4727,7 +4753,7 @@ Write all text in ${langName}.`
 
           {/* 푸터 — AI/수동 모두 저장 버튼으로 저장 (AI는 courseSource='ai'로 저장됨) */}
           <div style={{padding:'14px 20px',borderTop:'1px solid #e8e2da',flexShrink:0,display:'flex',gap:6}}>
-              <button onClick={()=>{const s=saveCourseToList(courseSource);if(s){alert(t('courseSaved'));saveCourse([]);saveCourseDays([]);setRouteCache({});setCourseSource('manual')}setShowCoursePlanner(false)}}
+              <button onClick={()=>{const s=saveCourseToList(courseSource);if(s){alert(t('courseSaved'));saveCourse([]);saveCourseDays([]);setRouteCache({});setCourseSource('manual');setLoadedCourseId(null)}setShowCoursePlanner(false)}}
                 style={{flex:1,padding:'11px',background:'#c8856a',border:'none',borderRadius:8,fontSize:12,fontWeight:700,color:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'all .15s'}}
                 onMouseEnter={e=>e.currentTarget.style.background='#b8745a'}
                 onMouseLeave={e=>e.currentTarget.style.background='#c8856a'}>
