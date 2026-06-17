@@ -497,6 +497,7 @@ function App() {
   const [cityData, setCityData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [selectedSpot, setSelectedSpot] = useState(null)
+  const [descFailed, setDescFailed] = useState(false) // 소개글 AI 생성 최종 실패 시 재시도 버튼 표시용
   const [searchQuery, setSearchQuery] = useState('')
   const [showDrop, setShowDrop] = useState(false)
   const [spotSearchQuery, setSpotSearchQuery] = useState('')      // 추천탭: 장소 검색해 코스 추가
@@ -3318,9 +3319,10 @@ Write all text in ${langName}.`
     try {
       const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt }) })
       const data = await res.json()
+      if (data.error) console.warn('[city desc] Gemini error (code', data.code, '):', data.error)
       const txt = (data.text || '').trim().replace(/^["'「『]+|["'」』]+$/g, '').trim()
       if (txt) { try { localStorage.setItem(cacheKey, txt) } catch {}; return txt }
-    } catch (e) { console.error('city description error:', e) }
+    } catch (e) { console.error('city description fetch error:', e) }
     return null
   }
   const fetchCityData = async (city) => {
@@ -3337,8 +3339,10 @@ Write all text in ${langName}.`
       setCityData(base)
       setLoading(false)
       if (!cachedDesc) {
+        setDescFailed(false)
         fetchCityDescription(cityKey, city.countryEn || '', lang).then(d => {
           if (d) setCityData(prev => prev ? { ...prev, description: d } : prev)
+          else setDescFailed(true)
         })
       }
       fetchWeather(city.lat, city.lng).then(w => {
@@ -4048,14 +4052,30 @@ Write all text in ${langName}.`
                   </div>
                 ) : (
                   <>
-                    {/* 도시 설명 - AI 생성 (언어별), 생성 중이면 로딩 표시 */}
+                    {/* 도시 설명 - AI 생성 (언어별), 생성 중이면 로딩 / 실패 시 다시 시도 */}
                     {(() => {
                       const desc = cityData.description
-                      return desc ? (
+                      if (desc) return (
                         <p style={{fontSize:13.5,color:'#475569',lineHeight:1.8,margin:'0 0 20px',borderLeft:`3px solid ${selectedCity?.color||'#3b82f6'}`,paddingLeft:14}}>
                           {desc}
                         </p>
-                      ) : (
+                      )
+                      if (descFailed) return (
+                        <p style={{fontSize:13.5,color:'#94a3b8',lineHeight:1.8,margin:'0 0 20px',borderLeft:`3px solid ${selectedCity?.color||'#3b82f6'}`,paddingLeft:14}}>
+                          {lang==='ko'?'소개글을 불러오지 못했어요. ':lang==='ja'?'紹介文を読み込めませんでした。':lang==='zh'?'无法加载介绍。':'Couldn\'t load the description. '}
+                          <button onClick={()=>{
+                            const ck = selectedCity?._koName || selectedCity?.name
+                            setDescFailed(false)
+                            fetchCityDescription(ck, selectedCity?.countryEn || '', lang).then(d => {
+                              if (d) setCityData(prev => prev ? { ...prev, description: d } : prev)
+                              else setDescFailed(true)
+                            })
+                          }} style={{background:'none',border:'none',color:selectedCity?.color||'#3b82f6',fontWeight:700,cursor:'pointer',padding:0,fontSize:13.5,textDecoration:'underline'}}>
+                            {lang==='ko'?'다시 시도':lang==='ja'?'再試行':lang==='zh'?'重试':'Retry'}
+                          </button>
+                        </p>
+                      )
+                      return (
                         <p style={{fontSize:13.5,color:'#94a3b8',lineHeight:1.8,margin:'0 0 20px',borderLeft:`3px solid ${selectedCity?.color||'#3b82f6'}`,paddingLeft:14,fontStyle:'italic'}}>
                           {lang==='ko'?'소개글 불러오는 중…':lang==='ja'?'紹介文を読み込み中…':lang==='zh'?'正在加载介绍…':'Loading description…'}
                         </p>
