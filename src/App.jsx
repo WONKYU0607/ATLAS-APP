@@ -554,7 +554,9 @@ function App() {
     // 책넘기기 핸들/스와이프가 selectedCity에 의존 → 코스의 도시를 복원
     const cityItem = flat.find(it => it && it.source === 'city') || flat.find(it => it && it.cityName)
     if (cityItem && cityItem.cityName) {
-      setSelectedCity({ name:cityItem.cityName, _koName:cityItem.cityName, lat:cityItem.lat, lng:cityItem.lng, emoji:cityItem.emoji||'📍', countryEn:cityItem.countryEn||'' })
+      const cityObj = { name:cityItem.cityName, _koName:cityItem.cityName, lat:cityItem.lat, lng:cityItem.lng, emoji:cityItem.emoji||'📍', countryEn:cityItem.countryEn||'' }
+      setSelectedCity(cityObj)
+      setCityData(null); fetchCityData(cityObj)
     }
     setActiveDayTab(0); setShowCoursePlanner(true); setShowHamburger(false)
     setCourseSource(saved.type || 'manual')
@@ -845,17 +847,6 @@ function App() {
     setShowAiModal(false)
     setShowCoursePlanner(true)
     setCourseSource('ai')
-    setTimeout(() => {
-      const cityNames = orderedCities.map(x => getCityName(x.city.name))
-      const courseName = cityNames.length <= 2 ? cityNames.join('·') : `${cityNames[0]} 외 ${cityNames.length-1}`
-      const aiSaved = {
-        id: Date.now(), name: `${courseName} ${days.length}${lang==='ko'?'일':'D'}`,
-        type: 'ai',
-        days, transport: aiTransport, tripStart: courseTripStart,
-        createdAt: Date.now()
-      }
-      setSavedCourses(prev => { const nl = [aiSaved, ...prev]; localStorage.setItem('atlas_saved_courses', JSON.stringify(nl)); return nl })
-    }, 100)
     setAiGenerating(false)
   }
 
@@ -2022,7 +2013,7 @@ function App() {
     { lat:29, lng:125, _type:'sea', name: lang==='ko'?'동중국해':lang==='ja'?'東シナ海':lang==='zh'?'东中国海':'East China Sea' },
     { lat:53, lng:148, _type:'sea', name: lang==='ko'?'오호츠크해':lang==='ja'?'オホーツク海':lang==='zh'?'鄂霍次克海':'Sea of Okhotsk' },
     { lat:27, lng:51, _type:'sea', name: lang==='ko'?'페르시아만':lang==='ja'?'ペルシャ湾':lang==='zh'?'波斯湾':'Persian Gulf' },
-    { lat:43, lng:15, _type:'sea', name: lang==='ko'?'아드리아해':lang==='ja'?'アドリア海':lang==='zh'?'亚得里亚海':'Adriatic Sea' },
+    { lat:42.5, lng:14.5, _type:'sea', name: lang==='ko'?'아드리아해':lang==='ja'?'アドリア海':lang==='zh'?'亚得里亚海':'Adriatic Sea' },
   ]
 
   useEffect(() => {
@@ -2184,7 +2175,7 @@ function App() {
           el.innerHTML = `<div style="
             transform:translate(-50%,-50%);
             font-family:Pretendard,Inter,sans-serif;
-            font-size:12px;
+            font-size:11px;
             font-weight:600;
             font-style:italic;
             letter-spacing:3px;
@@ -4431,15 +4422,14 @@ Write all text in ${langName}.`
                   onMouseLeave={e=>e.currentTarget.style.background='#7eb8e0'}
                 >{t('shareBtn')}</button>
                 <button
-                  onClick={()=>{if(confirm(t('courseDeleteConfirm'))){
+                  onClick={()=>{if(confirm(lang==='ko'?'현재 코스를 삭제할까요?':lang==='ja'?'現在のコースを削除しますか？':lang==='zh'?'删除当前行程？':'Delete current course?')){
                     saveCourse([]);saveCourseDays([]);setRouteCache({});
-                    setSavedCourses([]);localStorage.removeItem('atlas_saved_courses');
-                    setShowCoursePlanner(false)
+                    setShowCoursePlanner(false);closePanel()
                   }}}
                   style={{padding:'5px 10px',borderRadius:6,border:'1px solid #e0d9d0',background:'none',fontSize:11,fontWeight:500,color:'#1a1714',cursor:'pointer',transition:'all .15s'}}
                   onMouseEnter={e=>{e.currentTarget.style.color='#c0604a';e.currentTarget.style.borderColor='#e8c0b0'}}
                   onMouseLeave={e=>{e.currentTarget.style.color='#1a1714';e.currentTarget.style.borderColor='#e0d9d0'}}
-                >{t('courseDeleteAll')}</button>
+                >{lang==='ko'?'삭제':lang==='ja'?'削除':lang==='zh'?'删除':'Clear'}</button>
                 <button onClick={()=>setShowCoursePlanner(false)}
                   style={{width:30,height:30,borderRadius:6,border:'1px solid #e0d9d0',background:'none',color:'#1a1714',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}
                   onMouseEnter={e=>e.currentTarget.style.background='#f0ebe4'}
@@ -4735,10 +4725,9 @@ Write all text in ${langName}.`
             })()}
           </div>
 
-          {/* 푸터 (수동 코스만 — AI는 자동저장돼서 푸터 불필요, 헤더 ✕로 닫음) */}
-          {courseSource !== 'ai' && (
+          {/* 푸터 — AI/수동 모두 저장 버튼으로 저장 (AI는 courseSource='ai'로 저장됨) */}
           <div style={{padding:'14px 20px',borderTop:'1px solid #e8e2da',flexShrink:0,display:'flex',gap:6}}>
-              <button onClick={()=>{const s=saveCourseToList('manual');if(s)alert(t('courseSaved'));setShowCoursePlanner(false)}}
+              <button onClick={()=>{const s=saveCourseToList(courseSource);if(s){alert(t('courseSaved'));saveCourse([]);saveCourseDays([]);setRouteCache({});setCourseSource('manual')}setShowCoursePlanner(false)}}
                 style={{flex:1,padding:'11px',background:'#c8856a',border:'none',borderRadius:8,fontSize:12,fontWeight:700,color:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'all .15s'}}
                 onMouseEnter={e=>e.currentTarget.style.background='#b8745a'}
                 onMouseLeave={e=>e.currentTarget.style.background='#c8856a'}>
@@ -4749,7 +4738,6 @@ Write all text in ${langName}.`
               onMouseEnter={e=>e.currentTarget.style.background='#f0ebe4'}
               onMouseLeave={e=>e.currentTarget.style.background='none'}>✕</button>
           </div>
-          )}
         </div>
       )}
 
