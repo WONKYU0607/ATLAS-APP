@@ -421,8 +421,6 @@ function App() {
   const [feedSpotDetail, setFeedSpotDetail] = useState(null) // spot object
   const [feedSpotWikiSummary, setFeedSpotWikiSummary] = useState(null) // wikipedia summary text
   const [feedSpotWikiLoading, setFeedSpotWikiLoading] = useState(false)
-  // 사진 라이트박스 (갤러리 확대)
-  const [lightbox, setLightbox] = useState(null) // { titles: string[], index: number }
   const [journalForm, setJournalForm] = useState({ title:'', body:'', cities:[], days:1, rating:0, visibility:'public', photos:[], blocks:[], startDate:'', endDate:'' })
   const [journalNewPhotos, setJournalNewPhotos] = useState([]) // File 객체 (업로드 대기)
   const [journalSaving, setJournalSaving] = useState(false)
@@ -1438,7 +1436,6 @@ function App() {
     }
     return null
   }
-  const trDesc = (cityKey) => trCity(cityKey)?.description || null
   const trSpot = (cityKey, spotName) => {
     const cityTr = trCity(cityKey)
     // wikiTitle 가져오기 (name이 null일 때 fallback용)
@@ -2749,14 +2746,6 @@ function App() {
     setFeedSpotWikiSummary(null)
   }
 
-  // 라이트박스 열기
-  const openLightbox = (titles, index) => {
-    if (!titles || titles.length === 0) return
-    setLightbox({ titles, index: index || 0 })
-  }
-  const lightboxNext = () => setLightbox(l => l ? { ...l, index: (l.index + 1) % l.titles.length } : l)
-  const lightboxPrev = () => setLightbox(l => l ? { ...l, index: (l.index - 1 + l.titles.length) % l.titles.length } : l)
-
   // 피드 풀스크린 뒤로가기
   const feedGoBack = () => {
     if (feedView === 'cityDetail') {
@@ -2775,7 +2764,6 @@ function App() {
       setFeedCityList(null)
       setFeedCityDetail(null)
       setFeedSpotDetail(null)
-      setLightbox(null)
     }
   }, [showFeed])
 
@@ -2837,18 +2825,6 @@ function App() {
     loadSummary()
     return () => { cancelled = true }
   }, [feedSpotDetail, feedCityDetail, lang])
-
-  // 라이트박스 키보드 조작
-  useEffect(() => {
-    if (!lightbox) return
-    const handler = (e) => {
-      if (e.key === 'Escape') setLightbox(null)
-      else if (e.key === 'ArrowRight') lightboxNext()
-      else if (e.key === 'ArrowLeft') lightboxPrev()
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [lightbox])
 
   // 피드 도시 상세 데이터 로드 (CITY_DATA + 날씨)
   useEffect(() => {
