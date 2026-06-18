@@ -1,7 +1,6 @@
 import { CITY_DATA_I18N } from './data/cityDataI18n'
 import { translateCountryInfo } from './data/countryI18n'
-import { T, SPOT_TYPE_I18N, CITY_I18N, CONTINENT_I18N } from './data/translations'
-import { CITY_DATA, DEFAULT_CITY_DATA, TYPE_COLORS } from './data/cityData'
+import { T, CITY_I18N, CONTINENT_I18N } from './data/translations'
 import { getCountryDisplayName, LANG_OPTIONS, getFlagImg, COUNTRY_INFO, EMERGENCY_CONTACTS, extractCurrencyCode } from './data/countryInfo'
 import { COUNTRY_CITIES } from './data/countryCities'
 import ISLAND_POLYGONS from './data/islandPolygons.json'
@@ -432,7 +431,6 @@ function App() {
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [selectedCity, setSelectedCity] = useState(null)
     const [activeTab, setActiveTab] = useState('hotspots')
-  const [tabsCollapsed, setTabsCollapsed] = useState(true)
   const [hotspots, setHotspots] = useState([])
   const [restaurants, setRestaurants] = useState([])
   const [loadingPlaces, setLoadingPlaces] = useState(false)
@@ -564,7 +562,6 @@ function App() {
 
   // ── AI 코스 자동 생성 (알고리즘 기반, 비용 없음) ──────────────
   const [showAiModal, setShowAiModal] = useState(false)
-  const [aiCity, setAiCity] = useState(null)
   // 다중 도시: [{city, days}, ...]
   const [aiCities, setAiCities] = useState([])
   const addAiCity = (c) => {
@@ -575,7 +572,6 @@ function App() {
   const removeAiCity = (name) => setAiCities(prev => prev.filter(x => x.city.name !== name))
   const setAiCityDays = (name, days) => setAiCities(prev => prev.map(x => x.city.name === name ? { ...x, days: Math.max(1, days) } : x))
   const aiTotalDays = aiCities.reduce((s, x) => s + x.days, 0)
-  const [aiDays, setAiDays] = useState(2)
   const [aiTransport, setAiTransport] = useState('transit')
   const [aiHours, setAiHours] = useState(4)
   const [aiCitySearch, setAiCitySearch] = useState('')
@@ -1078,7 +1074,6 @@ function App() {
     saveVisited(v)
   }
   const totalCities = Object.values(COUNTRY_CITIES).flat().length
-  const totalSpots = Object.values(CITY_DATA).reduce((a, d) => a + (d.spots?.length || 0), 0)
   const visitedCityCount = (visited.cities || []).length
   const visitedSpotCount = Object.values(visited.spots || {}).reduce((a, s) => a + s.length, 0)
   const [showMyTravels, setShowMyTravels] = useState(false)
@@ -1342,10 +1337,6 @@ function App() {
     if (lang === 'zh') return tr[2] || koName
     return koName
   }
-  const getSpotType = (koType) => {
-    if (lang === 'ko') return koType
-    return SPOT_TYPE_I18N[koType]?.[lang] || koType
-  }
   // 관광 패널 번역 헬퍼
   const trCity = (cityKey) => {
     if (lang === 'ko' || !cityKey) return null
@@ -1367,22 +1358,11 @@ function App() {
   }
   const trSpot = (cityKey, spotName) => {
     const cityTr = trCity(cityKey)
-    // wikiTitle 가져오기 (name이 null일 때 fallback용)
-    const getWikiName = () => {
-      if (lang === 'ko') return null
-      const cityData2 = CITY_DATA[cityKey]
-      const spot = cityData2?.spots?.find(s => s.name === spotName)
-      return spot?.wikiTitle || null
-    }
     if (cityTr?.spots) {
       // 1차: 정확한 키 매칭
       const exact = cityTr.spots[spotName]
       if (exact) {
-        // name이 null이면 wikiTitle로 대체
-        if (!exact.name) {
-          const wikiName = getWikiName()
-          return { name: wikiName || spotName, desc: exact.desc || '' }
-        }
+        if (!exact.name) return { name: spotName, desc: exact.desc || '' }
         return exact
       }
       // 2차: 퍼지 매칭
@@ -1391,17 +1371,9 @@ function App() {
       )
       if (fuzzyKey) {
         const fuzzy = cityTr.spots[fuzzyKey]
-        if (!fuzzy.name) {
-          const wikiName = getWikiName()
-          return { name: wikiName || spotName, desc: fuzzy.desc || '' }
-        }
+        if (!fuzzy.name) return { name: spotName, desc: fuzzy.desc || '' }
         return fuzzy
       }
-    }
-    // 번역 데이터 자체가 없는 경우 → wikiTitle fallback
-    if (lang !== 'ko') {
-      const wikiName = getWikiName()
-      if (wikiName) return { name: wikiName, desc: '' }
     }
     return null
   }
@@ -3018,8 +2990,7 @@ Write all text in ${langName}.`
     try {
       // 1. 사전 데이터 (정적) 즉시 표시
       const cityKey = city._koName || city.name
-      const staticData = CITY_DATA[cityKey]
-      const base = staticData ? { ...staticData } : DEFAULT_CITY_DATA(cityKey)
+      const base = {}
       if (!base.weather) base.weather = { temp: '—', condition: '...', icon: '🌤️', humidity: '—' }
       // 소개글은 AI로 생성 (정적/제네릭 대신) — 캐시 있으면 즉시, 없으면 비워두고 아래서 생성
       let cachedDesc = null
@@ -3045,7 +3016,6 @@ Write all text in ${langName}.`
       setCityData({
         weather: { temp: '—', condition: '—', icon: '🌤️', humidity: '—' },
         description: `${cityKey2}`,
-        spots: DEFAULT_CITY_DATA(cityKey2).spots,
       })
       setLoading(false)
     }
@@ -3156,28 +3126,15 @@ Write all text in ${langName}.`
 
   // Search: all cities + all spots across all countries
   const allCities = Object.entries(COUNTRY_CITIES).flatMap(([country, cities]) =>
-    cities.map(c => ({ ...c, _koName: c.name, countryEn: country, countryKo: getCountryName(country), _searchType: 'city' }))
+    cities.map(c => ({ ...c, _koName: c.name, countryEn: country, countryKo: getCountryName(country) }))
   )
   // Build spot search index
-  const allSpots = Object.entries(CITY_DATA).flatMap(([cityName, data]) => {
-    const city = allCities.find(c => (c._koName || c.name) === cityName)
-    if (!city || !data.spots) return []
-    return data.spots.map(spot => ({
-      ...city,
-      spotName: spot.name,
-      spotType: spot.type,
-      _searchType: 'spot',
-    }))
-  })
-  const searchItems = [...allCities]  // 도시·국가만 검색 (명소 spot 제외)
+  const searchItems = [...allCities]  // 도시·국가만 검색
   const filtered = searchQuery.length >= 1
     ? searchItems.filter(c => {
         const q = searchQuery.toLowerCase()
         const koName = c._koName || c.name
         const trName = getCityName(koName)?.toLowerCase() || ''
-        if (c._searchType === 'spot') {
-          return c.spotName?.toLowerCase().includes(q) || koName?.toLowerCase().includes(q) || trName.includes(q)
-        }
         return koName?.includes(searchQuery) || trName.includes(q) || c.countryKo?.toLowerCase().includes(q) || c.countryEn?.toLowerCase().includes(q)
       }).slice(0, 10)
     : []
@@ -3308,7 +3265,7 @@ Write all text in ${langName}.`
                           {favorites.filter(f=>f.type==='spot').map((f,i)=>(
                             <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,cursor:'pointer',transition:'background .15s'}}
                               onMouseEnter={e=>e.currentTarget.style.background='#ede8e0'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-                              onClick={()=>{if(f.cityName){const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>cs.map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f.cityName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300);setTimeout(()=>{const spot=CITY_DATA[f.cityName]?.spots?.find(s=>s.name===f.name);if(spot)setSelectedSpot(spot)},1200)}};setShowHamburger(false)}}>
+                              onClick={()=>{if(f.cityName){const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>cs.map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f.cityName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300)}};setShowHamburger(false)}}>
                               
                               <div style={{flex:1,minWidth:0}}>
                                 <div style={{fontSize:12,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{trSpot(f.cityName, f.name)?.name || f.name}</div>
@@ -3502,16 +3459,6 @@ Write all text in ${langName}.`
                     const feat = countries.find(f => f.properties.NAME === c.countryEn)
                     if (feat) { setSelectedCountry(feat); }
                     setTimeout(() => handleCityClick(c), 300)
-                    if (c._searchType === 'spot') {
-                      // 관광지 검색 → 도시로 이동 후 해당 관광지 펼침
-                      const spotData = CITY_DATA[c._koName || c.name]
-                      if (spotData) {
-                        setTimeout(() => {
-                          const spot = spotData.spots?.find(s => s.name === c.spotName)
-                          if (spot) setSelectedSpot(spot)
-                        }, 800)
-                      }
-                    }
                     setSearchQuery(''); setShowDrop(false)
                   }}
                     style={{padding:'10px 14px',cursor:'pointer',display:'flex',alignItems:'center',gap:10,borderBottom:i<7?'1px solid #f1f5f9':'none'}}
@@ -3524,17 +3471,12 @@ Write all text in ${langName}.`
                     )}
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:13,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                        {c._searchType === 'spot' ? (trSpot(c._koName || c.name, c.spotName)?.name || c.spotName) : getCityName(c._koName || c.name)}
+                        {getCityName(c._koName || c.name)}
                       </div>
                       <div style={{fontSize:11,color:'#94a3b8'}}>
-                        {c._searchType === 'spot'
-                          ? `${getCityName(c._koName || c.name)}, ${c.countryKo}`
-                          : c.countryKo}
+                        {c.countryKo}
                       </div>
                     </div>
-                    {c._searchType === 'spot' && c.spotType && (
-                      <span style={{fontSize:9,padding:'2px 6px',borderRadius:8,background:TYPE_COLORS[c.spotType]||'#64748b',color:'white',fontWeight:700,flexShrink:0}}>{getSpotType(c.spotType)}</span>
-                    )}
                   </div>
                 ))}
               </div>
