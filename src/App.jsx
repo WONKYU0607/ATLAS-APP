@@ -1,4 +1,3 @@
-import { CITY_DATA_I18N } from './data/cityDataI18n'
 import { translateCountryInfo } from './data/countryI18n'
 import { T, CITY_I18N, CONTINENT_I18N } from './data/translations'
 import { getCountryDisplayName, LANG_OPTIONS, getFlagImg, COUNTRY_INFO, EMERGENCY_CONTACTS, extractCurrencyCode } from './data/countryInfo'
@@ -26,7 +25,6 @@ const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.n
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
-import { AUTO_I18N } from './auto-i18n'
 import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto } from './firebase'
 
 // ── 실제 관광지 사진 (Wikipedia + Wikimedia Commons 검색) ─────────────
@@ -1337,53 +1335,10 @@ function App() {
     if (lang === 'zh') return tr[2] || koName
     return koName
   }
-  // 관광 패널 번역 헬퍼
-  const trCity = (cityKey) => {
-    if (lang === 'ko' || !cityKey) return null
-    // 1차: CITY_DATA_I18N 수동 번역
-    const manual = CITY_DATA_I18N[cityKey]?.[lang]
-    if (manual) return manual
-    // 2차: 영어 fallback (ja/zh도 영어 번역이라도 표시)
-    if (lang !== 'en') {
-      const enFallback = CITY_DATA_I18N[cityKey]?.['en']
-      if (enFallback) return enFallback
-    }
-    // 3차: AUTO_I18N 자동 번역 데이터
-    const autoData = AUTO_I18N?.[cityKey]
-    if (autoData) {
-      const autoLang = autoData[lang] || autoData['en']
-      if (autoLang) return autoLang
-    }
-    return null
-  }
-  const trSpot = (cityKey, spotName) => {
-    const cityTr = trCity(cityKey)
-    if (cityTr?.spots) {
-      // 1차: 정확한 키 매칭
-      const exact = cityTr.spots[spotName]
-      if (exact) {
-        if (!exact.name) return { name: spotName, desc: exact.desc || '' }
-        return exact
-      }
-      // 2차: 퍼지 매칭
-      const fuzzyKey = Object.keys(cityTr.spots).find(
-        k => k.startsWith(spotName) || spotName.startsWith(k)
-      )
-      if (fuzzyKey) {
-        const fuzzy = cityTr.spots[fuzzyKey]
-        if (!fuzzy.name) return { name: spotName, desc: fuzzy.desc || '' }
-        return fuzzy
-      }
-    }
-    return null
-  }
-
   // 코스 아이템 동적 번역 (저장 시점 언어와 현재 언어가 다를 때)
   const getCourseItemName = (item) => {
     if (item.source === 'city') return getCityName(item.name || item.cityName)
     if (item.source === 'spot') {
-      const tr = trSpot(item.cityName, item.name)
-      if (tr?.name) return tr.name
       if (item.wikiTitle && lang !== 'ko') return item.wikiTitle
     }
     // hotspot/restaurant → 저장된 언어별 캐시 우선, 없으면 현재 로드된 데이터에서 place_id로 매칭
@@ -1397,7 +1352,7 @@ function App() {
   const getCourseItemCity = (item) => getCityName(item.cityName || item.name)
 
   // 코스 핫플/맛집 이름 다국어 lazy 캐시(B방식): 현재 언어 이름이 없으면 place_id로 그 언어 결과를 받아 nameI18n에 저장.
-  // 한 번 받으면 캐시되어 언어 바꿔도 재호출 없음. spot(정적 큐레이션)은 trSpot로 번역되므로 제외.
+  // 한 번 받으면 캐시되어 언어 바꿔도 재호출 없음.
   useEffect(() => {
     const targets = courseItems.filter(it => it.place_id && (it.source === 'hotspot' || it.source === 'restaurant') && !(it.nameI18n && it.nameI18n[lang]))
     if (targets.length === 0) return
@@ -1435,15 +1390,6 @@ function App() {
     }
     if (item.source === 'spot' && cityKey) {
       for (const lg of ['en','ja','zh']) {
-        const manual = CITY_DATA_I18N[cityKey]?.[lg]
-        const autoD = AUTO_I18N?.[cityKey]?.[lg] || AUTO_I18N?.[cityKey]?.['en']
-        const trData = manual || autoD
-        if (trData?.spots) {
-          const exact = trData.spots[item.name]
-          if (exact?.name) { names[lg] = exact.name; continue }
-          const fuzzy = Object.keys(trData.spots).find(k => k.startsWith(item.name) || item.name.startsWith(k))
-          if (fuzzy && trData.spots[fuzzy]?.name) { names[lg] = trData.spots[fuzzy].name; continue }
-        }
         if (item.wikiTitle) names[lg] = names[lg] || item.wikiTitle
         else names[lg] = names[lg] || item.name
       }
@@ -3268,7 +3214,7 @@ Write all text in ${langName}.`
                               onClick={()=>{if(f.cityName){const allC=Object.entries(COUNTRY_CITIES).flatMap(([co,cs])=>cs.map(c=>({...c,countryEn:co})));const city=allC.find(c=>c.name===f.cityName);if(city){const feat=countries.find(ft=>ft.properties?.NAME===city.countryEn);if(feat)setSelectedCountry(feat);setTimeout(()=>handleCityClickRef.current?.(city),300)}};setShowHamburger(false)}}>
                               
                               <div style={{flex:1,minWidth:0}}>
-                                <div style={{fontSize:12,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{trSpot(f.cityName, f.name)?.name || f.name}</div>
+                                <div style={{fontSize:12,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{f.name}</div>
                                 <div style={{fontSize:10,color:'#9a8070'}}>{getCityName(f.cityName)||f.cityDisplayName||f.cityName||''}</div>
                               </div>
                               <button onClick={e=>{e.stopPropagation();toggleFav(f)}} style={{background:'none',border:'none',color:'#9a8070',fontSize:13,cursor:'pointer',padding:2}}>✕</button>
@@ -4596,7 +4542,7 @@ Write all text in ${langName}.`
                                         {cs.map((sp,j)=>(
                                           <div key={j} style={{fontSize:11,color:'#94a3b8',padding:'2px 0',display:'flex',alignItems:'center',gap:5}}>
                                             <span style={{color:'#22c55e',fontSize:8}}>●</span>
-                                            {trSpot(city.name, sp)?.name || sp}
+                                            {sp}
                                           </div>
                                         ))}
                                       </div>
