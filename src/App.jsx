@@ -403,7 +403,6 @@ function App() {
 
   // ── 트래블 피드 (Phase 1) ──
   const [showFeed, setShowFeed] = useState(false)
-  const [feedMainTab, setFeedMainTab] = useState('courses') // 'courses' (여행기 제거됨)
   const [feedSubTab, setFeedSubTab] = useState('all') // 'all' | 'mine'
   const [feedJournals, setFeedJournals] = useState([])
   const [feedJournalsLoading, setFeedJournalsLoading] = useState(false)
@@ -411,16 +410,6 @@ function App() {
   const [editingJournal, setEditingJournal] = useState(null) // null=new, object=edit
   const [viewingJournal, setViewingJournal] = useState(null) // 상세 보기
   // ── 트래블 피드 풀스크린 뷰 (Phase 2) ──
-  // feedView: 'main' = 피드 메인, 'cityList' = 카드 → 도시 목록, 'cityDetail' = 도시 상세
-  const [feedView, setFeedView] = useState('main')
-  const [feedCityList, setFeedCityList] = useState(null) // { title, emoji, cities, gradient }
-  const [feedCityDetail, setFeedCityDetail] = useState(null) // { name, lat, lng, emoji, countryEn }
-  const [feedCityDetailData, setFeedCityDetailData] = useState(null) // cityData (weather/spots/desc)
-  const [feedCityDetailLoading, setFeedCityDetailLoading] = useState(false)
-  // 관광지 상세 풀스크린 (cityDetail 위에 오버레이)
-  const [feedSpotDetail, setFeedSpotDetail] = useState(null) // spot object
-  const [feedSpotWikiSummary, setFeedSpotWikiSummary] = useState(null) // wikipedia summary text
-  const [feedSpotWikiLoading, setFeedSpotWikiLoading] = useState(false)
   const [journalForm, setJournalForm] = useState({ title:'', body:'', cities:[], days:1, rating:0, visibility:'public', photos:[], blocks:[], startDate:'', endDate:'' })
   const [journalNewPhotos, setJournalNewPhotos] = useState([]) // File 객체 (업로드 대기)
   const [journalSaving, setJournalSaving] = useState(false)
@@ -452,44 +441,6 @@ function App() {
   const [loadingFoodCulture, setLoadingFoodCulture] = useState(false)
 
   // API 사용량 추적 및 제한
-  const MAX_DAILY_CALLS = 300
-  const [dailyUsage, setDailyUsage] = useState({ count: 0, date: '' })
-  
-  const getApiUsage = () => {
-    try {
-      const stored = localStorage.getItem('api_daily_usage')
-      if (!stored) return { count: 0, date: new Date().toDateString() }
-      
-      const { count, date } = JSON.parse(stored)
-      const today = new Date().toDateString()
-      
-      // 날짜가 다르면 리셋
-      if (date !== today) {
-        return { count: 0, date: today }
-      }
-      
-      return { count, date }
-    } catch {
-      return { count: 0, date: new Date().toDateString() }
-    }
-  }
-  
-  const incrementApiUsage = (calls = 2) => {
-    const usage = getApiUsage()
-    const newUsage = {
-      count: usage.count + calls,
-      date: usage.date
-    }
-    localStorage.setItem('api_daily_usage', JSON.stringify(newUsage))
-    setDailyUsage(newUsage)
-    return newUsage
-  }
-  
-  const checkApiLimit = () => {
-    const usage = getApiUsage()
-    setDailyUsage(usage)
-    return usage.count < MAX_DAILY_CALLS
-  }
 
 
   const [cityData, setCityData] = useState(null)
@@ -881,16 +832,7 @@ function App() {
     if (!isMobile) setShowCoursePlanner(true)
     setCourseSource('manual')
   }
-  const removeFromCourse = (idx) => {
-    const item = courseItems[idx]
-    saveCourse(courseItems.filter((_, i) => i !== idx))
-    if (courseDays.length > 0) {
-      const days = courseDays.map(d => ({ ...d, items: d.items.filter(di => !(di.name === item.name && di.source === item.source)) }))
-      setCourseDays(days); localStorage.setItem('atlas_course_days', JSON.stringify(days))
-    }
-  }
   const isInCourse = (name, source) => courseItems.some(c => c.name === name && c.source === source)
-  const reorderCourse = (fromIdx, toIdx) => { const arr = [...courseItems]; const [m] = arr.splice(fromIdx, 1); arr.splice(toIdx, 0, m); saveCourse(arr) }
 
   // 코스 → 구글지도 길찾기 URL로 열기 (경유지 번호순, 이동수단=courseTransport). 구글에서 노선·교통편 표시
   const openCourseInGmaps = (items) => {
@@ -1125,7 +1067,6 @@ function App() {
   // visited = { cities: ['서울','도쿄',...], spots: { '서울': ['경복궁','N서울타워'], '도쿄': ['센소지(아사쿠사)'] } }
   const saveVisited = (v) => { setVisited(v); localStorage.setItem('atlas_visited', JSON.stringify(v)) }
   const isVisitedCity = (cityName) => (visited.cities || []).includes(cityName)
-  const isVisitedSpot = (cityName, spotName) => (visited.spots?.[cityName] || []).includes(spotName)
   const toggleVisitedCity = (cityName) => {
     const v = { ...visited, cities: [...(visited.cities || [])], spots: { ...(visited.spots || {}) } }
     if (isVisitedCity(cityName)) {
@@ -1133,18 +1074,6 @@ function App() {
       delete v.spots[cityName]
     } else {
       v.cities.push(cityName)
-    }
-    saveVisited(v)
-  }
-  const toggleVisitedSpot = (cityName, spotName) => {
-    const v = { ...visited, cities: [...(visited.cities || [])], spots: { ...(visited.spots || {}) } }
-    const citySpots = [...(v.spots[cityName] || [])]
-    if (citySpots.includes(spotName)) {
-      v.spots[cityName] = citySpots.filter(s => s !== spotName)
-      if (v.spots[cityName].length === 0) delete v.spots[cityName]
-    } else {
-      v.spots[cityName] = [...citySpots, spotName]
-      if (!v.cities.includes(cityName)) v.cities.push(cityName)
     }
     saveVisited(v)
   }
@@ -2075,15 +2004,6 @@ function App() {
     // 포함하면 도시 나갈 때 라벨 데이터가 재생성되어 줌아웃 중 라벨이 튐
   }, [selectedCountry, countries, lang])
 
-
-
-  // API 사용량 초기화
-  useEffect(() => {
-    const usage = getApiUsage()
-    setDailyUsage(usage)
-    console.log(`📊 오늘 API 사용량: ${usage.count}/300건`)
-  }, [])
-
   // selectedCity 변경 시 핫플레이스/맛집 데이터 로드
   useEffect(() => {
     if (selectedCity) {
@@ -2118,17 +2038,6 @@ function App() {
     const globe = globeRef.current
 
     // 라벨 위에서 휠 줌이 막히는 문제 해결: 휠 이벤트를 globe 캔버스로 전달
-    const forwardWheel = (e) => {
-      const canvas = globeContainerRef.current?.querySelector('canvas')
-      if (!canvas) return
-      e.preventDefault()
-      canvas.dispatchEvent(new WheelEvent('wheel', {
-        deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode,
-        clientX: e.clientX, clientY: e.clientY,
-        bubbles: true, cancelable: true,
-      }))
-    }
-
     globe
       .htmlLat(d => d.lat)
       .htmlLng(d => d.lng)
@@ -2694,169 +2603,6 @@ function App() {
     return { lat: feat.properties.LABEL_Y || 0, lng: feat.properties.LABEL_X || 0 }
   }
 
-  // 문자열 NAME으로 country feat 객체 가져오기 (피드/검색 등에서 사용)
-  // 110m countries에 없으면 가짜 feat 생성 — selectedCountry.properties.NAME 접근 안전 보장
-  const getCountryFeat = (countryName, fallbackLat, fallbackLng) => {
-    if (!countryName) return null
-    const found = countries.find(f => f && f.properties && f.properties.NAME === countryName)
-    if (found) return found
-    return {
-      type: 'Feature',
-      properties: { NAME: countryName, LABEL_X: fallbackLng || 0, LABEL_Y: fallbackLat || 0 },
-      geometry: null,
-    }
-  }
-
-  // 피드 카드 → 도시 목록 풀스크린 진입
-  const openFeedCityList = (cardData) => {
-    if (!cardData) return
-    const titleSrc = cardData.title || cardData.label || cardData.tag || ''
-    const title = (titleSrc && typeof titleSrc === 'object') ? (titleSrc[lang] || titleSrc.ko || '') : titleSrc
-    const subtitleSrc = cardData.subtitle || ''
-    const subtitle = (subtitleSrc && typeof subtitleSrc === 'object') ? (subtitleSrc[lang] || subtitleSrc.ko || '') : subtitleSrc
-    const cityList = (cardData.cities || []).map(name => {
-      const entry = Object.entries(COUNTRY_CITIES).find(([_,cs]) => cs.some(x => x.name === name))
-      if (!entry) return null
-      const cityObj = entry[1].find(x => x.name === name)
-      if (!cityObj) return null
-      return { ...cityObj, _koName: cityObj.name, countryEn: entry[0] }
-    }).filter(Boolean)
-    if (cityList.length === 0) return
-    setFeedCityList({
-      title,
-      subtitle,
-      emoji: cardData.emoji || '🗺️',
-      gradient: cardData.gradient || cardData.color || 'linear-gradient(135deg,#f59e0b,#ec4899)',
-      cities: cityList,
-    })
-    setFeedView('cityList')
-  }
-
-  // 도시 클릭 → 도시 상세 풀스크린 진입
-  const openFeedCityDetail = (cityObj) => {
-    if (!cityObj) return
-    setFeedCityDetail(cityObj)
-    setFeedView('cityDetail')
-  }
-
-  // 관광지 클릭 → 관광지 상세 풀스크린 진입 (cityDetail 위 오버레이)
-  const openFeedSpotDetail = (spot) => {
-    if (!spot) return
-    setFeedSpotDetail(spot)
-    setFeedSpotWikiSummary(null)
-  }
-
-  // 피드 풀스크린 뒤로가기
-  const feedGoBack = () => {
-    if (feedView === 'cityDetail') {
-      setFeedCityDetail(null)
-      setFeedView('cityList')
-    } else if (feedView === 'cityList') {
-      setFeedCityList(null)
-      setFeedView('main')
-    }
-  }
-
-  // 피드 닫힐 때 풀스크린 뷰 상태 정리
-  useEffect(() => {
-    if (!showFeed) {
-      setFeedView('main')
-      setFeedCityList(null)
-      setFeedCityDetail(null)
-      setFeedSpotDetail(null)
-    }
-  }, [showFeed])
-
-  // 관광지 wikipedia summary 로드 (사용자 언어 → 영어 fallback)
-  useEffect(() => {
-    if (!feedSpotDetail) { setFeedSpotWikiSummary(null); return }
-    const wikiTitle = feedSpotDetail.wikiTitle
-    const spotName = feedSpotDetail.name
-    const trData = feedCityDetail ? trSpot(feedCityDetail._koName || feedCityDetail.name, spotName) : null
-    const localName = trData?.name  // 사용자 언어 spot 이름 (예: 영어 "Stanley Park")
-    if (!wikiTitle && !spotName && !localName) return
-    setFeedSpotWikiLoading(true)
-    let cancelled = false
-    const tryFetch = async (langCode, q) => {
-      if (!q) return null
-      try {
-        const url = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}`
-        const res = await fetch(url)
-        if (!res.ok) return null
-        const data = await res.json()
-        if (data.type === 'standard' && data.extract && data.extract.length > 30) return data.extract
-        return null
-      } catch { return null }
-    }
-    const loadSummary = async () => {
-      let summary = null
-      // 검색 후보 수집 (괄호 제거 버전도 포함)
-      const cleanQ = (q) => q && q.replace(/\s*\([^)]*\)\s*/g, '').trim()
-      const candidates = []
-      const addCand = (q) => {
-        if (!q) return
-        if (!candidates.includes(q)) candidates.push(q)
-        const c = cleanQ(q)
-        if (c && c !== q && !candidates.includes(c)) candidates.push(c)
-      }
-      addCand(spotName)
-      addCand(localName)
-      addCand(wikiTitle)
-      // 1차: 사용자 언어 wiki에서 모든 후보 시도 (한국어 사용자가 "금각사(킨카쿠지)" 클릭 → 괄호 제거된 "금각사"도 시도)
-      if (lang !== 'en') {
-        for (const c of candidates) {
-          summary = await tryFetch(lang, c)
-          if (summary) break
-        }
-      }
-      // 2차: 영어 wiki fallback (영문 wikiTitle 우선, 그 다음 다른 후보)
-      if (!summary && wikiTitle) summary = await tryFetch('en', wikiTitle)
-      if (!summary) {
-        for (const c of candidates) {
-          summary = await tryFetch('en', c)
-          if (summary) break
-        }
-      }
-      if (!cancelled) {
-        setFeedSpotWikiSummary(summary)
-        setFeedSpotWikiLoading(false)
-      }
-    }
-    loadSummary()
-    return () => { cancelled = true }
-  }, [feedSpotDetail, feedCityDetail, lang])
-
-  // 피드 도시 상세 데이터 로드 (CITY_DATA + 날씨)
-  useEffect(() => {
-    if (!feedCityDetail) { setFeedCityDetailData(null); return }
-    setFeedCityDetailLoading(true)
-    const cityKey = feedCityDetail._koName || feedCityDetail.name
-    let cancelled = false
-    const loadData = async () => {
-      try {
-        const staticData = CITY_DATA[cityKey]
-        const base = staticData ? { ...staticData } : DEFAULT_CITY_DATA(cityKey)
-        if (!base.weather) base.weather = { temp: '—', condition: '...', icon: '🌤️', humidity: '—' }
-        if (cancelled) return
-        setFeedCityDetailData(base)
-        setFeedCityDetailLoading(false)
-        // 날씨는 비동기로
-        if (feedCityDetail.lat != null && feedCityDetail.lng != null) {
-          const w = await fetchWeather(feedCityDetail.lat, feedCityDetail.lng).catch(() => null)
-          if (!cancelled && w) setFeedCityDetailData(prev => prev ? { ...prev, weather: w } : prev)
-        }
-        // 추천 관광지는 정적 큐레이션 spots(번역됨) 유지 — Google 교체 제거(번역/언어 일관성)
-      } catch(e) {
-        console.error('feed city detail load error:', e)
-        if (!cancelled) {
-          setFeedCityDetailData({ weather: { temp: '—', condition: '—', icon: '🌤️', humidity: '—' }, description: cityKey, spots: DEFAULT_CITY_DATA(cityKey).spots })
-          setFeedCityDetailLoading(false)
-        }
-      }
-    }
-    loadData()
-    return () => { cancelled = true }
-  }, [feedCityDetail])
 
   const handleCountryClick = (feat) => {
     if (!feat || !globeRef.current) return
@@ -2917,39 +2663,6 @@ function App() {
   // ── 도시 관광 데이터 로드 (사전 데이터 기반, AI 불필요) ──────────────────
 
 
-  // 캐시 관리 함수들
-  const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24시간
-  
-  const getCachedData = (key) => {
-    try {
-      const cached = localStorage.getItem(key)
-      if (!cached) return null
-      
-      const { data, timestamp } = JSON.parse(cached)
-      
-      // 24시간 이내면 캐시 사용
-      if (Date.now() - timestamp < CACHE_DURATION) {
-        return data
-      }
-      
-      // 만료된 캐시 삭제
-      localStorage.removeItem(key)
-      return null
-    } catch {
-      return null
-    }
-  }
-  
-  const setCachedData = (key, data) => {
-    try {
-      localStorage.setItem(key, JSON.stringify({
-        data,
-        timestamp: Date.now()
-      }))
-    } catch (error) {
-      console.warn('Cache storage failed:', error)
-    }
-  }
 
 
 
@@ -3632,7 +3345,7 @@ Write all text in ${langName}.`
                 <div style={{padding:'12px 16px 14px',borderTop:'1px solid #ede8e0'}}>
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'#f5f0ea',border:'1px solid #ede8e0',transition:'all .15s'}}
                     onClick={async()=>{
-                      setShowFeed(true);setShowHamburger(false);setFeedMainTab('courses');setFeedSubTab('all');setFeedJournalsLoading(true)
+                      setShowFeed(true);setShowHamburger(false);setFeedSubTab('all');setFeedJournalsLoading(true)
                       try{
                         const data=await loadJournals({ limitN: 30 })
                         setFeedJournals(data)
