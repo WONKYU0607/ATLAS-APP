@@ -1,8 +1,8 @@
 import { CITY_DATA_I18N } from './data/cityDataI18n'
-import { COUNTRY_I18N, translateCountryInfo } from './data/countryI18n'
-import { T, SPOT_TYPE_I18N, CITY_I18N, LANG_CODE, CONTINENT_I18N, DRIVE_I18N, translateVisa, translateTimeDiff, translatePopulation, KO_WORD_MAP, translateSpotField, intlLangMap, translateLangNames, translateCurrency } from './data/translations'
-import { CITY_DATA, DEFAULT_CITY_DATA, TYPE_EMOJI, getImg, TYPE_COLORS } from './data/cityData'
-import { COUNTRY_ISO, COUNTRY_NAME_OVERRIDE, getCountryDisplayName, LANG_OPTIONS, getFlagImg, COUNTRY_INFO, EMERGENCY_CONTACTS, extractCurrencyCode } from './data/countryInfo'
+import { translateCountryInfo } from './data/countryI18n'
+import { T, SPOT_TYPE_I18N, CITY_I18N, CONTINENT_I18N } from './data/translations'
+import { CITY_DATA, DEFAULT_CITY_DATA, TYPE_COLORS } from './data/cityData'
+import { getCountryDisplayName, LANG_OPTIONS, getFlagImg, COUNTRY_INFO, EMERGENCY_CONTACTS, extractCurrencyCode } from './data/countryInfo'
 import { COUNTRY_CITIES } from './data/countryCities'
 import ISLAND_POLYGONS from './data/islandPolygons.json'
 
@@ -24,11 +24,11 @@ const SMALL_COUNTRY = new Set(["Luxembourg","N. Cyprus","Palestine","Cyprus","Va
 // 이름 정규화: "Solomon Is." ↔ "Solomon Islands" 같은 약자 변형 매칭용
 const normCountryName = (s) => String(s || '').toLowerCase().replace(/\bis\.?\b/g, 'islands').replace(/&/g, 'and').replace(/[^a-z]/g, '')
 const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.nameEn)))
-import { useState, useEffect, useRef, useMemo, Component } from 'react'
+import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
 import { AUTO_I18N } from './auto-i18n'
-import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, toggleLike, createJournal, loadJournals, loadJournal, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto } from './firebase'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto } from './firebase'
 
 // ── 실제 관광지 사진 (Wikipedia + Wikimedia Commons 검색) ─────────────
 // 전역 중복 회피: 이미 사용된 이미지 URL을 패널 단위로 추적
