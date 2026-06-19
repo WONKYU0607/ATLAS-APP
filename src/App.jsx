@@ -2043,10 +2043,10 @@ function App() {
     "Uzbekistan": { alt: 0.35, lat: 41.3, lng: 64.5 },
     // 유럽
     "France": { alt: 0.27, lat: 46.6, lng: 2.5 },
-    "Italy": { alt: 0.28, lat: 42.5, lng: 12.5 },
+    "Italy": { alt: 0.27, lat: 42.5, lng: 12.5 },
     "Spain": { alt: 0.31, lat: 40.0, lng: -3.5 },
-    "Germany": { alt: 0.28, lat: 51.0, lng: 10.5 },
-    "United Kingdom": { alt: 0.3, lat: 54.0, lng: -2.5 },
+    "Germany": { alt: 0.25, lat: 51.0, lng: 10.5 },
+    "United Kingdom": { alt: 0.26, lat: 54.0, lng: -2.8 },
     "Portugal": { alt: 0.25, lat: 39.6, lng: -8.0 },
     "Netherlands": { alt: 0.12, lat: 52.2, lng: 5.3 },
     "Czechia": { alt: 0.15, lat: 49.8, lng: 15.5 },
