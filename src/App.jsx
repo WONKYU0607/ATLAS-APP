@@ -27,334 +27,6 @@ import Globe from 'globe.gl'
 import * as THREE from 'three'
 import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto } from './firebase'
 
-// ── 실제 관광지 사진 (Wikipedia + Wikimedia Commons 검색) ─────────────
-// 전역 중복 회피: 이미 사용된 이미지 URL을 패널 단위로 추적
-// key = `${cityName}:${spotName}` → 해당 스팟이 점유한 이미지 URL
-const SPOT_IMAGE_USED = new Map() // url → ownerKey
-const SPOT_IMAGE_OWNED = new Map() // ownerKey → url
-// 성능 최적화: wiki API 응답 캐시 (모듈 스코프, 세션 동안 유지)
-const WIKI_API_CACHE = new Map() // url → response (Promise 또는 resolved value)
-
-const claimImage = (url, ownerKey) => {
-  if (!url) return false
-  const prevOwner = SPOT_IMAGE_USED.get(url)
-  if (prevOwner && prevOwner !== ownerKey) return false // 이미 다른 스팟이 사용 중
-  // 기존에 이 스팟이 다른 이미지를 쓰고 있었다면 해제
-  const prevUrl = SPOT_IMAGE_OWNED.get(ownerKey)
-  if (prevUrl && prevUrl !== url) SPOT_IMAGE_USED.delete(prevUrl)
-  SPOT_IMAGE_USED.set(url, ownerKey)
-  SPOT_IMAGE_OWNED.set(ownerKey, url)
-  return true
-}
-
-// 두 좌표 간 거리(km) — 탭 위치에서 가장 가까운 도시/섬 찾기용
-function geoDistKm(lat1, lng1, lat2, lng2) {
-  const R = 6371, toR = x => x * Math.PI / 180
-  const dLat = toR(lat2 - lat1), dLng = toR(lng2 - lng1)
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toR(lat1)) * Math.cos(toR(lat2)) * Math.sin(dLng / 2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
-
-function SpotImage({ imageUrl, photoRef, wikiTitle, spotName, cityName, fallback, className, style, alt, onClick }) {
-  const [src, setSrc] = useState(null)
-
-  useEffect(() => {
-    setSrc(null)
-    let cancelled = false
-    // 1순위: 정적 URL (사전 큐레이션)
-    if (imageUrl) { setSrc(imageUrl); return }
-    // 2순위: Google Place Photo (place_id 기반 실제 사진)
-    if (photoRef) {
-      setSrc(`https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoRef}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`)
-      return
-    }
-    const keyword = wikiTitle || spotName || ''
-    const ownerKey = `${cityName || ''}:${spotName || keyword}`
-    if (!keyword) { setSrc(fallback); return }
-
-    // 패널 전환 시 이전 소유 이미지 해제
-    const prevUrl = SPOT_IMAGE_OWNED.get(ownerKey)
-    if (prevUrl) { SPOT_IMAGE_USED.delete(prevUrl); SPOT_IMAGE_OWNED.delete(ownerKey) }
-
-    // 지도/다이어그램/위치 정보 이미지 거부 (도시 자체 페이지의 인포박스가 위치 지도인 경우 회피)
-    const isMapImage = (url) => {
-      if (!url) return false
-      const decoded = decodeURIComponent(url)
-      const lower = decoded.toLowerCase()
-      // SVG는 거의 다이어그램/지도/플래그
-      if (lower.includes('.svg')) return true
-      // 명백한 지도/위치 표시 파일명 패턴
-      if (/(location[_ ]?map|locator|map[_ ]?of[_ ]|topographic|outline[_ ]?of[_ ]|administrative|orthographic|highlighted|in_globe|world[_ ]?map|location[_ ]?in[_ ])/i.test(decoded)) return true
-      // 국기 이미지
-      if (/flag[_ ]?of[_ ]/i.test(decoded)) return true
-      // 추가 지도 패턴 ('in_X', 'X_relief', 'X_topo', 'X_dot')
-      if (/_on_(globe|map|earth|world)/i.test(decoded)) return true
-      if (/_(relief|topo|satellite)_map/i.test(decoded)) return true
-      if (/_dot_/i.test(decoded)) return true  // 위치 점 표시
-      if (/(^|_)map($|_|\.)/i.test(decoded)) return true  // 단어 'map'이 단독으로 나오는 파일명
-      return false
-    }
-
-    const trySet = (url) => {
-      if (cancelled || !url) return false
-      if (isMapImage(url)) return false  // 지도/SVG/국기 자동 거부
-      if (!claimImage(url, ownerKey)) return false // 중복이면 skip
-      setSrc(url)
-      return true
-    }
-
-    // 캐시된 fetch (같은 URL 재호출 방지)
-    const cachedFetch = async (url) => {
-      if (WIKI_API_CACHE.has(url)) return WIKI_API_CACHE.get(url)
-      const promise = fetch(url).then(r => r.json()).catch(() => null)
-      WIKI_API_CACHE.set(url, promise)  // Promise 자체를 캐시 → 동시 요청도 1번만
-      const data = await promise
-      WIKI_API_CACHE.set(url, data)  // 해결된 데이터로 교체
-      return data
-    }
-
-    const tryWiki = async (title) => {
-      try {
-        const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=600&origin=*`
-        const data = await cachedFetch(url)
-        const page = Object.values(data?.query?.pages || {})[0]
-        return page?.thumbnail?.source || null
-      } catch { return null }
-    }
-
-    const searchWiki = async (query) => {
-      try {
-        const url = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=10&prop=pageimages&format=json&pithumbsize=600&origin=*`
-        const data = await cachedFetch(url)
-        const pages = Object.values(data?.query?.pages || {})
-        const urls = []
-        for (const page of pages) {
-          if (page?.thumbnail?.source) urls.push(page.thumbnail.source)
-        }
-        return urls
-      } catch { return [] }
-    }
-
-    // Wikimedia Commons에서 실사진 검색 (복수 후보 반환)
-    const searchCommons = async (query) => {
-      try {
-        const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|mime&iiurlwidth=600&format=json&origin=*`
-        const data = await cachedFetch(url)
-        const pages = Object.values(data?.query?.pages || {})
-        const urls = []
-        for (const p of pages) {
-          const info = p?.imageinfo?.[0]
-          if (info?.thumburl && info.mime?.startsWith('image/jpeg')) urls.push(info.thumburl)
-        }
-        return urls
-      } catch { return [] }
-    }
-
-    const loadImage = async () => {
-      // 1차: wikiTitle 정확 매칭 — 중복 회피 무시 (정확 매칭은 항상 신뢰)
-      let img = await tryWiki(keyword)
-      if (img && !isMapImage(img)) {
-        if (!cancelled) {
-          setSrc(img)
-          // ownership 등록만 (다른 컴포넌트가 fallback 떨어지지 않도록)
-          if (!SPOT_IMAGE_USED.has(img)) {
-            SPOT_IMAGE_USED.set(img, ownerKey)
-            SPOT_IMAGE_OWNED.set(ownerKey, img)
-          }
-        }
-        return
-      }
-
-      // 2차: 영어만 추출 (1차 매칭 실패한 경우, 중복 회피 적용)
-      const enKeyword = keyword.replace(/[가-힣]+/g, '').trim()
-      if (enKeyword && enKeyword !== keyword) {
-        img = await tryWiki(enKeyword)
-        if (trySet(img)) return
-      }
-
-      // 3차: spotName
-      if (spotName && spotName !== keyword) {
-        const enSpot = spotName.replace(/[가-힣]+/g, '').trim()
-        if (enSpot) {
-          img = await tryWiki(enSpot)
-          if (trySet(img)) return
-        }
-      }
-
-      // 4차: Wikipedia 검색 (도시명 포함, 복수 후보 중 미사용 선택)
-      const searchQuery = keyword + (cityName ? ' ' + cityName : '')
-      const wikiResults = await searchWiki(searchQuery)
-      for (const url of wikiResults) if (trySet(url)) return
-
-      // 5차: Wikimedia Commons 실사진 검색 (복수 후보)
-      const commonsResults = await searchCommons(keyword + ' photo')
-      for (const url of commonsResults) if (trySet(url)) return
-
-      // 6차: 도시명 + spotName으로 Commons 재검색
-      if (cityName) {
-        const commonsResults2 = await searchCommons(spotName + ' ' + cityName)
-        for (const url of commonsResults2) if (trySet(url)) return
-      }
-
-      // 7차 (신규): 도시 관광 사진 검색 - 같은 spotName 여러 개일 때도 다른 결과 시도
-      if (cityName) {
-        const commonsResults3 = await searchCommons(cityName + ' tourism landmark photograph')
-        for (const url of commonsResults3) if (trySet(url)) return
-      }
-
-      // 최종: 중복 절대 허용하지 않음 - fallback 이미지 사용
-      // (이전 로직 "빈 화면보단 중복이 나음"은 같은 사진 노출 원인이므로 제거)
-      if (!cancelled) setSrc(fallback)
-    }
-
-    loadImage()
-    return () => { cancelled = true }
-  }, [imageUrl, photoRef, wikiTitle, spotName, cityName, fallback])
-
-  return (
-    <img
-      className={className}
-      src={src || fallback}
-      alt={alt || ''}
-      style={style}
-      onError={e => { e.target.src = fallback; e.target.onerror = null }}
-    />
-  )
-}
-
-// ── 관광지 사진 갤러리 (Wikimedia Commons 실사진 + 필터링 강화) ──────────
-function SpotGallery({ photoRef, wikiTitle, spotName, cityName, fallback, style }) {
-  const [images, setImages] = useState([])
-  const [idx, setIdx] = useState(0)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    setImages([]); setIdx(0); setLoading(true)
-    let cancelled = false
-    // Google Place Photo가 있으면 그것만 표시 (wiki 검색 안 함)
-    if (photoRef) {
-      setImages([`https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoRef}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`])
-      setLoading(false)
-      return
-    }
-    const keyword = wikiTitle || spotName || ''
-    if (!keyword) { setLoading(false); return }
-
-    // 그림/아이콘/지도 필터
-    const badPattern = /\b(icon|logo|flag|map|symbol|coat|seal|crest|commons|wiki|button|arrow|edit|stub|diagram|drawing|plan|layout|svg|sign|medal|badge|emblem|silhouette|panorama_from|location|locator|position)\b/i
-
-    const fetchImages = async () => {
-      const results = []
-
-      try {
-        // 1단계: Wikimedia Commons에서 실사진 검색 (가장 좋은 소스)
-        const commonsRes = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(keyword + (cityName ? ' ' + cityName : '') + ' photo')}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=800&format=json&origin=*`)
-        const commonsData = await commonsRes.json()
-        const commonsPages = Object.values(commonsData?.query?.pages || {})
-        for (const p of commonsPages) {
-          const info = p?.imageinfo?.[0]
-          if (!info) continue
-          // 실사진만: JPEG, 최소 400px, 아이콘/지도 제외
-          if (info.mime?.startsWith('image/jpeg') && info.width > 400 && info.height > 300) {
-            const title = p.title || ''
-            if (!badPattern.test(title)) {
-              results.push(info.thumburl || info.url)
-            }
-          }
-        }
-      } catch {}
-
-      // 2단계: 부족하면 Wikipedia 문서 이미지 추가
-      if (results.length < 4) {
-        try {
-          const wikiRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(keyword)}&prop=images&imlimit=15&format=json&origin=*`)
-          const wikiData = await wikiRes.json()
-          const page = Object.values(wikiData?.query?.pages || {})[0]
-          const files = (page?.images || [])
-            .map(img => img.title)
-            .filter(t => /\.jpe?g$/i.test(t))  // JPEG만 (PNG는 보통 아이콘/다이어그램)
-            .filter(t => !badPattern.test(t))
-            .slice(0, 6)
-
-          if (files.length > 0) {
-            const infoRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${files.map(t => encodeURIComponent(t)).join('|')}&prop=imageinfo&iiprop=url|size&iiurlwidth=800&format=json&origin=*`)
-            const infoData = await infoRes.json()
-            const infoPages = Object.values(infoData?.query?.pages || {})
-            for (const tp of infoPages) {
-              const info = tp?.imageinfo?.[0]
-              // 실사진 필터: 최소 크기 + 가로세로 비율 체크 (너무 좁으면 배너/로고)
-              if (info?.thumburl && info.width > 400 && info.height > 250 && info.width / info.height < 4) {
-                if (!results.includes(info.thumburl)) results.push(info.thumburl)
-              }
-            }
-          }
-        } catch {}
-      }
-
-      if (!cancelled) {
-        setImages(results.length > 0 ? results.slice(0, 8) : (fallback ? [fallback] : []))
-        setLoading(false)
-      }
-    }
-
-    fetchImages()
-    return () => { cancelled = true }
-  }, [photoRef, wikiTitle, spotName, fallback])
-
-  const goNext = (e) => { e.stopPropagation(); setIdx(i => (i + 1) % images.length) }
-  const goPrev = (e) => { e.stopPropagation(); setIdx(i => (i - 1 + images.length) % images.length) }
-
-  if (loading) return (
-    <div style={{...style, display:'flex',alignItems:'center',justifyContent:'center',background:'#1e293b'}}>
-      <div style={{width:20,height:20,borderRadius:'50%',border:'2px solid #475569',borderTopColor:'#94a3b8',animation:'spin .7s linear infinite'}}/>
-    </div>
-  )
-  if (images.length === 0) return <div style={{...style, background:'#1e293b'}}/>
-
-  return (
-    <div style={{...style, position:'relative', overflow:'hidden'}}>
-      <img
-        src={images[idx]}
-        alt=""
-        style={{width:'100%',height:'100%',objectFit:'cover',display:'block',transition:'opacity 0.3s'}}
-        onError={e => { e.target.src = fallback; e.target.onerror = null }}
-      />
-      {images.length > 1 && (
-        <>
-          {/* 좌우 화살표 */}
-          <button onClick={goPrev} style={{
-            position:'absolute',left:6,top:'50%',transform:'translateY(-50%)',
-            width:28,height:28,borderRadius:'50%',border:'none',
-            background:'rgba(0,0,0,0.5)',color:'white',fontSize:14,
-            cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',
-            opacity:0.7,transition:'opacity .2s',
-          }} onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0.7'}>‹</button>
-          <button onClick={goNext} style={{
-            position:'absolute',right:6,top:'50%',transform:'translateY(-50%)',
-            width:28,height:28,borderRadius:'50%',border:'none',
-            background:'rgba(0,0,0,0.5)',color:'white',fontSize:14,
-            cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',
-            opacity:0.7,transition:'opacity .2s',
-          }} onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0.7'}>›</button>
-          {/* 하단 도트 인디케이터 */}
-          <div style={{position:'absolute',bottom:6,left:'50%',transform:'translateX(-50%)',display:'flex',gap:4}}>
-            {images.map((_, i) => (
-              <div key={i} onClick={e => { e.stopPropagation(); setIdx(i) }} style={{
-                width: i === idx ? 16 : 6, height:6, borderRadius:3,
-                background: i === idx ? 'white' : 'rgba(255,255,255,0.5)',
-                cursor:'pointer', transition:'all .2s',
-              }}/>
-            ))}
-          </div>
-          {/* 사진 카운터 */}
-          <div style={{position:'absolute',top:8,left:8,background:'rgba(0,0,0,0.6)',borderRadius:10,padding:'2px 8px',fontSize:10,color:'white',fontWeight:600}}>
-            {idx+1} / {images.length}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
 
 // ── 에러 바운더리 (흰 화면 방지) ─────────────────────────────────────────
 class ErrorBoundary extends Component {
@@ -408,7 +80,6 @@ function App() {
   const [viewingJournal, setViewingJournal] = useState(null) // 상세 보기
   // ── 트래블 피드 풀스크린 뷰 (Phase 2) ──
   const [journalForm, setJournalForm] = useState({ title:'', body:'', cities:[], days:1, rating:0, visibility:'public', photos:[], blocks:[], startDate:'', endDate:'' })
-  const [journalNewPhotos, setJournalNewPhotos] = useState([]) // File 객체 (업로드 대기)
   const [journalSaving, setJournalSaving] = useState(false)
   const [journalCommentText, setJournalCommentText] = useState('')
   const [journalCitySelectOpen, setJournalCitySelectOpen] = useState(false)
@@ -420,7 +91,6 @@ function App() {
   const handleCountryClickRef = useRef(null)  // ref for label click on small island countries
   const justClickedCityRef = useRef(false) // 도시 클릭 직후 polygon 클릭 무시용
   const pendingPanelRef = useRef(false) // 직전이 줌-only였으면 true → 다음 탭은 무조건 패널 (의도 단계 추적)
-  const foodReqRef = useRef(0) // 음식점 fetch 경쟁 상태 방지 (최신 요청만 반영)
   const lastPovKeyRef = useRef('') // hideBackLabels idle 스킵용 (라벨 재생성 시 리셋)
   const labelCacheRef = useRef({ t: 0, items: [] }) // 라벨 DOM+좌표 캐시 (querySelectorAll 매틱 방지)
   const hasTouchedRef = useRef(false) // 페이지에 첫 터치 발생하면 true → 호버 영구 비활성 (모바일 확정)
@@ -430,9 +100,7 @@ function App() {
   const [selectedCity, setSelectedCity] = useState(null)
     const [activeTab, setActiveTab] = useState('hotspots')
   const [hotspots, setHotspots] = useState([])
-  const [restaurants, setRestaurants] = useState([])
   const [loadingPlaces, setLoadingPlaces] = useState(false)
-  const [foodCategory, setFoodCategory] = useState('restaurant') // 'restaurant' | 'cafe' | 'bar'
   const [foodCulture, setFoodCulture] = useState(null) // AI 생성 음식문화 데이터
   const [loadingFoodCulture, setLoadingFoodCulture] = useState(false)
 
@@ -460,7 +128,6 @@ function App() {
   const [lang, setLang] = useState(() => { try { return localStorage.getItem('atlas_lang') || 'ko' } catch { return 'ko' } })
   const [showLangMenu, setShowLangMenu] = useState(false)
   const [sidePanel, setSidePanel] = useState(null) // 'hotspots' | 'restaurants' | null
-  const [showFavorites, setShowFavorites] = useState(false)
   const [showHamburger, setShowHamburger] = useState(false)
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768)
   // 모바일 코스↔도시 패널 책넘기기 스와이프 상태
@@ -1344,7 +1011,7 @@ function App() {
     // hotspot/restaurant → 저장된 언어별 캐시 우선, 없으면 현재 로드된 데이터에서 place_id로 매칭
     if (item.nameI18n && item.nameI18n[lang]) return item.nameI18n[lang]
     if (item.place_id) {
-      const current = [...hotspots, ...restaurants].find(p => p.place_id === item.place_id)
+      const current = hotspots.find(p => p.place_id === item.place_id)
       if (current?.name) return current.name
     }
     return item.displayName || item.name
@@ -1927,26 +1594,16 @@ function App() {
     if (selectedCity) {
       fetchPlacesData(selectedCity)
       setSidePanel(null)
-      setFoodCategory('restaurant')
       setFoodCulture(null)
       setActiveTab('hotspots')   // 새 도시 진입 시 항상 추천 관광지부터
       setSpotSearchQuery(''); setSpotSearchResults([])   // 장소 검색 초기화
       prefetchFoodCulture(selectedCity)   // 음식문화 미리 생성(백그라운드) → 탭 누를 때 즉시
     } else {
       setHotspots([])
-      setRestaurants([])
       setActiveTab('hotspots')
     }
   }, [selectedCity, lang])
 
-  // 맛집 카테고리 변경 시 다시 로드
-  useEffect(() => {
-    if (selectedCity && activeTab === 'restaurants') {
-      setRestaurants([])
-      setLoadingPlaces(true)
-      fetchFoodData(selectedCity, foodCategory).finally(() => setLoadingPlaces(false))
-    }
-  }, [foodCategory])
 
 
 
@@ -2711,76 +2368,10 @@ function App() {
       const topHotspots = await fetchHotspotsFor(city)
       setHotspots(topHotspots)
 
-      // 맛집도 함께 로드
-      await fetchFoodData(city, foodCategory)
-
     } catch (error) {
       console.error('Failed to fetch places:', error)
     } finally {
       setLoadingPlaces(false)
-    }
-  }
-
-  // 맛집 카테고리별 데이터 로드
-  const fetchFoodData = async (city, category) => {
-    if (!city?.lat || !city?.lng) return
-    const reqId = ++foodReqRef.current  // 이 요청의 시퀀스 번호
-    
-    // 동서양 공통으로 잘 잡히도록 넓게 매핑
-    const typeMap = {
-      restaurant: 'restaurant',           // 전 세계 공통
-      cafe: 'cafe|bakery',                // 카페 + 베이커리/디저트숍 (아시아 디저트 카페 포함)
-      bar: 'bar|night_club'               // 바/펍/이자카야 + 클럽
-    }
-    const apiType = typeMap[category] || 'restaurant'
-    // keyword로 실제 음식점/카페/바가 결과 상위에 오게 (호텔 점령 방지)
-    const keywordMap = {
-      restaurant: 'restaurant',
-      cafe: 'cafe coffee',
-      bar: 'bar pub'
-    }
-    const apiKeyword = keywordMap[category] || 'restaurant'
-    
-    // 카테고리별 제외 키워드
-    const excludeKeywords = {
-      restaurant: ['hotel', 'hostel', 'resort', 'motel', 'lodge', 'suites', '호텔', '리조트', '모텔', 'guesthouse', 'pension', '펜션'],
-      cafe: ['hotel', 'hostel', 'resort', '호텔', '리조트', 'guesthouse'],
-      bar: ['hotel', 'hostel', 'resort', '호텔', '리조트', 'guesthouse', 'karaoke', '노래방']
-    }
-    const excludeTypes = {
-      restaurant: ['lodging', 'hotel', 'resort'],
-      cafe: ['lodging', 'hotel'],
-      bar: ['lodging', 'hotel']
-    }
-    const keywords = excludeKeywords[category] || excludeKeywords.restaurant
-    const badTypes = excludeTypes[category] || excludeTypes.restaurant
-
-    try {
-      const res = await fetch(
-        `/api/places?lat=${city.lat}&lng=${city.lng}&type=${apiType}&keyword=${encodeURIComponent(apiKeyword)}&language=${lang==='zh'?'zh-CN':lang}`
-      )
-      const data = await res.json()
-      
-      if (data.results) {
-        const filterResults = (minReviews) => data.results
-          .filter(p => {
-            if (!p.rating || p.rating < 3.0) return false
-            if (!p.user_ratings_total || p.user_ratings_total < minReviews) return false
-            const nameLower = (p.name || '').toLowerCase()
-            if (keywords.some(kw => nameLower.includes(kw))) return false
-            if (p.types && p.types.some(t => badTypes.includes(t))) return false
-            return true
-          })
-          .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
-
-        // 리뷰 100개 이상이면 모두 표시 (리뷰 많은 순, Google 상한 20개)
-        const results = filterResults(100)
-
-        if (reqId !== foodReqRef.current) return  // 더 최신 요청이 시작됨 → 이 응답 폐기
-        setRestaurants(results)
-      }
-    } catch (error) {
-      console.error('Failed to fetch food data:', error)
     }
   }
 
@@ -2955,7 +2546,6 @@ Write all text in ${langName}.`
         if (w) setCityData(prev => prev ? { ...prev, weather: w } : prev)
       }).catch(() => {})
 
-      // 추천 관광지는 정적 큐레이션 spots(번역됨) 유지 — Google 교체 제거(번역/언어 일관성)
     } catch(e) {
       console.error('fetchCityData error:', e)
       const cityKey2 = city._koName || city.name
@@ -3232,7 +2822,7 @@ Write all text in ${langName}.`
                               onMouseEnter={e=>e.currentTarget.style.background='#ede8e0'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                               <span style={{fontSize:10,width:24,height:24,borderRadius:6,background:f.type==='hotspot'?'#f5f0ea':'#eef5ea',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,color:f.type==='hotspot'?'#c8856a':'#6fa870'}}>{f.type==='hotspot'?'H':'F'}</span>
                               <div style={{flex:1,minWidth:0}}>
-                                <div style={{fontSize:12,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{(f.place_id && [...hotspots,...restaurants].find(p=>p.place_id===f.place_id))?.name || f.name}</div>
+                                <div style={{fontSize:12,fontWeight:600,color:'#1a1714',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{(f.place_id && hotspots.find(p=>p.place_id===f.place_id))?.name || f.name}</div>
                                 <div style={{fontSize:10,color:'#9a8070'}}>{f.rating?` ${f.rating}`:''} {getCityName(f.cityName)||f.cityDisplayName||''}</div>
                               </div>
                               <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav(f)}} style={{background:'none',border:'none',color:'#9a8070',fontSize:13,cursor:'pointer',padding:2}}>✕</button>
@@ -3357,7 +2947,7 @@ Write all text in ${langName}.`
           </div>
           {/* Language Selector */}
           <div style={{position:'relative',marginLeft:isMobile?0:8}}>
-            <button onClick={()=>{setShowLangMenu(v=>!v);setShowFavorites(false);setShowHamburger(false)}}
+            <button onClick={()=>{setShowLangMenu(v=>!v);setShowHamburger(false)}}
               style={{display:'flex',alignItems:'center',gap:isMobile?2:5,background:'rgba(255,255,255,.12)',border:'1px solid rgba(255,255,255,.2)',borderRadius:isMobile?14:20,padding:isMobile?'3px 6px':'5px 12px 5px 8px',cursor:'pointer',color:'white',fontSize:isMobile?10:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s'}}
               onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.22)'}
               onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.12)'}>
@@ -3383,7 +2973,7 @@ Write all text in ${langName}.`
           </div>
           {/* AI Course Button */}
           <div style={{marginLeft:isMobile?0:4}}>
-            <button onClick={()=>{setShowAiModal(true);setShowLangMenu(false);setShowFavorites(false);setShowHamburger(false)}}
+            <button onClick={()=>{setShowAiModal(true);setShowLangMenu(false);setShowHamburger(false)}}
               style={{display:'flex',alignItems:'center',gap:isMobile?3:6,background:showAiModal?'rgba(200,133,106,.35)':'rgba(255,255,255,.13)',border:showAiModal?'1px solid rgba(200,133,106,.6)':'1px solid rgba(255,255,255,.22)',borderRadius:isMobile?14:20,padding:isMobile?'3px 7px':'6px 14px',cursor:'pointer',color:'white',fontSize:isMobile?9:12,fontWeight:600,backdropFilter:'blur(8px)',transition:'all .2s',letterSpacing:'.1px'}}
               onMouseEnter={e=>e.currentTarget.style.background=showAiModal?'rgba(200,133,106,.45)':'rgba(255,255,255,.22)'}
               onMouseLeave={e=>e.currentTarget.style.background=showAiModal?'rgba(200,133,106,.35)':'rgba(255,255,255,.13)'}>
@@ -4677,7 +4267,6 @@ Write all text in ${langName}.`
             if (!currentUser) { setShowLoginModal(true); return }
             setEditingJournal(null)
             setJournalForm({ title:'', body:'', cities:[], days:1, rating:0, visibility:'public', photos:[], blocks:[], startDate:'', endDate:'' })
-            setJournalNewPhotos([])
             setShowJournalEditor(true)
           }} style={{
             position:'absolute',right:isMobile?18:26,bottom:isMobile?'calc(22px + env(safe-area-inset-bottom))':28,
@@ -4732,7 +4321,7 @@ Write all text in ${langName}.`
                     await createJournal(currentUser.uid, payload, currentUser.displayName||currentUser.email, currentUser.photoURL)
                   }
                   alert(t('journalSaved'))
-                  setShowJournalEditor(false);setEditingJournal(null);setJournalNewPhotos([])
+                  setShowJournalEditor(false);setEditingJournal(null)
                   // 피드 새로고침
                   setFeedJournalsLoading(true)
                   const fresh = await loadJournals({ limitN: 30, ...(feedSubTab==='mine'&&currentUser?{byUid:currentUser.uid}:{}) })
@@ -4931,7 +4520,7 @@ Write all text in ${langName}.`
                         ? viewingJournal.blocks.map(b=>({photo:b.photo||'',caption:b.caption||'',file:null}))
                         : (viewingJournal.photos||[]).map(u=>({photo:u,caption:'',file:null})) // 구버전 호환
                     })
-                    setJournalNewPhotos([]);setShowJournalEditor(true);setViewingJournal(null)
+                    setShowJournalEditor(true);setViewingJournal(null)
                   }} style={{background:'#f1f5f9',border:'none',color:'#475569',padding:'5px 10px',borderRadius:7,fontSize:11,fontWeight:600,cursor:'pointer'}}>✏️</button>
                   <button onClick={async()=>{
                     if (confirm(t('journalDeleteConfirm'))) {
