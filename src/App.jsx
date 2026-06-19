@@ -238,7 +238,8 @@ function App() {
   const setAiCityDays = (name, days) => setAiCities(prev => prev.map(x => x.city.name === name ? { ...x, days: Math.max(1, days) } : x))
   const aiTotalDays = aiCities.reduce((s, x) => s + x.days, 0)
   const [aiTransport, setAiTransport] = useState('transit')
-  const [aiHours, setAiHours] = useState(4)
+  const [aiHours, setAiHours] = useState(1)
+  const [aiCount, setAiCount] = useState(1)
   const [aiCitySearch, setAiCitySearch] = useState('')
   const [aiGenerating, setAiGenerating] = useState(false)
   const [courseSource, setCourseSource] = useState('manual') // 'manual' | 'ai'
@@ -298,13 +299,10 @@ function App() {
       if (t.includes('place_of_worship') || t.includes('church') || t.includes('hindu_temple')) return 'worship'
       return 'attraction'
     }
-    const dwellByCat = { museum: 90, nature: 75, theme: 120, worship: 50, attraction: 60 }
+    const dwellByCat = { museum: 60, nature: 60, theme: 180, worship: 30, attraction: 30 }
     // 품질 점수 (베이지안 평균) — 리뷰 적은데 별점만 높은 함정 보정
-    const Q_C = 4.3, Q_M = 300
-    const qScore = (rating, reviews) => {
-      const v = reviews || 0, R = rating || 4.0
-      return (v / (v + Q_M)) * R + (Q_M / (v + Q_M)) * Q_C
-    }
+    // 품질 점수 = 리뷰 수 (관광지는 리뷰 많으면 평점도 대체로 좋음 → 별점 제외)
+    const qScore = (rating, reviews) => reviews || 0
     // 노이즈 타입 (관광지 아님 — 후보에서 제외)
     const JUNK = ['transit_station','bus_station','subway_station','train_station','light_rail_station','parking','lodging','airport','car_rental',
       'shopping_mall','store','clothing_store','department_store','supermarket','convenience_store','shoe_store','jewelry_store','furniture_store','home_goods_store','electronics_store','book_store',
@@ -362,12 +360,10 @@ function App() {
       const sorted = [...pool].sort((a, b) => b._q - a._q)
       const picked = [], catCount = {}
       while (sorted.length > 0) {
+        if (picked.length >= aiCount) break                                // 장소 수 우선(A) — 목표 개수 도달 시 종료
         const cand = sorted.shift()
         if ((catCount[cand.cat] || 0) >= 2 && sorted.length > 0) continue // 같은 카테고리 하루 2개까지
-        const total = routeTotalMin([...picked, cand], cityLat, cityLng)
-        if (total > dayBudgetMin && picked.length >= 2) continue           // 예산 초과 → 건너뜀(더 작은 후보 시도)
         picked.push(cand); catCount[cand.cat] = (catCount[cand.cat] || 0) + 1
-        if (picked.length >= 12) break
       }
       // 동선 확정 + 시간표(09:00 기준 도착 오프셋) 계산
       let ordered = orderRoute(picked, cityLat, cityLng)
@@ -396,13 +392,13 @@ function App() {
         const key = p.place_id || (p.name || '').toLowerCase().replace(/\s+/g, '')
         if (seen.has(key)) return; seen.add(key)                           // 중복 제거
         const cat = catOf(types)
-        const landmarkBonus = types.some(t => ['tourist_attraction','historical_landmark','monument'].includes(t)) ? 0.15 : 0
+        const landmarkBonus = types.some(t => ['tourist_attraction','historical_landmark','monument'].includes(t)) ? 1.3 : 1
         attractions.push({
           source: 'hotspot', name: p.name, displayName: p.name,
           cityName: cityKey, cityDisplayName: getCityName(cityKey),
           rating: p.rating || 4.0, reviews: p.user_ratings_total || 0, place_id: p.place_id, vicinity: p.vicinity,
           lat: cityLat, lng: cityLng, _lat: p.geometry?.location?.lat || cityLat, _lng: p.geometry?.location?.lng || cityLng,
-          cat, dwell: dwellByCat[cat] || 60, _q: qScore(p.rating, p.user_ratings_total) + landmarkBonus,
+          cat, dwell: dwellByCat[cat] || 30, _q: qScore(p.rating, p.user_ratings_total) * landmarkBonus,
           emoji: '📍', photo_ref: p.photos?.[0]?.photo_reference || null
         })
       })
@@ -3526,17 +3522,23 @@ Write all text in ${langName}.`
                 </div>
               </div>
 
-              {/* 일수 + 강도 */}
-              <div>
-                <div style={{fontSize:12,fontWeight:600,color:'#1a1714',marginBottom:6}}>{t('aiHoursLabel')}</div>
-                <div style={{display:'flex',gap:4}}>
-                  {[1,2,4,6,8].map(h=>(
-                    <button key={h} onClick={()=>setAiHours(h)} style={{
-                      flex:1,padding:'9px 0',fontSize:12,fontWeight:aiHours===h?700:400,
-                      background:aiHours===h?'#c8856a':'#f5f0ea',color:aiHours===h?'white':'#a89080',
-                      border:aiHours===h?'none':'1px solid #e0d9d0',borderRadius:8,cursor:'pointer',transition:'all .15s'
-                    }}>{h}{t('aiHourUnit')}</button>
-                  ))}
+              {/* 관광시간 + 장소 수 */}
+              <div style={{display:'flex',gap:8}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:12,fontWeight:600,color:'#1a1714',marginBottom:6}}>{t('aiHoursLabel')}</div>
+                  <div style={{display:'flex',alignItems:'center',gap:6,background:'#f5f0ea',border:'1px solid #e0d9d0',borderRadius:8,padding:'4px 6px'}}>
+                    <button onClick={()=>setAiHours(h=>Math.max(1,h-1))} style={{width:30,height:30,fontSize:18,fontWeight:700,background:'#fff',color:'#c8856a',border:'1px solid #e0d9d0',borderRadius:6,cursor:'pointer',lineHeight:1,flexShrink:0}}>−</button>
+                    <span style={{flex:1,textAlign:'center',fontSize:13,fontWeight:700,color:'#1a1714'}}>{aiHours}{t('aiHourUnit')}</span>
+                    <button onClick={()=>setAiHours(h=>Math.min(24,h+1))} style={{width:30,height:30,fontSize:18,fontWeight:700,background:'#fff',color:'#c8856a',border:'1px solid #e0d9d0',borderRadius:6,cursor:'pointer',lineHeight:1,flexShrink:0}}>+</button>
+                  </div>
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:12,fontWeight:600,color:'#1a1714',marginBottom:6}}>{({ko:'장소 수',en:'Places',ja:'場所数',zh:'地点数'})[lang]||'장소 수'}</div>
+                  <div style={{display:'flex',alignItems:'center',gap:6,background:'#f5f0ea',border:'1px solid #e0d9d0',borderRadius:8,padding:'4px 6px'}}>
+                    <button onClick={()=>setAiCount(c=>Math.max(1,c-1))} style={{width:30,height:30,fontSize:18,fontWeight:700,background:'#fff',color:'#c8856a',border:'1px solid #e0d9d0',borderRadius:6,cursor:'pointer',lineHeight:1,flexShrink:0}}>−</button>
+                    <span style={{flex:1,textAlign:'center',fontSize:13,fontWeight:700,color:'#1a1714'}}>{aiCount}{({ko:'개',en:'',ja:'',zh:'个'})[lang]||''}</span>
+                    <button onClick={()=>setAiCount(c=>Math.min(15,c+1))} style={{width:30,height:30,fontSize:18,fontWeight:700,background:'#fff',color:'#c8856a',border:'1px solid #e0d9d0',borderRadius:6,cursor:'pointer',lineHeight:1,flexShrink:0}}>+</button>
+                  </div>
                 </div>
               </div>
 
@@ -3567,7 +3569,7 @@ Write all text in ${langName}.`
               {aiCities.length > 0 && (
                 <div style={{padding:'10px 14px',background:'#f5f0ea',border:'1px solid #e0d9d0',borderRadius:10,fontSize:12,color:'#9a8070',lineHeight:1.7}}>
                   <strong>{aiCities.map(x=>getCityName(x.city.name)).join(' → ')}</strong>{t('aiSummaryIn')} <strong>{aiTotalDays}{t('aiDayUnit')}</strong>{t('aiSummaryTrip')||' 여행'}
-                  {t(aiHours<=1?'aiPreview1h':aiHours<=2?'aiPreview2h':aiHours<=4?'aiPreview4h':aiHours<=6?'aiPreview6h':'aiPreview8h')} {t('aiPreviewText')}
+                  <br/>{({ko:`하루 ${aiCount}곳 · 관광 ${aiHours}시간`,en:`${aiCount} places/day · ${aiHours}h`,ja:`1日${aiCount}箇所・${aiHours}時間`,zh:`每天${aiCount}个 · ${aiHours}小时`})[lang]||`하루 ${aiCount}곳 · 관광 ${aiHours}시간`}
                   {courseTripStart && <><br/>📅 {formatDate(getDayDate(0))} ~ {formatDate(getDayDate(aiTotalDays-1))}</>}
                 </div>
               )}
