@@ -25,7 +25,7 @@ const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.n
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
-import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto } from './firebase'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache } from './firebase'
 
 
 // ── 에러 바운더리 (흰 화면 방지) ─────────────────────────────────────────
@@ -2378,10 +2378,16 @@ function App() {
   const fetchFoodCulture = async (city) => {
     const cityKey = city._koName || city.name
     const cacheKey = `foodCulture3_${cityKey}_${lang}`
-    // 캐시 확인
+    // 1) localStorage (같은 기기)
     try {
       const cached = localStorage.getItem(cacheKey)
       if (cached) { setFoodCulture(JSON.parse(cached)); return }
+    } catch {}
+    // 2) Firestore 공용 캐시 (다른 사용자가 이미 생성한 것)
+    const fsKey = `${cityKey}_${lang}`
+    try {
+      const fc = await getCityCache(fsKey)
+      if (fc?.food) { setFoodCulture(fc.food); try { localStorage.setItem(cacheKey, JSON.stringify(fc.food)) } catch {}; return }
     } catch {}
 
     setLoadingFoodCulture(true)
@@ -2406,6 +2412,7 @@ Write all text in ${langName}.`
       const parsed = JSON.parse(txt)
       setFoodCulture(parsed)
       try { localStorage.setItem(cacheKey, JSON.stringify(parsed)) } catch {}
+      setCityCache(fsKey, { food: parsed })
     } catch (e) {
       console.error('Food culture fetch error:', e)
       setFoodCulture({ error: true })
@@ -2510,7 +2517,15 @@ Write all text in ${langName}.`
 
   const fetchCityDescription = async (cityKey, countryEn, lng) => {
     const cacheKey = `atlas_citydesc_${cityKey}_${lng}`
+    // 1) localStorage (같은 기기 재방문)
     try { const c = localStorage.getItem(cacheKey); if (c) return c } catch {}
+    // 2) Firestore 공용 캐시 (다른 사용자가 이미 생성한 것)
+    const fsKey = `${cityKey}_${lng}`
+    try {
+      const cached = await getCityCache(fsKey)
+      if (cached?.desc) { try { localStorage.setItem(cacheKey, cached.desc) } catch {}; return cached.desc }
+    } catch {}
+    // 3) Gemini 생성
     const langName = lng === 'ja' ? '日本語' : lng === 'zh' ? '中文(简体)' : lng === 'en' ? 'English' : '한국어'
     const prompt = `Write a 2-3 sentence travel introduction for the city "${cityKey}"${countryEn ? ` (${countryEn})` : ''} in ${langName}. Use a natural tone without exaggeration, and highlight what makes the city appealing to travelers. Output ONLY the introduction text — no quotation marks, no title, no extra explanation.`
     try {
@@ -2518,7 +2533,7 @@ Write all text in ${langName}.`
       const data = await res.json()
       if (data.error) console.warn('[city desc] Gemini error (code', data.code, '):', data.error)
       const txt = (data.text || '').trim().replace(/^["'「『]+|["'」』]+$/g, '').trim()
-      if (txt) { try { localStorage.setItem(cacheKey, txt) } catch {}; return txt }
+      if (txt) { try { localStorage.setItem(cacheKey, txt) } catch {}; setCityCache(fsKey, { desc: txt }); return txt }
     } catch (e) { console.error('city description fetch error:', e) }
     return null
   }
