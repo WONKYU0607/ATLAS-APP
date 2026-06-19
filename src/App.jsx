@@ -2093,7 +2093,7 @@ function App() {
     "Taiwan": { alt: 0.15, lat: 23.7, lng: 121.0 },
     "Maldives": { alt: 0.35, lat: 3.2, lng: 73.2 },
     "Costa Rica": { alt: 0.12, lat: 10.0, lng: -84.0 },
-    "Panama": { alt: 0.17, lat: 9.0, lng: -81.5 },
+    "Panama": { alt: 0.17, lat: 9.0, lng: -79.5 },
     "Ecuador": { alt: 0.25, lat: -1.5, lng: -78.5 },
     "Romania": { alt: 0.2, lat: 46.0, lng: 25.0 },
     "Georgia": { alt: 0.12, lat: 42.3, lng: 43.5 },
