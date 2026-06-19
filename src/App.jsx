@@ -2065,14 +2065,14 @@ function App() {
     "Russia": { alt: 1.7, lat: 62.0, lng: 95.0 },
     // 아프리카
     "Egypt": { alt: 0.4, lat: 27.0, lng: 30.5 },
-    "Morocco": { alt: 0.3, lat: 32.0, lng: -6.0 },
-    "South Africa": { alt: 0.5, lat: -29.0, lng: 25.0 },
+    "Morocco": { alt: 0.4, lat: 30.0, lng: -6.0 },
+    "South Africa": { alt: 0.45, lat: -29.0, lng: 25.0 },
     "Kenya": { alt: 0.3, lat: 0.5, lng: 37.5 },
     "Tanzania": { alt: 0.35, lat: -6.5, lng: 35.0 },
     "Ethiopia": { alt: 0.4, lat: 9.0, lng: 39.5 },
     "Ghana": { alt: 0.22, lat: 7.5, lng: -1.5 },
     // 아메리카
-    "United States of America": { alt: 1.2, lat: 39.0, lng: -98.0 },
+    "United States of America": { alt: 1.1, lat: 37.0, lng: -102.0 },
     "Canada": { alt: 1.5, lat: 58.0, lng: -98.0 },
     "Mexico": { alt: 0.55, lat: 23.5, lng: -102.5 },
     "Brazil": { alt: 0.9, lat: -10.0, lng: -52.0 },
