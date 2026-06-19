@@ -218,3 +218,20 @@ export const uploadJournalPhoto = async (file, uid, journalIdHint) => {
   await uploadBytes(ref, file)
   return await getDownloadURL(ref)
 }
+
+// ── 공용 캐시: 도시 소개글/음식문화 (cityCache) ──
+// key 형식: `${도시키}_${언어}` (예: '도쿄_ko'), 한 문서에 { desc, food } 병합 저장
+const cityCacheRef = (key) => doc(db, 'cityCache', key)
+
+export const getCityCache = async (key) => {
+  try {
+    const snap = await getDoc(cityCacheRef(key))
+    return snap.exists() ? snap.data() : null
+  } catch { return null }
+}
+
+export const setCityCache = async (key, data) => {
+  try {
+    await setDoc(cityCacheRef(key), { ...data, updatedAt: Date.now() }, { merge: true })
+  } catch {}
+}
