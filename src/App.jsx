@@ -2023,9 +2023,9 @@ function App() {
   // 국가별 최적 줌 레벨 (수동 튜닝)
   const COUNTRY_ZOOM = {
     // 아시아
-    "South Korea": { alt: 0.22, lat: 36.0, lng: 127.8 },
-    "Japan": { alt: 0.35, lat: 36.5, lng: 138.0 },
-    "China": { alt: 1.2, lat: 35.0, lng: 105.0 },
+    "South Korea": { alt: 0.20, lat: 36.0, lng: 127.8 },
+    "Japan": { alt: 0.34, lat: 36.5, lng: 138.0 },
+    "China": { alt: 1.0, lat: 35.0, lng: 105.0 },
     "India": { alt: 0.6, lat: 22.0, lng: 79.0 },
     "Thailand": { alt: 0.35, lat: 14.0, lng: 100.5 },
     "Vietnam": { alt: 0.4, lat: 16.0, lng: 107.5 },
