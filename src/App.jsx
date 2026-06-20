@@ -18,8 +18,7 @@ const ISLAND_NAMES = new Set(ISLAND_LABEL_DATA.map(d => d.nameEn))
 const HIDDEN_COUNTRY_LABELS = new Set(['W. Sahara', 'Falkland Is.', 'Greenland', 'Fr. S. Antarctic Lands', 'Puerto Rico', 'New Caledonia', 'Antarctica', 'N. Cyprus', 'Somaliland'])
 // 면적 작은 나라(섬나라 제외 하위 30%, 단 이스라엘·벨기에·대만·네덜란드·덴마크·스위스·크로아티아·아일랜드 제외)
 // → 섬나라처럼 줌인(alt<0.7) 했을 때만 라벨 표시. 유럽 등 작은 나라 밀집 정리용
-const SMALL_COUNTRY = new Set(["Luxembourg","N. Cyprus","Palestine","Cyprus","Vanuatu","Trinidad and Tobago","Puerto Rico","Lebanon","Brunei","Kosovo","Qatar","Fr. S. Antarctic Lands","Jamaica","Montenegro","Gambia","Timor-Leste","Bahamas","Falkland Is.","Kuwait","eSwatini","Slovenia","Fiji","El Salvador","Djibouti","Belize","New Caledonia","Rwanda","Solomon Is.","North Macedonia","Burundi","Eq. Guinea","Lesotho","Armenia","Haiti","Albania","Moldova","Guinea-Bissau","Bhutan","Estonia","Slovakia","Dominican Rep.","Bosnia and Herz.","Costa Rica","Togo","Lithuania","Latvia","Croatia","Azerbaijan","Turkmenistan","Jordan","Liberia","Sierra Leone","Congo","Honduras"])
-const ALWAYS_LABEL = new Set(["Qatar","Singapore","United Arab Emirates"])  // 작아도 기본 줌에서 라벨 표시(gated 제외)
+const SMALL_COUNTRY = new Set(["Luxembourg","N. Cyprus","Palestine","Cyprus","Vanuatu","Trinidad and Tobago","Puerto Rico","Lebanon","Brunei","Kosovo","Fr. S. Antarctic Lands","Jamaica","Montenegro","Gambia","Timor-Leste","Bahamas","Falkland Is.","Kuwait","eSwatini","Slovenia","Fiji","El Salvador","Djibouti","Belize","New Caledonia","Rwanda","Solomon Is.","North Macedonia","Burundi","Eq. Guinea","Lesotho","Armenia","Haiti","Albania","Moldova","Guinea-Bissau","Bhutan","Estonia","Slovakia","Dominican Rep.","Bosnia and Herz.","Costa Rica","Togo","Lithuania","Latvia","Croatia","Azerbaijan","Turkmenistan","Jordan","Liberia","Sierra Leone","Congo","Honduras"])
 // 이름 정규화: "Solomon Is." ↔ "Solomon Islands" 같은 약자 변형 매칭용
 const normCountryName = (s) => String(s || '').toLowerCase().replace(/\bis\.?\b/g, 'islands').replace(/&/g, 'and').replace(/[^a-z]/g, '')
 const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.nameEn)))
@@ -1619,8 +1618,8 @@ function App() {
         el.dataset.lat = d.lat
         el.dataset.lng = d.lng
         // gated: 줌인 시에만 표시 (섬나라 + 작은 나라) / micro: 터치 핸들러 달린 섬나라(아래 pointer-events 토글 대상)
-        if (d._type === 'island') { el.dataset.micro = '1'; if (d.nameEn !== 'Guam' && !ALWAYS_LABEL.has(d.nameEn)) el.dataset.gated = '1' }
-        else if (d._type === 'country' && SMALL_COUNTRY.has(d.nameEn) && !ALWAYS_LABEL.has(d.nameEn)) { el.dataset.gated = '1' }
+        if (d._type === 'island') { el.dataset.micro = '1'; if (d.nameEn !== 'Guam' && d.nameEn !== 'Singapore') el.dataset.gated = '1' }
+        else if (d._type === 'country' && SMALL_COUNTRY.has(d.nameEn)) { el.dataset.gated = '1' }
         else if (d._type === 'sea') { el.dataset.seaGate = '1' }
 
         if (d._type === 'geoline') {
@@ -3948,7 +3947,7 @@ Write all text in ${langName}.`
                           <div style={{display:'flex',alignItems:'center',gap:6,padding:'5px 0 5px 34px'}}>
                             {route ? (
                               <span style={{fontSize:10,color:'#1a1714',fontWeight:600}}>
-                                — {route.noRoute ? t('courseNoRoute') : `${route.duration} · ${route.distance}`}
+                                — {route.noRoute ? (({ko:'상단의 상세 길찾기를 이용하세요.',en:'Use the detailed directions above.',ja:'上部の詳細ルート検索をご利用ください。',zh:'请使用上方的详细路线查询。'})[lang]||'상단의 상세 길찾기를 이용하세요.') : `${route.duration} · ${route.distance}`}
                               </span>
                             ) : loadingRoutes ? (
                               <div style={{width:10,height:10,borderRadius:'50%',border:'1.5px solid #e0d9d0',borderTopColor:'#c8856a',animation:'spin .7s linear infinite'}}/>
