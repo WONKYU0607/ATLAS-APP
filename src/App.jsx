@@ -240,6 +240,10 @@ function App() {
   const [aiTransport, setAiTransport] = useState('transit')
   const [aiHours, setAiHours] = useState(1)
   const [aiCount, setAiCount] = useState(1)
+  const [nlOpen, setNlOpen] = useState(false)     // 자연어 코스 입력 패널 열림
+  const [nlText, setNlText] = useState('')         // 자연어 입력값
+  const [nlLoading, setNlLoading] = useState(false) // 파싱/생성 중
+  const [aiTheme, setAiTheme] = useState(null)     // 파싱된 테마 (['역사','자연'] 등, 없으면 null)
   const [aiCitySearch, setAiCitySearch] = useState('')
   const [aiGenerating, setAiGenerating] = useState(false)
   const [courseSource, setCourseSource] = useState('manual') // 'manual' | 'ai'
@@ -275,6 +279,20 @@ function App() {
       sorted.push(picked); curLat = picked._lat||curLat; curLng = picked._lng||curLng
     }
     return sorted
+  }
+
+  // 자연어 입력 → 코스 생성 (조각2에서 파싱·생성 채움)
+  const handleNlGenerate = async () => {
+    if (!nlText.trim() || nlLoading) return
+    setNlLoading(true)
+    try {
+      // TODO(조각2): Gemini 파싱 → 도시 매칭 → aiCities/aiCount/aiTheme/aiTotalDays 설정 → generateAiCourse()
+      console.log('[NL] input:', nlText)
+    } catch (e) {
+      console.warn('[NL] error:', e)
+    } finally {
+      setNlLoading(false)
+    }
   }
 
   const generateAiCourse = async () => {
@@ -3157,6 +3175,27 @@ Write all text in ${langName}.`
       })()}
 
       {/* Hint */}
+      {nlOpen && (
+        <div onClick={()=>!nlLoading&&setNlOpen(false)} style={{position:'fixed',inset:0,zIndex:2000,background:'rgba(0,0,0,.45)',display:'flex',alignItems:'flex-end',justifyContent:'center'}}>
+          <div onClick={e=>e.stopPropagation()} style={{width:'100%',maxWidth:560,background:'#fff',borderRadius:'20px 20px 0 0',padding:'22px 20px calc(22px + env(safe-area-inset-bottom))',boxShadow:'0 -8px 30px rgba(0,0,0,.2)'}}>
+            <div style={{fontSize:16,fontWeight:800,color:'#1a1714',marginBottom:6}}>{({ko:'AI 코스 만들기',en:'AI Course',ja:'AIコース',zh:'AI行程'})[lang]||'AI 코스 만들기'}</div>
+            <div style={{fontSize:12,color:'#94a3b8',marginBottom:14,lineHeight:1.5}}>{({ko:'예: 파리에서 꼭 가봐야 할 곳 3곳 코스 / 서울 역사와 자연 하루 코스',en:'e.g. A course of 3 must-see spots in Paris',ja:'例: パリの名所3つコース',zh:'例: 巴黎必去3处行程'})[lang]||''}</div>
+            <textarea value={nlText} onChange={e=>setNlText(e.target.value)} autoFocus rows={3}
+              placeholder={({ko:'어떤 여행을 원하세요?',en:'What trip do you want?',ja:'どんな旅？',zh:'想要什么旅行？'})[lang]||''}
+              style={{width:'100%',boxSizing:'border-box',padding:'12px 14px',fontSize:14,border:'1.5px solid #e0d9d0',borderRadius:12,resize:'none',outline:'none',fontFamily:'inherit',marginBottom:14}}/>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>!nlLoading&&setNlOpen(false)} style={{flex:'0 0 auto',padding:'12px 18px',fontSize:14,fontWeight:700,background:'#f5f0ea',color:'#a89080',border:'none',borderRadius:12,cursor:'pointer'}}>{({ko:'닫기',en:'Close',ja:'閉じる',zh:'关闭'})[lang]||'닫기'}</button>
+              <button onClick={handleNlGenerate} disabled={!nlText.trim()||nlLoading} style={{flex:1,padding:'12px 18px',fontSize:14,fontWeight:700,background:(!nlText.trim()||nlLoading)?'#e0d9d0':'#c8856a',color:'#fff',border:'none',borderRadius:12,cursor:(!nlText.trim()||nlLoading)?'default':'pointer'}}>{nlLoading?(({ko:'생성 중...',en:'Generating...',ja:'生成中...',zh:'生成中...'})[lang]||'생성 중...'):(({ko:'코스 만들기',en:'Create',ja:'作成',zh:'创建'})[lang]||'코스 만들기')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {!selectedCountry && !showCoursePlanner && (
+        <div style={{position:'absolute',bottom:isMobile?56:84,left:'50%',transform:'translateX(-50%)',zIndex:1001,display:'flex',gap:10}}>
+          <button onClick={()=>{ setNlText(''); setNlOpen(true) }} style={{padding:isMobile?'10px 18px':'12px 22px',fontSize:isMobile?13:14,fontWeight:700,background:'rgba(255,255,255,.95)',color:'#c8856a',border:'1.5px solid #e0d9d0',borderRadius:30,cursor:'pointer',boxShadow:'0 4px 16px rgba(0,0,0,.18)',backdropFilter:'blur(8px)'}}>{({ko:'음성으로',en:'Voice',ja:'音声で',zh:'语音'})[lang]||'음성으로'}</button>
+          <button onClick={()=>{ setNlText(''); setNlOpen(true) }} style={{padding:isMobile?'10px 18px':'12px 22px',fontSize:isMobile?13:14,fontWeight:700,background:'#c8856a',color:'#fff',border:'none',borderRadius:30,cursor:'pointer',boxShadow:'0 4px 16px rgba(200,133,106,.4)'}}>{({ko:'직접 입력',en:'Type',ja:'入力',zh:'输入'})[lang]||'직접 입력'}</button>
+        </div>
+      )}
       {!selectedCountry && (
         <div style={{position:'absolute',bottom:isMobile?12:24,left:'50%',transform:'translateX(-50%)',zIndex:1000,background:'rgba(255,255,255,.9)',backdropFilter:'blur(12px)',border:'1.5px solid rgba(255,255,255,.5)',borderRadius:40,padding:isMobile?'7px 14px':'9px 20px',fontSize:isMobile?10:12,color:'#475569',whiteSpace:'nowrap',boxShadow:'0 4px 20px rgba(0,0,0,.2)',pointerEvents:'none'}}>
           {t('hintMain')}
