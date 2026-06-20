@@ -19,6 +19,7 @@ const HIDDEN_COUNTRY_LABELS = new Set(['W. Sahara', 'Falkland Is.', 'Greenland',
 // 면적 작은 나라(섬나라 제외 하위 30%, 단 이스라엘·벨기에·대만·네덜란드·덴마크·스위스·크로아티아·아일랜드 제외)
 // → 섬나라처럼 줌인(alt<0.7) 했을 때만 라벨 표시. 유럽 등 작은 나라 밀집 정리용
 const SMALL_COUNTRY = new Set(["Luxembourg","N. Cyprus","Palestine","Cyprus","Vanuatu","Trinidad and Tobago","Puerto Rico","Lebanon","Brunei","Kosovo","Qatar","Fr. S. Antarctic Lands","Jamaica","Montenegro","Gambia","Timor-Leste","Bahamas","Falkland Is.","Kuwait","eSwatini","Slovenia","Fiji","El Salvador","Djibouti","Belize","New Caledonia","Rwanda","Solomon Is.","North Macedonia","Burundi","Eq. Guinea","Lesotho","Armenia","Haiti","Albania","Moldova","Guinea-Bissau","Bhutan","Estonia","Slovakia","Dominican Rep.","Bosnia and Herz.","Costa Rica","Togo","Lithuania","Latvia","Croatia","Azerbaijan","Turkmenistan","Jordan","Liberia","Sierra Leone","Congo","Honduras"])
+const ALWAYS_LABEL = new Set(["Qatar","Singapore","United Arab Emirates"])  // 작아도 기본 줌에서 라벨 표시(gated 제외)
 // 이름 정규화: "Solomon Is." ↔ "Solomon Islands" 같은 약자 변형 매칭용
 const normCountryName = (s) => String(s || '').toLowerCase().replace(/\bis\.?\b/g, 'islands').replace(/&/g, 'and').replace(/[^a-z]/g, '')
 const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.nameEn)))
@@ -1618,8 +1619,8 @@ function App() {
         el.dataset.lat = d.lat
         el.dataset.lng = d.lng
         // gated: 줌인 시에만 표시 (섬나라 + 작은 나라) / micro: 터치 핸들러 달린 섬나라(아래 pointer-events 토글 대상)
-        if (d._type === 'island') { el.dataset.micro = '1'; if (d.nameEn !== 'Guam') el.dataset.gated = '1' }
-        else if (d._type === 'country' && SMALL_COUNTRY.has(d.nameEn)) { el.dataset.gated = '1' }
+        if (d._type === 'island') { el.dataset.micro = '1'; if (d.nameEn !== 'Guam' && !ALWAYS_LABEL.has(d.nameEn)) el.dataset.gated = '1' }
+        else if (d._type === 'country' && SMALL_COUNTRY.has(d.nameEn) && !ALWAYS_LABEL.has(d.nameEn)) { el.dataset.gated = '1' }
         else if (d._type === 'sea') { el.dataset.seaGate = '1' }
 
         if (d._type === 'geoline') {
@@ -2675,8 +2676,16 @@ Write all text in ${langName}.`
     cities.map(c => ({ ...c, _koName: c.name, countryEn: country, countryKo: getCountryName(country) }))
   )
   // Build spot search index
-  const searchItems = [...allCities]  // 도시·국가만 검색
-  const filtered = searchQuery.length >= 1
+  const searchItems = [...allCities]  // 도시 검색 소스
+  // 국가명 매칭 → 결과 맨 위에 국가 항목 추가
+  const matchedCountries = searchQuery.length >= 1
+    ? countries.filter(feat => {
+        const en = feat.properties.NAME, ko = getCountryName(en) || ''
+        const q = searchQuery.toLowerCase()
+        return ko.includes(searchQuery) || en.toLowerCase().includes(q)
+      }).slice(0, 3).map(feat => ({ _isCountry: true, _feat: feat, countryEn: feat.properties.NAME, name: getCountryName(feat.properties.NAME) }))
+    : []
+  const filteredCities = searchQuery.length >= 1
     ? searchItems.filter(c => {
         const q = searchQuery.toLowerCase()
         const koName = c._koName || c.name
@@ -2684,6 +2693,7 @@ Write all text in ${langName}.`
         return koName?.includes(searchQuery) || trName.includes(q) || c.countryKo?.toLowerCase().includes(q) || c.countryEn?.toLowerCase().includes(q)
       }).slice(0, 10)
     : []
+  const filtered = [...matchedCountries, ...filteredCities].slice(0, 10)
 
   const countryKo = selectedCountry ? getCountryName(selectedCountry.properties.NAME) : ''
 
@@ -3002,6 +3012,7 @@ Write all text in ${langName}.`
               <div style={{position:'absolute',top:'calc(100% + 7px)',right:0,background:'white',border:'1.5px solid #e2e8f0',borderRadius:14,overflow:'hidden',width:isMobile?'80vw':250,zIndex:2000,boxShadow:'0 12px 32px rgba(0,0,0,.15)'}}>
                 {filtered.slice(0,8).map((c,i)=>(
                   <div key={i} onMouseDown={()=>{
+                    if (c._isCountry) { handleCountryClick(c._feat); setSearchQuery(''); setShowDrop(false); return }
                     const feat = countries.find(f => f.properties.NAME === c.countryEn)
                     if (feat) { setSelectedCountry(feat); }
                     setTimeout(() => handleCityClick(c), 300)
@@ -3017,10 +3028,10 @@ Write all text in ${langName}.`
                     )}
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:13,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                        {getCityName(c._koName || c.name)}
+                        {c._isCountry ? c.name : getCityName(c._koName || c.name)}
                       </div>
                       <div style={{fontSize:11,color:'#94a3b8'}}>
-                        {c.countryKo}
+                        {c._isCountry ? (({ko:'국가',en:'Country',ja:'国',zh:'国家'})[lang]||'국가') : c.countryKo}
                       </div>
                     </div>
                   </div>
