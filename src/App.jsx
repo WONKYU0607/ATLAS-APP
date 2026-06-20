@@ -334,12 +334,13 @@ function App() {
     try {
       const cityKey = gd.city._koName || gd.city.name
       const countryEn = gd.city.countryEn || ''
-      const [desc, food, extra] = await Promise.all([
+      const [desc, food, extra, course] = await Promise.all([
         fetchCityDescription(cityKey, countryEn, lang),
         fetchFoodCulture(gd.city, true),
-        fetchGuideExtra(gd.city)
+        fetchGuideExtra(gd.city),
+        generateAiCourse({ cities: [{ city: gd.city, days: gd.days }], count: gd.count, theme: gd.themes, transport: gd.transport, returnDays: true })
       ])
-      setGuideData(prev => prev ? { ...prev, desc, food, extra } : prev)
+      setGuideData(prev => prev ? { ...prev, desc, food, extra, course } : prev)
     } catch (e) {
       console.warn('[buildGuide] error:', e)
     } finally {
@@ -380,9 +381,13 @@ function App() {
     }
   }
 
-  const generateAiCourse = async () => {
-    if (aiCities.length === 0) return
-    setAiGenerating(true)
+  const generateAiCourse = async (opts = null) => {
+    const _cities = opts?.cities || aiCities
+    const _count = opts?.count ?? aiCount
+    const _theme = (opts && 'theme' in opts) ? opts.theme : aiTheme
+    const _transport = opts?.transport || aiTransport
+    if (_cities.length === 0) return
+    if (!opts?.returnDays) setAiGenerating(true)
     // 날짜 미설정 시 오늘로 동기화
     if (!courseTripStart) {
       saveTripStart(new Date().toISOString().slice(0, 10))
@@ -390,7 +395,7 @@ function App() {
 
     // ── 시간예산 + 신뢰도 모델 헬퍼 ──
     const dayBudgetMin = Math.max(60, aiHours * 60)            // 하루 가용시간(분)
-    const speedKmh = aiTransport === 'walking' ? 4.5 : aiTransport === 'transit' ? 18 : 25
+    const speedKmh = _transport === 'walking' ? 4.5 : _transport === 'transit' ? 18 : 25
     const DETOUR = 1.35                                         // 직선→도로 보정계수
     const travelMin = (a, b) => (haversine(a._lat, a._lng, b._lat, b._lng) * DETOUR / speedKmh) * 60
     // Google types → 체류시간(분) + 카테고리 버킷
@@ -463,7 +468,7 @@ function App() {
       const sorted = [...pool].sort((a, b) => b._q - a._q)
       const picked = [], catCount = {}
       while (sorted.length > 0) {
-        if (picked.length >= aiCount) break                                // 장소 수 우선(A) — 목표 개수 도달 시 종료
+        if (picked.length >= _count) break                                // 장소 수 우선(A) — 목표 개수 도달 시 종료
         const cand = sorted.shift()
         if ((catCount[cand.cat] || 0) >= 2 && sorted.length > 0) continue // 같은 카테고리 하루 2개까지
         picked.push(cand); catCount[cand.cat] = (catCount[cand.cat] || 0) + 1
@@ -510,7 +515,7 @@ function App() {
     }
 
     // 1) 도시 동선 정렬 (가까운 순, 첫 도시 기준 nearest neighbor)
-    let orderedCities = [...aiCities]
+    let orderedCities = [..._cities]
     if (orderedCities.length > 1) {
       const sorted = []
       const remaining = orderedCities.map(x => ({ ...x, _lat: x.city.lat, _lng: x.city.lng }))
@@ -533,7 +538,7 @@ function App() {
     for (const { city, days: cityDays } of orderedCities) {
       let { cityLat, cityLng, attractions } = await collectAttractions(city)
       // 테마 필터: 후보가 충분하면(>=장소수) 테마 카테고리만, 부족하면 전체 유지
-      if (aiTheme) { const cats = themeToCats(aiTheme); if (cats) { const f = attractions.filter(a => cats.includes(a.cat)); if (f.length >= aiCount) attractions = f } }
+      if (_theme) { const cats = themeToCats(_theme); if (cats) { const f = attractions.filter(a => cats.includes(a.cat)); if (f.length >= _count) attractions = f } }
       if (attractions.length === 0) { days.push({ items: [], endMin: 0 }); continue }
       if (cityDays <= 1) {
         days.push(buildDay(attractions, cityLat, cityLng))
@@ -554,9 +559,11 @@ function App() {
       }
     }
 
+    // 가이드 모드: 코스 days만 반환 (플래너에 로드하지 않음)
+    if (opts?.returnDays) return days
     // 3) 플래너에 로드 + 자동 저장
     saveCourseDays(days)
-    setCourseTransport(aiTransport)
+    setCourseTransport(_transport)
     setActiveDayTab(0)
     setShowAiModal(false)
     setShowCoursePlanner(true)
@@ -3285,7 +3292,27 @@ Write all text in ${langName}.`
                     <div style={{fontSize:14,color:'#475569',lineHeight:1.7,whiteSpace:'pre-wrap'}}>{guideData.desc || loadingTxt}</div>
                   )}
                   {sec.key === 'course' && (
-                    <div style={{fontSize:13,color:'#b0a89e'}}>{({ko:'곧 표시됩니다 (코스)',en:'Coming soon',ja:'準備中',zh:'即将显示'})[lang]||'곧 표시됩니다'}</div>
+                    guideData.course && guideData.course.length > 0 ? (
+                      <div>
+                        {guideData.course.map((day, di) => (
+                          <div key={di} style={{marginBottom:di < guideData.course.length-1 ? 22 : 0}}>
+                            {guideData.course.length > 1 && <div style={{fontSize:14,fontWeight:800,color:'#1a1714',marginBottom:10}}>Day {di+1}</div>}
+                            {(day.items||[]).map((it, ii) => (
+                              <div key={ii} style={{display:'flex',gap:12,marginBottom:12,alignItems:'flex-start'}}>
+                                <div style={{flexShrink:0,width:26,height:26,borderRadius:'50%',background:'#c8856a',color:'#fff',fontSize:13,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}>{ii+1}</div>
+                                {it.photo_ref && (
+                                  <img src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photo_reference=${it.photo_ref}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`} alt={it.displayName||it.name} style={{width:64,height:64,borderRadius:10,objectFit:'cover',flexShrink:0}} onError={e=>{e.target.style.display='none'}}/>
+                                )}
+                                <div style={{flex:1,minWidth:0,paddingTop:2}}>
+                                  <div style={{fontSize:14,fontWeight:700,color:'#1a1714'}}>{it.displayName || it.name}</div>
+                                  {it.vicinity && <div style={{fontSize:12,color:'#94a3b8',marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{it.vicinity}</div>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    ) : <div style={{fontSize:14,color:'#475569'}}>{loadingTxt}</div>
                   )}
                   {sec.key === 'food' && (
                     guideData.food && !guideData.food.error ? (
