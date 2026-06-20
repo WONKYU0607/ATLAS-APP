@@ -308,6 +308,45 @@ function App() {
     return set.size ? [...set] : null
   }
 
+  // 가이드 추가정보(날씨·교통·에티켓) Gemini 1회 + 캐시
+  const fetchGuideExtra = async (city) => {
+    const cityKey = city._koName || city.name
+    const fsKey = `${cityKey}_${lang}`
+    try { const c = await getCityCache(fsKey); if (c?.extra) return c.extra } catch {}
+    const cityName = getCityName(cityKey) || city.name
+    const langName = lang === 'ko' ? '한국어' : lang === 'ja' ? '日本語' : lang === 'zh' ? '中文' : 'English'
+    const prompt = `여행 가이드 작성자입니다. "${cityName}"에 대해 JSON으로만 답하세요 (마크다운·코드펜스 없이).
+형식: {"weather":"시즌별 날씨 특징 2-3문장","transport":"이동·교통 팁 2-3문장","etiquette":"여행자가 알아야 할 주의사항·문화 에티켓 2-3문장"}
+모든 내용은 ${langName}로 작성.`
+    try {
+      const res = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt }) })
+      const data = await res.json()
+      const txt = (data.text||'').trim().replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```\s*$/i,'').trim()
+      const parsed = JSON.parse(txt)
+      setCityCache(fsKey, { extra: parsed })
+      return parsed
+    } catch (e) { console.warn('[guide extra] error:', e); return null }
+  }
+
+  // 가이드 데이터 수집 (소개·음식·추가정보 병렬) — 코스는 조각B-2에서
+  const buildGuide = async (gd) => {
+    setGuideLoading(true)
+    try {
+      const cityKey = gd.city._koName || gd.city.name
+      const countryEn = gd.city.countryEn || ''
+      const [desc, food, extra] = await Promise.all([
+        fetchCityDescription(cityKey, countryEn, lang),
+        fetchFoodCulture(gd.city, true),
+        fetchGuideExtra(gd.city)
+      ])
+      setGuideData(prev => prev ? { ...prev, desc, food, extra } : prev)
+    } catch (e) {
+      console.warn('[buildGuide] error:', e)
+    } finally {
+      setGuideLoading(false)
+    }
+  }
+
   // 자연어 입력 → 가이드 데이터 기본 설정 후 페이지 열기 (실제 수집은 조각B)
   const handleNlGenerate = async () => {
     if (!nlText.trim() || nlLoading) return
@@ -321,7 +360,7 @@ function App() {
       if (!cityObj) { alert(`'${parsed.city}' 도시를 찾지 못했어요. 다른 도시로 시도해보세요.`); setNlLoading(false); return }
       const themes = (parsed.themes||[]).filter(t => t !== '대표')
       setNlOpen(false)
-      setGuideData({
+      const gd = {
         city: cityObj,
         cityName: getCityName(cityObj.name),
         days: Math.max(1, parsed.days||1),
@@ -329,9 +368,10 @@ function App() {
         themes: themes.length ? themes : null,
         transport: ['transit','walking','driving'].includes(parsed.transport) ? parsed.transport : 'transit',
         desc: null, course: null, food: null, extra: null
-      })
+      }
+      setGuideData(gd)
       setGuideOpen(true)
-      // TODO(조각B): buildGuide로 desc/course/food/extra 수집
+      buildGuide(gd)   // 소개·음식·추가정보 수집 (코스는 조각B-2)
     } catch (e) {
       console.warn('[NL] error:', e)
       alert('요청을 이해하지 못했어요. 다시 입력해주세요.')
@@ -2436,23 +2476,22 @@ function App() {
   }
 
   // 음식 문화 AI 생성 (localStorage 캐싱)
-  const fetchFoodCulture = async (city) => {
+  const fetchFoodCulture = async (city, returnOnly = false) => {
     const cityKey = city._koName || city.name
     const cacheKey = `foodCulture3_${cityKey}_${lang}`
     // 1) localStorage (같은 기기)
     try {
       const cached = localStorage.getItem(cacheKey)
-      if (cached) { setFoodCulture(JSON.parse(cached)); return }
+      if (cached) { const p = JSON.parse(cached); if (returnOnly) return p; setFoodCulture(p); return }
     } catch {}
     // 2) Firestore 공용 캐시 (다른 사용자가 이미 생성한 것)
     const fsKey = `${cityKey}_${lang}`
     try {
       const fc = await getCityCache(fsKey)
-      if (fc?.food) { setFoodCulture(fc.food); try { localStorage.setItem(cacheKey, JSON.stringify(fc.food)) } catch {}; return }
+      if (fc?.food) { if (returnOnly) return fc.food; setFoodCulture(fc.food); try { localStorage.setItem(cacheKey, JSON.stringify(fc.food)) } catch {}; return }
     } catch {}
 
-    setLoadingFoodCulture(true)
-    setFoodCulture(null)
+    if (!returnOnly) { setLoadingFoodCulture(true); setFoodCulture(null) }
     const cityName = getCityName(cityKey) || city.name
     const langName = lang === 'ko' ? '한국어' : lang === 'ja' ? '日本語' : lang === 'zh' ? '中文' : 'English'
     const prompt = `You are a travel food culture curator. Introduce the food culture of "${cityName}" to travelers.
@@ -2471,9 +2510,10 @@ Write all text in ${langName}.`
       const data = await res.json()
       const txt = (data.text || '').trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim()
       const parsed = JSON.parse(txt)
-      setFoodCulture(parsed)
       try { localStorage.setItem(cacheKey, JSON.stringify(parsed)) } catch {}
       setCityCache(fsKey, { food: parsed })
+      if (returnOnly) return parsed
+      setFoodCulture(parsed)
     } catch (e) {
       console.error('Food culture fetch error:', e)
       setFoodCulture({ error: true })
@@ -3225,7 +3265,7 @@ Write all text in ${langName}.`
       {guideOpen && guideData && (
         <div style={{position:'fixed',inset:0,zIndex:2100,background:'#faf7f2',overflowY:'auto',WebkitOverflowScrolling:'touch'}}>
           <div style={{position:'sticky',top:0,zIndex:10,background:'rgba(250,247,242,.95)',backdropFilter:'blur(12px)',borderBottom:'1px solid #e8e0d5',padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-            <div style={{fontSize:isMobile?17:20,fontWeight:800,color:'#1a1714'}}>{guideData.cityName} {({ko:'여행 가이드',en:'Travel Guide',ja:'旅行ガイド',zh:'旅行指南'})[lang]||'여행 가이드'}</div>
+            <div style={{fontSize:isMobile?17:20,fontWeight:800,color:'#1a1714'}}>{guideData.cityName} {({ko:'여행 AI 가이드',en:'Travel AI Guide',ja:'旅行AIガイド',zh:'AI旅行指南'})[lang]||'여행 AI 가이드'}</div>
             <button onClick={()=>setGuideOpen(false)} style={{width:36,height:36,borderRadius:'50%',border:'none',background:'#f0e9e0',color:'#8a7a68',fontSize:20,cursor:'pointer',lineHeight:1,flexShrink:0}}>×</button>
           </div>
           <div style={{maxWidth:720,margin:'0 auto',padding:isMobile?'16px':'24px 20px'}}>
@@ -3236,12 +3276,42 @@ Write all text in ${langName}.`
               {key:'weather', label:({ko:'시즌별 날씨',en:'Weather by Season',ja:'季節の天気',zh:'季节天气'})[lang]||'시즌별 날씨'},
               {key:'transport', label:({ko:'이동·교통 팁',en:'Transport Tips',ja:'交通のヒント',zh:'交通提示'})[lang]||'이동·교통 팁'},
               {key:'etiquette', label:({ko:'주의사항·에티켓',en:'Tips & Etiquette',ja:'マナー',zh:'注意事项'})[lang]||'주의사항·에티켓'},
-            ].map(sec => (
-              <div key={sec.key} style={{marginBottom:isMobile?16:24,background:'#fff',borderRadius:16,padding:isMobile?16:20,boxShadow:'0 2px 12px rgba(0,0,0,.05)'}}>
-                <div style={{fontSize:isMobile?15:16,fontWeight:800,color:'#c8856a',marginBottom:12}}>{sec.label}</div>
-                <div style={{fontSize:13,color:'#b0a89e'}}>{({ko:'곧 표시됩니다 (다음 단계에서 데이터 연결)',en:'Coming soon',ja:'準備中',zh:'即将显示'})[lang]||'곧 표시됩니다'}</div>
-              </div>
-            ))}
+            ].map(sec => {
+              const loadingTxt = ({ko:'불러오는 중...',en:'Loading...',ja:'読込中...',zh:'加载中...'})[lang]||'불러오는 중...'
+              return (
+                <div key={sec.key} style={{marginBottom:isMobile?16:24,background:'#fff',borderRadius:16,padding:isMobile?16:20,boxShadow:'0 2px 12px rgba(0,0,0,.05)'}}>
+                  <div style={{fontSize:isMobile?15:16,fontWeight:800,color:'#c8856a',marginBottom:12}}>{sec.label}</div>
+                  {sec.key === 'desc' && (
+                    <div style={{fontSize:14,color:'#475569',lineHeight:1.7,whiteSpace:'pre-wrap'}}>{guideData.desc || loadingTxt}</div>
+                  )}
+                  {sec.key === 'course' && (
+                    <div style={{fontSize:13,color:'#b0a89e'}}>{({ko:'곧 표시됩니다 (코스)',en:'Coming soon',ja:'準備中',zh:'即将显示'})[lang]||'곧 표시됩니다'}</div>
+                  )}
+                  {sec.key === 'food' && (
+                    guideData.food && !guideData.food.error ? (
+                      <div>
+                        {guideData.food.intro && <div style={{fontSize:14,color:'#475569',lineHeight:1.7,marginBottom:12}}>{guideData.food.intro}</div>}
+                        {(guideData.food.dishes||[]).map((d,i) => (
+                          <div key={i} style={{marginTop:i>0?12:0,paddingTop:i>0?12:0,borderTop:i>0?'1px solid #f0e9e0':'none'}}>
+                            <div style={{fontSize:14,fontWeight:700,color:'#1a1714',marginBottom:3}}>{d.name}</div>
+                            <div style={{fontSize:13,color:'#64748b',lineHeight:1.6}}>{d.desc}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <div style={{fontSize:14,color:'#475569'}}>{guideData.food?.error ? loadingTxt : loadingTxt}</div>
+                  )}
+                  {sec.key === 'weather' && (
+                    <div style={{fontSize:14,color:'#475569',lineHeight:1.7}}>{guideData.extra?.weather || loadingTxt}</div>
+                  )}
+                  {sec.key === 'transport' && (
+                    <div style={{fontSize:14,color:'#475569',lineHeight:1.7}}>{guideData.extra?.transport || loadingTxt}</div>
+                  )}
+                  {sec.key === 'etiquette' && (
+                    <div style={{fontSize:14,color:'#475569',lineHeight:1.7}}>{guideData.extra?.etiquette || loadingTxt}</div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
