@@ -244,6 +244,7 @@ function App() {
   const [nlText, setNlText] = useState('')         // 자연어 입력값
   const [nlLoading, setNlLoading] = useState(false) // 파싱/생성 중
   const [aiTheme, setAiTheme] = useState(null)     // 파싱된 테마 (['역사','자연'] 등, 없으면 null)
+  const nlGenRef = useRef(false)                   // 자연어 파싱 후 자동 코스 생성 트리거
   const [aiCitySearch, setAiCitySearch] = useState('')
   const [aiGenerating, setAiGenerating] = useState(false)
   const [courseSource, setCourseSource] = useState('manual') // 'manual' | 'ai'
@@ -281,19 +282,63 @@ function App() {
     return sorted
   }
 
-  // 자연어 입력 → 코스 생성 (조각2에서 파싱·생성 채움)
+  // 자연어 → 코스 파라미터 파싱 (Gemini)
+  const parseNlCourse = async (text) => {
+    const prompt = `다음 여행 요청을 분석해 JSON으로만 답하세요. 설명·마크다운 없이 JSON 객체만 출력.
+요청: "${text}"
+출력 형식: {"city":"도시 한국어명","count":장소수 숫자,"days":일수 숫자,"themes":["역사"|"자연"|"박물관"|"예술"|"종교"|"놀이"|"대표" 중 해당하는 것들],"transport":"transit"|"walking"|"driving"}
+규칙:
+- city는 반드시 한국어 도시명 (예: 파리, 도쿄, 서울)
+- count 명시 없으면 3, days 명시 없으면 1
+- themes는 요청에 맞는 것만, 특별한 테마 없으면 ["대표"]
+- transport 명시 없으면 "transit"`
+    const res = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt }) })
+    const data = await res.json()
+    const txt = (data.text||'').trim().replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```\s*$/i,'').trim()
+    return JSON.parse(txt)
+  }
+
+  // 테마 → 카테고리(catOf 결과) 매핑. 매핑 없으면 null(전체 허용)
+  const themeToCats = (themes) => {
+    const map = { '역사':['museum','worship','attraction'], '자연':['nature'], '박물관':['museum'], '예술':['museum'], '종교':['worship'], '놀이':['theme'] }
+    const set = new Set()
+    ;(themes||[]).forEach(t => (map[t]||[]).forEach(c => set.add(c)))
+    return set.size ? [...set] : null
+  }
+
+  // 자연어 입력 → 코스 생성
   const handleNlGenerate = async () => {
     if (!nlText.trim() || nlLoading) return
     setNlLoading(true)
     try {
-      // TODO(조각2): Gemini 파싱 → 도시 매칭 → aiCities/aiCount/aiTheme/aiTotalDays 설정 → generateAiCourse()
-      console.log('[NL] input:', nlText)
+      const parsed = await parseNlCourse(nlText)
+      const q = (parsed.city||'').trim()
+      const cityObj = allCitiesFlat.find(c =>
+        c.name === q || (CITY_I18N[c.name]?.[0]||'').toLowerCase() === q.toLowerCase() || c.name.includes(q)
+      )
+      if (!cityObj) { alert(`'${parsed.city}' 도시를 찾지 못했어요. 다른 도시로 시도해보세요.`); setNlLoading(false); return }
+      const themes = (parsed.themes||[]).filter(t => t !== '대표')
+      setAiCities([{ city: cityObj, days: Math.max(1, parsed.days||1) }])
+      setAiCount(Math.max(1, Math.min(15, parsed.count||3)))
+      setAiTheme(themes.length ? themes : null)
+      setAiTransport(['transit','walking','driving'].includes(parsed.transport) ? parsed.transport : 'transit')
+      setNlOpen(false)
+      nlGenRef.current = true   // aiCities 반영되면 아래 useEffect가 생성
     } catch (e) {
       console.warn('[NL] error:', e)
+      alert('요청을 이해하지 못했어요. 다시 입력해주세요.')
     } finally {
       setNlLoading(false)
     }
   }
+
+  // 자연어 파싱 완료 → aiCities 반영되면 자동으로 코스 생성
+  useEffect(() => {
+    if (nlGenRef.current && aiCities.length > 0) {
+      nlGenRef.current = false
+      generateAiCourse()
+    }
+  }, [aiCities])
 
   const generateAiCourse = async () => {
     if (aiCities.length === 0) return
@@ -446,7 +491,9 @@ function App() {
     // 2) 도시별 날짜 채우기 — 다일정은 지역 클러스터링(하루=한 구역)
     const days = []
     for (const { city, days: cityDays } of orderedCities) {
-      const { cityLat, cityLng, attractions } = await collectAttractions(city)
+      let { cityLat, cityLng, attractions } = await collectAttractions(city)
+      // 테마 필터: 후보가 충분하면(>=장소수) 테마 카테고리만, 부족하면 전체 유지
+      if (aiTheme) { const cats = themeToCats(aiTheme); if (cats) { const f = attractions.filter(a => cats.includes(a.cat)); if (f.length >= aiCount) attractions = f } }
       if (attractions.length === 0) { days.push({ items: [], endMin: 0 }); continue }
       if (cityDays <= 1) {
         days.push(buildDay(attractions, cityLat, cityLng))
