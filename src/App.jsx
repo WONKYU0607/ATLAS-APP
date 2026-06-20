@@ -244,7 +244,9 @@ function App() {
   const [nlText, setNlText] = useState('')         // 자연어 입력값
   const [nlLoading, setNlLoading] = useState(false) // 파싱/생성 중
   const [aiTheme, setAiTheme] = useState(null)     // 파싱된 테마 (['역사','자연'] 등, 없으면 null)
-  const nlGenRef = useRef(false)                   // 자연어 파싱 후 자동 코스 생성 트리거
+  const [guideOpen, setGuideOpen] = useState(false)   // 전체화면 가이드 페이지 열림
+  const [guideData, setGuideData] = useState(null)    // 가이드 데이터 (도시/소개/코스/음식/추가정보)
+  const [guideLoading, setGuideLoading] = useState(false)
   const [aiCitySearch, setAiCitySearch] = useState('')
   const [aiGenerating, setAiGenerating] = useState(false)
   const [courseSource, setCourseSource] = useState('manual') // 'manual' | 'ai'
@@ -306,7 +308,7 @@ function App() {
     return set.size ? [...set] : null
   }
 
-  // 자연어 입력 → 코스 생성
+  // 자연어 입력 → 가이드 데이터 기본 설정 후 페이지 열기 (실제 수집은 조각B)
   const handleNlGenerate = async () => {
     if (!nlText.trim() || nlLoading) return
     setNlLoading(true)
@@ -318,12 +320,18 @@ function App() {
       )
       if (!cityObj) { alert(`'${parsed.city}' 도시를 찾지 못했어요. 다른 도시로 시도해보세요.`); setNlLoading(false); return }
       const themes = (parsed.themes||[]).filter(t => t !== '대표')
-      setAiCities([{ city: cityObj, days: Math.max(1, parsed.days||1) }])
-      setAiCount(Math.max(1, Math.min(15, parsed.count||3)))
-      setAiTheme(themes.length ? themes : null)
-      setAiTransport(['transit','walking','driving'].includes(parsed.transport) ? parsed.transport : 'transit')
       setNlOpen(false)
-      nlGenRef.current = true   // aiCities 반영되면 아래 useEffect가 생성
+      setGuideData({
+        city: cityObj,
+        cityName: getCityName(cityObj.name),
+        days: Math.max(1, parsed.days||1),
+        count: Math.max(1, Math.min(15, parsed.count||3)),
+        themes: themes.length ? themes : null,
+        transport: ['transit','walking','driving'].includes(parsed.transport) ? parsed.transport : 'transit',
+        desc: null, course: null, food: null, extra: null
+      })
+      setGuideOpen(true)
+      // TODO(조각B): buildGuide로 desc/course/food/extra 수집
     } catch (e) {
       console.warn('[NL] error:', e)
       alert('요청을 이해하지 못했어요. 다시 입력해주세요.')
@@ -331,14 +339,6 @@ function App() {
       setNlLoading(false)
     }
   }
-
-  // 자연어 파싱 완료 → aiCities 반영되면 자동으로 코스 생성
-  useEffect(() => {
-    if (nlGenRef.current && aiCities.length > 0) {
-      nlGenRef.current = false
-      generateAiCourse()
-    }
-  }, [aiCities])
 
   const generateAiCourse = async () => {
     if (aiCities.length === 0) return
@@ -3222,6 +3222,29 @@ Write all text in ${langName}.`
       })()}
 
       {/* Hint */}
+      {guideOpen && guideData && (
+        <div style={{position:'fixed',inset:0,zIndex:2100,background:'#faf7f2',overflowY:'auto',WebkitOverflowScrolling:'touch'}}>
+          <div style={{position:'sticky',top:0,zIndex:10,background:'rgba(250,247,242,.95)',backdropFilter:'blur(12px)',borderBottom:'1px solid #e8e0d5',padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <div style={{fontSize:isMobile?17:20,fontWeight:800,color:'#1a1714'}}>{guideData.cityName} {({ko:'여행 가이드',en:'Travel Guide',ja:'旅行ガイド',zh:'旅行指南'})[lang]||'여행 가이드'}</div>
+            <button onClick={()=>setGuideOpen(false)} style={{width:36,height:36,borderRadius:'50%',border:'none',background:'#f0e9e0',color:'#8a7a68',fontSize:20,cursor:'pointer',lineHeight:1,flexShrink:0}}>×</button>
+          </div>
+          <div style={{maxWidth:720,margin:'0 auto',padding:isMobile?'16px':'24px 20px'}}>
+            {[
+              {key:'desc', label:({ko:'도시 소개',en:'About',ja:'都市紹介',zh:'城市介绍'})[lang]||'도시 소개'},
+              {key:'course', label:({ko:'추천 코스',en:'Course',ja:'おすすめコース',zh:'推荐路线'})[lang]||'추천 코스'},
+              {key:'food', label:({ko:'음식문화',en:'Food Culture',ja:'食文化',zh:'美食文化'})[lang]||'음식문화'},
+              {key:'weather', label:({ko:'시즌별 날씨',en:'Weather by Season',ja:'季節の天気',zh:'季节天气'})[lang]||'시즌별 날씨'},
+              {key:'transport', label:({ko:'이동·교통 팁',en:'Transport Tips',ja:'交通のヒント',zh:'交通提示'})[lang]||'이동·교통 팁'},
+              {key:'etiquette', label:({ko:'주의사항·에티켓',en:'Tips & Etiquette',ja:'マナー',zh:'注意事项'})[lang]||'주의사항·에티켓'},
+            ].map(sec => (
+              <div key={sec.key} style={{marginBottom:isMobile?16:24,background:'#fff',borderRadius:16,padding:isMobile?16:20,boxShadow:'0 2px 12px rgba(0,0,0,.05)'}}>
+                <div style={{fontSize:isMobile?15:16,fontWeight:800,color:'#c8856a',marginBottom:12}}>{sec.label}</div>
+                <div style={{fontSize:13,color:'#b0a89e'}}>{({ko:'곧 표시됩니다 (다음 단계에서 데이터 연결)',en:'Coming soon',ja:'準備中',zh:'即将显示'})[lang]||'곧 표시됩니다'}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {nlOpen && (
         <div onClick={()=>!nlLoading&&setNlOpen(false)} style={{position:'fixed',inset:0,zIndex:2000,background:'rgba(0,0,0,.45)',display:'flex',alignItems:'flex-end',justifyContent:'center'}}>
           <div onClick={e=>e.stopPropagation()} style={{width:'100%',maxWidth:560,background:'#fff',borderRadius:'20px 20px 0 0',padding:'22px 20px calc(22px + env(safe-area-inset-bottom))',boxShadow:'0 -8px 30px rgba(0,0,0,.2)'}}>
