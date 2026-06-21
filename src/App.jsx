@@ -247,6 +247,7 @@ function App() {
   const [guideOpen, setGuideOpen] = useState(false)   // 전체화면 가이드 페이지 열림
   const [guideData, setGuideData] = useState(null)    // 가이드 데이터 (도시/소개/코스/음식/추가정보)
   const [guideLoading, setGuideLoading] = useState(false)
+  const [guideList, setGuideList] = useState(() => { try { return JSON.parse(localStorage.getItem('atlas_guides') || '[]') } catch { return [] } })
   const [aiCitySearch, setAiCitySearch] = useState('')
   const [aiGenerating, setAiGenerating] = useState(false)
   const [courseSource, setCourseSource] = useState('manual') // 'manual' | 'ai'
@@ -291,7 +292,7 @@ function App() {
 출력 형식: {"city":"도시 한국어명","count":장소수 숫자,"days":일수 숫자,"themes":["역사"|"자연"|"박물관"|"예술"|"종교"|"놀이"|"대표" 중 해당하는 것들],"transport":"transit"|"walking"|"driving"}
 규칙:
 - city는 반드시 한국어 도시명 (예: 파리, 도쿄, 서울)
-- count 명시 없으면 3, days 명시 없으면 1
+- count: 구체적 개수가 있으면 그 수, "알차게"·"유명한"·"제대로"·"많이"·"전부" 같은 표현이 있으면 7, 둘 다 없으면 5. days 명시 없으면 1
 - themes는 요청에 맞는 것만, 특별한 테마 없으면 ["대표"]
 - transport 명시 없으면 "transit"`
     const res = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt }) })
@@ -329,6 +330,25 @@ function App() {
   }
 
   // 가이드 데이터 수집 (소개·음식·추가정보 병렬) — 코스는 조각B-2에서
+  // 가이드 목록 저장 (localStorage) — 같은 도시는 최신으로 갱신, 최대 20개
+  const saveGuideToList = (g) => {
+    if (!g || !g.cityName) return
+    const entry = { id: Date.now(), cityName: g.cityName, days: g.days || 1, savedAt: new Date().toISOString(), payload: g }
+    setGuideList(prev => {
+      const next = [entry, ...prev.filter(e => e.cityName !== g.cityName)].slice(0, 20)
+      try { localStorage.setItem('atlas_guides', JSON.stringify(next)) } catch {}
+      return next
+    })
+  }
+  const openSavedGuide = (entry) => { if (entry?.payload) { setGuideData(entry.payload); setGuideOpen(true) } }
+  const deleteSavedGuide = (id) => {
+    setGuideList(prev => {
+      const next = prev.filter(e => e.id !== id)
+      try { localStorage.setItem('atlas_guides', JSON.stringify(next)) } catch {}
+      return next
+    })
+  }
+
   const buildGuide = async (gd) => {
     setGuideLoading(true)
     try {
@@ -341,6 +361,7 @@ function App() {
         generateAiCourse({ cities: [{ city: gd.city, days: gd.days }], count: gd.count, theme: gd.themes, transport: gd.transport, returnDays: true })
       ])
       setGuideData(prev => prev ? { ...prev, desc, food, extra, course } : prev)
+      saveGuideToList({ ...gd, desc, food, extra, course })
     } catch (e) {
       console.warn('[buildGuide] error:', e)
     } finally {
@@ -365,7 +386,7 @@ function App() {
         city: cityObj,
         cityName: getCityName(cityObj.name),
         days: Math.max(1, parsed.days||1),
-        count: Math.max(1, Math.min(15, parsed.count||3)),
+        count: Math.max(1, Math.min(15, parsed.count||5)),
         themes: themes.length ? themes : null,
         transport: ['transit','walking','driving'].includes(parsed.transport) ? parsed.transport : 'transit',
         desc: null, course: null, food: null, extra: null
@@ -2392,12 +2413,14 @@ function App() {
     if (!city?.lat || !city?.lng) return []
     const langParam = lang === 'zh' ? 'zh-CN' : lang
     const cityKey = city._koName || city.name
+    const fsKey = `${cityKey}_${lang}`
+    try { const cc = await getCityCache(fsKey); if (cc?.hotspots && cc.hotspots.length) return cc.hotspots } catch {}
     const cityName = getCityName(cityKey)   // 현재 언어 도시명 (UI/필터용)
     const cityNameEn = (CITY_I18N[cityKey] && CITY_I18N[cityKey][0]) || cityName   // 검색 쿼리는 영어로 (Google 범용)
     // ── 관광 유형별 분산 Text Search (전 세계 보편 8종) — 반경 의존 제거로 외곽 명소 누락 방지 ──
     const CATS = {
       ko: ['관광명소','명소','랜드마크','궁궐','성','유적','사찰','성당','사원','공원','정원','박물관','미술관','전망대','시장'],
-      en: ['tourist attractions','landmarks','monuments','palace','castle','historic site','temple','church','mosque','park','garden','museum','gallery','viewpoint','market'],
+      en: ['tourist attractions','landmarks','monuments','palace','castle','historic site','temple','shrine','church','mosque','park','garden','museum','gallery','viewpoint','observation deck','shopping district','market'],
       ja: ['観光スポット','名所','ランドマーク','城','史跡','遺跡','寺','神社','教会','公園','庭園','博物館','美術館','展望台','市場'],
       zh: ['旅游景点','名胜','地标','宫殿','城堡','古迹','寺庙','教堂','公园','花园','博物馆','美术馆','观景台','市场','广场'],
     }
@@ -2460,6 +2483,7 @@ function App() {
         .filter(inCity)                                          // 오염(타지 명소) 제거
         .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))  // 리뷰순(유명세)
         .slice(0, 30)
+      try { setCityCache(fsKey, { hotspots: list }) } catch {}
       return list
     } catch { return [] }
   }
@@ -3358,9 +3382,21 @@ Write all text in ${langName}.`
         </div>
       )}
       {!selectedCountry && !showCoursePlanner && (
-        <div style={{position:'absolute',bottom:isMobile?56:84,left:'50%',transform:'translateX(-50%)',zIndex:1001,display:'flex',gap:10}}>
-          <button onClick={()=>{ setNlText(''); setNlOpen(true) }} style={{padding:isMobile?'10px 18px':'12px 22px',fontSize:isMobile?13:14,fontWeight:700,background:'rgba(255,255,255,.95)',color:'#c8856a',border:'1.5px solid #e0d9d0',borderRadius:30,cursor:'pointer',boxShadow:'0 4px 16px rgba(0,0,0,.18)',backdropFilter:'blur(8px)'}}>{({ko:'음성으로',en:'Voice',ja:'音声で',zh:'语音'})[lang]||'음성으로'}</button>
-          <button onClick={()=>{ setNlText(''); setNlOpen(true) }} style={{padding:isMobile?'10px 18px':'12px 22px',fontSize:isMobile?13:14,fontWeight:700,background:'#c8856a',color:'#fff',border:'none',borderRadius:30,cursor:'pointer',boxShadow:'0 4px 16px rgba(200,133,106,.4)'}}>{({ko:'직접 입력',en:'Type',ja:'入力',zh:'输入'})[lang]||'직접 입력'}</button>
+        <div style={{position:'absolute',bottom:isMobile?56:84,left:'50%',transform:'translateX(-50%)',zIndex:1001,display:'flex',flexDirection:'column',alignItems:'center',gap:10}}>
+          {guideList.length > 0 && (
+            <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',maxWidth:isMobile?'92vw':460}}>
+              {guideList.slice(0,8).map(entry => (
+                <span key={entry.id} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 8px 6px 12px',fontSize:12,fontWeight:600,background:'rgba(255,255,255,.92)',color:'#5a5048',border:'1px solid #e0d9d0',borderRadius:20,boxShadow:'0 2px 8px rgba(0,0,0,.12)',backdropFilter:'blur(8px)'}}>
+                  <span onClick={()=>openSavedGuide(entry)} style={{cursor:'pointer'}}>{getCityName(entry.cityName)} · {entry.days}{({ko:'일',en:'d',ja:'日',zh:'天'})[lang]||'일'}</span>
+                  <span onClick={()=>deleteSavedGuide(entry.id)} style={{cursor:'pointer',color:'#c0b8ae',fontSize:15,lineHeight:1,padding:'0 2px'}}>×</span>
+                </span>
+              ))}
+            </div>
+          )}
+          <div style={{display:'flex',gap:10}}>
+            <button onClick={()=>{ setNlText(''); setNlOpen(true) }} style={{padding:isMobile?'10px 18px':'12px 22px',fontSize:isMobile?13:14,fontWeight:700,background:'rgba(255,255,255,.95)',color:'#c8856a',border:'1.5px solid #e0d9d0',borderRadius:30,cursor:'pointer',boxShadow:'0 4px 16px rgba(0,0,0,.18)',backdropFilter:'blur(8px)'}}>{({ko:'음성으로',en:'Voice',ja:'音声で',zh:'语音'})[lang]||'음성으로'}</button>
+            <button onClick={()=>{ setNlText(''); setNlOpen(true) }} style={{padding:isMobile?'10px 18px':'12px 22px',fontSize:isMobile?13:14,fontWeight:700,background:'#c8856a',color:'#fff',border:'none',borderRadius:30,cursor:'pointer',boxShadow:'0 4px 16px rgba(200,133,106,.4)'}}>{({ko:'직접 입력',en:'Type',ja:'入力',zh:'输入'})[lang]||'직접 입력'}</button>
+          </div>
         </div>
       )}
       {!selectedCountry && (
