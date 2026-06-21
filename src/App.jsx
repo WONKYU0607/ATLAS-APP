@@ -150,12 +150,16 @@ function App() {
     const allCityNames = [...new Set(days.flatMap(d => (d.items||[]).map(it => it.cityDisplayName)).filter(Boolean))]
     const name = allCityNames.length > 0 ? allCityNames.join(' · ') : 'My Course'
     const saved = {
-      id: Date.now(), name: `${name} ${days.length}${lang==='ko'?'일':'D'}`,
+      id: loadedCourseId || Date.now(), name: `${name} ${days.length}${lang==='ko'?'일':'D'}`,
       type: courseType,
       days: days, transport: courseTransport, tripStart: courseTripStart,
       createdAt: Date.now()
     }
-    const newList = [saved, ...savedCourses]
+    // 불러온 코스를 수정·재저장하면 같은 id를 덮어씀(중복 방지), 새 코스면 맨 앞에 추가
+    const editing = loadedCourseId && savedCourses.some(c => c.id === loadedCourseId)
+    const newList = editing
+      ? savedCourses.map(c => c.id === loadedCourseId ? saved : c)
+      : [saved, ...savedCourses]
     setSavedCourses(newList); localStorage.setItem('atlas_saved_courses', JSON.stringify(newList))
     return saved
   }
@@ -1154,17 +1158,22 @@ function App() {
     if (targets.length === 0) return
     let cancelled = false
     const langParam = lang === 'zh' ? 'zh-CN' : lang
+    let nameCache = {}
+    try { nameCache = JSON.parse(localStorage.getItem('atlas_name_i18n') || '{}') } catch {}
     ;(async () => {
       const resolved = {}
+      let cacheUpdated = false
       for (const it of targets) {
+        if (nameCache[it.place_id] && nameCache[it.place_id][lang]) { resolved[it.place_id] = nameCache[it.place_id][lang]; continue }  // 번역 캐시 우선 → 재검색 0회
         try {
           const q = it.displayName || it.name
           const r = await fetch(`/api/places?query=${encodeURIComponent(q)}&lat=${it.lat}&lng=${it.lng}&language=${langParam}`)
           const d = await r.json()
           const hit = (d.results || []).find(p => p.place_id === it.place_id)  // place_id 정확 매칭만 (오번역 방지)
-          if (hit?.name) resolved[it.place_id] = hit.name
+          if (hit?.name) { resolved[it.place_id] = hit.name; nameCache[it.place_id] = { ...(nameCache[it.place_id] || {}), [lang]: hit.name }; cacheUpdated = true }
         } catch {}
       }
+      if (cacheUpdated) { try { localStorage.setItem('atlas_name_i18n', JSON.stringify(nameCache)) } catch {} }
       if (cancelled || Object.keys(resolved).length === 0) return
       const apply = (arr) => arr.map(it => (it.place_id && resolved[it.place_id]) ? { ...it, nameI18n: { ...(it.nameI18n || {}), [lang]: resolved[it.place_id] } } : it)
       setCourseItems(prev => { const n = apply(prev); localStorage.setItem('atlas_course', JSON.stringify(n)); return n })
@@ -3188,7 +3197,7 @@ Write all text in ${langName}.`
             {/* Country Info Panel (단일 통합 UI — 하단 바 역할 겸함) */}
             {info && (
               <div className="countryInfoPanel" style={{
-                position:'absolute',bottom:isMobile?'calc(60px + env(safe-area-inset-bottom))':24,left:'50%',transform:'translateX(-50%)',
+                position:'absolute',bottom:isMobile?'calc(80px + env(safe-area-inset-bottom))':44,left:'50%',transform:'translateX(-50%)',
                 zIndex:1000,width:isMobile?'78vw':480,maxWidth:'95vw',
                 maxHeight:isMobile?'40vh':'none',
                 display:'flex',flexDirection:'column',
