@@ -1811,7 +1811,7 @@ function App() {
           ">${d.name}</div>`
         } else if (d._type === 'city') {
           const isSelected = (selectedCity?._koName || selectedCity?.name) === (d._koName || d.name)
-          el.style.cssText = 'pointer-events:none;'  // 터치 투명 → 회전/줌 안 막힘 (선택은 onGlobeClick에서)
+          el.style.cssText = d.cityGated ? 'pointer-events:none;opacity:0;' : 'pointer-events:none;'  // 게이팅 대상은 숨김으로 시작(깜빡임 방지), 터치 투명 → 회전/줌 안 막힘
           const inner = document.createElement('div')
           inner.style.cssText = `
             transform:translate(-50%,-50%);
