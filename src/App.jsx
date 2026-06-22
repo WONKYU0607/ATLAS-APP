@@ -92,6 +92,7 @@ function App() {
   const justClickedCityRef = useRef(false) // 도시 클릭 직후 polygon 클릭 무시용
   const pendingPanelRef = useRef(false) // 직전이 줌-only였으면 true → 다음 탭은 무조건 패널 (의도 단계 추적)
   const lastPovKeyRef = useRef('') // hideBackLabels idle 스킵용 (라벨 재생성 시 리셋)
+  const cityEnterAltRef = useRef(0.5) // 국가 진입 alt 기록 → 도시 소도시 라벨 줌 게이팅 기준
   const labelCacheRef = useRef({ t: 0, items: [] }) // 라벨 DOM+좌표 캐시 (querySelectorAll 매틱 방지)
   const hasTouchedRef = useRef(false) // 페이지에 첫 터치 발생하면 true → 호버 영구 비활성 (모바일 확정)
   const [countries, setCountries] = useState([])
@@ -1120,7 +1121,7 @@ function App() {
     c.querySelectorAll('[data-lat]').forEach(el => {
       const la = parseFloat(el.dataset.lat) * Math.PI / 180, ln = parseFloat(el.dataset.lng) * Math.PI / 180
       const ang = Math.acos(Math.max(-1, Math.min(1, Math.sin(cLat) * Math.sin(la) + Math.cos(cLat) * Math.cos(la) * Math.cos(ln - cLng))))
-      const altOk = el.dataset.seaGate === '1' ? alt < 0.45 : (el.dataset.gated !== '1' || alt < 0.7)
+      const altOk = el.dataset.seaGate === '1' ? alt < 0.45 : el.dataset.cityGated === '1' ? alt < cityEnterAltRef.current * 0.6 : (el.dataset.gated !== '1' || alt < 0.7)
       const sh = ang < maxA && altOk
       el.style.opacity = sh ? '1' : '0'
       if (el.dataset.micro === '1') el.style.pointerEvents = sh ? 'auto' : 'none'
@@ -1551,6 +1552,7 @@ function App() {
             gated: el.dataset.gated === '1',
             micro: el.dataset.micro === '1',
             seaGate: el.dataset.seaGate === '1',
+            cityGated: el.dataset.cityGated === '1',
           }))
           cache.t = now
         }
@@ -1567,7 +1569,7 @@ function App() {
           el.dataset.tInit = '1'
         }
         // 섬나라/작은나라(gated)는 alt<0.7, 바다(seaGate)는 더 깊게 alt<0.45에서만 표시
-        const altOk = it.seaGate ? alt < 0.45 : (it.gated ? alt < 0.7 : true)
+        const altOk = it.seaGate ? alt < 0.45 : it.gated ? alt < 0.7 : it.cityGated ? alt < cityEnterAltRef.current * 0.6 : true
         const show = angle < maxAngle && altOk
         const next = show ? '1' : '0'
         if (el.style.opacity !== next) el.style.opacity = next
@@ -1710,7 +1712,7 @@ function App() {
     }
 
     const countryEn = selectedCountry.properties.NAME
-    const cities = (COUNTRY_CITIES[countryEn] || []).map(c => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city' }))
+    const cities = (COUNTRY_CITIES[countryEn] || []).map((c, idx) => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city', cityGated: idx >= 5 }))
     const countryLabels = countries.map(feat => ({
       lat: feat.properties.LABEL_Y || 0,
       lng: feat.properties.LABEL_X || 0,
@@ -1763,6 +1765,7 @@ function App() {
         if (d._type === 'island') { el.dataset.micro = '1'; if (d.nameEn !== 'Guam' && d.nameEn !== 'Singapore') el.dataset.gated = '1' }
         else if (d._type === 'country' && SMALL_COUNTRY.has(d.nameEn)) { el.dataset.gated = '1' }
         else if (d._type === 'sea') { el.dataset.seaGate = '1' }
+        else if (d._type === 'city' && d.cityGated) { el.dataset.cityGated = '1' }
 
         if (d._type === 'geoline') {
           el.style.cssText = 'pointer-events:none;'
@@ -2348,6 +2351,7 @@ function App() {
     const center = getCountryCenter(feat)
     const altitude = getCountryAltitude(feat)
     const mobileAlt = window.innerWidth <= 768 ? altitude * 1.5 : altitude
+    cityEnterAltRef.current = mobileAlt   // 도시 소도시 라벨 게이팅 기준 (이 나라의 진입 줌)
 
     globe.controls().autoRotate = false
     globe.pointOfView({ lat: center.lat, lng: center.lng, altitude: mobileAlt }, 1300)
