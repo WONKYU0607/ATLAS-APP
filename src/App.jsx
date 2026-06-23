@@ -60,6 +60,8 @@ function App() {
 
   // ── 커뮤니티 상태 ──
   const [showCommunity, setShowCommunity] = useState(false)
+  const [communitySearch, setCommunitySearch] = useState('')
+  const [communityDayFilter, setCommunityDayFilter] = useState(0)
   const [communityCoursesData, setCommunityCoursesData] = useState([])
   const [communityLoading, setCommunityLoading] = useState(false)
   const [communityExpanded, setCommunityExpanded] = useState(null)
@@ -1111,6 +1113,28 @@ function App() {
     const suf = lang === 'ko' ? '월' : '月'
     return s.replace(/Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/g, m => M[m] + suf).replace(/[–—-]/g, '~')
   }
+  // 국가정보 패널 라인 아이콘 (골드)
+  const InfoIcon = ({ type, color = '#c9a86a', size = 15 }) => {
+    const P = {
+      capital: <><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/></>,
+      pop: <><circle cx="9" cy="7" r="3"/><path d="M2.5 21v-1.5A4 4 0 0 1 6.5 15.5h2M15 7a3 3 0 0 1 0 6M21.5 21v-1.5a4 4 0 0 0-3-3.87"/></>,
+      area: <><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></>,
+      lang: <><path d="M21 14a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/></>,
+      currency: <><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></>,
+      timezone: <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,
+      season: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></>,
+      continent: <><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></>,
+      voltage: <><path d="M13 2L4.5 13.5H11l-1 8.5 8.5-11.5H12z"/></>,
+      callCode: <><path d="M21 16.5v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 1.1 3.8 2 2 0 0 1 3.1 1.6h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L7.1 9.3a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.7 2z"/></>,
+      drive: <><path d="M5 13l1.5-4.5A2 2 0 0 1 8.4 7h7.2a2 2 0 0 1 1.9 1.5L19 13M5 13h14v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H8v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><circle cx="7.5" cy="16" r=".6"/><circle cx="16.5" cy="16" r=".6"/></>,
+      cityCount: <><rect x="3" y="8" width="7" height="13" rx="1"/><rect x="12" y="3" width="9" height="18" rx="1"/><path d="M6 12h1M6 16h1M15.5 7h2M15.5 11h2M15.5 15h2"/></>,
+      police: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>,
+      ambulance: <><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></>,
+      fire: <><path d="M12 2c1 3 4 4.5 4 8a4 4 0 0 1-8 0c0-1 .5-2 1-2.5C8 9 9 5 12 2z"/><path d="M12 22a6 6 0 0 0 6-6c0-2-1-3.5-2.5-4.8"/></>,
+      tourist: <><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></>,
+    }
+    return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>{P[type]}</svg>
+  }
   // 라벨 게이팅 1회 강제 적용 (첫 상호작용 전에도 줌/시야각 기준 라벨 정리)
   const forceGatingNow = () => {
     const g = globeRef.current, c = globeContainerRef.current
@@ -1206,14 +1230,35 @@ function App() {
   }
 
   const buildCourseI18n = (course) => {
-    const newDays = (course.days || []).map(d => ({
-      ...d,
-      items: (d.items || []).map(it => {
-        const i18n = buildItemI18n(it)
-        return { ...it, i18n: i18n.names, cityI18n: i18n.cityNames }
-      })
-    }))
+    const tr = course.transport || courseTransport
+    const newDays = (course.days || []).map(d => {
+      const items = d.items || []
+      return {
+        ...d,
+        items: items.map((it, i) => {
+          const i18n = buildItemI18n(it)
+          let legToNext = null
+          if (items[i + 1]) { const r = routeCache[getRouteKey(it, items[i + 1], tr)]; if (r && !r.noRoute) legToNext = { distance: r.distance, duration: r.duration } }
+          return { ...it, i18n: i18n.names, cityI18n: i18n.cityNames, legToNext }
+        })
+      }
+    })
     return { ...course, days: newDays }
+  }
+
+  // 사용자 추천 코스 필터 (검색어 + 박일)
+  const matchCommunityFilter = (sc) => {
+    const days = sc.course?.days || sc.days || []
+    if (communityDayFilter > 0) { if (communityDayFilter === 99 ? days.length < 4 : days.length !== communityDayFilter) return false }
+    if (communitySearch.trim()) {
+      const firstCityRaw = days.flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).find(Boolean)
+      let country = ''
+      if (firstCityRaw) { const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>Array.isArray(cs)&&cs.some(c=>c.name===firstCityRaw)); if (entry) country = entry[0] }
+      const cities = days.flatMap(d=>(d.items||[]).map(it=>it.cityI18n?.[lang] || getCityName(it.cityName||it.name))).filter(Boolean)
+      const hay = (cities.join(' ') + ' ' + (country?getCountryName(country):'')).toLowerCase()
+      if (!hay.includes(communitySearch.trim().toLowerCase())) return false
+    }
+    return true
   }
 
   // ── 코스 다운로드 (PPT / Word) ──
@@ -3221,89 +3266,82 @@ Write all text in ${langName}.`
             {info && (
               <div className="countryInfoPanel" style={{
                 position:'absolute',bottom:isMobile?'calc(80px + env(safe-area-inset-bottom))':44,left:'50%',transform:'translateX(-50%)',
-                zIndex:1000,width:isMobile?'78vw':480,maxWidth:'95vw',
-                maxHeight:isMobile?'40vh':'none',
+                zIndex:1000,width:isMobile?'82vw':480,maxWidth:'95vw',
+                maxHeight:isMobile?'44vh':'none',
                 display:'flex',flexDirection:'column',
-                background:'rgba(255,255,255,.97)',backdropFilter:'blur(16px)',
-                border:'1.5px solid #e2e8f0',borderRadius:18,
-                boxShadow:'0 12px 48px rgba(0,0,0,.22)',
+                background:'linear-gradient(160deg, #2e323c 0%, #23262e 55%, #1b1e25 100%)',
+                border:'1px solid rgba(201,168,106,.35)',borderRadius:18,
+                boxShadow:'0 16px 56px rgba(0,0,0,.5)',
                 overflow:'hidden',
               }}>
-                {/* Header (탭하면 컴팩트↔전체 펼침 토글, ✕는 패널 자체 닫기) */}
+                {/* Header */}
                 <div onClick={() => setInfoExpanded(v => !v)} style={{
-                  background:`linear-gradient(135deg, ${cities?.[0]?.color || '#3b82f6'}18, ${cities?.[1]?.color || '#8b5cf6'}12)`,
-                  borderBottom: infoExpanded ? '1px solid #e2e8f0' : 'none', padding:'8px 11px',
+                  background:'linear-gradient(135deg, rgba(201,168,106,.14), rgba(201,168,106,.03))',
+                  borderBottom: infoExpanded ? '1px solid rgba(201,168,106,.18)' : 'none', padding:'10px 13px',
                   cursor:'pointer', userSelect:'none', flexShrink:0,
                 }}>
-                  <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:3}}>
-                    <span style={{fontSize:18}}>{info.emoji}</span>
+                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
                     <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:14,fontWeight:800,color:'#0f172a',letterSpacing:'-.3px'}}>{countryKo}</div>
-                      <div style={{fontSize:9,color:'#64748b',fontWeight:500}}>{cName} · {info.continent}</div>
+                      <div style={{fontSize:15,fontWeight:800,color:'#e8d9b8',letterSpacing:'-.3px'}}>{countryKo}</div>
+                      <div style={{fontSize:9.5,color:'#9a8f7a',fontWeight:500}}>{cName} · {info.continent}</div>
                     </div>
-                    <span style={{fontSize:11,color:'#94a3b8',flexShrink:0,marginLeft:2}}>{infoExpanded ? '▼' : '▲'}</span>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); closeCountry() }}
-                      style={{background:'#f1f5f9',border:'none',borderRadius:12,width:20,height:20,padding:0,cursor:'pointer',fontSize:10,color:'#64748b',fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}
-                      aria-label="close">✕</button>
+                    <span style={{fontSize:11,color:'#8a7f6a',flexShrink:0}}>{infoExpanded ? '▼' : '▲'}</span>
+                    <button onClick={(e) => { e.stopPropagation(); closeCountry() }} style={{background:'rgba(255,255,255,.08)',border:'none',borderRadius:10,width:22,height:22,padding:0,cursor:'pointer',fontSize:11,color:'#b5a98e',fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}} aria-label="close">✕</button>
                   </div>
-                  <div style={{fontSize:10,color:'#475569',fontStyle:'italic',lineHeight:1.4}}>"{info.tagline}"</div>
+                  <div style={{fontSize:10,color:'#9a8f7a',fontStyle:'italic',lineHeight:1.4}}>"{info.tagline}"</div>
                 </div>
 
-                {/* 펼침 상태: 스크롤 래퍼 안에 Grid + Emergency + Footer 통합 */}
                 {infoExpanded && (
                 <div style={{flex:1,overflowY:'auto',minHeight:0}}>
-                  {/* Info Grid */}
-                  <div style={{padding:'10px 14px 12px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0'}}>
+                  <div style={{padding:'8px 14px 12px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0'}}>
                     {[
-                      { icon:'🏛️', label:t('lCapital'), value:info.capital },
-                      { icon:'👥', label:t('lPop'), value:info.population },
-                      { icon:'📐', label:t('lArea'), value:info.area },
-                      { icon:'🗣️', label:t('lLang'), value:info.lang },
-                      { icon:'💰', label:t('lCurrency'), value:info.currency },
-                      { icon:'🕐', label:t('lTimezone'), value:info.timezone },
-                      { icon:'🌤️', label:t('lBestSeason'), value: translateBestSeason(info.bestSeason) },
-                      { icon:'🌍', label:t('lContinent'), value:info.continent },
-                      { icon:'🔌', label:t('lVoltage'), value:info.voltage },
-                      { icon:'📞', label:t('lCallCode'), value:info.callCode },
-                      { icon:'🚗', label:t('lDrive'), value:info.drive },
-                      { icon:'🌍', label:t('lCityCount'), value: cities ? `${cities.length}${t('registered')}` : '—' },
+                      { icon:'capital', label:t('lCapital'), value:info.capital },
+                      { icon:'pop', label:t('lPop'), value:info.population },
+                      { icon:'area', label:t('lArea'), value:info.area },
+                      { icon:'lang', label:t('lLang'), value:info.lang },
+                      { icon:'currency', label:t('lCurrency'), value:info.currency },
+                      { icon:'timezone', label:t('lTimezone'), value:info.timezone },
+                      { icon:'season', label:t('lBestSeason'), value: translateBestSeason(info.bestSeason) },
+                      { icon:'continent', label:t('lContinent'), value:info.continent },
+                      { icon:'voltage', label:t('lVoltage'), value:info.voltage },
+                      { icon:'callCode', label:t('lCallCode'), value:info.callCode },
+                      { icon:'drive', label:t('lDrive'), value:info.drive },
+                      { icon:'cityCount', label:t('lCityCount'), value: cities ? `${cities.length}${t('registered')}` : '—' },
                     ].map((item, i) => (
                       <div key={i} style={{
-                        display:'flex',alignItems:'center',gap:7,
-                        padding:'6px 4px',
-                        borderBottom: i < 10 ? '1px solid #f1f5f9' : 'none',
+                        display:'flex',alignItems:'center',gap:9,
+                        padding:'7px 4px',
+                        borderBottom: i < 10 ? '1px solid rgba(255,255,255,.05)' : 'none',
                       }}>
-                        <span style={{fontSize:14,flexShrink:0,width:20,textAlign:'center'}}>{item.icon}</span>
+                        <InfoIcon type={item.icon} />
                         <div style={{minWidth:0}}>
-                          <div style={{fontSize:9.5,color:'#94a3b8',fontWeight:600,letterSpacing:'.5px',lineHeight:1}}>{item.label}</div>
-                          <div style={{fontSize:11.5,color:'#1e293b',fontWeight:600,marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.value}</div>
+                          <div style={{fontSize:9,color:'#c9a86a',fontWeight:600,letterSpacing:'.5px',lineHeight:1}}>{item.label}</div>
+                          <div style={{fontSize:11.5,color:'#ecedf0',fontWeight:600,marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.value}</div>
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  {/* Emergency Contacts */}
                   {(() => {
                     const em = EMERGENCY_CONTACTS[cName]
                     if (!em) return null
                     const items = [
-                      em.police && {icon:'🚔',label:t('emergPolice'),num:em.police},
-                      em.ambulance && {icon:'🚑',label:t('emergAmbulance'),num:em.ambulance},
-                      em.fire && {icon:'🚒',label:t('emergFire'),num:em.fire},
-                      em.tourist && {icon:'ℹ️',label:t('emergTourist'),num:em.tourist},
-                      em.general && {icon:'📞',label:t('emergGeneral'),num:em.general},
+                      em.police && {icon:'police',label:t('emergPolice'),num:em.police},
+                      em.ambulance && {icon:'ambulance',label:t('emergAmbulance'),num:em.ambulance},
+                      em.fire && {icon:'fire',label:t('emergFire'),num:em.fire},
+                      em.tourist && {icon:'tourist',label:t('emergTourist'),num:em.tourist},
+                      em.general && {icon:'callCode',label:t('emergGeneral'),num:em.general},
                     ].filter(Boolean)
                     return (
-                      <div style={{padding:'8px 14px 10px',borderTop:'1px solid #f1f5f9'}}>
-                        <div style={{fontSize:10.5,fontWeight:700,color:'#ef4444',letterSpacing:'.5px',marginBottom:6}}>🆘 {t('emergTitle')}</div>
-                        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'repeat(3,1fr)',gap:4}}>
+                      <div style={{padding:'8px 14px 10px',borderTop:'1px solid rgba(201,168,106,.18)'}}>
+                        <div style={{fontSize:10,fontWeight:700,color:'#c9a86a',letterSpacing:'1px',marginBottom:7}}>{t('emergTitle')}</div>
+                        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'repeat(3,1fr)',gap:5}}>
                           {items.map((it,i)=>(
-                            <a key={i} href={`tel:${it.num}`} style={{display:'flex',alignItems:'center',gap:4,padding:'5px 7px',borderRadius:7,background:'#fef2f2',border:'1px solid #fecaca',textDecoration:'none',fontSize:10.5,color:'#dc2626',fontWeight:600,minWidth:0,overflow:'hidden'}}>
-                              <span style={{flexShrink:0,fontSize:11}}>{it.icon}</span>
+                            <a key={i} href={`tel:${it.num}`} style={{display:'flex',alignItems:'center',gap:6,padding:'7px 9px',borderRadius:9,background:'rgba(255,255,255,.04)',border:'1px solid rgba(201,168,106,.2)',textDecoration:'none',minWidth:0,overflow:'hidden'}}>
+                              <InfoIcon type={it.icon} size={16} color="#d4b878" />
                               <div style={{minWidth:0,overflow:'hidden'}}>
-                                <div style={{fontSize:8.5,color:'#94a3b8',fontWeight:500,lineHeight:1}}>{it.label}</div>
-                                <div style={{fontSize:11,fontWeight:700,color:'#dc2626',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{it.num}</div>
+                                <div style={{fontSize:8.5,color:'#9a8f7a',fontWeight:500,lineHeight:1}}>{it.label}</div>
+                                <div style={{fontSize:12,fontWeight:700,color:'#e8d9b8',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{it.num}</div>
                               </div>
                             </a>
                           ))}
@@ -3312,9 +3350,8 @@ Write all text in ${langName}.`
                     )
                   })()}
 
-                  {/* Footer hint */}
-                  <div style={{borderTop:'1px solid #f1f5f9',padding:'7px 14px',textAlign:'center'}}>
-                    <span style={{fontSize:10.5,color:'#94a3b8'}}>{t('cityInfoHint')}</span>
+                  <div style={{borderTop:'1px solid rgba(255,255,255,.05)',padding:'8px 14px',textAlign:'center'}}>
+                    <span style={{fontSize:10,color:'#7a7268'}}>{t('cityInfoHint')}</span>
                   </div>
                 </div>
                 )}
@@ -4969,8 +5006,15 @@ Write all text in ${langName}.`
             ) : communityCoursesData.length === 0 ? (
               <div style={{textAlign:'center',padding:'60px 0',color:'#94a3b8',fontSize:14,fontWeight:600}}>{t('communityEmpty')}</div>
             ) : (
-              <div style={{display:'flex',flexDirection:'column',gap:12,maxWidth:640,margin:'0 auto'}}>
-                {communityCoursesData.map((sc,idx) => {
+              <div style={{maxWidth:640,margin:'0 auto'}}>
+                <input value={communitySearch} onChange={e=>setCommunitySearch(e.target.value)} placeholder={lang==='ko'?'국가·도시 검색':'Search country/city'} style={{width:'100%',padding:'10px 14px',fontSize:13,border:'1px solid #e0d9d0',borderRadius:10,background:'white',outline:'none',marginBottom:10,boxSizing:'border-box'}} />
+                <div style={{display:'flex',gap:6,marginBottom:16,flexWrap:'wrap'}}>
+                  {[[0,lang==='ko'?'전체':'All'],[1,lang==='ko'?'당일':'1d'],[2,lang==='ko'?'1박2일':'2d'],[3,lang==='ko'?'2박3일':'3d'],[99,lang==='ko'?'3박+':'4d+']].map(([v,label])=>(
+                    <button key={v} onClick={()=>setCommunityDayFilter(v)} style={{padding:'6px 13px',fontSize:12,fontWeight:600,borderRadius:16,cursor:'pointer',border:'1px solid '+(communityDayFilter===v?'#c8856a':'#e0d9d0'),background:communityDayFilter===v?'#c8856a':'white',color:communityDayFilter===v?'white':'#7a6f63'}}>{label}</button>
+                  ))}
+                </div>
+                <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                {communityCoursesData.filter(matchCommunityFilter).map((sc,idx) => {
                   const days = sc.course?.days || sc.days || []
                   const cities = [...new Set(days.flatMap(d=>(d.items||[]).map(it=>it.cityI18n?.[lang] || getCityName(it.cityName||it.name))).filter(Boolean))]
                   const firstCityRaw = days.flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).find(Boolean)
@@ -4999,9 +5043,14 @@ Write all text in ${langName}.`
                             <div key={di} style={{marginBottom:di<days.length-1?16:10}}>
                               <div style={{fontSize:13,fontWeight:800,color:'#c8856a',marginBottom:8}}>Day {di+1}</div>
                               {(day.items||[]).map((it,ii)=>(
-                                <div key={ii} style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
-                                  <div style={{flexShrink:0,width:22,height:22,borderRadius:'50%',background:'#c8856a',color:'white',fontSize:11,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}>{ii+1}</div>
-                                  <div style={{fontSize:14,fontWeight:600,color:'#1a1714'}}>{it.i18n?.[lang] || getCourseItemName(it)}</div>
+                                <div key={ii}>
+                                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:(it.legToNext&&ii<(day.items||[]).length-1)?4:8}}>
+                                    <div style={{flexShrink:0,width:22,height:22,borderRadius:'50%',background:'#c8856a',color:'white',fontSize:11,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}>{ii+1}</div>
+                                    <div style={{fontSize:14,fontWeight:600,color:'#1a1714'}}>{it.i18n?.[lang] || getCourseItemName(it)}</div>
+                                  </div>
+                                  {it.legToNext && ii<(day.items||[]).length-1 && (
+                                    <div style={{fontSize:11,color:'#b0a89e',paddingLeft:32,marginBottom:8,display:'flex',alignItems:'center',gap:5}}><span style={{color:'#d0c8be'}}>↓</span>{it.legToNext.duration} · {it.legToNext.distance}</div>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -5021,6 +5070,7 @@ Write all text in ${langName}.`
                     </div>
                   )
                 })}
+                </div>
               </div>
             )}
           </div>
