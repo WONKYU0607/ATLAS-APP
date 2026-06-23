@@ -1128,9 +1128,9 @@ function App() {
       callCode: <><path d="M21 16.5v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 1.1 3.8 2 2 0 0 1 3.1 1.6h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L7.1 9.3a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.7 2z"/></>,
       drive: <><path d="M5 13l1.5-4.5A2 2 0 0 1 8.4 7h7.2a2 2 0 0 1 1.9 1.5L19 13M5 13h14v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H8v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><circle cx="7.5" cy="16" r=".6"/><circle cx="16.5" cy="16" r=".6"/></>,
       cityCount: <><rect x="3" y="8" width="7" height="13" rx="1"/><rect x="12" y="3" width="9" height="18" rx="1"/><path d="M6 12h1M6 16h1M15.5 7h2M15.5 11h2M15.5 15h2"/></>,
-      police: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>,
+      police: <><path d="M12 22s7-3.5 7-9V5.5l-7-2.5-7 2.5V13c0 5.5 7 9 7 9z"/><path d="M12 8.3l1 2.1 2.3.3-1.7 1.6.4 2.3-2-1.1-2 1.1.4-2.3-1.7-1.6 2.3-.3z"/></>,
       ambulance: <><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></>,
-      fire: <><path d="M12 2c1 3 4 4.5 4 8a4 4 0 0 1-8 0c0-1 .5-2 1-2.5C8 9 9 5 12 2z"/><path d="M12 22a6 6 0 0 0 6-6c0-2-1-3.5-2.5-4.8"/></>,
+      fire: <><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></>,
       tourist: <><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></>,
     }
     return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>{P[type]}</svg>
@@ -3288,7 +3288,7 @@ Write all text in ${langName}.`
                     <span style={{fontSize:11,color:'#8a7f6a',flexShrink:0}}>{infoExpanded ? '▼' : '▲'}</span>
                     <button onClick={(e) => { e.stopPropagation(); closeCountry() }} style={{background:'rgba(255,255,255,.08)',border:'none',borderRadius:10,width:22,height:22,padding:0,cursor:'pointer',fontSize:11,color:'#b5a98e',fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}} aria-label="close">✕</button>
                   </div>
-                  <div style={{fontSize:10,color:'#9a8f7a',fontStyle:'italic',lineHeight:1.4}}>"{info.tagline}"</div>
+                  <div style={{fontSize:10,color:'#9a8f7a',lineHeight:1.4}}>"{info.tagline}"</div>
                 </div>
 
                 {infoExpanded && (
