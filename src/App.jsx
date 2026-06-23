@@ -5078,58 +5078,48 @@ Write all text in ${langName}.`
       )}
 
       {/* Share Modal */}
-      {shareModalCourse && (
+      {shareModalCourse && (() => {
+        const days = shareModalCourse.days || []
+        const cityNames = [...new Set(days.flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))]
+        const firstCityRaw = days.flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).find(Boolean)
+        let country = ''
+        if (firstCityRaw) { const entry = Object.entries(COUNTRY_CITIES).find(([_,cs])=>Array.isArray(cs)&&cs.some(c=>c.name===firstCityRaw)); if (entry) country = entry[0] }
+        const cityDisp = cityNames.map(c=>getCityName(c)).join(' · ')
+        const totalPlaces = days.reduce((a,d)=>a+(d.items||[]).length,0)
+        return (
         <>
           <div onClick={()=>setShareModalCourse(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:3100}} />
           <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:3101,width:isMobile?'92vw':400,background:'white',borderRadius:20,boxShadow:'0 24px 64px rgba(0,0,0,.3)',overflow:'hidden'}}>
-            <div style={{background:'linear-gradient(135deg,#2563eb,#7c3aed)',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <span style={{fontSize:17,fontWeight:800,color:'white'}}>{t('shareBtn')}</span>
+            <div style={{background:'#c8856a',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <span style={{fontSize:16,fontWeight:800,color:'white'}}>{({ko:'사용자 추천 코스 공유하기',en:'Share to Community',ja:'おすすめコースを共有',zh:'分享推荐路线'})[lang]||'사용자 추천 코스 공유하기'}</span>
               <button onClick={()=>setShareModalCourse(null)} style={{background:'rgba(255,255,255,.2)',border:'none',color:'white',width:30,height:30,borderRadius:8,fontSize:15,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
             </div>
             <div style={{padding:'18px 22px 22px'}}>
-              <div style={{padding:'12px 16px',borderRadius:12,background:'#f8fafc',border:'1px solid #e2e8f0',marginBottom:16}}>
-                <div style={{fontSize:15,fontWeight:700,color:'#0f172a'}}>{[...new Set((shareModalCourse.days||[]).flatMap(d=>(d.items||[]).map(it=>it.cityName||it.name)).filter(Boolean))].map(c=>getCityName(c)).join(' · ')}</div>
-                <div style={{fontSize:12,color:'#64748b',marginTop:4}}>{(shareModalCourse.days||[]).reduce((a,d)=>a+(d.items||[]).length,0)}{t('communityPlaces')} · {(shareModalCourse.days||[]).length}{t('communityDays')}</div>
-              </div>
-              <div style={{marginBottom:16}}>
-                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:6}}>{t('sharePhotos')}</label>
-                <input type="file" accept="image/*" multiple onChange={e=>setSharePhotos([...e.target.files].slice(0,5))}
-                  style={{fontSize:12,color:'#64748b'}} />
-                {sharePhotos.length > 0 && (
-                  <div style={{display:'flex',gap:8,marginTop:8,flexWrap:'wrap'}}>
-                    {[...sharePhotos].map((f,i)=>(
-                      <div key={i} style={{width:64,height:48,borderRadius:8,overflow:'hidden',border:'1px solid #e2e8f0'}}>
-                        <img src={URL.createObjectURL(f)} style={{width:'100%',height:'100%',objectFit:'cover'}} />
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div style={{padding:'18px 16px',borderRadius:12,background:'#faf8f5',border:'1px solid #e0d9d0',marginBottom:18,textAlign:'center'}}>
+                {getFlagImg(COUNTRY_INFO[country]?.emoji,24) && <img src={getFlagImg(COUNTRY_INFO[country]?.emoji,24)} width={34} height={24} style={{borderRadius:4,marginBottom:8}} />}
+                <div style={{fontSize:15,fontWeight:800,color:'#1a1714'}}>{country?getCountryName(country):''}{cityDisp?` · ${cityDisp}`:''}</div>
+                <div style={{fontSize:12,color:'#9a8070',marginTop:5}}>{totalPlaces}{t('communityPlaces')} · {days.length}{t('communityDays')}</div>
               </div>
               <div style={{display:'flex',gap:10}}>
-                <button onClick={()=>setShareModalCourse(null)} style={{flex:1,padding:'11px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'white',color:'#64748b',fontSize:13,fontWeight:600,cursor:'pointer'}}>{t('shareCancel')}</button>
+                <button onClick={()=>setShareModalCourse(null)} style={{flex:1,padding:'12px',borderRadius:10,border:'1.5px solid #e0d9d0',background:'white',color:'#7a6f63',fontSize:13,fontWeight:600,cursor:'pointer'}}>{t('shareCancel')}</button>
                 <button disabled={shareUploading} onClick={async()=>{
                   if (!currentUser) { alert(lang==='ko'?'로그인이 필요합니다':'Login required'); return }
                   setShareUploading(true)
                   try {
-                    let photoUrls = []
-                    for (const f of sharePhotos) {
-                      const path = 'courses/'+currentUser.uid+'/'+Date.now()+'_'+f.name
-                      const url = await uploadPhoto(f, path)
-                      photoUrls.push(url)
-                    }
-                    await shareCourse(currentUser.uid, buildCourseI18n(shareModalCourse), currentUser.displayName||currentUser.email, photoUrls)
+                    await shareCourse(currentUser.uid, buildCourseI18n(shareModalCourse), currentUser.displayName||currentUser.email, [])
                     alert(t('communityShared'))
-                    setShareModalCourse(null);setSharePhotos([])
+                    setShareModalCourse(null)
                   } catch(e) { alert(e.message) }
                   setShareUploading(false)
-                }} style={{flex:1,padding:'11px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#2563eb,#7c3aed)',color:'white',fontSize:13,fontWeight:700,cursor:'pointer',opacity:shareUploading?.6:1}}>
-                  {shareUploading ? t('uploading') : t('shareBtn')}
+                }} style={{flex:1,padding:'12px',borderRadius:10,border:'none',background:'#c8856a',color:'white',fontSize:13,fontWeight:700,cursor:'pointer',opacity:shareUploading?.6:1}}>
+                  {shareUploading ? t('uploading') : (({ko:'공유하기',en:'Share',ja:'共有',zh:'分享'})[lang]||'공유하기')}
                 </button>
               </div>
             </div>
           </div>
         </>
-      )}
+        )
+      })()}
 
       {/* Login Modal */}
       {showLoginModal && (
