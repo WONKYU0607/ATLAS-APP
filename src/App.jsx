@@ -3027,6 +3027,25 @@ Write all text in ${langName}.`
                   </div>
                 </div>
 
+                {/* 사용자 추천 코스 */}
+                <div style={{padding:'0 16px 14px'}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'#f5f0ea',border:'1px solid #ede8e0',transition:'all .15s'}}
+                    onClick={async()=>{
+                      setShowCommunity(true);setShowHamburger(false);setCommunityLoading(true)
+                      try{const cd=await loadSharedCourses();setCommunityCoursesData(cd)}catch(e){console.error('[ATLAS] loadSharedCourses failed:',e)}
+                      setCommunityLoading(false)
+                    }}
+                    onMouseEnter={e=>e.currentTarget.style.background='#ede8e0'}
+                    onMouseLeave={e=>e.currentTarget.style.background='#f5f0ea'}>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:700,color:'#1a1714'}}>{({ko:'사용자 추천 코스',en:'Community Courses',ja:'おすすめコース',zh:'推荐路线'})[lang]||'사용자 추천 코스'}</div>
+                        <div style={{fontSize:10,color:'#9a8070',marginTop:2}}>{({ko:'다른 여행자들이 공유한 코스',en:'Courses shared by travelers',ja:'旅行者が共有したコース',zh:'旅行者分享的路线'})[lang]||'다른 여행자들이 공유한 코스'}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* 내 여행 기록 */}
                 <div style={{padding:'0 16px 14px'}}>
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'#f5f0ea',border:'1px solid #ede8e0',transition:'all .15s'}}
@@ -3395,7 +3414,7 @@ Write all text in ${langName}.`
         </div>
       )}
       {!selectedCountry && !showCoursePlanner && (
-        <div style={{position:'absolute',bottom:isMobile?56:84,left:'50%',transform:'translateX(-50%)',zIndex:1001,display:'flex',flexDirection:'column',alignItems:'center',gap:10}}>
+        <div style={{position:'absolute',bottom:isMobile?'calc(56px + 15vh)':84,left:'50%',transform:'translateX(-50%)',zIndex:1001,display:'flex',flexDirection:'column',alignItems:'center',gap:10}}>
           {guideList.length > 0 && (
             <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',maxWidth:isMobile?'92vw':460}}>
               {guideList.slice(0,8).map(entry => (
@@ -3529,12 +3548,12 @@ Write all text in ${langName}.`
                       <button
                         onClick={() => copyLink(selectedCity)}
                         style={{
-                          flex:1,padding:'10px 14px',background:'#f8fafc',
-                          border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,fontWeight:600,
-                          color:'#64748b',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'all .2s'
+                          flex:1,padding:'10px 14px',background:'#faf8f5',
+                          border:'1.5px solid #e0d9d0',borderRadius:10,fontSize:13,fontWeight:600,
+                          color:'#c8856a',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'all .2s'
                         }}
-                        onMouseEnter={e=>{e.currentTarget.style.background='#3b82f6';e.currentTarget.style.color='white';e.currentTarget.style.borderColor='#3b82f6'}}
-                        onMouseLeave={e=>{e.currentTarget.style.background='#f8fafc';e.currentTarget.style.color='#64748b';e.currentTarget.style.borderColor='#e2e8f0'}}
+                        onMouseEnter={e=>{e.currentTarget.style.background='#c8856a';e.currentTarget.style.color='white';e.currentTarget.style.borderColor='#c8856a'}}
+                        onMouseLeave={e=>{e.currentTarget.style.background='#faf8f5';e.currentTarget.style.color='#c8856a';e.currentTarget.style.borderColor='#e0d9d0'}}
                       >{t('linkCopy')}</button>
                       <button
                         onClick={() => shareNative(selectedCity)}
