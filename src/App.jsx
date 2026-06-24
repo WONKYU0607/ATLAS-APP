@@ -3450,7 +3450,38 @@ Write all text in ${langName}.`
           </div>
         </div>
       )}
-      {!selectedCountry && !showCoursePlanner && (
+      {/* ===== 임시 데이터 추출 도구 (추출 끝나면 이 블록 삭제) ===== */}
+      {selectedCity && (
+          <div style={{position:'fixed',top:10,right:10,zIndex:99999,display:'flex',gap:6,alignItems:'center'}}>
+            <button onClick={()=>{
+              const cityName = selectedCity._koName || selectedCity.name
+              const ex = JSON.parse(localStorage.getItem('atlas_extract')||'{}')
+              ex[cityName] = {
+                country: selectedCity.countryEn || '',
+                desc: cityData?.desc || '',
+                attractions: (hotspots||[]).map(h=>({
+                  name: h.name,
+                  lat: h.geometry?.location?.lat ?? null,
+                  lng: h.geometry?.location?.lng ?? null,
+                  place_id: h.place_id || null,
+                  types: h.types || [],
+                }))
+              }
+              localStorage.setItem('atlas_extract', JSON.stringify(ex))
+              alert(`[${cityName}] ${ex[cityName].attractions.length}곳 추출\n누적: ${Object.keys(ex).length}개 도시`)
+            }} style={{padding:'8px 12px',background:'#16a34a',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer',boxShadow:'0 2px 8px rgba(0,0,0,.3)'}}>추출</button>
+            <button onClick={()=>{
+              const data = localStorage.getItem('atlas_extract')||'{}'
+              const n = Object.keys(JSON.parse(data)).length
+              const blob = new Blob([data],{type:'application/json'})
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href=url; a.download=`atlas_extract_${n}cities.json`; a.click()
+              URL.revokeObjectURL(url)
+            }} style={{padding:'8px 12px',background:'#2563eb',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer',boxShadow:'0 2px 8px rgba(0,0,0,.3)'}}>JSON 저장</button>
+          </div>
+        )}
+        {!selectedCountry && !showCoursePlanner && (
         <div style={{position:'absolute',bottom:isMobile?'calc(56px + 15vh)':84,left:'50%',transform:'translateX(-50%)',zIndex:1001,display:'flex',flexDirection:'column',alignItems:'center',gap:10}}>
           {guideList.length > 0 && (
             <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',maxWidth:isMobile?'92vw':460}}>
