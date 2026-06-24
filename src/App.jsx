@@ -3458,7 +3458,7 @@ Write all text in ${langName}.`
               const ex = JSON.parse(localStorage.getItem('atlas_extract')||'{}')
               ex[cityName] = {
                 country: selectedCity.countryEn || '',
-                desc: cityData?.desc || '',
+                desc: cityData?.description || '',
                 attractions: (hotspots||[]).map(h=>({
                   name: h.name,
                   lat: h.geometry?.location?.lat ?? null,
