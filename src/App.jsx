@@ -62,6 +62,7 @@ function App() {
   const [showCommunity, setShowCommunity] = useState(false)
   const [communitySearch, setCommunitySearch] = useState('')
   const [communityDayFilter, setCommunityDayFilter] = useState(0)
+  const [extractTick, setExtractTick] = useState(0) // 임시 추출 도구 리렌더용 (추출 끝나면 삭제)
   const [communityCoursesData, setCommunityCoursesData] = useState([])
   const [communityLoading, setCommunityLoading] = useState(false)
   const [communityExpanded, setCommunityExpanded] = useState(null)
@@ -3450,37 +3451,63 @@ Write all text in ${langName}.`
           </div>
         </div>
       )}
-      {/* ===== 임시 데이터 추출 도구 (추출 끝나면 이 블록 삭제) ===== */}
-      {selectedCity && (
-          <div style={{position:'fixed',top:10,right:10,zIndex:99999,display:'flex',gap:6,alignItems:'center'}}>
-            <button onClick={()=>{
-              const cityName = selectedCity._koName || selectedCity.name
-              const ex = JSON.parse(localStorage.getItem('atlas_extract')||'{}')
-              ex[cityName] = {
-                country: selectedCity.countryEn || '',
-                desc: cityData?.description || '',
-                attractions: (hotspots||[]).map(h=>({
-                  name: h.name,
-                  lat: h.geometry?.location?.lat ?? null,
-                  lng: h.geometry?.location?.lng ?? null,
-                  place_id: h.place_id || null,
-                  types: h.types || [],
-                }))
-              }
-              localStorage.setItem('atlas_extract', JSON.stringify(ex))
-              alert(`[${cityName}] ${ex[cityName].attractions.length}곳 추출\n누적: ${Object.keys(ex).length}개 도시`)
-            }} style={{padding:'8px 12px',background:'#16a34a',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer',boxShadow:'0 2px 8px rgba(0,0,0,.3)'}}>추출</button>
-            <button onClick={()=>{
-              const data = localStorage.getItem('atlas_extract')||'{}'
-              const n = Object.keys(JSON.parse(data)).length
-              const blob = new Blob([data],{type:'application/json'})
-              const url = URL.createObjectURL(blob)
-              const a = document.createElement('a')
-              a.href=url; a.download=`atlas_extract_${n}cities.json`; a.click()
-              URL.revokeObjectURL(url)
-            }} style={{padding:'8px 12px',background:'#2563eb',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer',boxShadow:'0 2px 8px rgba(0,0,0,.3)'}}>JSON 저장</button>
+      {/* ===== 임시 데이터 추출 도구 (추출 끝나면 이 블록 + extractTick state 삭제) ===== */}
+      {selectedCity && (() => {
+        const ex = JSON.parse(localStorage.getItem('atlas_extract')||'{}')
+        const cityName = selectedCity._koName || selectedCity.name
+        const done = !!ex[cityName]
+        const count = Object.keys(ex).length
+        const save = (obj) => { localStorage.setItem('atlas_extract', JSON.stringify(obj)); setExtractTick(t=>t+1) }
+        return (
+          <div style={{position:'fixed',top:10,right:10,zIndex:99999,display:'flex',flexDirection:'column',gap:6,alignItems:'stretch',background:'rgba(15,18,24,.82)',padding:'10px 12px',borderRadius:12,boxShadow:'0 4px 16px rgba(0,0,0,.4)',minWidth:200}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10}}>
+              <span style={{fontSize:12,fontWeight:700,color:done?'#4ade80':'#fbbf24'}}>{cityName} · {done?'추출됨':'미추출'}</span>
+              <span style={{fontSize:11,color:'#cbd5e1'}}>누적 {count}</span>
+            </div>
+            <div style={{display:'flex',gap:6}}>
+              <button onClick={()=>{
+                ex[cityName] = {
+                  country: selectedCity.countryEn || '',
+                  desc: cityData?.description || '',
+                  attractions: (hotspots||[]).map(h=>({ name:h.name, lat:h.geometry?.location?.lat??null, lng:h.geometry?.location?.lng??null, place_id:h.place_id||null, types:h.types||[] }))
+                }
+                save(ex)
+              }} style={{flex:1,padding:'7px 0',background:done?'#0891b2':'#16a34a',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>{done?'재추출':'추출'}</button>
+              <button onClick={()=>{
+                const names = Object.keys(ex)
+                alert(names.length ? `추출된 ${names.length}개 도시:\n\n${names.join(', ')}` : '아직 추출된 도시 없음')
+              }} style={{flex:1,padding:'7px 0',background:'#475569',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:600,cursor:'pointer'}}>목록</button>
+            </div>
+            <div style={{display:'flex',gap:6}}>
+              <button onClick={()=>{
+                const data = localStorage.getItem('atlas_extract')||'{}'
+                const blob = new Blob([data],{type:'application/json'})
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href=url; a.download=`atlas_extract_${count}cities.json`; a.click()
+                URL.revokeObjectURL(url)
+              }} style={{flex:1,padding:'7px 0',background:'#2563eb',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>JSON 저장</button>
+              <label style={{flex:1,padding:'7px 0',background:'#7c3aed',color:'white',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer',textAlign:'center'}}>
+                불러오기
+                <input type="file" accept="application/json" style={{display:'none'}} onChange={(e)=>{
+                  const file = e.target.files?.[0]; if(!file) return
+                  const reader = new FileReader()
+                  reader.onload = () => {
+                    try {
+                      const loaded = JSON.parse(reader.result)
+                      const merged = { ...loaded, ...ex }
+                      save(merged)
+                      alert(`불러오기 완료\n파일 ${Object.keys(loaded).length}개 → 총 ${Object.keys(merged).length}개 도시`)
+                    } catch(err) { alert('JSON 파싱 실패: '+err.message) }
+                  }
+                  reader.readAsText(file)
+                  e.target.value = ''
+                }} />
+              </label>
+            </div>
           </div>
-        )}
+        )
+      })()}
         {!selectedCountry && !showCoursePlanner && (
         <div style={{position:'absolute',bottom:isMobile?'calc(56px + 15vh)':84,left:'50%',transform:'translateX(-50%)',zIndex:1001,display:'flex',flexDirection:'column',alignItems:'center',gap:10}}>
           {guideList.length > 0 && (
