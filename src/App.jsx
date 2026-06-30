@@ -1137,36 +1137,30 @@ function App() {
     return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>{P[type]}</svg>
   }
   // 라벨 게이팅 1회 강제 적용 (첫 상호작용 전에도 줌/시야각 기준 라벨 정리)
-  // 라벨 충돌 회피 가시성 계산: 유명5개·국가명·바다는 기존 규칙, cityGated 도시는 화면상 다른 라벨과 안 겹칠 때만 표시(줌 레벨 따라 자동 증감)
+  // 라벨 가시성: 도시는 유명도 단계(cityTier)별로 줌인하면 등장. 진입줌(cityEnterAltRef) 기준 상대값이라 나라별 진입 줌차 보정
   const computeLabelVis = (g, els, pov) => {
     const cLat = pov.lat * Math.PI / 180, cLng = pov.lng * Math.PI / 180
     const maxA = Math.min(0.75, 0.35 + pov.altitude * 0.18), alt = pov.altitude
-    let collisionMode = false
-    for (const el of els) { if (el.dataset.cityGated === '1') { collisionMode = true; break } }
-    const placed = []   // 표시 확정된 라벨의 화면좌표(px) — cityGated 도시는 이를 피해 배치
-    const MIN_DX = 56, MIN_DY = 20   // 라벨 충돌 간격(px): 가로로 넓고 세로로 좁음
+    const enterAlt = cityEnterAltRef.current || 0.5
     const out = []
     els.forEach(el => {
-      const laD = parseFloat(el.dataset.lat), lnD = parseFloat(el.dataset.lng)
-      const la = laD * Math.PI / 180, ln = lnD * Math.PI / 180
+      const la = parseFloat(el.dataset.lat) * Math.PI / 180, ln = parseFloat(el.dataset.lng) * Math.PI / 180
       const ang = Math.acos(Math.max(-1, Math.min(1, Math.sin(cLat) * Math.sin(la) + Math.cos(cLat) * Math.cos(la) * Math.cos(ln - cLng))))
-      const cityGated = el.dataset.cityGated === '1'
-      const altOk = el.dataset.seaGate === '1' ? alt < 0.45 : (el.dataset.gated !== '1' || alt < 0.7)
-      let sh = ang < maxA && (cityGated ? true : altOk)   // cityGated는 alt 무관, 충돌로만 판정
-      if (sh && collisionMode) {
-        const sc = g.getScreenCoords(laD, lnD)
-        if (cityGated) {
-          for (const p of placed) { if (Math.abs(sc.x - p.x) < MIN_DX && Math.abs(sc.y - p.y) < MIN_DY) { sh = false; break } }
-        }
-        if (sh) placed.push({ x: sc.x, y: sc.y })   // 유명5개·국가명도 placed에 넣어 도시가 이들과 안 겹치게
+      let altOk
+      if (el.dataset.seaGate === '1') altOk = alt < 0.45
+      else if (el.dataset.cityGated === '1') {
+        // 도시 단계별: tier1(13~24위)은 진입줌의 0.7배, tier2(25위~)는 0.5배로 줌인해야 등장
+        const tier = el.dataset.cityTier === '2' ? 2 : 1
+        altOk = alt < enterAlt * (tier === 2 ? 0.5 : 0.7)
       }
-      out.push([el, sh])
+      else altOk = el.dataset.gated !== '1' || alt < 0.7   // 유명12개·국가명은 항상, 섬/작은나라는 alt<0.7
+      out.push([el, ang < maxA && altOk])
     })
     return out
   }
   const forceGatingNow = () => {
     const g = globeRef.current, c = globeContainerRef.current
-    if (!g || !c || typeof g.pointOfView !== 'function' || typeof g.getScreenCoords !== 'function') return
+    if (!g || !c || typeof g.pointOfView !== 'function') return
     const vis = computeLabelVis(g, c.querySelectorAll('[data-lat]'), g.pointOfView())
     for (const [el, sh] of vis) {
       el.style.opacity = sh ? '1' : '0'
@@ -1593,7 +1587,6 @@ function App() {
     const hideBackLabels = () => {
       if (!globeRef.current) return
       const g = globeRef.current
-      if (typeof g.getScreenCoords !== 'function') return
       const pov = g.pointOfView()
       // POV가 직전 틱과 동일하면(정지 상태) 통째로 스킵 — idle 비용 0
       const povKey = `${pov.lat.toFixed(3)},${pov.lng.toFixed(3)},${pov.altitude.toFixed(3)}`
@@ -1752,7 +1745,7 @@ function App() {
     }
 
     const countryEn = selectedCountry.properties.NAME
-    const cities = (COUNTRY_CITIES[countryEn] || []).map((c, idx) => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city', cityGated: idx >= 5 }))
+    const cities = (COUNTRY_CITIES[countryEn] || []).map((c, idx) => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city', cityGated: idx >= 12, cityTier: idx < 12 ? 0 : idx < 24 ? 1 : 2 }))
     const countryLabels = countries.map(feat => ({
       lat: feat.properties.LABEL_Y || 0,
       lng: feat.properties.LABEL_X || 0,
@@ -1806,7 +1799,7 @@ function App() {
         if (d._type === 'island') { el.dataset.micro = '1'; if (d.nameEn !== 'Guam' && d.nameEn !== 'Singapore') el.dataset.gated = '1' }
         else if (d._type === 'country' && SMALL_COUNTRY.has(d.nameEn)) { el.dataset.gated = '1' }
         else if (d._type === 'sea') { el.dataset.seaGate = '1' }
-        else if (d._type === 'city' && d.cityGated) { el.dataset.cityGated = '1' }
+        else if (d._type === 'city' && d.cityGated) { el.dataset.cityGated = '1'; el.dataset.cityTier = String(d.cityTier || 1) }
 
         if (d._type === 'geoline') {
           el.style.cssText = 'pointer-events:none;'
