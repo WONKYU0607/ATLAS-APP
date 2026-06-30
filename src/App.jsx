@@ -96,6 +96,7 @@ function App() {
   const pendingPanelRef = useRef(false) // 직전이 줌-only였으면 true → 다음 탭은 무조건 패널 (의도 단계 추적)
   const lastPovKeyRef = useRef('') // hideBackLabels idle 스킵용 (라벨 재생성 시 리셋)
   const cityEnterAltRef = useRef(0.5) // 국가 진입 alt 기록 → 도시 소도시 라벨 줌 게이팅 기준
+  const countryFlyingRef = useRef({ active: false, targetAlt: 0.5 }) // 국가 전환 카메라 이동 중 → 게이팅을 목표 줌 기준으로 고정(경유 줌에서 라벨 깜빡임 방지)
   const labelCacheRef = useRef({ t: 0, items: [] }) // 라벨 DOM+좌표 캐시 (querySelectorAll 매틱 방지)
   const hasTouchedRef = useRef(false) // 페이지에 첫 터치 발생하면 true → 호버 영구 비활성 (모바일 확정)
   const [countries, setCountries] = useState([])
@@ -1140,7 +1141,10 @@ function App() {
   // 라벨 가시성: 도시는 유명도 단계(cityTier)별로 줌인하면 등장. 진입줌(cityEnterAltRef) 기준 상대값이라 나라별 진입 줌차 보정
   const computeLabelVis = (g, els, pov) => {
     const cLat = pov.lat * Math.PI / 180, cLng = pov.lng * Math.PI / 180
-    const maxA = Math.min(0.75, 0.35 + pov.altitude * 0.18), alt = pov.altitude
+    // 국가 전환 이동 중이면 경유 줌이 아니라 '목표 줌'으로 판정 → 중간에 도시 라벨이 떴다 사라지는 깜빡임 방지
+    const fly = countryFlyingRef.current
+    const alt = fly.active ? fly.targetAlt : pov.altitude
+    const maxA = Math.min(0.75, 0.35 + alt * 0.18)
     const enterAlt = cityEnterAltRef.current || 0.5
     const out = []
     els.forEach(el => {
@@ -2388,7 +2392,9 @@ function App() {
     cityEnterAltRef.current = mobileAlt   // 도시 소도시 라벨 게이팅 기준 (이 나라의 진입 줌)
 
     globe.controls().autoRotate = false
+    countryFlyingRef.current = { active: true, targetAlt: mobileAlt }   // 이동 중엔 목표 줌 기준으로 게이팅(경유 줌에서 라벨 안 뜨게)
     globe.pointOfView({ lat: center.lat, lng: center.lng, altitude: mobileAlt }, 1300)
+    setTimeout(() => { countryFlyingRef.current.active = false }, 1350)
   }
 
   const handleCityClick = (city) => {
