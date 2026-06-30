@@ -1137,20 +1137,41 @@ function App() {
     return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>{P[type]}</svg>
   }
   // 라벨 게이팅 1회 강제 적용 (첫 상호작용 전에도 줌/시야각 기준 라벨 정리)
-  const forceGatingNow = () => {
-    const g = globeRef.current, c = globeContainerRef.current
-    if (!g || !c || typeof g.pointOfView !== 'function') return
-    const pov = g.pointOfView()
+  // 라벨 충돌 회피 가시성 계산: 유명5개·국가명·바다는 기존 규칙, cityGated 도시는 화면상 다른 라벨과 안 겹칠 때만 표시(줌 레벨 따라 자동 증감)
+  const computeLabelVis = (g, els, pov) => {
     const cLat = pov.lat * Math.PI / 180, cLng = pov.lng * Math.PI / 180
     const maxA = Math.min(0.75, 0.35 + pov.altitude * 0.18), alt = pov.altitude
-    c.querySelectorAll('[data-lat]').forEach(el => {
-      const la = parseFloat(el.dataset.lat) * Math.PI / 180, ln = parseFloat(el.dataset.lng) * Math.PI / 180
+    let collisionMode = false
+    for (const el of els) { if (el.dataset.cityGated === '1') { collisionMode = true; break } }
+    const placed = []   // 표시 확정된 라벨의 화면좌표(px) — cityGated 도시는 이를 피해 배치
+    const MIN_DX = 56, MIN_DY = 20   // 라벨 충돌 간격(px): 가로로 넓고 세로로 좁음
+    const out = []
+    els.forEach(el => {
+      const laD = parseFloat(el.dataset.lat), lnD = parseFloat(el.dataset.lng)
+      const la = laD * Math.PI / 180, ln = lnD * Math.PI / 180
       const ang = Math.acos(Math.max(-1, Math.min(1, Math.sin(cLat) * Math.sin(la) + Math.cos(cLat) * Math.cos(la) * Math.cos(ln - cLng))))
-      const altOk = el.dataset.seaGate === '1' ? alt < 0.45 : el.dataset.cityGated === '1' ? alt < cityEnterAltRef.current * 0.6 : (el.dataset.gated !== '1' || alt < 0.7)
-      const sh = ang < maxA && altOk
+      const cityGated = el.dataset.cityGated === '1'
+      const altOk = el.dataset.seaGate === '1' ? alt < 0.45 : (el.dataset.gated !== '1' || alt < 0.7)
+      let sh = ang < maxA && (cityGated ? true : altOk)   // cityGated는 alt 무관, 충돌로만 판정
+      if (sh && collisionMode) {
+        const sc = g.getScreenCoords(laD, lnD)
+        if (cityGated) {
+          for (const p of placed) { if (Math.abs(sc.x - p.x) < MIN_DX && Math.abs(sc.y - p.y) < MIN_DY) { sh = false; break } }
+        }
+        if (sh) placed.push({ x: sc.x, y: sc.y })   // 유명5개·국가명도 placed에 넣어 도시가 이들과 안 겹치게
+      }
+      out.push([el, sh])
+    })
+    return out
+  }
+  const forceGatingNow = () => {
+    const g = globeRef.current, c = globeContainerRef.current
+    if (!g || !c || typeof g.pointOfView !== 'function' || typeof g.getScreenCoords !== 'function') return
+    const vis = computeLabelVis(g, c.querySelectorAll('[data-lat]'), g.pointOfView())
+    for (const [el, sh] of vis) {
       el.style.opacity = sh ? '1' : '0'
       if (el.dataset.micro === '1') el.style.pointerEvents = sh ? 'auto' : 'none'
-    })
+    }
   }
   const getCityName = (koName) => {
     if (lang === 'ko') return koName
@@ -1571,62 +1592,35 @@ function App() {
     // ── 뒷면 라벨 숨기기 (지구 뒤쪽 라벨 안 보이게) ──
     const hideBackLabels = () => {
       if (!globeRef.current) return
-      const pov = globeRef.current.pointOfView()
+      const g = globeRef.current
+      if (typeof g.getScreenCoords !== 'function') return
+      const pov = g.pointOfView()
       // POV가 직전 틱과 동일하면(정지 상태) 통째로 스킵 — idle 비용 0
-      // 단, 라벨을 한 번이라도 숨김 처리(settled)한 뒤부터만. 초기엔 라벨이 DOM에 늦게 생기므로 계속 처리해야 함
       const povKey = `${pov.lat.toFixed(3)},${pov.lng.toFixed(3)},${pov.altitude.toFixed(3)}`
       if (povKey === lastPovKeyRef.current && labelCacheRef.current.settled) return
       lastPovKeyRef.current = povKey
 
-      const camLat = pov.lat * Math.PI / 180
-      const camLng = pov.lng * Math.PI / 180
-      // 시야각 좁게: 정면 ~45도 이내만 표시
-      const maxAngle = Math.min(0.75, 0.35 + pov.altitude * 0.18)
-
       const container = globeContainerRef.current
       if (!container) return
-      // 라벨 목록·좌표 캐시: 매 틱 querySelectorAll/parseFloat 대신 ~1초마다 갱신
+      // 라벨 DOM 목록만 ~1초 캐시(노드는 안 변함). 좌표·충돌은 매 틱 재계산해야 줌/회전 반영됨
       const cache = labelCacheRef.current
       const now = performance.now()
-      if (now - cache.t > 1000 || cache.items.length === 0) {
-        const els = container.querySelectorAll('[data-lat]')
-        if (els.length) {
-          cache.items = Array.from(els).map(el => ({
-            el,
-            lat: parseFloat(el.dataset.lat) * Math.PI / 180,
-            lng: parseFloat(el.dataset.lng) * Math.PI / 180,
-            gated: el.dataset.gated === '1',
-            micro: el.dataset.micro === '1',
-            seaGate: el.dataset.seaGate === '1',
-            cityGated: el.dataset.cityGated === '1',
-          }))
-          cache.t = now
-        }
+      if (now - cache.t > 1000 || !cache.els || cache.els.length === 0) {
+        cache.els = container.querySelectorAll('[data-lat]')
+        cache.t = now
       }
-      const alt = pov.altitude
-      for (const it of cache.items) {
-        const angle = Math.acos(Math.max(-1, Math.min(1,
-          Math.sin(camLat) * Math.sin(it.lat) +
-          Math.cos(camLat) * Math.cos(it.lat) * Math.cos(it.lng - camLng)
-        )))
-        const el = it.el
-        if (!el.dataset.tInit) {
-          el.style.transition = 'opacity 0.3s'
-          el.dataset.tInit = '1'
-        }
-        // 섬나라/작은나라(gated)는 alt<0.7, 바다(seaGate)는 더 깊게 alt<0.45에서만 표시
-        const altOk = it.seaGate ? alt < 0.45 : it.gated ? alt < 0.7 : it.cityGated ? alt < cityEnterAltRef.current * 0.6 : true
-        const show = angle < maxAngle && altOk
+      if (!cache.els || !cache.els.length) return
+      const vis = computeLabelVis(g, cache.els, pov)
+      for (const [el, show] of vis) {
+        if (!el.dataset.tInit) { el.style.transition = 'opacity 0.3s'; el.dataset.tInit = '1' }
         const next = show ? '1' : '0'
         if (el.style.opacity !== next) el.style.opacity = next
-        // 섬나라 라벨(micro)은 숨김 시 pointer-events도 꺼야 투명 박스가 터치/드래그를 안 막음
-        if (it.micro) {
+        if (el.dataset.micro === '1') {
           const pe = show ? 'auto' : 'none'
           if (el.style.pointerEvents !== pe) el.style.pointerEvents = pe
         }
       }
-      // 라벨이 실제로 존재해 한 번 처리됨 → 이후로는 idle 스킵 허용
-      if (cache.items.length > 0) cache.settled = true
+      cache.settled = true
     }
     const labelInterval = setInterval(hideBackLabels, 150)
 
@@ -1770,6 +1764,7 @@ function App() {
     // 마이크로국가(산마리노·바티칸 등)는 국가단위라 국가뷰(도시 표시)에선 숨김 — 세계뷰에서만 표시/클릭
     globe.htmlElementsData([...countryLabels, ...cities, ...OCEAN_LABELS, ...SEA_LABELS])
     lastPovKeyRef.current = ''; labelCacheRef.current = { t: 0, items: [] } // 라벨 새로 생성됨 → idle스킵 해제 + 캐시 무효화
+    requestAnimationFrame(() => { forceGatingNow(); requestAnimationFrame(forceGatingNow) })  // DOM 생성 직후(~16ms) 즉시 게이팅 → 라벨 깜빡임 방지
     setTimeout(forceGatingNow, 180); setTimeout(forceGatingNow, 550)  // 첫 상호작용 전에도 게이팅 적용
     // selectedCity는 deps에서 제외: cities 배열이 selectedCity에 의존 안 하고,
     // 포함하면 도시 나갈 때 라벨 데이터가 재생성되어 줌아웃 중 라벨이 튐
