@@ -3503,7 +3503,7 @@ Write all text in ${langName}.`
         )
       })()}
         {!selectedCountry && !showCoursePlanner && (
-        <div style={{position:'absolute',bottom:isMobile?'calc(56px + 15vh)':84,left:'50%',transform:'translateX(-50%)',zIndex:1001,display:'flex',flexDirection:'column',alignItems:'center',gap:10}}>
+        <div style={{position:'absolute',bottom:isMobile?'calc(56px + 5vh)':84,left:'50%',transform:'translateX(-50%)',zIndex:1001,display:'flex',flexDirection:'column',alignItems:'center',gap:10}}>
           {guideList.length > 0 && (
             <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',maxWidth:isMobile?'92vw':460}}>
               {guideList.slice(0,8).map(entry => (
@@ -3514,9 +3514,11 @@ Write all text in ${langName}.`
               ))}
             </div>
           )}
-          <div style={{display:'flex',gap:10}}>
-            <button onClick={()=>{ setNlText(''); setNlOpen(true) }} style={{padding:isMobile?'10px 18px':'12px 22px',fontSize:isMobile?13:14,fontWeight:700,background:'rgba(255,255,255,.95)',color:'#c8856a',border:'1.5px solid #e0d9d0',borderRadius:30,cursor:'pointer',boxShadow:'0 4px 16px rgba(0,0,0,.18)',backdropFilter:'blur(8px)'}}>{({ko:'음성으로',en:'Voice',ja:'音声で',zh:'语音'})[lang]||'음성으로'}</button>
-            <button onClick={()=>{ setNlText(''); setNlOpen(true) }} style={{padding:isMobile?'10px 18px':'12px 22px',fontSize:isMobile?13:14,fontWeight:700,background:'#c8856a',color:'#fff',border:'none',borderRadius:30,cursor:'pointer',boxShadow:'0 4px 16px rgba(200,133,106,.4)'}}>{({ko:'직접 입력',en:'Type',ja:'入力',zh:'输入'})[lang]||'직접 입력'}</button>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <button onClick={()=>{ setNlText(''); setNlOpen(true) }} title={({ko:'음성으로',en:'Voice',ja:'音声で',zh:'语音'})[lang]||'음성으로'} style={{width:isMobile?40:44,height:isMobile?40:44,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(255,255,255,.95)',color:'#c8856a',border:'1.5px solid #e0d9d0',borderRadius:'50%',cursor:'pointer',boxShadow:'0 4px 16px rgba(0,0,0,.18)',backdropFilter:'blur(8px)'}}>
+              <svg width={isMobile?18:20} height={isMobile?18:20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </button>
+            <button onClick={()=>{ setNlText(''); setNlOpen(true) }} style={{padding:isMobile?'8px 14px':'9px 18px',fontSize:isMobile?12:13,fontWeight:700,background:'#c8856a',color:'#fff',border:'none',borderRadius:24,cursor:'pointer',boxShadow:'0 4px 16px rgba(200,133,106,.4)'}}>{({ko:'직접 입력',en:'Type',ja:'入力',zh:'输入'})[lang]||'직접 입력'}</button>
           </div>
         </div>
       )}
