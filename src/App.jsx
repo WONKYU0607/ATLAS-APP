@@ -25,7 +25,7 @@ const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.n
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
-import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, deleteAttractionPhoto } from './firebase'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto } from './firebase'
 
 
 // ── 에러 바운더리 (흰 화면 방지) ─────────────────────────────────────────
@@ -3476,6 +3476,16 @@ Write all text in ${langName}.`
             </div>
             <div style={{marginTop:16,display:'flex',gap:12,alignItems:'center'}}>
               <span style={{color:'#fff',fontSize:14,fontWeight:600}}>{gv.idx+1} / {list.length}</span>
+              {list.length>1 && (gv.idx===0 ? (
+                <span style={{background:'rgba(13,148,136,.9)',color:'#fff',padding:'7px 14px',borderRadius:8,fontSize:13,fontWeight:700}}>★ 대표</span>
+              ) : (
+                <button onClick={async(e)=>{ e.stopPropagation()
+                  try { const reordered=await setAttractionCoverPhoto(gv.country,gv.city,gv.placeId,cur)
+                    setAttrPhotos(pc=>({...pc,[gv.placeId]:reordered}))
+                    setGalleryView(g=>({...g,photos:reordered,idx:0}))
+                  } catch(err){ alert('대표 설정 실패: '+(err?.message||err)) }
+                }} style={{background:'#0d9488',color:'#fff',border:'none',padding:'7px 14px',borderRadius:8,fontSize:13,fontWeight:700,cursor:'pointer'}}>대표로 설정</button>
+              ))}
               <button onClick={async(e)=>{ e.stopPropagation(); if(!confirm('이 사진을 삭제할까요?')) return
                 try { const rest=await deleteAttractionPhoto(gv.country,gv.city,gv.placeId,cur)
                   setAttrPhotos(pc=>({...pc,[gv.placeId]:rest}))
