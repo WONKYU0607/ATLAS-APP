@@ -78,6 +78,52 @@ export const uploadPhoto = async (file, path) => {
   return await getDownloadURL(ref)
 }
 
+// ── 관광지 사진: Storage 업로드 + Firestore photos 필드 자동 연동 ──
+// files를 attractions/{place_id}/ 에 올리고 URL을 관광지 문서 photos 배열에 추가 (폴더 자동 생성)
+export const uploadAttractionPhotos = async (country, city, placeId, files, onEach) => {
+  const attrDoc = doc(db, 'countries', country, 'cities', city, 'attractions', placeId)
+  const snap = await getDoc(attrDoc)
+  const existing = (snap.exists() && Array.isArray(snap.data().photos)) ? snap.data().photos : []
+  const newItems = []
+  let i = 0
+  for (const file of files) {
+    const ts = Date.now() + '_' + Math.random().toString(36).slice(2, 6)
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
+    const path = `attractions/${placeId}/${ts}.${ext}`
+    const sref = storageRef(storage, path)
+    await uploadBytes(sref, file)
+    const url = await getDownloadURL(sref)
+    newItems.push({ url, path })
+    i++
+    if (onEach) onEach(i, files.length)
+  }
+  const merged = [...existing, ...newItems]
+  await setDoc(attrDoc, { photos: merged, updatedAt: Date.now() }, { merge: true })
+  return merged
+}
+
+// 관광지 사진 목록 조회
+export const getAttractionPhotos = async (country, city, placeId) => {
+  try {
+    const snap = await getDoc(doc(db, 'countries', country, 'cities', city, 'attractions', placeId))
+    if (snap.exists() && Array.isArray(snap.data().photos)) return snap.data().photos
+  } catch {}
+  return []
+}
+
+// 관광지 사진 1장 삭제 (Storage 파일 + Firestore 배열에서 제거)
+export const deleteAttractionPhoto = async (country, city, placeId, photoItem) => {
+  const attrDoc = doc(db, 'countries', country, 'cities', city, 'attractions', placeId)
+  try {
+    if (photoItem.path) { const { deleteObject } = await import('firebase/storage'); await deleteObject(storageRef(storage, photoItem.path)) }
+  } catch (e) { console.warn('[deletePhoto] Storage 삭제 실패(무시):', e?.message) }
+  const snap = await getDoc(attrDoc)
+  const cur = (snap.exists() && Array.isArray(snap.data().photos)) ? snap.data().photos : []
+  const filtered = cur.filter(p => (p.url || p) !== (photoItem.url || photoItem))
+  await setDoc(attrDoc, { photos: filtered, updatedAt: Date.now() }, { merge: true })
+  return filtered
+}
+
 // 댓글 추가
 export const addComment = async (courseId, comment) => {
   const courseRef = doc(db, 'sharedCourses', courseId)
