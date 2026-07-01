@@ -2542,12 +2542,17 @@ function App() {
         const hay = (p.name || '') + ' ' + addr
         return allow.some(k => hay.includes(k))
       }
-      const list = merged
+      const ranked = merged
         .filter(p => p.user_ratings_total)                       // 리뷰 있는 곳만
         .filter(p => p.rating === undefined || p.rating >= 3.5)  // 저평점 컷
         .filter(inCity)                                          // 오염(타지 명소) 제거
         .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))  // 리뷰순(유명세)
-        .slice(0, 30)
+      // 관광 규모 자동 판별: 리뷰 1만+ 관광지가 10개 이상이면 대도시(25개), 아니면 소도시(15개)
+      const famousCount = ranked.filter(p => (p.user_ratings_total || 0) >= 10000).length
+      const isBigCity = famousCount >= 10
+      const limit = isBigCity ? 25 : 15
+      console.log(`[대도시판별] ${cityKey}: 리뷰1만+ ${famousCount}개 → ${isBigCity?'대도시':'소도시'}(${limit}개), 총후보 ${ranked.length}개`)
+      const list = ranked.slice(0, limit)
       try { localStorage.setItem(lsKey, JSON.stringify(list)) } catch {}   // 로컬 캐시 저장 (Firestore 실패 대비)
       try { setCityCache(fsKey, { hotspots: list }) } catch {}
       return list
