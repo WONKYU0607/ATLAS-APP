@@ -2485,7 +2485,7 @@ function App() {
     // ── 관광 유형별 분산 Text Search (전 세계 보편 8종) — 반경 의존 제거로 외곽 명소 누락 방지 ──
     const CATS = {
       ko: ['관광명소','명소','랜드마크','궁궐','성','유적','사찰','성당','사원','공원','정원','박물관','미술관','전망대','시장'],
-      en: ['tourist attractions','landmarks','monuments','palace','castle','historic site','temple','shrine','church','mosque','park','garden','museum','gallery','viewpoint','observation deck','shopping district','market'],
+      en: ['tourist attractions','landmarks','monuments','palace','castle','historic site','temple','shrine','church','mosque','park','garden','museum','gallery','viewpoint','observation deck','market'],
       ja: ['観光スポット','名所','ランドマーク','城','史跡','遺跡','寺','神社','教会','公園','庭園','博物館','美術館','展望台','市場'],
       zh: ['旅游景点','名胜','地标','宫殿','城堡','古迹','寺庙','教堂','公园','花园','博物馆','美术馆','观景台','市场','广场'],
     }
@@ -2542,9 +2542,11 @@ function App() {
         const hay = (p.name || '') + ' ' + addr
         return allow.some(k => hay.includes(k))
       }
+      const JUNK_TYPES = ['supermarket','grocery_or_supermarket','department_store','shopping_mall','convenience_store','store','clothing_store','electronics_store','home_goods_store','furniture_store','hardware_store','gas_station','lodging','car_dealer']
       const ranked = merged
         .filter(p => p.user_ratings_total)                       // 리뷰 있는 곳만
         .filter(p => p.rating === undefined || p.rating >= 3.5)  // 저평점 컷
+        .filter(p => !(p.types || []).some(t => JUNK_TYPES.includes(t)))  // 마트/상점/주유소 등 제외
         .filter(inCity)                                          // 오염(타지 명소) 제거
         .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))  // 리뷰순(유명세)
       // 관광 규모 자동 판별: 리뷰 1만+ 관광지가 10개 이상이면 대도시(25개), 아니면 소도시(15개)
