@@ -79,6 +79,29 @@ export const uploadPhoto = async (file, path) => {
 }
 
 // ── 관광지 사진: Storage 업로드 + Firestore photos 필드 자동 연동 ──
+// 사진 압축: 긴 변 1200px로 리사이즈 + JPEG 품질 0.8 (용량 대폭 절감)
+const compressImage = (file, maxSize = 1200, quality = 0.8) => new Promise((resolve) => {
+  const img = new Image()
+  const url = URL.createObjectURL(file)
+  img.onload = () => {
+    URL.revokeObjectURL(url)
+    let { width, height } = img
+    if (width > maxSize || height > maxSize) {
+      if (width >= height) { height = Math.round(height * maxSize / width); width = maxSize }
+      else { width = Math.round(width * maxSize / height); height = maxSize }
+    }
+    const canvas = document.createElement('canvas')
+    canvas.width = width; canvas.height = height
+    canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+    canvas.toBlob(
+      (blob) => resolve(blob || file),   // 실패 시 원본 반환
+      'image/jpeg', quality
+    )
+  }
+  img.onerror = () => { URL.revokeObjectURL(url); resolve(file) }  // 이미지 로드 실패 시 원본
+  img.src = url
+})
+
 // files를 attractions/{place_id}/ 에 올리고 URL을 관광지 문서 photos 배열에 추가 (폴더 자동 생성)
 export const uploadAttractionPhotos = async (country, city, placeId, files, onEach) => {
   const attrDoc = doc(db, 'countries', country, 'cities', city, 'attractions', placeId)
@@ -87,11 +110,11 @@ export const uploadAttractionPhotos = async (country, city, placeId, files, onEa
   const newItems = []
   let i = 0
   for (const file of files) {
+    const compressed = await compressImage(file)   // 압축(긴변 1200px, JPEG 0.8)
     const ts = Date.now() + '_' + Math.random().toString(36).slice(2, 6)
-    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
-    const path = `attractions/${placeId}/${ts}.${ext}`
+    const path = `attractions/${placeId}/${ts}.jpg`   // 압축 결과는 항상 jpg
     const sref = storageRef(storage, path)
-    await uploadBytes(sref, file)
+    await uploadBytes(sref, compressed, { contentType: 'image/jpeg' })
     const url = await getDownloadURL(sref)
     newItems.push({ url, path })
     i++
