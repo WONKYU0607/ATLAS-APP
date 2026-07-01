@@ -230,8 +230,22 @@ export const getCityCache = async (key) => {
   } catch { return null }
 }
 
+// Firestore는 undefined 값을 저장하면 400 에러 → 저장 전 undefined 필드/배열요소를 재귀 제거
+const stripUndefined = (v) => {
+  if (Array.isArray(v)) return v.map(stripUndefined).filter(x => x !== undefined)
+  if (v && typeof v === 'object') {
+    const out = {}
+    for (const k in v) {
+      const cleaned = stripUndefined(v[k])
+      if (cleaned !== undefined) out[k] = cleaned
+    }
+    return out
+  }
+  return v === undefined ? undefined : v
+}
+
 export const setCityCache = async (key, data) => {
   try {
-    await setDoc(cityCacheRef(key), { ...data, updatedAt: Date.now() }, { merge: true })
-  } catch {}
+    await setDoc(cityCacheRef(key), { ...stripUndefined(data), updatedAt: Date.now() }, { merge: true })
+  } catch (e) { console.error('[setCityCache] 저장 실패:', key, e?.message || e) }
 }
