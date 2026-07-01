@@ -249,3 +249,43 @@ export const setCityCache = async (key, data) => {
     await setDoc(cityCacheRef(key), { ...stripUndefined(data), updatedAt: Date.now() }, { merge: true })
   } catch (e) { console.error('[setCityCache] 저장 실패:', key, e?.message || e) }
 }
+
+// ── 관광지 데이터 아카이브: countries/{국가}/cities/{도시}/attractions/{place_id} ──
+// 추출 JSON을 계층 구조로 Firestore에 업로드. 도시 문서엔 소개글·음식문화, 관광지 문서엔 이름·좌표·place_id·photos
+// extractData 형식: { "도시명": { country, desc, food, attractions:[{name,lat,lng,place_id,types}] } }
+// onProgress(현재, 전체, 도시명) 콜백으로 진행상황 보고
+export const uploadAttractionsArchive = async (extractData, onProgress) => {
+  const cities = Object.keys(extractData)
+  let done = 0, attractionCount = 0, skipped = 0
+  for (const cityName of cities) {
+    const d = extractData[cityName]
+    const country = d.country || 'Unknown'
+    // 도시 문서: 소개글·음식문화
+    const cityDoc = doc(db, 'countries', country, 'cities', cityName)
+    await setDoc(cityDoc, stripUndefined({
+      name: cityName,
+      desc: d.desc || '',
+      food: d.food || null,
+      attractionCount: (d.attractions || []).length,
+      updatedAt: Date.now()
+    }), { merge: true })
+    // 관광지 문서들
+    for (const a of (d.attractions || [])) {
+      if (!a.place_id) { skipped++; continue }   // place_id 없으면 문서ID 못 만듦 → 스킵
+      const attrDoc = doc(db, 'countries', country, 'cities', cityName, 'attractions', a.place_id)
+      // merge:true라 재업로드해도 photos는 보존됨(photos는 여기서 안 건드림)
+      await setDoc(attrDoc, stripUndefined({
+        name: a.name || '',
+        lat: a.lat ?? null,
+        lng: a.lng ?? null,
+        place_id: a.place_id,
+        types: a.types || [],
+        updatedAt: Date.now()
+      }), { merge: true })
+      attractionCount++
+    }
+    done++
+    if (onProgress) onProgress(done, cities.length, cityName)
+  }
+  return { cities: done, attractions: attractionCount, skipped }
+}
