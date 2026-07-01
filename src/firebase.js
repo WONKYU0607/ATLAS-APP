@@ -124,6 +124,19 @@ export const deleteAttractionPhoto = async (country, city, placeId, photoItem) =
   return filtered
 }
 
+// 대표 사진 지정: 선택한 사진을 photos 배열 맨 앞으로 이동 (첫 사진이 썸네일이 됨)
+export const setAttractionCoverPhoto = async (country, city, placeId, photoItem) => {
+  const attrDoc = doc(db, 'countries', country, 'cities', city, 'attractions', placeId)
+  const snap = await getDoc(attrDoc)
+  const cur = (snap.exists() && Array.isArray(snap.data().photos)) ? snap.data().photos : []
+  const key = photoItem.url || photoItem
+  const target = cur.find(p => (p.url || p) === key)
+  if (!target) return cur
+  const reordered = [target, ...cur.filter(p => (p.url || p) !== key)]
+  await setDoc(attrDoc, { photos: reordered, updatedAt: Date.now() }, { merge: true })
+  return reordered
+}
+
 // 댓글 추가
 export const addComment = async (courseId, comment) => {
   const courseRef = doc(db, 'sharedCourses', courseId)
