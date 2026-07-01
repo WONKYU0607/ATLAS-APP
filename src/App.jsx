@@ -3408,7 +3408,7 @@ Write all text in ${langName}.`
                               <div key={ii} style={{display:'flex',gap:12,marginBottom:12,alignItems:'flex-start'}}>
                                 <div style={{flexShrink:0,width:26,height:26,borderRadius:'50%',background:'#c8856a',color:'#fff',fontSize:13,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}>{ii+1}</div>
                                 {it.photo_ref && (
-                                  <img src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photo_reference=${it.photo_ref}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`} alt={it.displayName||it.name} style={{width:64,height:64,borderRadius:10,objectFit:'cover',flexShrink:0}} onError={e=>{e.target.style.display='none'}}/>
+                                  <div style={{width:64,height:64,borderRadius:10,background:'#f0e9e1',flexShrink:0}}/>
                                 )}
                                 <div style={{flex:1,minWidth:0,paddingTop:2}}>
                                   <div style={{fontSize:14,fontWeight:700,color:'#1a1714'}}>{it.displayName || it.name}</div>
@@ -3720,7 +3720,7 @@ Write all text in ${langName}.`
                                   <a key={i} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name)}&query_place_id=${r.place_id||''}`}
                                     target="_blank" rel="noopener noreferrer"
                                     style={{textDecoration:'none',display:'flex',gap:10,padding:8,alignItems:'center',background:'#faf7f3',border:'1px solid #ede8e0',borderRadius:10,cursor:'pointer'}}>
-                                    {r.photos&&r.photos.length>0 ? (
+                                    {false ? (
                                       <img src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=160&photo_reference=${r.photos[0].photo_reference}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`}
                                         alt={r.name} style={{width:54,height:54,borderRadius:8,objectFit:'cover',flexShrink:0}}/>
                                     ) : (
@@ -3751,7 +3751,7 @@ Write all text in ${langName}.`
                                 target="_blank" rel="noopener noreferrer"
                                 style={{textDecoration:'none',background:'white',border:'1px solid #ede8e0',borderRadius:12,overflow:'hidden',cursor:'pointer',transition:'all .2s'}}>
                                 <div style={{display:'flex',gap:10,padding:10,alignItems:'center'}}>
-                                  {place.photos && place.photos.length>0 ? (
+                                  {false ? (
                                     <img src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photo_reference=${place.photos[0].photo_reference}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`}
                                       alt={place.name} style={{width:72,height:72,borderRadius:10,objectFit:'cover',flexShrink:0}}/>
                                   ) : (
