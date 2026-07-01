@@ -105,8 +105,9 @@ function App() {
   const [selectedCity, setSelectedCity] = useState(null)
     const [activeTab, setActiveTab] = useState('hotspots')
   const [hotspots, setHotspots] = useState([])
-  const [attrPhotoCounts, setAttrPhotoCounts] = useState({})  // { place_id: 사진수 } 추출도구용
+  const [attrPhotos, setAttrPhotos] = useState({})  // { place_id: [{url,path}] } 관광지별 사진 목록
   const [attrPhotoUploading, setAttrPhotoUploading] = useState('')  // 업로드중인 place_id
+  const [galleryView, setGalleryView] = useState(null)  // { photos:[{url,path}], idx, placeId, country, city } 큰 갤러리 팝업
   const [loadingPlaces, setLoadingPlaces] = useState(false)
   const [foodCulture, setFoodCulture] = useState(null) // AI 생성 음식문화 데이터
   const [loadingFoodCulture, setLoadingFoodCulture] = useState(false)
@@ -2563,12 +2564,12 @@ function App() {
       // 핫플레이스 = AI 코스와 동일 소스 (Nearby Search, 도시별 반경, 리뷰순)
       const topHotspots = await fetchHotspotsFor(city)
       setHotspots(topHotspots)
-      // 각 관광지의 기존 Firestore 사진 개수 로드 (배지 표시용)
+      // 각 관광지의 Firestore 사진 목록 로드 (썸네일/갤러리용)
       const country = city.countryEn || 'Unknown'
       const cityNm = city._koName || city.name
       Promise.all((topHotspots||[]).filter(h=>h.place_id).map(async h=>{
-        try { const ph = await getAttractionPhotos(country, cityNm, h.place_id); return [h.place_id, ph.length] } catch { return [h.place_id, 0] }
-      })).then(pairs=>{ const m={}; pairs.forEach(([id,n])=>{ if(n>0) m[id]=n }); setAttrPhotoCounts(m) })
+        try { const ph = await getAttractionPhotos(country, cityNm, h.place_id); return [h.place_id, ph] } catch { return [h.place_id, []] }
+      })).then(pairs=>{ const m={}; pairs.forEach(([id,ph])=>{ if(ph&&ph.length) m[id]=ph }); setAttrPhotos(m) })
 
     } catch (error) {
       console.error('Failed to fetch places:', error)
@@ -3457,6 +3458,36 @@ Write all text in ${langName}.`
           </div>
         </div>
       )}
+      {galleryView && (() => {
+        const gv = galleryView
+        const list = gv.photos || []
+        const cur = list[gv.idx] || {}
+        const go = (d) => setGalleryView(g => { const n = (g.idx + d + list.length) % list.length; return { ...g, idx: n } })
+        return (
+          <div onClick={()=>setGalleryView(null)} style={{position:'fixed',inset:0,zIndex:3000,background:'rgba(0,0,0,.9)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}
+            onTouchStart={e=>{ e.currentTarget.dataset.sx = e.touches[0].clientX }}
+            onTouchEnd={e=>{ const sx=parseFloat(e.currentTarget.dataset.sx||'0'); const dx=e.changedTouches[0].clientX-sx; if(Math.abs(dx)>50 && list.length>1) go(dx<0?1:-1) }}>
+            <div onClick={e=>e.stopPropagation()} style={{position:'relative',maxWidth:'92vw',maxHeight:'80vh',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <img src={cur.url||cur} alt="" style={{maxWidth:'92vw',maxHeight:'80vh',objectFit:'contain',borderRadius:8}}/>
+              {list.length>1 && (<>
+                <button onClick={()=>go(-1)} style={{position:'absolute',left:-6,top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,.9)',border:'none',width:44,height:44,borderRadius:'50%',fontSize:22,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 10px rgba(0,0,0,.3)'}}>‹</button>
+                <button onClick={()=>go(1)} style={{position:'absolute',right:-6,top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,.9)',border:'none',width:44,height:44,borderRadius:'50%',fontSize:22,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 10px rgba(0,0,0,.3)'}}>›</button>
+              </>)}
+            </div>
+            <div style={{marginTop:16,display:'flex',gap:12,alignItems:'center'}}>
+              <span style={{color:'#fff',fontSize:14,fontWeight:600}}>{gv.idx+1} / {list.length}</span>
+              <button onClick={async(e)=>{ e.stopPropagation(); if(!confirm('이 사진을 삭제할까요?')) return
+                try { const rest=await deleteAttractionPhoto(gv.country,gv.city,gv.placeId,cur)
+                  setAttrPhotos(pc=>({...pc,[gv.placeId]:rest}))
+                  if(!rest.length) setGalleryView(null)
+                  else setGalleryView(g=>({...g,photos:rest,idx:Math.min(g.idx,rest.length-1)}))
+                } catch(err){ alert('삭제 실패: '+(err?.message||err)) }
+              }} style={{background:'#dc2626',color:'#fff',border:'none',padding:'7px 14px',borderRadius:8,fontSize:13,fontWeight:700,cursor:'pointer'}}>삭제</button>
+              <button onClick={()=>setGalleryView(null)} style={{background:'rgba(255,255,255,.9)',color:'#333',border:'none',padding:'7px 14px',borderRadius:8,fontSize:13,fontWeight:700,cursor:'pointer'}}>닫기</button>
+            </div>
+          </div>
+        )
+      })()}
       {nlOpen && (
         <div onClick={()=>!nlLoading&&setNlOpen(false)} style={{position:'fixed',inset:0,zIndex:2000,background:'rgba(0,0,0,.45)',display:'flex',alignItems:'flex-end',justifyContent:'center'}}>
           <div onClick={e=>e.stopPropagation()} style={{width:'100%',maxWidth:560,background:'#fff',borderRadius:'20px 20px 0 0',padding:'22px 20px calc(22px + env(safe-area-inset-bottom))',boxShadow:'0 -8px 30px rgba(0,0,0,.2)'}}>
@@ -3773,9 +3804,14 @@ Write all text in ${langName}.`
                                 target="_blank" rel="noopener noreferrer"
                                 style={{textDecoration:'none',background:'white',border:'1px solid #ede8e0',borderRadius:12,overflow:'hidden',cursor:'pointer',transition:'all .2s'}}>
                                 <div style={{display:'flex',gap:10,padding:10,alignItems:'center'}}>
-                                  {false ? (
-                                    <img src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photo_reference=${place.photos[0].photo_reference}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`}
-                                      alt={place.name} style={{width:72,height:72,borderRadius:10,objectFit:'cover',flexShrink:0}}/>
+                                  {(attrPhotos[place.place_id] && attrPhotos[place.place_id].length) ? (
+                                    <div onClick={e=>{e.preventDefault();e.stopPropagation();setGalleryView({photos:attrPhotos[place.place_id],idx:0,placeId:place.place_id,country:selectedCity.countryEn||'Unknown',city:selectedCity._koName||selectedCity.name})}}
+                                      style={{position:'relative',width:72,height:72,borderRadius:10,overflow:'hidden',flexShrink:0,cursor:'pointer'}}>
+                                      <img src={(attrPhotos[place.place_id][0].url||attrPhotos[place.place_id][0])} alt={place.name} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                                      {attrPhotos[place.place_id].length>1 && (
+                                        <div style={{position:'absolute',bottom:3,right:3,background:'rgba(0,0,0,.65)',color:'#fff',fontSize:9,fontWeight:700,padding:'1px 5px',borderRadius:8}}>{attrPhotos[place.place_id].length}</div>
+                                      )}
+                                    </div>
                                   ) : (
                                     <div style={{width:72,height:72,borderRadius:10,background:'#f5f0ea',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,color:'#c8b8a8',flexShrink:0}}>Place</div>
                                   )}
@@ -3802,8 +3838,8 @@ Write all text in ${langName}.`
                                       title={t("favToggle")}>{isFav('hotspot',place.name)?'★':'☆'}</button>
                                     {place.place_id && selectedCity && (
                                       <label onClick={e=>e.stopPropagation()} title="사진 추가(Firestore)"
-                                        style={{background:(attrPhotoCounts[place.place_id]>0)?'#e0f2ef':'#f5f0ea',border:'1px solid '+((attrPhotoCounts[place.place_id]>0)?'#0d9488':'#e0d9d0'),color:(attrPhotoCounts[place.place_id]>0)?'#0d9488':'#c8b8a8',minWidth:30,height:30,padding:'0 4px',borderRadius:7,cursor:attrPhotoUploading===place.place_id?'wait':'pointer',fontSize:11,fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                                        {attrPhotoUploading===place.place_id ? '…' : (attrPhotoCounts[place.place_id]>0 ? `📷${attrPhotoCounts[place.place_id]}` : '📷')}
+                                        style={{background:(attrPhotos[place.place_id]?.length)?'#e0f2ef':'#f5f0ea',border:'1px solid '+((attrPhotos[place.place_id]?.length)?'#0d9488':'#e0d9d0'),color:(attrPhotos[place.place_id]?.length)?'#0d9488':'#c8b8a8',minWidth:30,height:30,padding:'0 4px',borderRadius:7,cursor:attrPhotoUploading===place.place_id?'wait':'pointer',fontSize:11,fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                                        {attrPhotoUploading===place.place_id ? '…' : (attrPhotos[place.place_id]?.length ? `📷${attrPhotos[place.place_id].length}` : '📷')}
                                         <input type="file" accept="image/*" multiple style={{display:'none'}} disabled={attrPhotoUploading===place.place_id}
                                           onClick={e=>e.stopPropagation()}
                                           onChange={async(e)=>{
@@ -3814,7 +3850,7 @@ Write all text in ${langName}.`
                                             setAttrPhotoUploading(place.place_id)
                                             try {
                                               const merged=await uploadAttractionPhotos(country,city,place.place_id,files)
-                                              setAttrPhotoCounts(pc=>({...pc,[place.place_id]:merged.length}))
+                                              setAttrPhotos(pc=>({...pc,[place.place_id]:merged}))
                                             } catch(err){ console.error('[사진업로드]',err); alert('사진 업로드 실패: '+(err?.message||err)) }
                                             finally { setAttrPhotoUploading('') }
                                           }}/>
