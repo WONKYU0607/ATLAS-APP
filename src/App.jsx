@@ -25,7 +25,7 @@ const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.n
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
-import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive } from './firebase'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, deleteAttractionPhoto } from './firebase'
 
 
 // ── 에러 바운더리 (흰 화면 방지) ─────────────────────────────────────────
@@ -105,6 +105,8 @@ function App() {
   const [selectedCity, setSelectedCity] = useState(null)
     const [activeTab, setActiveTab] = useState('hotspots')
   const [hotspots, setHotspots] = useState([])
+  const [attrPhotoCounts, setAttrPhotoCounts] = useState({})  // { place_id: 사진수 } 추출도구용
+  const [attrPhotoUploading, setAttrPhotoUploading] = useState('')  // 업로드중인 place_id
   const [loadingPlaces, setLoadingPlaces] = useState(false)
   const [foodCulture, setFoodCulture] = useState(null) // AI 생성 음식문화 데이터
   const [loadingFoodCulture, setLoadingFoodCulture] = useState(false)
@@ -2561,6 +2563,12 @@ function App() {
       // 핫플레이스 = AI 코스와 동일 소스 (Nearby Search, 도시별 반경, 리뷰순)
       const topHotspots = await fetchHotspotsFor(city)
       setHotspots(topHotspots)
+      // 각 관광지의 기존 Firestore 사진 개수 로드 (배지 표시용)
+      const country = city.countryEn || 'Unknown'
+      const cityNm = city._koName || city.name
+      Promise.all((topHotspots||[]).filter(h=>h.place_id).map(async h=>{
+        try { const ph = await getAttractionPhotos(country, cityNm, h.place_id); return [h.place_id, ph.length] } catch { return [h.place_id, 0] }
+      })).then(pairs=>{ const m={}; pairs.forEach(([id,n])=>{ if(n>0) m[id]=n }); setAttrPhotoCounts(m) })
 
     } catch (error) {
       console.error('Failed to fetch places:', error)
@@ -3792,6 +3800,26 @@ Write all text in ${langName}.`
                                     <button onClick={e=>{e.preventDefault();e.stopPropagation();toggleFav({type:'hotspot',name:place.name,place_id:place.place_id,rating:place.rating,user_ratings_total:place.user_ratings_total,vicinity:place.vicinity||place.formatted_address,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name)})}}
                                       style={{background:isFav('hotspot',place.name)?'#fef3c7':'#f5f0ea',border:isFav('hotspot',place.name)?'1px solid #f0c040':'1px solid #e0d9d0',color:isFav('hotspot',place.name)?'#c8a020':'#c8b8a8',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:12,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}
                                       title={t("favToggle")}>{isFav('hotspot',place.name)?'★':'☆'}</button>
+                                    {place.place_id && selectedCity && (
+                                      <label onClick={e=>e.stopPropagation()} title="사진 추가(Firestore)"
+                                        style={{background:(attrPhotoCounts[place.place_id]>0)?'#e0f2ef':'#f5f0ea',border:'1px solid '+((attrPhotoCounts[place.place_id]>0)?'#0d9488':'#e0d9d0'),color:(attrPhotoCounts[place.place_id]>0)?'#0d9488':'#c8b8a8',minWidth:30,height:30,padding:'0 4px',borderRadius:7,cursor:attrPhotoUploading===place.place_id?'wait':'pointer',fontSize:11,fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                                        {attrPhotoUploading===place.place_id ? '…' : (attrPhotoCounts[place.place_id]>0 ? `📷${attrPhotoCounts[place.place_id]}` : '📷')}
+                                        <input type="file" accept="image/*" multiple style={{display:'none'}} disabled={attrPhotoUploading===place.place_id}
+                                          onClick={e=>e.stopPropagation()}
+                                          onChange={async(e)=>{
+                                            const files=Array.from(e.target.files||[]); e.target.value=''
+                                            if(!files.length) return
+                                            const country=selectedCity.countryEn||'Unknown'
+                                            const city=selectedCity._koName||selectedCity.name
+                                            setAttrPhotoUploading(place.place_id)
+                                            try {
+                                              const merged=await uploadAttractionPhotos(country,city,place.place_id,files)
+                                              setAttrPhotoCounts(pc=>({...pc,[place.place_id]:merged.length}))
+                                            } catch(err){ console.error('[사진업로드]',err); alert('사진 업로드 실패: '+(err?.message||err)) }
+                                            finally { setAttrPhotoUploading('') }
+                                          }}/>
+                                      </label>
+                                    )}
                                   </div>
                                 </div>
                               </a>
