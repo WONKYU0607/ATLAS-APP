@@ -25,7 +25,7 @@ const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.n
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
-import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache } from './firebase'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive } from './firebase'
 
 
 // ── 에러 바운더리 (흰 화면 방지) ─────────────────────────────────────────
@@ -3520,6 +3520,20 @@ Write all text in ${langName}.`
                 }} />
               </label>
             </div>
+            <button onClick={async()=>{
+              const cnt = Object.keys(ex).length
+              if (!cnt) { alert('업로드할 데이터가 없습니다'); return }
+              if (!confirm(`Firestore에 업로드\n\n도시 ${cnt}개를 countries/{국가}/cities/{도시}/attractions 구조로 올립니다.\n(재업로드 시 사진(photos)은 보존됩니다)\n\n진행할까요?`)) return
+              try {
+                const r = await uploadAttractionsArchive(ex, (done, total, city)=>{
+                  console.log(`[Archive] ${done}/${total} - ${city}`)
+                })
+                alert(`업로드 완료\n\n도시 ${r.cities}개\n관광지 ${r.attractions}개\n${r.skipped?`(place_id 없어 스킵 ${r.skipped}개)`:''}`)
+              } catch(err) {
+                console.error('[Archive] 업로드 실패:', err)
+                alert('업로드 실패: '+(err?.message||err))
+              }
+            }} style={{width:'100%',marginTop:6,padding:'8px 0',background:'#0d9488',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>Firestore 업로드 ({Object.keys(ex).length})</button>
           </div>
         )
       })()}
