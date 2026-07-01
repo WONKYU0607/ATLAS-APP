@@ -3463,6 +3463,7 @@ Write all text in ${langName}.`
                 ex[cityName] = {
                   country: selectedCity.countryEn || '',
                   desc: cityData?.description || '',
+                  food: (foodCulture && !foodCulture.error) ? foodCulture : null,
                   attractions: (hotspots||[]).map(h=>({ name:h.name, lat:h.geometry?.location?.lat??null, lng:h.geometry?.location?.lng??null, place_id:h.place_id||null, types:h.types||[] }))
                 }
                 save(ex)
@@ -3474,7 +3475,8 @@ Write all text in ${langName}.`
             </div>
             <div style={{display:'flex',gap:6}}>
               <button onClick={()=>{
-                const data = localStorage.getItem('atlas_extract')||'{}'
+                const raw = localStorage.getItem('atlas_extract')||'{}'
+                const data = JSON.stringify(JSON.parse(raw), null, 2)   // 읽기 쉽게 들여쓰기
                 const blob = new Blob([data],{type:'application/json'})
                 const url = URL.createObjectURL(blob)
                 const a = document.createElement('a')
