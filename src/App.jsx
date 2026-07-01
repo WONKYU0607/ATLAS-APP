@@ -2467,7 +2467,16 @@ function App() {
     const langParam = lang === 'zh' ? 'zh-CN' : lang
     const cityKey = city._koName || city.name
     const fsKey = `${cityKey}_${lang}`
-    try { const cc = await getCityCache(fsKey); if (cc?.hotspots && cc.hotspots.length) return cc.hotspots } catch {}
+    const lsKey = `hotspots_${fsKey}`
+    // 1) localStorage 캐시 우선 (Firestore 실패해도 재클릭 시 API 재호출 방지)
+    try { const raw = localStorage.getItem(lsKey); if (raw) { const arr = JSON.parse(raw); if (arr && arr.length) { console.log('[Hotspots] localStorage 캐시 히트:', fsKey); return arr } } } catch {}
+    // 2) Firestore 공용 캐시
+    try {
+      const cc = await getCityCache(fsKey)
+      console.log('[Hotspots] Firestore 조회:', fsKey, '→', cc?.hotspots?.length ? `캐시 ${cc.hotspots.length}개 히트` : '캐시 없음/빈값', cc)
+      if (cc?.hotspots && cc.hotspots.length) { try { localStorage.setItem(lsKey, JSON.stringify(cc.hotspots)) } catch {}; return cc.hotspots }
+    } catch (e) { console.error('[Hotspots] Firestore 조회 실패(→API 호출됨):', fsKey, e) }
+    console.warn('[Hotspots] 캐시 미스 → API 18키워드 호출:', fsKey)
     const cityName = getCityName(cityKey)   // 현재 언어 도시명 (UI/필터용)
     const cityNameEn = (CITY_I18N[cityKey] && CITY_I18N[cityKey][0]) || cityName   // 검색 쿼리는 영어로 (Google 범용)
     // ── 관광 유형별 분산 Text Search (전 세계 보편 8종) — 반경 의존 제거로 외곽 명소 누락 방지 ──
@@ -2536,6 +2545,7 @@ function App() {
         .filter(inCity)                                          // 오염(타지 명소) 제거
         .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))  // 리뷰순(유명세)
         .slice(0, 30)
+      try { localStorage.setItem(lsKey, JSON.stringify(list)) } catch {}   // 로컬 캐시 저장 (Firestore 실패 대비)
       try { setCityCache(fsKey, { hotspots: list }) } catch {}
       return list
     } catch { return [] }
@@ -2593,7 +2603,16 @@ Write all text in ${langName}.`
       })
       const data = await res.json()
       const txt = (data.text || '').trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim()
-      const parsed = JSON.parse(txt)
+      let parsed
+      try {
+        parsed = JSON.parse(txt)
+      } catch (pe) {
+        // 잘린 JSON 복구 시도: 마지막 완성된 dish까지만 살려서 파싱
+        console.warn('[FoodCulture] 원본 응답 길이:', (data.text||'').length, '| 원문:', data.text)
+        const repaired = txt.replace(/,\s*\{[^}]*$/, '').replace(/\]?\s*\}?\s*$/, '') + ']}'
+        parsed = JSON.parse(repaired)
+        console.warn('[FoodCulture] 잘린 JSON 복구 성공')
+      }
       try { localStorage.setItem(cacheKey, JSON.stringify(parsed)) } catch {}
       setCityCache(fsKey, { food: parsed })
       if (returnOnly) return parsed
