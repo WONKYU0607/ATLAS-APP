@@ -1856,15 +1856,16 @@ function App() {
             user-select:none;
           ">${d.name}</div>`
         } else if (d._type === 'city') {
-          const isSelected = false   // 라벨 재생성 방지 위해 selectedCity 의존 제거 (선택 강조는 패널로 대체)
+          el.dataset.cityname = d._koName || d.name   // 선택 강조 색 갱신용 식별자
           el.style.cssText = d.cityGated ? 'pointer-events:none;opacity:0;' : 'pointer-events:none;'  // 게이팅 대상은 숨김으로 시작(깜빡임 방지), 터치 투명 → 회전/줌 안 막힘
           const inner = document.createElement('div')
+          inner.className = 'city-label-inner'
           inner.style.cssText = `
             transform:translate(-50%,-50%);
             font-family:Pretendard,Inter,system-ui,sans-serif;
-            font-size:${isSelected ? '14px' : '12px'};
+            font-size:12px;
             font-weight:700;
-            color:${isSelected ? '#2563eb' : 'rgba(255,255,255,0.95)'};
+            color:rgba(255,255,255,0.95);
             text-shadow:0 1px 6px rgba(0,0,0,1),0 0 12px rgba(0,0,0,0.9);
             white-space:nowrap;
             user-select:none;
@@ -1959,6 +1960,18 @@ function App() {
         return el
       })
   }, [countries, selectedCountry])
+
+  // 선택 도시 강조: 라벨 재생성 없이 색/크기만 갱신 (재생성하면 opacity:0 리셋되어 라벨이 사라지므로)
+  useEffect(() => {
+    const sel = selectedCity?._koName || selectedCity?.name
+    document.querySelectorAll('[data-cityname]').forEach(el => {
+      const inner = el.querySelector('.city-label-inner')
+      if (!inner) return
+      const on = el.dataset.cityname === sel
+      inner.style.color = on ? '#2563eb' : 'rgba(255,255,255,0.95)'
+      inner.style.fontSize = on ? '14px' : '12px'
+    })
+  }, [selectedCity])
 
   // ── 지리 기준선 (적도, 날짜변경선) ───────────────────────────────
   useEffect(() => {
@@ -2542,7 +2555,18 @@ function App() {
       const learnThreshold = Math.max(3, merged.length * 0.25)
       const learnedLocalities = Object.entries(localityTally).filter(([, c]) => c >= learnThreshold).map(([k]) => k)
       const acceptNames = [...cityNames, ...learnedLocalities]
+      // 동명 다른지역 차단: 도시 좌표에서 확연히 먼(100km 초과) 관광지 제거. 가까운 명소(성산일출봉 등)·같은 도시 구들은 안전
+      const farKm = 150
+      const tooFar = (p) => {
+        const loc = p.geometry?.location
+        if (!loc || loc.lat == null || city?.lat == null) return false   // 좌표 없으면 거리로 못 거름 → 통과
+        const R = 6371, toR = Math.PI / 180
+        const dLat = (loc.lat - city.lat) * toR, dLng = (loc.lng - city.lng) * toR
+        const a = Math.sin(dLat/2)**2 + Math.cos(city.lat*toR) * Math.cos(loc.lat*toR) * Math.sin(dLng/2)**2
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) > farKm
+      }
       const inCity = (p) => {
+        if (tooFar(p)) return false   // 확연히 먼 동명 다른지역 관광지 차단
         const addr = (p.vicinity || '') + ' ' + (p.formatted_address || '')
         if (acceptNames.some(n => addr.includes(n))) return true
         const hay = (p.name || '') + ' ' + addr
