@@ -3534,7 +3534,7 @@ Write all text in ${langName}.`
         const count = Object.keys(ex).length
         const save = (obj) => { localStorage.setItem('atlas_extract', JSON.stringify(obj)); setExtractTick(t=>t+1) }
         return (
-          <div style={{position:'fixed',top:10,right:10,zIndex:99999,display:'flex',flexDirection:'column',gap:6,alignItems:'stretch',background:'rgba(15,18,24,.82)',padding:'10px 12px',borderRadius:12,boxShadow:'0 4px 16px rgba(0,0,0,.4)',minWidth:200}}>
+          <div style={{position:'fixed',top:10,left:10,zIndex:99999,display:'flex',flexDirection:'column',gap:6,alignItems:'stretch',background:'rgba(15,18,24,.82)',padding:'10px 12px',borderRadius:12,boxShadow:'0 4px 16px rgba(0,0,0,.4)',minWidth:200}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10}}>
               <span style={{fontSize:12,fontWeight:700,color:done?'#4ade80':'#fbbf24'}}>{cityName} · {done?'추출됨':'미추출'}</span>
               <span style={{fontSize:11,color:'#cbd5e1'}}>누적 {count}</span>
@@ -3583,6 +3583,16 @@ Write all text in ${langName}.`
               </label>
             </div>
             <button onClick={async()=>{
+              if (!done || !ex[cityName]) { alert('현재 도시가 추출되지 않았습니다'); return }
+              try {
+                const r = await uploadAttractionsArchive({ [cityName]: ex[cityName] }, ()=>{})
+                alert(`"${cityName}" 업로드 완료\n관광지 ${r.attractions}개${r.skipped?` (스킵 ${r.skipped})`:''}`)
+              } catch(err) {
+                console.error('[Archive] 업로드 실패:', err)
+                alert('업로드 실패: '+(err?.message||err))
+              }
+            }} style={{width:'100%',marginTop:6,padding:'8px 0',background:'#0d9488',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>이 도시만 업로드 ({cityName})</button>
+            <button onClick={async()=>{
               const cnt = Object.keys(ex).length
               if (!cnt) { alert('업로드할 데이터가 없습니다'); return }
               if (!confirm(`Firestore에 업로드\n\n도시 ${cnt}개를 countries/{국가}/cities/{도시}/attractions 구조로 올립니다.\n(재업로드 시 사진(photos)은 보존됩니다)\n\n진행할까요?`)) return
@@ -3595,7 +3605,7 @@ Write all text in ${langName}.`
                 console.error('[Archive] 업로드 실패:', err)
                 alert('업로드 실패: '+(err?.message||err))
               }
-            }} style={{width:'100%',marginTop:6,padding:'8px 0',background:'#0d9488',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>Firestore 업로드 ({Object.keys(ex).length})</button>
+            }} style={{width:'100%',marginTop:6,padding:'8px 0',background:'#475569',color:'white',border:'none',borderRadius:8,fontSize:11,fontWeight:700,cursor:'pointer'}}>전체 업로드 ({Object.keys(ex).length})</button>
           </div>
         )
       })()}
