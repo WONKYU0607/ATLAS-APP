@@ -1761,7 +1761,7 @@ function App() {
     }
 
     const countryEn = selectedCountry.properties.NAME
-    const cities = (COUNTRY_CITIES[countryEn] || []).map((c, idx) => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city', cityGated: idx >= 12, cityTier: idx < 12 ? 0 : idx < 24 ? 1 : 2 }))
+    const cities = (COUNTRY_CITIES[countryEn] || []).map((c, idx) => ({ ...c, name: getCityName(c.name), _koName: c.name, countryEn, _type: 'city', cityGated: idx >= 12, cityTier: 1 }))
     const countryLabels = countries.map(feat => ({
       lat: feat.properties.LABEL_Y || 0,
       lng: feat.properties.LABEL_X || 0,
