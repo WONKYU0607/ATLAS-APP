@@ -112,7 +112,7 @@ export const uploadAttractionPhotos = async (country, city, placeId, files, onEa
   for (const file of files) {
     const compressed = await compressImage(file)   // 압축(긴변 1200px, JPEG 0.8)
     const ts = Date.now() + '_' + Math.random().toString(36).slice(2, 6)
-    const path = `attractions/${placeId}/${ts}.jpg`   // 압축 결과는 항상 jpg
+    const path = `attractions/${country}/${city}/${placeId}/${ts}.jpg`   // 국가/도시/관광지 계층, 압축결과 jpg
     const sref = storageRef(storage, path)
     await uploadBytes(sref, compressed, { contentType: 'image/jpeg' })
     const url = await getDownloadURL(sref)
