@@ -1153,7 +1153,7 @@ function App() {
     // 국가 전환 이동 중이면 경유 줌이 아니라 '목표 줌'으로 판정 → 중간에 도시 라벨이 떴다 사라지는 깜빡임 방지
     const fly = countryFlyingRef.current
     const alt = fly.active ? fly.targetAlt : pov.altitude
-    const maxA = Math.min(0.75, 0.35 + alt * 0.18)
+    const maxA = Math.max(0.55, Math.min(0.75, 0.35 + alt * 0.18))
     const enterAlt = cityEnterAltRef.current || 0.5
     const out = []
     els.forEach(el => {
@@ -1164,7 +1164,10 @@ function App() {
       else if (el.dataset.cityGated === '1') {
         // 도시 단계별: tier1(13~24위)은 진입줌의 0.7배, tier2(25위~)는 0.5배로 줌인해야 등장
         const tier = el.dataset.cityTier === '2' ? 2 : 1
-        altOk = alt < enterAlt * (tier === 2 ? 0.5 : 0.7)
+        const base = enterAlt * (tier === 2 ? 0.5 : 0.7)
+        // 히스테리시스: 이미 보이는 라벨은 임계를 12% 넘어도 유지 → 카메라 정착 중 경계 진동에도 안 꺼짐(깜빡임 방지)
+        const wasVisible = el.style.opacity === '1'
+        altOk = alt < (wasVisible ? base * 1.12 : base)
       }
       else altOk = el.dataset.gated !== '1' || alt < 0.7   // 유명12개·국가명은 항상, 섬/작은나라는 alt<0.7
       out.push([el, ang < maxA && altOk])
@@ -2418,10 +2421,7 @@ function App() {
       const pov = globeRef.current.pointOfView()
       const cityAlt = window.innerWidth <= 768 ? 0.32 : 0.22
       const targetAlt = pov.altitude > 0.5 ? cityAlt : pov.altitude
-      // 이동 중 게이팅을 '목표 줌' 기준으로 고정 → 이동 애니메이션 동안 근처 라벨이 사라지지 않음(깜빡임 방지)
-      countryFlyingRef.current = { active: true, targetAlt }
       globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: targetAlt }, 900)
-      setTimeout(() => { countryFlyingRef.current.active = false; forceGatingNow() }, 950)
     } catch(e) { console.error('city click error:', e) }
   }
 
