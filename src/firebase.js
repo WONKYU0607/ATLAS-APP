@@ -160,6 +160,30 @@ export const setAttractionCoverPhoto = async (country, city, placeId, photoItem)
   return reordered
 }
 
+// ── 관광지 제외목록: 추천에서 영구 제외할 place_id (단일 문서에 배열 저장) ──
+const excludedRef = () => doc(db, 'config', 'excludedAttractions')
+
+export const getExcludedAttractions = async () => {
+  try {
+    const snap = await getDoc(excludedRef())
+    return (snap.exists() && Array.isArray(snap.data().ids)) ? snap.data().ids : []
+  } catch { return [] }
+}
+
+export const addExcludedAttraction = async (placeId) => {
+  try {
+    await setDoc(excludedRef(), { ids: arrayUnion(placeId), updatedAt: Date.now() }, { merge: true })
+    return true
+  } catch (e) { console.error('[addExcluded] 실패:', e?.message || e); return false }
+}
+
+export const removeExcludedAttraction = async (placeId) => {
+  try {
+    await setDoc(excludedRef(), { ids: arrayRemove(placeId), updatedAt: Date.now() }, { merge: true })
+    return true
+  } catch (e) { console.error('[removeExcluded] 실패:', e?.message || e); return false }
+}
+
 // 댓글 추가
 export const addComment = async (courseId, comment) => {
   const courseRef = doc(db, 'sharedCourses', courseId)
