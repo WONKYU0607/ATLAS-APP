@@ -25,7 +25,7 @@ const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.n
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
-import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto } from './firebase'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto, getExcludedAttractions, addExcludedAttraction } from './firebase'
 
 
 // ── 에러 바운더리 (흰 화면 방지) ─────────────────────────────────────────
@@ -108,6 +108,7 @@ function App() {
   const [attrPhotos, setAttrPhotos] = useState({})  // { place_id: [{url,path}] } 관광지별 사진 목록
   const [attrPhotoUploading, setAttrPhotoUploading] = useState('')  // 업로드중인 place_id
   const [galleryView, setGalleryView] = useState(null)  // { photos:[{url,path}], idx, placeId, country, city } 큰 갤러리 팝업
+  const [excludedIds, setExcludedIds] = useState(new Set())  // 추천 제외 place_id
   const [loadingPlaces, setLoadingPlaces] = useState(false)
   const [foodCulture, setFoodCulture] = useState(null) // AI 생성 음식문화 데이터
   const [loadingFoodCulture, setLoadingFoodCulture] = useState(false)
@@ -809,6 +810,11 @@ function App() {
   }
 
   // 플래너 열릴 때/day 변경 시 경로 자동 로드
+  // 추천 제외 관광지 목록 로드 (1회)
+  useEffect(() => {
+    getExcludedAttractions().then(ids => setExcludedIds(new Set(ids))).catch(() => {})
+  }, [])
+
   useEffect(() => {
     if (showCoursePlanner && courseDays.length > 0) {
       const hasUncached = courseDays.some(day => {
@@ -3816,7 +3822,7 @@ Write all text in ${langName}.`
                           </div>
                         ) : hotspots.length>0 ? (
                           <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                            {hotspots.map((place,idx)=>(
+                            {hotspots.filter(place=>!excludedIds.has(place.place_id)).map((place,idx)=>(
                               <a key={idx} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id||''}`}
                                 target="_blank" rel="noopener noreferrer"
                                 style={{textDecoration:'none',background:'white',border:'1px solid #ede8e0',borderRadius:12,overflow:'hidden',cursor:'pointer',transition:'all .2s'}}>
@@ -3872,6 +3878,15 @@ Write all text in ${langName}.`
                                             finally { setAttrPhotoUploading('') }
                                           }}/>
                                       </label>
+                                    )}
+                                    {place.place_id && (
+                                      <button onClick={async(e)=>{e.preventDefault();e.stopPropagation()
+                                        if(!confirm(`"${place.name}"을(를) 추천에서 영구 제외할까요?`)) return
+                                        setExcludedIds(prev=>new Set(prev).add(place.place_id))
+                                        const ok=await addExcludedAttraction(place.place_id)
+                                        if(!ok){ alert('제외 저장 실패'); setExcludedIds(prev=>{const s=new Set(prev); s.delete(place.place_id); return s}) }
+                                      }} title="추천에서 영구 제외"
+                                        style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#dc2626',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
                                     )}
                                   </div>
                                 </div>
