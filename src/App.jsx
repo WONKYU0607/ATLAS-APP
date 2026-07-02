@@ -2548,7 +2548,7 @@ function App() {
         const hay = (p.name || '') + ' ' + addr
         return allow.some(k => hay.includes(k))
       }
-      const JUNK_TYPES = ['supermarket','grocery_or_supermarket','department_store','shopping_mall','convenience_store','store','clothing_store','electronics_store','home_goods_store','furniture_store','hardware_store','gas_station','lodging','car_dealer']
+      const JUNK_TYPES = ['supermarket','grocery_or_supermarket','department_store','shopping_mall','convenience_store','store','clothing_store','electronics_store','home_goods_store','furniture_store','hardware_store','gas_station','lodging','car_dealer','restaurant','cafe','food','meal_takeaway','meal_delivery','bakery','bar','parking','travel_agency','school','university','primary_school','secondary_school','hair_care','beauty_salon','pharmacy','hospital','doctor','bank','atm','real_estate_agency','lawyer','insurance_agency','car_rental','car_repair','gym','spa']
       const ranked = merged
         .filter(p => p.user_ratings_total)                       // 리뷰 있는 곳만
         .filter(p => p.rating === undefined || p.rating >= 3.5)  // 저평점 컷
