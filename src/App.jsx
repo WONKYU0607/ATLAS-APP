@@ -2418,6 +2418,7 @@ function App() {
       const cityAlt = window.innerWidth <= 768 ? 0.32 : 0.22
       const targetAlt = pov.altitude > 0.5 ? cityAlt : pov.altitude
       globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: targetAlt }, 900)
+      lastPovKeyRef.current = ''; labelCacheRef.current.settled = false  // idle 스킵 해제 → 이동이 미미해도 라벨 게이팅 재계산(사라짐 방지)
     } catch(e) { console.error('city click error:', e) }
   }
 
