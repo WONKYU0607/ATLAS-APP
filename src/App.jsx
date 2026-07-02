@@ -2419,6 +2419,8 @@ function App() {
       const cityAlt = window.innerWidth <= 768 ? 0.32 : 0.22
       const targetAlt = pov.altitude > 0.5 ? cityAlt : pov.altitude
       globeRef.current.pointOfView({ lat: city.lat, lng: city.lng, altitude: targetAlt }, 900)
+      // 이동 완료 후 라벨 게이팅 재계산 (안 하면 이동 중 사라진 근처 라벨이 복구 안 됨)
+      setTimeout(forceGatingNow, 950); setTimeout(forceGatingNow, 1200)
     } catch(e) { console.error('city click error:', e) }
   }
 
