@@ -49,20 +49,13 @@ export const COUNTRY_CITIES = {
     { name:"하코다테", lat:41.77, lng:140.73 },
     { name:"돗토리", lat:35.50, lng:134.24 },
     { name:"미야자키", lat:31.91, lng:131.42 },
-    { name:"가루이자와", lat:36.35, lng:138.6 },
-    { name:"오타루", lat:43.19, lng:141.0 },
-    { name:"후라노", lat:43.34, lng:142.38 },
-    { name:"니세코", lat:42.8, lng:140.69 },
     { name:"노보리베쓰", lat:42.41, lng:141.1 },
     { name:"아오모리", lat:40.82, lng:140.74 },
-    { name:"모리오카", lat:39.7, lng:141.15 },
     { name:"야마가타", lat:38.24, lng:140.36 },
     { name:"가고시마", lat:31.6, lng:130.56 },
     { name:"이부스키", lat:31.25, lng:130.63 },
     { name:"나하", lat:26.21, lng:127.68 },
-    { name:"이시가키", lat:24.34, lng:124.16 },
     { name:"미야코지마", lat:24.81, lng:125.28 },
-    { name:"가와고에", lat:35.93, lng:139.48 }
   ],
   "China": [
     { name:"베이징", lat:39.90, lng:116.41 },
@@ -80,13 +73,10 @@ export const COUNTRY_CITIES = {
     { name:"광저우", lat:23.13, lng:113.26 },
     { name:"선전", lat:22.54, lng:114.06 },
     { name:"충칭", lat:29.56, lng:106.55 },
-    { name:"우한", lat:30.59, lng:114.31 },
     { name:"칭다오", lat:36.07, lng:120.38 },
     { name:"다롄", lat:38.91, lng:121.61 },
     { name:"하얼빈", lat:45.80, lng:126.54 },
     { name:"톈진", lat:39.34, lng:117.36 },
-    { name:"핑야오", lat:37.2, lng:112.18 },
-    { name:"다리", lat:25.61, lng:100.27 }
   ],
   "France": [
     { name:"파리", lat:48.86, lng:2.35 },
@@ -121,9 +111,6 @@ export const COUNTRY_CITIES = {
     { name:"페르피냥", lat:42.7, lng:2.9 },
     { name:"몽펠리에", lat:43.61, lng:3.88 },
     { name:"라로셸", lat:46.16, lng:-1.15 },
-    { name:"오를레앙", lat:47.9, lng:1.91 },
-    { name:"아작시오", lat:41.93, lng:8.74 },
-    { name:"도빌", lat:49.36, lng:0.07 }
   ],
   "Italy": [
     { name:"로마", lat:41.90, lng:12.50 },
@@ -157,10 +144,6 @@ export const COUNTRY_CITIES = {
     { name:"라벤나", lat:44.42, lng:12.2 },
     { name:"우르비노", lat:43.73, lng:12.64 },
     { name:"베르가모", lat:45.7, lng:9.67 },
-    { name:"만토바", lat:45.16, lng:10.79 },
-    { name:"트렌토", lat:46.07, lng:11.12 },
-    { name:"카프리", lat:40.55, lng:14.24 },
-    { name:"타오르미나", lat:37.85, lng:15.29 }
   ],
   "Spain": [
     { name:"바르셀로나", lat:41.39, lng:2.17 },
@@ -344,8 +327,6 @@ export const COUNTRY_CITIES = {
     { name:"핫야이", lat:7.01, lng:100.47 },
     { name:"코사멧", lat:12.57, lng:101.45 },
     { name:"우돈타니", lat:17.41, lng:102.79 },
-    { name:"나콘랏차시마", lat:14.97, lng:102.1 },
-    { name:"코리뻬", lat:6.49, lng:99.3 }
   ],
   "India": [
     { name:"뭄바이", lat:19.08, lng:72.88 },
@@ -381,7 +362,6 @@ export const COUNTRY_CITIES = {
     { name:"아지만", lat:25.41, lng:55.44 },
     { name:"움알쿠와인", lat:25.56, lng:55.55 },
     { name:"하타", lat:24.8, lng:56.12 },
-    { name:"리와오아시스", lat:23.13, lng:53.78 }
   ],
   "Turkey": [
     { name:"이스탄불", lat:41.01, lng:28.98 },
@@ -483,8 +463,6 @@ export const COUNTRY_CITIES = {
     { name:"조호바루", lat:1.49, lng:103.74 },
     { name:"카메론하일랜드", lat:4.47, lng:101.38 },
     { name:"티오만", lat:2.82, lng:104.16 },
-    { name:"페르헨티안", lat:5.9, lng:102.74 },
-    { name:"미리", lat:4.4, lng:113.99 }
   ],
   "Singapore": [
     { name:"싱가포르", lat:1.36, lng:103.82 },
@@ -500,14 +478,12 @@ export const COUNTRY_CITIES = {
     { name:"시아누크빌", lat:10.63, lng:103.50 },
     { name:"바탐방", lat:13.1, lng:103.2 },
     { name:"캄폿", lat:10.61, lng:104.18 },
-    { name:"케프", lat:10.48, lng:104.32 }
   ],
   "Myanmar": [
     { name:"양곤", lat:16.87, lng:96.19 },
     { name:"바간", lat:21.17, lng:94.86 },
     { name:"만달레이", lat:21.97, lng:96.08 },
     { name:"인레호수", lat:20.53, lng:96.90 },
-    { name:"네피도", lat:19.76, lng:96.08 }
   ],
   "Nepal": [
     { name:"카트만두", lat:27.70, lng:85.32 },
@@ -515,7 +491,6 @@ export const COUNTRY_CITIES = {
     { name:"치트완", lat:27.52, lng:84.35 },
     { name:"룸비니", lat:27.48, lng:83.28 },
     { name:"박타푸르", lat:27.67, lng:85.43 },
-    { name:"나가르콧", lat:27.72, lng:85.52 }
   ],
   "Sri Lanka": [
     { name:"콜롬보", lat:6.93, lng:79.85 },
@@ -524,7 +499,6 @@ export const COUNTRY_CITIES = {
     { name:"시기리야", lat:7.96, lng:80.76 },
     { name:"누와라엘리야", lat:6.97, lng:80.78 },
     { name:"엘라", lat:6.87, lng:81.05 },
-    { name:"아누라다푸라", lat:8.31, lng:80.4 }
   ],
   "Philippines": [
     { name:"마닐라", lat:14.60, lng:120.98 },
@@ -550,8 +524,6 @@ export const COUNTRY_CITIES = {
     { name:"기마랑이스", lat:41.44, lng:-8.29 },
     { name:"카스카이스", lat:38.7, lng:-9.42 },
     { name:"라구스", lat:37.1, lng:-8.67 },
-    { name:"빌라노바드가이아", lat:41.13, lng:-8.61 },
-    { name:"나자레", lat:39.6, lng:-9.07 }
   ],
   "Netherlands": [
     { name:"암스테르담", lat:52.37, lng:4.90 },
@@ -624,7 +596,6 @@ export const COUNTRY_CITIES = {
     { name:"블레드", lat:46.37, lng:14.11 },
     { name:"피란", lat:45.53, lng:13.57 },
     { name:"마리보르", lat:46.56, lng:15.65 },
-    { name:"포스토이나", lat:45.78, lng:14.21 }
   ],
   "Croatia": [
     { name:"두브로브니크", lat:42.66, lng:18.05 },
@@ -735,7 +706,6 @@ export const COUNTRY_CITIES = {
     { name:"와디럼", lat:29.58, lng:35.42 },
     { name:"아카바", lat:29.53, lng:35.01 },
     { name:"제라시", lat:32.28, lng:35.89 },
-    { name:"마다바", lat:31.72, lng:35.79 }
   ],
   "Israel": [
     { name:"예루살렘", lat:31.77, lng:35.22 },
@@ -779,8 +749,6 @@ export const COUNTRY_CITIES = {
     { name:"캔모어", lat:51.09, lng:-115.36 },
     { name:"나나이모", lat:49.16, lng:-123.94 },
     { name:"셔브룩", lat:45.4, lng:-71.89 },
-    { name:"선더베이", lat:48.38, lng:-89.25 },
-    { name:"무스조", lat:50.39, lng:-105.53 }
   ],
   "Cuba": [
     { name:"하바나", lat:23.11, lng:-82.37 },
@@ -926,10 +894,6 @@ export const COUNTRY_CITIES = {
     { name:"화롄", lat:23.99, lng:121.60 },
     { name:"타로코", lat:24.18, lng:121.62 },
     { name:"단수이", lat:25.17, lng:121.44 },
-    { name:"컨딩", lat:21.95, lng:120.79 },
-    { name:"르웨탄", lat:23.86, lng:120.91 },
-    { name:"아리산", lat:23.51, lng:120.8 },
-    { name:"진먼", lat:24.43, lng:118.32 }
   ],
   "Maldives": [
     { name:"몰디브", lat:4.18, lng:73.51 },
@@ -1003,7 +967,6 @@ export const COUNTRY_CITIES = {
     { name:"무스카트", lat:23.59, lng:58.38 },
     { name:"니즈와", lat:22.93, lng:57.53 },
     { name:"살랄라", lat:17.02, lng:54.09 },
-    { name:"수르", lat:22.57, lng:59.53 }
   ],
   "Qatar": [
     { name:"도하", lat:25.30, lng:51.53 },
@@ -1035,7 +998,6 @@ export const COUNTRY_CITIES = {
     { name:"빌뉴스", lat:54.69, lng:25.28 },
     { name:"카우나스", lat:54.90, lng:23.90 },
     { name:"트라카이", lat:54.65, lng:24.93 },
-    { name:"클라이페다", lat:55.7, lng:21.14 }
   ],
   "Estonia": [
     { name:"탈린", lat:59.43, lng:24.75 },
@@ -1079,7 +1041,6 @@ export const COUNTRY_CITIES = {
     { name:"베이루트", lat:33.89, lng:35.51 },
     { name:"비블로스", lat:34.12, lng:35.65 },
     { name:"바알베크", lat:34.01, lng:36.21 },
-    { name:"시돈", lat:33.56, lng:35.37 }
   ],
   "Ukraine": [
     { name:"키이우", lat:50.45, lng:30.52 },
