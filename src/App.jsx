@@ -1166,7 +1166,11 @@ function App() {
         altOk = alt < enterAlt * (tier === 2 ? 0.5 : 0.7)
       }
       else altOk = el.dataset.gated !== '1' || alt < 0.7   // 유명12개·국가명은 항상, 섬/작은나라는 alt<0.7
-      out.push([el, ang < maxA && altOk])
+      const shown = ang < maxA && altOk
+      if (window.__labelDebug && el.dataset.cityGated === '1') {
+        console.log(`[라벨] ${el.textContent?.slice(0,6)} shown=${shown} ang=${ang.toFixed(3)} maxA=${maxA.toFixed(3)} alt=${alt.toFixed(3)} enterAlt=${enterAlt.toFixed(3)} 임계=${(enterAlt*0.7).toFixed(3)} angOK=${ang<maxA} altOK=${altOk}`)
+      }
+      out.push([el, shown])
     })
     return out
   }
