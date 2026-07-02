@@ -1166,11 +1166,7 @@ function App() {
         altOk = alt < enterAlt * (tier === 2 ? 0.5 : 0.7)
       }
       else altOk = el.dataset.gated !== '1' || alt < 0.7   // 유명12개·국가명은 항상, 섬/작은나라는 alt<0.7
-      const shown = ang < maxA && altOk
-      if (window.__labelDebug && el.dataset.cityGated === '1') {
-        console.log(`[라벨] ${el.textContent?.slice(0,6)} shown=${shown} ang=${ang.toFixed(3)} maxA=${maxA.toFixed(3)} alt=${alt.toFixed(3)} enterAlt=${enterAlt.toFixed(3)} 임계=${(enterAlt*0.7).toFixed(3)} angOK=${ang<maxA} altOK=${altOk}`)
-      }
-      out.push([el, shown])
+      out.push([el, ang < maxA && altOk])
     })
     return out
   }
@@ -1860,7 +1856,7 @@ function App() {
             user-select:none;
           ">${d.name}</div>`
         } else if (d._type === 'city') {
-          const isSelected = (selectedCity?._koName || selectedCity?.name) === (d._koName || d.name)
+          const isSelected = false   // 라벨 재생성 방지 위해 selectedCity 의존 제거 (선택 강조는 패널로 대체)
           el.style.cssText = d.cityGated ? 'pointer-events:none;opacity:0;' : 'pointer-events:none;'  // 게이팅 대상은 숨김으로 시작(깜빡임 방지), 터치 투명 → 회전/줌 안 막힘
           const inner = document.createElement('div')
           inner.style.cssText = `
@@ -1962,7 +1958,7 @@ function App() {
         }
         return el
       })
-  }, [countries, selectedCountry, selectedCity])
+  }, [countries, selectedCountry])
 
   // ── 지리 기준선 (적도, 날짜변경선) ───────────────────────────────
   useEffect(() => {
