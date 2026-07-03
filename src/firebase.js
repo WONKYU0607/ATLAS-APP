@@ -134,6 +134,19 @@ export const getAttractionPhotos = async (country, city, placeId) => {
   return []
 }
 
+// 도시의 모든 관광지 사진을 1회 컬렉션 쿼리로 일괄 조회 → { place_id: [{url,path}] } (관광지 25개 개별조회 25회 → 1회)
+export const getCityAttractionPhotos = async (country, city) => {
+  const out = {}
+  try {
+    const snap = await getDocs(collection(db, 'countries', country, 'cities', city, 'attractions'))
+    snap.forEach(d => {
+      const ph = d.data().photos
+      if (Array.isArray(ph) && ph.length) out[d.id] = ph   // 문서ID = place_id
+    })
+  } catch (e) { console.error('[getCityAttractionPhotos] 실패:', e?.message || e) }
+  return out
+}
+
 // 관광지 사진 1장 삭제 (Storage 파일 + Firestore 배열에서 제거)
 export const deleteAttractionPhoto = async (country, city, placeId, photoItem) => {
   const attrDoc = doc(db, 'countries', country, 'cities', city, 'attractions', placeId)
