@@ -2576,7 +2576,7 @@ function App() {
       const ranked = merged
         .filter(p => p.user_ratings_total)                       // 리뷰 있는 곳만
         .filter(p => p.rating === undefined || p.rating >= 3.5)  // 저평점 컷
-        .filter(p => !(p.types || []).some(t => JUNK_TYPES.includes(t)))  // 마트/상점/주유소 등 제외
+        .filter(p => (p.types || []).includes('tourist_attraction') || !(p.types || []).some(t => JUNK_TYPES.includes(t)))  // 관광지면 살림, 아니면 마트/상점 등 제외
         .filter(inCity)                                          // 오염(타지 명소) 제거
         .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))  // 리뷰순(유명세)
       // 관광 규모 자동 판별: 리뷰 1만+ 관광지가 10개 이상이면 대도시(25개), 아니면 소도시(15개)
