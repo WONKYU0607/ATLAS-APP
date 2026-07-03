@@ -25,7 +25,7 @@ const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.n
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
-import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto, getExcludedAttractions, addExcludedAttraction } from './firebase'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, getCityAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto, getExcludedAttractions, addExcludedAttraction } from './firebase'
 
 
 // ── 에러 바운더리 (흰 화면 방지) ─────────────────────────────────────────
@@ -2610,12 +2610,10 @@ function App() {
       // 핫플레이스 = AI 코스와 동일 소스 (Nearby Search, 도시별 반경, 리뷰순)
       const topHotspots = await fetchHotspotsFor(city)
       setHotspots(topHotspots)
-      // 각 관광지의 Firestore 사진 목록 로드 (썸네일/갤러리용)
+      // 도시의 관광지 사진을 1회 컬렉션 쿼리로 일괄 로드 (개별 25회 → 1회, 렉 감소)
       const country = city.countryEn || 'Unknown'
       const cityNm = city._koName || city.name
-      Promise.all((topHotspots||[]).filter(h=>h.place_id).map(async h=>{
-        try { const ph = await getAttractionPhotos(country, cityNm, h.place_id); return [h.place_id, ph] } catch { return [h.place_id, []] }
-      })).then(pairs=>{ const m={}; pairs.forEach(([id,ph])=>{ if(ph&&ph.length) m[id]=ph }); setAttrPhotos(m) })
+      getCityAttractionPhotos(country, cityNm).then(m => setAttrPhotos(m || {})).catch(() => setAttrPhotos({}))
 
     } catch (error) {
       console.error('Failed to fetch places:', error)
