@@ -2542,31 +2542,40 @@ function App() {
       // 예외: 행정구역 다른 핵심 명소(피라미드·만리장성·수니온 등)는 allow 키워드로 통과
       const cityNames = [cityKey, ...(CITY_I18N[cityKey] || [])].filter(Boolean)
       const allow = extra?.allow || []
-      // 현지 표기 자동 학습: 도시명으로 검색한 결과 다수가 공유하는 지역 표기(예: København)를 추출해 허용
-      // → København·München·Praha 같은 현지어 주소를 수동등록·반경 없이 자동 통과. 타지 명소(소수)는 학습 안 됨
-      const localityTally = {}
+      // 시/도(광역) 단위로 관광지 그룹화 — 구 단위로 안 나뉘게(도쿄 신주쿠·시부야는 다 '도쿄도' 한 그룹)
+      const regionGroups = {}
       for (const p of merged) {
         const segs = (p.formatted_address || '').split(',').map(s => s.trim()).filter(Boolean)
         if (segs.length >= 2) {
-          const loc = segs[segs.length - 2].replace(/[0-9]+/g, '').trim()  // 국가 앞 세그먼트, 우편번호 제거
-          if (loc.length >= 2) localityTally[loc] = (localityTally[loc] || 0) + 1
+          const loc = segs[segs.length - 2].replace(/[0-9]+/g, '').trim()  // 국가 앞 세그먼트(시/도), 우편번호 제거
+          if (loc.length >= 2) (regionGroups[loc] = regionGroups[loc] || []).push(p)
         }
       }
       const learnThreshold = Math.max(3, merged.length * 0.25)
-      const learnedLocalities = Object.entries(localityTally).filter(([, c]) => c >= learnThreshold).map(([k]) => k)
+      const learnedLocalities = Object.entries(regionGroups).filter(([, arr]) => arr.length >= learnThreshold).map(([k]) => k)
       const acceptNames = [...cityNames, ...learnedLocalities]
-      // 동명 다른지역 차단: 도시 좌표에서 확연히 먼(100km 초과) 관광지 제거. 가까운 명소(성산일출봉 등)·같은 도시 구들은 안전
-      const farKm = 150
-      const tooFar = (p) => {
-        const loc = p.geometry?.location
-        if (!loc || loc.lat == null || city?.lat == null) return false   // 좌표 없으면 거리로 못 거름 → 통과
+      // 등록 안 된 동명 도시 차단: 시/도 그룹이 2개 이상일 때, 그룹 평균좌표가 도시에서 확연히 먼(150km 초과) 그룹만 제거
+      // 그룹 평균 기준이라 넓은 도시(한 그룹, 평균=도심)·구 단위는 안전. 다른 지역 동명도시(별개 그룹, 수백km)만 걸림
+      const farGroups = new Set()
+      if (city?.lat != null && Object.keys(regionGroups).length >= 2) {
         const R = 6371, toR = Math.PI / 180
-        const dLat = (loc.lat - city.lat) * toR, dLng = (loc.lng - city.lng) * toR
-        const a = Math.sin(dLat/2)**2 + Math.cos(city.lat*toR) * Math.cos(loc.lat*toR) * Math.sin(dLng/2)**2
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) > farKm
+        for (const loc in regionGroups) {
+          const pts = regionGroups[loc].map(p => p.geometry?.location).filter(l => l && l.lat != null)
+          if (!pts.length) continue
+          const mlat = pts.reduce((s, l) => s + l.lat, 0) / pts.length
+          const mlng = pts.reduce((s, l) => s + l.lng, 0) / pts.length
+          const dLat = (mlat - city.lat) * toR, dLng = (mlng - city.lng) * toR
+          const a = Math.sin(dLat/2)**2 + Math.cos(city.lat*toR) * Math.cos(mlat*toR) * Math.sin(dLng/2)**2
+          if (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) > 150) farGroups.add(loc)
+        }
+        if (farGroups.size) console.log(`[동명차단] ${cityKey}: 먼 지역 제거 [${[...farGroups].join(', ')}]`)
       }
       const inCity = (p) => {
-        if (tooFar(p)) return false   // 확연히 먼 동명 다른지역 관광지 차단
+        const segs = (p.formatted_address || '').split(',').map(s => s.trim()).filter(Boolean)
+        if (segs.length >= 2) {
+          const loc = segs[segs.length - 2].replace(/[0-9]+/g, '').trim()
+          if (farGroups.has(loc)) return false   // 등록 안 된 동명 도시(먼 시/도 그룹) 차단
+        }
         const addr = (p.vicinity || '') + ' ' + (p.formatted_address || '')
         if (acceptNames.some(n => addr.includes(n))) return true
         const hay = (p.name || '') + ' ' + addr
