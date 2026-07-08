@@ -2486,7 +2486,7 @@ function App() {
   // 임의 도시의 핫플(관광 명소) 배열을 반환 (state 안 건드림, AI 코스용)
   const fetchHotspotsFor = async (city) => {
     if (!city?.lat || !city?.lng) return []
-    const langParam = lang === 'zh' ? 'zh-CN' : lang
+    const langParam = 'en'   // 관광지 검색은 영어로 고정: 결과가 영어 이름으로 나와 사진 찾기 수월(화면 UI 언어와 무관, 데이터 수집용)
     const cityKey = city._koName || city.name
     const fsKey = `${cityKey}_${lang}`
     const lsKey = `hotspots_${fsKey}`
