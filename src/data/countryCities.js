@@ -109,8 +109,6 @@ export const COUNTRY_CITIES = {
     { name:"클레르몽페랑", lat:45.78, lng:3.09 },
     { name:"그르노블", lat:45.19, lng:5.72 },
     { name:"페르피냥", lat:42.7, lng:2.9 },
-    { name:"몽펠리에", lat:43.61, lng:3.88 },
-    { name:"라로셸", lat:46.16, lng:-1.15 },
   ],
   "Italy": [
     { name:"로마", lat:41.90, lng:12.50 },
@@ -206,8 +204,6 @@ export const COUNTRY_CITIES = {
     { name:"콘스탄츠", lat:47.66, lng:9.18 },
     { name:"마인츠", lat:50.0, lng:8.27 },
     { name:"에르푸르트", lat:50.98, lng:11.03 },
-    { name:"슈베린", lat:53.63, lng:11.4 },
-    { name:"키일", lat:54.32, lng:10.14 }
   ],
   "United Kingdom": [
     { name:"런던", lat:51.51, lng:-0.13 },
@@ -321,12 +317,6 @@ export const COUNTRY_CITIES = {
     { name:"코창", lat:12.05, lng:102.33 },
     { name:"코란타", lat:7.65, lng:99.08 },
     { name:"람빵", lat:18.29, lng:99.49 },
-    { name:"핏사눌로크", lat:16.83, lng:100.26 },
-    { name:"부리람", lat:14.99, lng:103.10 },
-    { name:"매홍손", lat:19.30, lng:97.98 },
-    { name:"핫야이", lat:7.01, lng:100.47 },
-    { name:"코사멧", lat:12.57, lng:101.45 },
-    { name:"우돈타니", lat:17.41, lng:102.79 },
   ],
   "India": [
     { name:"뭄바이", lat:19.08, lng:72.88 },
@@ -432,10 +422,6 @@ export const COUNTRY_CITIES = {
     { name:"깐터", lat:10.04, lng:105.78 },
     { name:"동호이", lat:17.47, lng:106.60 },
     { name:"붕따우", lat:10.35, lng:107.08 },
-    { name:"반메투옷", lat:12.67, lng:108.04 },
-    { name:"꾸이년", lat:13.77, lng:109.22 },
-    { name:"미토", lat:10.36, lng:106.36 },
-    { name:"빈롱", lat:10.25, lng:105.97 }
   ],
   "Indonesia": [
     { name:"발리", lat:-8.7180, lng:115.1686 },
@@ -449,8 +435,6 @@ export const COUNTRY_CITIES = {
     { name:"수라바야", lat:-7.26, lng:112.75 },
     { name:"반둥", lat:-6.92, lng:107.61 },
     { name:"길리", lat:-8.35, lng:116.05 },
-    { name:"브로모", lat:-7.94, lng:112.95 },
-    { name:"메단", lat:3.59, lng:98.67 }
   ],
   "Malaysia": [
     { name:"쿠알라룸푸르", lat:3.15, lng:101.70 },
@@ -458,7 +442,6 @@ export const COUNTRY_CITIES = {
     { name:"코타키나발루", lat:5.98, lng:116.07 },
     { name:"랑카위", lat:6.35, lng:99.80 },
     { name:"말라카", lat:2.19, lng:102.25 },
-    { name:"이포", lat:4.6, lng:101.07 },
     { name:"쿠칭", lat:1.55, lng:110.34 },
     { name:"조호바루", lat:1.49, lng:103.74 },
     { name:"카메론하일랜드", lat:4.47, lng:101.38 },
@@ -490,7 +473,6 @@ export const COUNTRY_CITIES = {
     { name:"포카라", lat:28.21, lng:83.99 },
     { name:"치트완", lat:27.52, lng:84.35 },
     { name:"룸비니", lat:27.48, lng:83.28 },
-    { name:"박타푸르", lat:27.67, lng:85.43 },
   ],
   "Sri Lanka": [
     { name:"콜롬보", lat:6.93, lng:79.85 },
@@ -498,7 +480,6 @@ export const COUNTRY_CITIES = {
     { name:"갈레", lat:6.03, lng:80.22 },
     { name:"시기리야", lat:7.96, lng:80.76 },
     { name:"누와라엘리야", lat:6.97, lng:80.78 },
-    { name:"엘라", lat:6.87, lng:81.05 },
   ],
   "Philippines": [
     { name:"마닐라", lat:14.60, lng:120.98 },
@@ -536,8 +517,6 @@ export const COUNTRY_CITIES = {
     { name:"델프트", lat:52.01, lng:4.36 },
     { name:"하를럼", lat:52.38, lng:4.64 },
     { name:"에인트호번", lat:51.44, lng:5.48 },
-    { name:"흐로닝언", lat:53.22, lng:6.57 },
-    { name:"네이메헌", lat:51.84, lng:5.86 }
   ],
   "Czechia": [
     { name:"프라하", lat:50.08, lng:14.44 },
@@ -588,14 +567,13 @@ export const COUNTRY_CITIES = {
     { name:"센텐드레", lat:47.67, lng:19.08 },
     { name:"데브레첸", lat:47.53, lng:21.63 },
     { name:"쇼프론", lat:47.68, lng:16.58 },
-    { name:"티하니", lat:46.91, lng:17.89 },
-    { name:"세게드", lat:46.25, lng:20.15 }
+    { name:"티하니", lat:46.91, lng:17.89 }
   ],
   "Slovenia": [
     { name:"류블랴나", lat:46.05, lng:14.51 },
     { name:"블레드", lat:46.37, lng:14.11 },
     { name:"피란", lat:45.53, lng:13.57 },
-    { name:"마리보르", lat:46.56, lng:15.65 },
+    { name:"마리보르", lat:46.56, lng:15.65 }
   ],
   "Croatia": [
     { name:"두브로브니크", lat:42.66, lng:18.05 },
@@ -860,12 +838,12 @@ export const COUNTRY_CITIES = {
     { name:"아디스아바바", lat:9.03, lng:38.74 },
     { name:"랄리벨라", lat:12.03, lng:39.04 },
     { name:"악숨", lat:14.13, lng:38.73 },
-    { name:"다나킬사막", lat:14.24, lng:40.30 },
+    { name:"다나킬사막", lat:14.24, lng:40.30 }
   ],
   "Ghana": [
     { name:"아크라", lat:5.56, lng:-0.20 },
     { name:"케이프코스트", lat:5.10, lng:-1.25 },
-    { name:"쿠마시", lat:6.69, lng:-1.62 },
+    { name:"쿠마시", lat:6.69, lng:-1.62 }
   ],
   "Ireland": [
     { name:"더블린", lat:53.35, lng:-6.26 },
@@ -908,8 +886,7 @@ export const COUNTRY_CITIES = {
     { name:"산호세", lat:9.93, lng:-84.08 },
     { name:"아레날", lat:10.46, lng:-84.70 },
     { name:"몬테베르데", lat:10.31, lng:-84.82 },
-    { name:"타마린도", lat:10.3, lng:-85.84 },
-    { name:"마누엘안토니오", lat:9.39, lng:-84.14 }
+    { name:"타마린도", lat:10.3, lng:-85.84 }
   ],
   "Panama": [
     { name:"파나마시티", lat:8.98, lng:-79.52 },
