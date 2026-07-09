@@ -13,6 +13,7 @@ const ANIM = {
   idle:  { srcs: ['/hero/idle/idle_1.png'], h: 130, flip: false },
   ewalk: { srcs: ['/hero/erectus_walk/ewalk_1.png', '/hero/erectus_walk/ewalk_2.png', '/hero/erectus_walk/ewalk_3.png', '/hero/erectus_walk/ewalk_4.png'], h: 131, flip: false },
   eatk1: { srcs: ['/hero/erectus_atk1/eatk1_1.png', '/hero/erectus_atk1/eatk1_2.png', '/hero/erectus_atk1/eatk1_3.png'], h: 165, flip: false },
+  eatk2: { srcs: ['/hero/erectus_atk2/eatk2_1.png', '/hero/erectus_atk2/eatk2_2.png', '/hero/erectus_atk2/eatk2_3.png', '/hero/erectus_atk2/eatk2_4.png'], h: 139, flip: false },
 }
 // 스킬 정의 — charSeq: 히어로가 재생할 프레임(1-based, 없으면 전체), fx: 분리 이펙트
 //   fx proj  = 투사체: fly 프레임이 몬스터 쪽으로 날아가 명중 시 데미지(+impact 프레임)
@@ -114,7 +115,7 @@ const SCROLL = 140 * SPEED                            // 전진 속도 (px/s)
 const PUNCH = { hitAt: 0.12, total: 0.3, range: 95 } // 4족 주먹질
 const THROW = { windupEnd: 0.14, releaseEnd: 0.30, total: 0.42, range: 340 }
 // 에렉투스 몽둥이: 1타 내려치기(위→아래), 2타 올려치기(아래→위) 번갈아
-const ECLUB = { total: 0.60, range: 150, hits: [0.55, 0.55] }  // hits = 각 타 명중 시점(진행률)
+const ECLUB = { total: 0.65, range: 150, hits: [0.55, 0.55] }  // hits = 각 타 명중 시점(진행률)
 
 // ── 적 정의 ──
 const ENEMY_TYPES = {
