@@ -11,14 +11,13 @@ const ANIM = {
   punch: { srcs: ['/hero/punch/punch_1.png', '/hero/punch/punch_2.png', '/hero/punch/punch_3.png'], h: 102, flip: false },
   throw: { srcs: ['/hero/throw/hero_windup.png', '/hero/throw/hero_release.png'], h: 130, flip: false },
   idle:  { srcs: ['/hero/idle/idle_1.png'], h: 130, flip: false },
-  ewalk: { srcs: ['/hero/erectus_walk/ewalk_1.png', '/hero/erectus_walk/ewalk_2.png', '/hero/erectus_walk/ewalk_3.png', '/hero/erectus_walk/ewalk_4.png'], h: 131, flip: false },
+  ewalk: { srcs: ['/hero/erectus_walk/ewalk_1.png', '/hero/erectus_walk/ewalk_2.png', '/hero/erectus_walk/ewalk_3.png', '/hero/erectus_walk/ewalk_4.png'], h: 130, flip: false },
   eatk1: { srcs: ['/hero/erectus_atk1/eatk1_1.png', '/hero/erectus_atk1/eatk1_2.png', '/hero/erectus_atk1/eatk1_3.png'], h: 165, flip: false },
-  eatk2: { srcs: ['/hero/erectus_atk2/eatk2_1.png', '/hero/erectus_atk2/eatk2_2.png', '/hero/erectus_atk2/eatk2_3.png', '/hero/erectus_atk2/eatk2_4.png'], h: 139, flip: false },
 }
 // 스킬 정의 — charSeq: 히어로가 재생할 프레임(1-based, 없으면 전체), fx: 분리 이펙트
 //   fx proj  = 투사체: fly 프레임이 몬스터 쪽으로 날아가 명중 시 데미지(+impact 프레임)
 //   fx strike = 낙하/타격: 적 위치에 frames 재생, 중반에 데미지
-// stage — 0:4족보행 1:직립보행 2:에렉투스 3:네안데르탈렌시스 4:사피엔스 5:인간
+// stage — 0:4족보행 1:직립보행 2:에렉투스 3:네안데르탈인 4:사피엔스 5:인간
 const SKILL_SHEET = [
   { id: 1, n: 6, h: 280, stage: 3, title: '번개 바위', charSeq: [1, 2, 3, 4], fx: { type: 'strike', frames: [5, 6], fxH: 240 } },
   { id: 2, n: 5, h: 250, stage: 3, title: '전기 작살', charSeq: [1, 2], fx: { type: 'proj', fly: [3, 4], impact: 5, fxH: 200 } },
@@ -43,7 +42,10 @@ SKILL_SHEET.forEach(c => {
 })
 const AIMG = {}
 for (const k in ANIM) AIMG[k] = ANIM[k].srcs.map(s => { const i = new Image(); i.src = s; return i })
-const BG = new Image(); BG.src = '/bg/bg.jpg'
+const BG_THEMES = ['wasteland', 'forest', 'volcano', 'snow', 'swamp', 'night']
+const BG_NORMAL = BG_THEMES.map(t => { const i = new Image(); i.src = `/bg/n_${t}.jpg`; return i })
+const BG_BOSS = BG_THEMES.map(t => { const i = new Image(); i.src = `/bg/b_${t}.jpg`; return i })
+const bgFor = (wave, boss) => (boss ? BG_BOSS : BG_NORMAL)[Math.floor((wave - 1) / 10) % BG_THEMES.length]
 const STONE = new Image(); STONE.src = '/misc/stone.png'
 
 // ── 스킬 프레임 시간 설정 (초, 직접 수정) ─────────────────────────
@@ -115,7 +117,7 @@ const SCROLL = 140 * SPEED                            // 전진 속도 (px/s)
 const PUNCH = { hitAt: 0.12, total: 0.3, range: 95 } // 4족 주먹질
 const THROW = { windupEnd: 0.14, releaseEnd: 0.30, total: 0.42, range: 340 }
 // 에렉투스 몽둥이: 1타 내려치기(위→아래), 2타 올려치기(아래→위) 번갈아
-const ECLUB = { total: 0.65, range: 150, hits: [0.55, 0.55] }  // hits = 각 타 명중 시점(진행률)
+const ECLUB = { total: 0.65, range: 150, hitAt: 0.55 }  // 몽둥이 내려치기 (단일 모션)
 
 // ── 적 정의 ──
 const ENEMY_TYPES = {
@@ -190,7 +192,7 @@ const EVOS = [
   { name: '오스트랄로피테쿠스 (4족보행)', mult: 1, mode: 'quad' },
   { name: '오스트랄로피테쿠스 (직립보행)', mult: 3, cost: 1500, mode: 'biped' },
   { name: '호모 에렉투스', mult: 27, cost: 300000, mode: 'erectus' },
-  { name: '호모 네안데르탈렌시스', mult: 81, cost: 3000000, mode: 'biped' },
+  { name: '호모 네안데르탈인', mult: 81, cost: 3000000, mode: 'biped' },
   { name: '호모 사피엔스', mult: 243, cost: 30000000, mode: 'biped' },
   { name: '인간', mult: 729, cost: 300000000, mode: 'biped' },
 ]
@@ -231,6 +233,8 @@ export default function App() {
   const [tab, setTab] = useState('강화')      // 영웅 서브탭: 강화/성장/진화
   const [phase, setPhase] = useState('fighting')
   const [clearMsg, setClearMsg] = useState(null)   // 웨이브 클리어 배너 (멈춤 없음)
+  const [bossReady, setBossReady] = useState(false) // 10웨이브 클리어 후 보스 도전 대기
+  const [gem] = useState(0)                          // 다이아 재화 (추후 구현, 표시용)
   const [offReward, setOffReward] = useState(null) // 오프라인 보상 팝업
   const offDone = useRef(false)
 
@@ -357,13 +361,24 @@ export default function App() {
     function startWave(n) {
       w.enemies = []; w.stones = []; w.rocks = []; w.waves = []
       // 주의: dmgTexts/particles/pools/projs/strikes/skill은 유지 — 클리어 넘어갈 때 이펙트 끊김 방지
-      const boss = n % 5 === 0
-      w.spawnLeft = boss ? 5 : 5 + Math.min(n, 15)
+      w.bossBattle = false
+      w.spawnLeft = 5 + Math.min(n, 15)
       w.total = w.spawnLeft
       w.killed = 0
-      w.bossPending = boss
+      w.bossPending = false
       w.spawnTimer = 300
       w.waveNum = n
+      w.clearedFlag = false
+    }
+
+    function startBossBattle() {
+      w.enemies = []; w.stones = []; w.rocks = []; w.waves = []
+      w.bossBattle = true
+      w.spawnLeft = 1
+      w.total = 1
+      w.killed = 0
+      w.bossPending = true
+      w.spawnTimer = 200
       w.clearedFlag = false
     }
 
@@ -457,6 +472,7 @@ export default function App() {
       w.scrollX += scroll * dt
 
       if (st.phase === 'fighting') {
+        if (w.startBossFlag) { w.startBossFlag = false; w.needStart = false; startBossBattle(); hero.state = 'move'; hero.t = 0 }
         if (w.needStart) { startWave(st.wave); w.needStart = false; hero.hp = st.maxHp; hero.state = 'move'; hero.t = 0 }
 
         if (w.spawnLeft > 0) {
@@ -605,13 +621,17 @@ export default function App() {
             if (hero.t >= PUNCH.total) { hero.state = 'move'; hero.t = 0 }
           } else if (st.mode === 'erectus') {
             const prog = hero.t / ECLUB.total
-            const hitAt = ECLUB.hits[hero.atkAlt ? 1 : 0]
-            if (!hero.did && prog >= hitAt) {
-              hero.did = true
-              const t = w.enemies.find(e => !e.dead && e.x - HERO_X < ECLUB.range + 40)
-              if (t) dealDamage(t, st)
+            const inRange = w.enemies.find(e => !e.dead && e.x - HERO_X < ECLUB.range + 40)
+            if (!hero.did && !inRange) {
+              // 타격 전에 사거리 내 적이 사라짐(스킬 등으로 처치) → 헛스윙 방지, 걷기로 복귀
+              hero.state = 'move'; hero.t = 0
+            } else {
+              if (!hero.did && prog >= ECLUB.hitAt) {
+                hero.did = true
+                if (inRange) dealDamage(inRange, st)
+              }
+              if (hero.t >= ECLUB.total) { hero.state = 'move'; hero.t = 0 }
             }
-            if (hero.t >= ECLUB.total) { hero.state = 'move'; hero.t = 0; hero.atkAlt = !hero.atkAlt }  // 다음 타는 반대 모션
           } else {
             if (!hero.did && hero.t >= THROW.windupEnd) {
               hero.did = true
@@ -662,12 +682,28 @@ export default function App() {
 
         if (hero.hp <= 0) setPhase('gameover')
         else if (w.spawnLeft === 0 && w.enemies.length === 0 && !w.clearedFlag) {
-          // 멈춤 없는 클리어: 배너만 띄우고 즉시 다음 웨이브 (히어로/이펙트/시전 유지)
           w.clearedFlag = true
-          setMeat(m => m + 15 + w.waveNum * 5)
-          setClearMsg(w.waveNum)
-          setWave(v => v + 1)
-          w.needStart = true
+          if (w.bossBattle) {
+            // 보스 처치: 보상 크게 + 다음 웨이브 블록으로 진행
+            setMeat(m => m + 100 + w.waveNum * 20)
+            setClearMsg('보스 격파!')
+            w.bossBattle = false
+            w.bossPrompted = false
+            setBossReady(false)
+            setWave(v => v + 1)
+            w.needStart = true
+          } else {
+            setMeat(m => m + 15 + w.waveNum * 5)
+            if (w.waveNum % 10 === 0) {
+              // 10웨이브: 보스 도전 버튼 띄우되 멈추지 않고 같은 웨이브 계속 반복
+              if (!w.bossPrompted) { w.bossPrompted = true; setClearMsg(w.waveNum); setBossReady(true) }
+              w.needStart = true  // setWave 안 함 → 같은 웨이브 재시작(반복)
+            } else {
+              setClearMsg(w.waveNum)
+              setWave(v => v + 1)
+              w.needStart = true
+            }
+          }
         }
       }
 
@@ -699,10 +735,9 @@ export default function App() {
           return ['punch', k]
         }
         if (st.mode === 'erectus') {
-          const anim = hero.atkAlt ? 'eatk2' : 'eatk1'
-          const arr = ANIM[anim].srcs
+          const arr = ANIM.eatk1.srcs
           const k = Math.min(arr.length - 1, Math.floor(hero.t / ECLUB.total * arr.length))
-          return [anim, k]
+          return ['eatk1', k]
         }
         const k = hero.t < THROW.windupEnd ? 0 : 1
         return ['throw', k]
@@ -710,8 +745,7 @@ export default function App() {
       const key = st.mode === 'quad' ? 'quad' : st.mode === 'erectus' ? 'ewalk' : 'walk'
       // 에렉투스: 적을 앞에 두고 대기 중(막힘)일 땐 걷기 대신 마지막 스윙 프레임 유지 → 공격↔대기 스냅 깜빡임 방지
       if (st.mode === 'erectus' && key === 'ewalk' && w._blocked) {
-        const anim = hero.atkAlt ? 'eatk1' : 'eatk2'  // 방금 끝난 공격(토글 후이므로 반대)
-        return [anim, ANIM[anim].srcs.length - 1]
+        return ['eatk1', ANIM.eatk1.srcs.length - 1]
       }
       const fi = Math.floor(hero.animT * 10) % ANIM[key].srcs.length
       return [key, fi]
@@ -783,7 +817,8 @@ export default function App() {
       ctx.save()
       if (w.shake > 0.3) ctx.translate((Math.random() - 0.5) * w.shake, (Math.random() - 0.5) * w.shake)
 
-      // 배경: 가로 무한 타일 스크롤
+      // 배경: 가로 무한 타일 스크롤 (10웨이브마다 테마 변경, 보스전투 시 보스 배경)
+      const BG = bgFor(w.waveNum || 1, w.bossBattle)
       if (BG.complete && BG.naturalWidth > 0) {
         const scale = Math.max(w.W / BG.naturalWidth, w.H / BG.naturalHeight)
         const bw = BG.naturalWidth * scale, bh = BG.naturalHeight * scale
@@ -936,6 +971,7 @@ export default function App() {
     setEvo(v => v + 1)
   }
   function retry() { world.current.needStart = true; setPhase('fighting') }
+  function challengeBoss() { setBossReady(false); world.current.startBossFlag = true }
   function equipSkill(i) {
     setEquipped(eq => {
       if (eq.includes(i)) return eq
@@ -950,9 +986,16 @@ export default function App() {
 
   return (
     <div style={st.outer}>
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Jua&display=swap');
+      * { box-sizing: border-box; }
+      button { cursor: pointer; font-family: inherit; }
+      .pd-num { font-family: 'Do Hyeon', sans-serif; letter-spacing: 0.02em; }
+      @keyframes pdPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+    `}</style>
     <div style={st.root}>
       <div style={st.topBar}>
-        <img src="/hero/misc/face.png" alt="" style={st.avatar} />
+        <div style={st.avatarWrap}><img src="/hero/misc/face.png" alt="" style={st.avatarFace} /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={st.nickRow}>
             <span style={st.nick}>Australo_원규</span>
@@ -963,8 +1006,11 @@ export default function App() {
           </div>
         </div>
         <div style={st.currency}>
-          <div>🍖 <b style={{ color: '#f0b060' }}>{fmt(meat)}</b></div>
-          <div style={{ fontSize: 11, opacity: 0.85 }}>웨이브 {wave}{wave % 5 === 0 && <span style={{ color: '#ef9a3c' }}> 보스</span>}</div>
+          <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+            <span style={st.pillMeat}><b style={{ color: '#ffe6c0' }}>{fmt(meat)}</b></span>
+            <span style={st.pillGem}><b style={{ color: '#cfe8ff' }}>{fmt(gem)}</b></span>
+          </div>
+          <div style={{ fontSize: 12, opacity: 0.85, marginTop: 3 }}>웨이브 {wave}{bossReady && <span style={{ color: '#ef5a3c' }}> · 보스 대기</span>}</div>
         </div>
       </div>
       <div style={st.waveProg}>
@@ -985,7 +1031,12 @@ export default function App() {
           <div style={st.hpOuter}><div style={{ ...st.hpInner, width: Math.min(100, heroHpUI / maxHp * 100) + '%' }} /></div>
           <div style={{ fontSize: 10, opacity: 0.8, marginTop: 2 }}>{fmt(heroHpUI)} / {fmt(maxHp)}</div>
         </div>
-        {clearMsg != null && <div style={st.overlayText}>웨이브 {clearMsg} 클리어!</div>}
+        {clearMsg != null && <div style={st.overlayText}>{typeof clearMsg === 'number' ? `웨이브 ${clearMsg} 클리어!` : clearMsg}</div>}
+        {bossReady && phase === 'fighting' && (
+          <div style={st.bossChallenge}>
+            <button style={st.bossBtn} onClick={challengeBoss}>☠ 보스 도전</button>
+          </div>
+        )}
         {phase === 'gameover' && (
           <div style={st.overlay}>
             <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 12 }}>쓰러졌다...</div>
@@ -994,8 +1045,9 @@ export default function App() {
         )}
       </div>
 
-      {nav === '영웅' && <>
-      <div style={st.tabs}>
+      {nav === '영웅' && (
+      <div style={st.frameBox}>
+      <div style={st.tabsInner}>
         {['강화', '성장', '진화'].map(t => (
           <button key={t} style={{ ...st.tabBtn, ...(tab === t ? st.tabActive : {}) }} onClick={() => setTab(t)}>
             {t}{t === '성장' && sp > 0 && <span style={st.spDot}>{sp}</span>}
@@ -1003,7 +1055,7 @@ export default function App() {
         ))}
       </div>
 
-      <div style={st.panel}>
+      <div style={st.panelInner}>
         {tab === '강화' && STAT_KEYS.map(k => {
           const d = STAT_LIST[k]
           const c = buyCost(k, lv[k])
@@ -1015,7 +1067,6 @@ export default function App() {
                 <div style={st.rowName}>{d.name} <span style={st.rowLv}>Lv.{lv[k]}</span></div>
                 <div style={st.rowVal}>{statText(k, lv[k] + skill[k])} <span style={{ color: '#7cb35c' }}>→ {statText(k, lv[k] + 1 + skill[k])}</span></div>
               </div>
-              <button style={st.dbgBtn} onClick={() => buyStat(k, -1)}>−</button>
               <input style={st.dbgInput} type="number" inputMode="numeric" value={lv[k]} onChange={e => setStatLv(k, e.target.value)} />
               <button style={{ ...st.costBtn, opacity: ok ? 1 : 0.4 }} onClick={() => buyStat(k)}>{DEBUG ? '+1' : fmt(c)}</button>
             </div>
@@ -1054,7 +1105,6 @@ export default function App() {
                     <div style={st.rowName}>{d.name} <span style={st.rowLv}>Lv.{skill[k]}</span></div>
                     <div style={st.rowVal}>{statText(k, lv[k] + skill[k])} <span style={{ color: '#7cb35c' }}>→ {statText(k, lv[k] + skill[k] + 1)}</span></div>
                   </div>
-                  <button style={st.dbgBtn} onClick={() => upSkill(k, -1)}>−</button>
                   <input style={st.dbgInput} type="number" inputMode="numeric" value={skill[k]} onChange={e => setSkillLv(k, e.target.value)} />
                   <button style={{ ...st.spBtn, opacity: ok ? 1 : 0.4 }} onClick={() => upSkill(k)}>+1</button>
                 </div>
@@ -1063,7 +1113,8 @@ export default function App() {
           </>
         )}
       </div>
-      </>}
+      </div>
+      )}
 
       {nav === '스킬' && (
         <div style={st.panel}>
@@ -1106,15 +1157,16 @@ export default function App() {
       )}
 
       {nav === '장비' && (
-        <div style={st.panel}>
-          <div style={st.slotRow}>
+        <div style={st.frameBox}>
+          <div style={st.tabsInner}>
             {['무기', '방어구', '유물'].map(t => (
               <button key={t} style={{ ...st.tabBtn, ...(equipTab === t ? st.tabActive : {}) }} onClick={() => setEquipTab(t)}>{t}</button>
             ))}
           </div>
+          <div style={st.panelInner}>
           {equipTab === '무기' && WEAPON_TYPES.map((wt, wi) => (
             <div key={wi}>
-              <div style={{ fontSize: 12, fontWeight: 700, margin: '6px 2px 4px', opacity: 0.85 }}>{wt}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, margin: '4px 2px 4px', opacity: 0.85 }}>{wt}</div>
               <div style={st.equipGrid}>
                 {Array.from({ length: 10 }, (_, ti) => (
                   <div key={ti} style={st.equipCell}>
@@ -1127,7 +1179,7 @@ export default function App() {
           ))}
           {equipTab === '방어구' && ARMOR_TYPES.map((at, ai) => (
             <div key={ai}>
-              <div style={{ fontSize: 12, fontWeight: 700, margin: '6px 2px 4px', opacity: 0.85 }}>{at}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, margin: '4px 2px 4px', opacity: 0.85 }}>{at}</div>
               <div style={st.equipGrid}>
                 {Array.from({ length: 7 }, (_, ti) => (
                   <div key={ti} style={st.equipCell}>
@@ -1140,7 +1192,7 @@ export default function App() {
           ))}
           {equipTab === '유물' && RELIC_ROWS.map((rn, ri) => (
             <div key={ri}>
-              <div style={{ fontSize: 12, fontWeight: 700, margin: '6px 2px 4px', opacity: 0.85 }}>{rn}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, margin: '4px 2px 4px', opacity: 0.85 }}>{rn}</div>
               <div style={st.equipGrid}>
                 {Array.from({ length: 10 }, (_, ti) => (
                   <div key={ti} style={st.equipCell}>
@@ -1151,6 +1203,7 @@ export default function App() {
               </div>
             </div>
           ))}
+          </div>
         </div>
       )}
 
@@ -1188,137 +1241,151 @@ export default function App() {
   )
 }
 
+const GOLD = '#e8b962'
+const GOLD_D = '#a9762f'
+const PANEL_BORDER = '1px solid #6b4a24'
 const st = {
-  outer: {
-    position: 'fixed', inset: 0, background: '#000',
-    display: 'flex', justifyContent: 'center',
-  },
+  outer: { position: 'fixed', inset: 0, background: '#000', display: 'flex', justifyContent: 'center' },
   root: {
-    width: '100%', maxWidth: 420, height: '100%',
-    position: 'relative', display: 'flex', flexDirection: 'column',
-    background: '#1a120b', color: '#f5ead9',
-    fontFamily: "'Pretendard', -apple-system, 'Noto Sans KR', sans-serif",
+    width: '100%', maxWidth: 420, height: '100%', position: 'relative',
+    display: 'flex', flexDirection: 'column',
+    background: 'linear-gradient(180deg,#1c130a,#140d06)', color: '#f3e6d0',
+    fontFamily: "'Do Hyeon','Jua',-apple-system,'Noto Sans KR',sans-serif",
   },
   topBar: {
-    display: 'flex', alignItems: 'center', gap: 10,
-    padding: '10px 14px', paddingTop: 'max(10px, env(safe-area-inset-top))',    fontSize: 14, background: '#241a10', borderBottom: '1px solid #3a2c1c',
+    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
+    paddingTop: 'max(10px, env(safe-area-inset-top))', fontSize: 14,
+    background: 'linear-gradient(180deg,#2b1e11,#1f1509)', borderBottom: '2px solid #4a3418',
   },
-  avatar: { width: 40, height: 40, borderRadius: 8, border: '2px solid #6b4f35', background: '#1a120b', imageRendering: 'pixelated' },
+  avatar: { width: 44, height: 44, borderRadius: 10, border: `2px solid ${GOLD_D}`, background: '#1a120b', imageRendering: 'pixelated', boxShadow: 'inset 0 0 0 1px #201408' },
+  avatarWrap: {
+    width: 48, height: 48, flexShrink: 0, position: 'relative',
+    backgroundImage: 'url(/ui/avatar.png)', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  },
+  avatarFace: { width: '66%', height: '66%', objectFit: 'cover', borderRadius: '50%', imageRendering: 'pixelated' },
   nickRow: { display: 'flex', alignItems: 'center', gap: 6 },
-  nick: { fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  lvBadge: { fontSize: 11, fontWeight: 800, color: '#7ce0ff', background: '#12303a', padding: '1px 6px', borderRadius: 6, flexShrink: 0 },
-  expOuter: { height: 7, background: '#12222a', borderRadius: 4, overflow: 'hidden', marginTop: 4 },
-  expInner: { height: '100%', background: 'linear-gradient(90deg,#3ba7d0,#7ce0ff)', transition: 'width 0.2s' },
-  currency: { textAlign: 'right', fontSize: 13, whiteSpace: 'nowrap' },
-  waveProg: { height: 6, background: '#241a10', overflow: 'hidden' },
+  nick: { fontSize: 15, fontWeight: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  lvBadge: { fontSize: 12, color: GOLD, background: 'linear-gradient(180deg,#3a2a14,#2a1d0d)', border: `1px solid ${GOLD_D}`, padding: '1px 8px', borderRadius: 7, flexShrink: 0 },
+  expOuter: { height: 9, background: '#0e0a05', borderRadius: 5, overflow: 'hidden', marginTop: 4, border: '1px solid #3a2a14' },
+  expInner: { height: '100%', background: 'linear-gradient(90deg,#c98a2e,#f0c05a,#ffe08a)', transition: 'width 0.2s' },
+  currency: { textAlign: 'right', fontSize: 14, whiteSpace: 'nowrap' },
+  currencyPill: {
+    display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13,
+    background: 'linear-gradient(180deg,#2b1e11,#1a1208)', border: '1px solid #4a3418',
+    borderRadius: 20, padding: '4px 12px', color: '#f3e6d0',
+  },
+  pillMeat: {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end',
+    minWidth: 92, height: 26, paddingRight: 12, fontSize: 13,
+    backgroundImage: 'url(/ui/pill_meat.png)', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat',
+    textShadow: '0 1px 2px #000',
+  },
+  pillGem: {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end',
+    minWidth: 92, height: 26, paddingRight: 12, fontSize: 13,
+    backgroundImage: 'url(/ui/pill_gem.png)', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat',
+    textShadow: '0 1px 2px #000',
+  },
+  waveProg: { height: 6, background: '#120c06', overflow: 'hidden' },
   gainWrap: { position: 'absolute', left: 8, top: 44, display: 'flex', flexDirection: 'column', gap: 3, pointerEvents: 'none' },
-  gainItem: {
-    display: 'flex', gap: 8, fontSize: 12, fontWeight: 700,
-    background: 'rgba(10,6,3,0.6)', padding: '2px 8px', borderRadius: 6,
-    animation: 'none',
-  },
-  spBar: { padding: '4px 6px 8px', fontSize: 13 },
+  gainItem: { display: 'flex', gap: 8, fontSize: 13, background: 'rgba(10,6,3,0.6)', padding: '2px 8px', borderRadius: 6 },
+  spBar: { padding: '3px 5px 5px', fontSize: 12, color: '#c9b596' },
   spBtn: {
-    minWidth: 46, padding: '10px 6px', borderRadius: 8, border: 'none',
-    background: '#2f8fb0', color: '#fff', fontSize: 13, fontWeight: 800, flexShrink: 0,
+    minWidth: 42, padding: '8px 5px', borderRadius: 7, border: '1px solid #2f7fa0',
+    background: 'linear-gradient(180deg,#3a9ec0,#256f8c)', color: '#fff', fontSize: 13, flexShrink: 0,
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.25)',
   },
-  spDot: {
-    marginLeft: 5, fontSize: 10, fontWeight: 800, color: '#fff',
-    background: '#e05a4e', borderRadius: 8, padding: '0 5px',
-  },
+  spDot: { marginLeft: 5, fontSize: 11, color: '#fff', background: '#e05a4e', borderRadius: 8, padding: '0 6px' },
   bottomNav: {
-    display: 'flex', background: '#1a120b', borderTop: '1px solid #3a2c1c',
+    display: 'flex', background: 'linear-gradient(180deg,#241811,#160e07)', borderTop: '2px solid #4a3418',
     paddingBottom: 'env(safe-area-inset-bottom)',
   },
   navBtn: {
     flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-    padding: '8px 0', border: 'none', background: 'transparent', color: '#8a7a63', cursor: 'pointer',
+    padding: '10px 2px 8px', margin: '0 1px', border: 'none', background: 'transparent',
+    backgroundImage: 'url(/ui/nav_off.png)', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat',
+    color: '#9a8768', position: 'relative',
   },
-  navActive: { color: '#f0b060' },
-  comingSoon: {
-    flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-    justifyContent: 'center', background: '#241a10', color: '#f5ead9',
-  },
-  cdOverlay: {
-    position: 'absolute', inset: 0, display: 'flex', alignItems: 'center',
-    justifyContent: 'center', background: 'rgba(10,6,3,0.7)', fontSize: 12,
-    fontWeight: 800, color: '#7ce0ff',
-  },
-  slotRow: { display: 'flex', gap: 8, padding: '4px 2px 8px' },
-  slot: {
-    flex: 1, aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    background: '#312415', border: '2px solid #4a3822', borderRadius: 12, cursor: 'pointer',
-  },
-  slotEmpty: { fontSize: 26, color: '#5a4632' },
+  navActive: { backgroundImage: 'url(/ui/nav_on.png)', color: GOLD },
+  comingSoon: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#20160c', color: '#f3e6d0' },
+  cdOverlay: { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(10,6,3,0.72)', fontSize: 13, color: '#7ce0ff' },
+  slotRow: { display: 'flex', gap: 6, padding: '2px 2px 5px' },
+  slot: { flex: 1, aspectRatio: '1', maxWidth: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(180deg,#2c2013,#20160c)', border: '2px solid #5a4028', borderRadius: 10 },
+  slotEmpty: { fontSize: 22, color: '#6a4f30' },
   equipGrid: { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 },
-  equipCell: {
-    position: 'relative', aspectRatio: '1', background: '#312415',
-    border: '1px solid #4a3822', borderRadius: 10, display: 'flex',
-    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-  },
+  equipCell: { position: 'relative', aspectRatio: '1', background: 'linear-gradient(180deg,#2c2013,#1e150b)', border: '1px solid #5a4028', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   equipImg: { width: '78%', height: '78%', objectFit: 'contain', imageRendering: 'pixelated' },
   statIconImg: { width: '100%', height: '100%', objectFit: 'contain' },
-  navIconImg: { width: 24, height: 24, objectFit: 'contain' },
-  equipTier: {
-    position: 'absolute', right: 3, bottom: 1, fontSize: 10, fontWeight: 800,
-    color: '#f0b060', textShadow: '0 0 3px #000',
-  },
-  offOverlay: {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 50,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-  },
-  offBox: {
-    background: '#312415', border: '2px solid #6b4f35', borderRadius: 14,
-    padding: '20px 24px', textAlign: 'center', minWidth: 240, color: '#f5ead9',
-  },
-  skillIcon: {
-    width: 32, height: 32, borderRadius: 8, background: '#241a10',
-    border: '1px solid #4a3822', display: 'flex', alignItems: 'center',
-    justifyContent: 'center', fontSize: 16, flexShrink: 0,
-  },
-  progOuter: { height: 8, background: '#3a2c1c', borderRadius: 4, overflow: 'hidden' },
-  progInner: { height: '100%', background: '#f0b060', transition: 'width 0.2s' },
+  navIconImg: { width: 26, height: 26, objectFit: 'contain' },
+  equipTier: { position: 'absolute', right: 3, bottom: 1, fontSize: 11, color: GOLD, textShadow: '0 0 3px #000' },
+  offOverlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  offBox: { background: 'linear-gradient(180deg,#2c2013,#1e150b)', border: `2px solid ${GOLD_D}`, borderRadius: 16, padding: '20px 24px', textAlign: 'center', minWidth: 240, color: '#f3e6d0', boxShadow: '0 8px 30px rgba(0,0,0,0.6)' },
+  skillIcon: { width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(180deg,#2c2013,#1a1208)', border: '1px solid #5a4028', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 },
+  progOuter: { height: 8, background: '#2a1d0d', borderRadius: 4, overflow: 'hidden', border: '1px solid #3a2a14' },
+  progInner: { height: '100%', background: `linear-gradient(90deg,${GOLD_D},${GOLD})`, transition: 'width 0.2s' },
   canvasWrap: { height: '42%', position: 'relative', minHeight: 220 },
   heroHpWrap: { position: 'absolute', left: 12, top: 10, width: 130 },
   hpOuter: { height: 8, background: 'rgba(0,0,0,0.5)', borderRadius: 4, overflow: 'hidden' },
   hpInner: { height: '100%', background: '#7cb35c', transition: 'width 0.15s' },
-  overlay: {
-    position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-    alignItems: 'center', justifyContent: 'center', background: 'rgba(10,6,3,0.75)',
-  },
-  overlayText: {
-    position: 'absolute', top: '40%', left: 0, right: 0, textAlign: 'center',
-    fontSize: 22, fontWeight: 800, textShadow: '0 2px 8px rgba(0,0,0,0.8)', pointerEvents: 'none',
-  },
-  retryBtn: { padding: '12px 32px', fontSize: 16, fontWeight: 700, borderRadius: 12, border: 'none', background: '#c9772e', color: '#fff' },
-  tabs: { display: 'flex', gap: 6, padding: '8px 10px 0', background: '#241a10' },
+  overlay: { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(10,6,3,0.75)' },
+  overlayText: { position: 'absolute', top: '40%', left: 0, right: 0, textAlign: 'center', fontSize: 24, color: GOLD, textShadow: '0 2px 8px rgba(0,0,0,0.8)', pointerEvents: 'none' },
+  retryBtn: { padding: '12px 32px', fontSize: 17, borderRadius: 12, border: `1px solid ${GOLD_D}`, background: 'linear-gradient(180deg,#d4872e,#a85f1f)', color: '#fff', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)' },
+  tabs: { display: 'flex', gap: 5, padding: '8px 6px 2px', background: 'transparent' },
   tabBtn: {
-    flex: 1, padding: '9px 0', borderRadius: '10px 10px 0 0', border: 'none',
-    background: '#2c2012', color: '#a89880', fontSize: 14, fontWeight: 700,
+    flex: 1, padding: '9px 0 12px', border: 'none', background: 'transparent',
+    backgroundImage: 'url(/ui/tab_off.png)', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat',
+    color: '#b6a488', fontSize: 14, position: 'relative', filter: 'grayscale(0.2)',
   },
-  tabActive: { background: '#3a2c1a', color: '#f5ead9' },
+  tabActive: {
+    backgroundImage: 'url(/ui/tab_on.png)', backgroundSize: '100% 100%',
+    color: '#fff4d8', filter: 'none',
+  },
   panel: {
-    flex: 1, overflowY: 'auto', background: '#241a10',
-    padding: '10px 10px 14px',
-    display: 'flex', flexDirection: 'column', gap: 8,
+    flex: 1, overflowY: 'auto', minHeight: 0,
+    background: 'rgba(20,13,7,0.55)',
+    borderStyle: 'solid', borderWidth: '13px 11px 12px 11px',
+    borderImage: 'url(/ui/panel.png) 29 20 26 19 fill / 13px 11px 12px 11px stretch',
+    margin: '3px 0 0', padding: '4px 4px 2px',
+    display: 'flex', flexDirection: 'column', gap: 5,
   },
+  frameBox: {
+    flex: 1, minHeight: 0,
+    background: 'rgba(20,13,7,0.55)',
+    borderStyle: 'solid', borderWidth: '13px 11px 12px 11px',
+    borderImage: 'url(/ui/panel.png) 29 20 26 19 fill / 13px 11px 12px 11px stretch',
+    margin: '3px 0 0', padding: '4px 4px 2px',
+    display: 'flex', flexDirection: 'column',
+  },
+  tabsInner: { display: 'flex', gap: 5, padding: '0 0 5px', flexShrink: 0 },
+  panelInner: { flex: 1, overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 5 },
   row: {
     display: 'flex', alignItems: 'center', gap: 6,
-    background: '#312415', border: '1px solid #4a3822', borderRadius: 12, padding: '10px 10px',
+    background: 'transparent',
+    borderStyle: 'solid', borderWidth: '9px 11px 9px 11px',
+    borderImage: 'url(/ui/row.png) 22 23 24 24 fill / 9px 11px 9px 11px stretch',
+    padding: '2px 3px', minHeight: 30,
   },
-  rowName: { fontWeight: 700, fontSize: 13 },
-  rowLv: { fontSize: 11, color: '#f0b060', marginLeft: 4 },
-  rowVal: { fontSize: 11, opacity: 0.85, marginTop: 2, whiteSpace: 'nowrap' },
-  dbgBtn: {
-    width: 32, padding: '10px 0', borderRadius: 8, border: '1px solid #4a3822',
-    background: '#241a10', color: '#f5ead9', fontSize: 15, fontWeight: 800, flexShrink: 0,
-  },
-  dbgInput: {
-    width: 42, padding: '9px 2px', borderRadius: 8, border: '1px solid #4a3822',
-    background: '#1a120b', color: '#f0b060', fontSize: 13, fontWeight: 700, textAlign: 'center', flexShrink: 0,
-  },
+  rowName: { fontSize: 13 },
+  rowLv: { fontSize: 11, color: GOLD, marginLeft: 4 },
+  rowVal: { fontSize: 10.5, opacity: 0.82, marginTop: 1, whiteSpace: 'nowrap' },
+  dbgBtn: { width: 27, padding: '7px 0', borderRadius: 6, border: '1px solid #5a4028', background: 'linear-gradient(180deg,#2c2013,#1e150b)', color: '#f3e6d0', fontSize: 15, flexShrink: 0 },
+  dbgInput: { width: 38, padding: '6px 2px', borderRadius: 6, border: '1px solid #5a4028', background: '#160e07', color: GOLD, fontSize: 13, textAlign: 'center', flexShrink: 0, fontFamily: "'Do Hyeon',sans-serif" },
   costBtn: {
-    minWidth: 46, padding: '10px 6px', borderRadius: 8, border: 'none',
-    background: '#c9772e', color: '#fff', fontSize: 13, fontWeight: 800, flexShrink: 0,
+    minWidth: 40, height: 30, padding: '0 8px', border: 'none', background: 'transparent',
+    backgroundImage: 'url(/ui/btn.png)', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat',
+    color: '#fff4d8', fontSize: 13, flexShrink: 0, textShadow: '0 1px 2px #4a0e0e',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  },
+  plusBtn: { border: '1px solid #a85f1f', background: 'linear-gradient(180deg,#d4872e,#a85f1f)', color: '#fff', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)' },
+  minusBtn: { border: '1px solid #5a4028', background: 'linear-gradient(180deg,#2c2013,#1e150b)', color: '#cbb89a' },
+  bossChallenge: { position: 'absolute', left: 0, right: 0, bottom: 16, display: 'flex', justifyContent: 'center', pointerEvents: 'none' },
+  bossBtn: {
+    pointerEvents: 'auto', padding: '12px 28px', fontSize: 18,
+    border: '2px solid #7a2a1a', borderRadius: 12,
+    background: 'linear-gradient(180deg,#b83a26,#7a2015)', color: '#ffe0d0',
+    boxShadow: '0 4px 16px rgba(180,50,30,0.5), inset 0 1px 0 rgba(255,255,255,0.25)',
+    animation: 'pdPulse 1.2s ease-in-out infinite',
   },
 }
+
