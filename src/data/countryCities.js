@@ -662,15 +662,13 @@ export const COUNTRY_CITIES = {
     { name:"마사이마라", lat:-1.49, lng:35.15 },
     { name:"몸바사", lat:-4.05, lng:39.67 },
     { name:"암보셀리", lat:-2.65, lng:37.26 },
-    { name:"라무", lat:-2.27, lng:40.90 },
-    { name:"나쿠루", lat:-0.3, lng:36.08 }
+    { name:"라무", lat:-2.27, lng:40.90 }
   ],
   "Tanzania": [
     { name:"잔지바르", lat:-6.16, lng:39.20 },
     { name:"세렝게티", lat:-2.33, lng:34.83 },
     { name:"킬리만자로", lat:-3.07, lng:37.35 },
-    { name:"응고롱고로", lat:-3.26, lng:35.52 },
-    { name:"아루샤", lat:-3.39, lng:36.68 }
+    { name:"응고롱고로", lat:-3.26, lng:35.52 }
   ],
   "Jordan": [
     { name:"페트라", lat:30.33, lng:35.44 },
