@@ -54,7 +54,6 @@ export const COUNTRY_CITIES = {
     { name:"야마가타", lat:38.24, lng:140.36 },
     { name:"가고시마", lat:31.6, lng:130.56 },
     { name:"이부스키", lat:31.25, lng:130.63 },
-    { name:"나하", lat:26.21, lng:127.68 },
     { name:"미야코지마", lat:24.81, lng:125.28 },
   ],
   "China": [
