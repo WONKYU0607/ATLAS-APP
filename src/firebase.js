@@ -183,7 +183,8 @@ export const setAttractionCoverPhoto = async (country, city, placeId, photoItem)
 }
 
 // ── 관광지 제외목록: 추천에서 영구 제외할 place_id (단일 문서에 배열 저장) ──
-// ── 작업 완료 도시: 소개글·음식문화·관광지 사진을 다 채운 도시 (라벨 빨간색 표시용) ──const completedRef = () => doc(db, 'config', 'completedCities')
+// ── 작업 완료 도시: 소개글·음식문화·관광지 사진을 다 채운 도시 (라벨 빨간색 표시용) ──
+const completedRef = () => doc(db, 'config', 'completedCities')
 
 export const getCompletedCities = async () => {
   try {
