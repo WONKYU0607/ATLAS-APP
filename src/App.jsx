@@ -1965,27 +1965,33 @@ function App() {
   }, [countries, selectedCountry])
 
   // 라벨 색 갱신: 선택=파랑, 작업완료=빨강. 라벨 재생성 없이 스타일만 바꿈(재생성하면 opacity:0 리셋되어 라벨이 사라지므로)
+  // globe.gl이 라벨 DOM을 비동기로 만들어서, 즉시 1회 + 지연 재실행해야 새로 생긴 라벨까지 칠해짐(국가 진입 직후 도시 라벨 포함)
   useEffect(() => {
-    const sel = selectedCity?._koName || selectedCity?.name
-    // 도시 라벨
-    document.querySelectorAll('[data-cityname]').forEach(el => {
-      const inner = el.querySelector('.city-label-inner')
-      if (!inner) return
-      const nm = el.dataset.cityname
-      const isSel = nm === sel
-      const isDone = completedCities.has(nm)
-      inner.style.color = isSel ? '#2563eb' : isDone ? '#ef4444' : 'rgba(255,255,255,0.95)'
-      inner.style.fontSize = isSel ? '14px' : '12px'
-    })
-    // 국가 라벨: 그 국가의 등록 도시가 모두 완료면 빨강
-    document.querySelectorAll('[data-countryen]').forEach(el => {
-      const inner = el.querySelector('.country-label-inner')
-      if (!inner) return
-      const cities = COUNTRY_CITIES[el.dataset.countryen] || []
-      const allDone = cities.length > 0 && cities.every(c => completedCities.has(c.name))
-      if (allDone) inner.style.color = '#ef4444'
-      else inner.style.color = cities.length > 0 ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'
-    })
+    const paint = () => {
+      const sel = selectedCity?._koName || selectedCity?.name
+      // 도시 라벨
+      document.querySelectorAll('[data-cityname]').forEach(el => {
+        const inner = el.querySelector('.city-label-inner')
+        if (!inner) return
+        const nm = el.dataset.cityname
+        const isSel = nm === sel
+        const isDone = completedCities.has(nm)
+        inner.style.color = isSel ? '#2563eb' : isDone ? '#ef4444' : 'rgba(255,255,255,0.95)'
+        inner.style.fontSize = isSel ? '14px' : '12px'
+      })
+      // 국가 라벨: 그 국가의 등록 도시가 모두 완료면 빨강
+      document.querySelectorAll('[data-countryen]').forEach(el => {
+        const inner = el.querySelector('.country-label-inner')
+        if (!inner) return
+        const cities = COUNTRY_CITIES[el.dataset.countryen] || []
+        const allDone = cities.length > 0 && cities.every(c => completedCities.has(c.name))
+        if (allDone) inner.style.color = '#ef4444'
+        else inner.style.color = cities.length > 0 ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'
+      })
+    }
+    paint()
+    const ts = [120, 500, 1200, 2000].map(ms => setTimeout(paint, ms))   // 라벨 DOM 생성 후 재적용
+    return () => ts.forEach(clearTimeout)
   }, [selectedCity, completedCities, selectedCountry, countries, lang])
 
   // ── 지리 기준선 (적도, 날짜변경선) ───────────────────────────────
