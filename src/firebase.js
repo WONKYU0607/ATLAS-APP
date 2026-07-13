@@ -135,6 +135,15 @@ export const getAttractionPhotos = async (country, city, placeId) => {
 }
 
 // 도시의 모든 관광지 사진을 1회 컬렉션 쿼리로 일괄 조회 → { place_id: [{url,path}] } (관광지 25개 개별조회 25회 → 1회)
+// 추출 데이터 계층(countries/{국가}/cities/{도시})의 도시 문서 조회 → { desc, food, ... }
+// Firebase 콘솔에서 직접 수정한 소개글/음식문화를 앱에 반영하기 위함 (cityCache보다 우선)
+export const getCityDoc = async (country, city) => {
+  try {
+    const snap = await getDoc(doc(db, 'countries', country, 'cities', city))
+    return snap.exists() ? snap.data() : null
+  } catch { return null }
+}
+
 export const getCityAttractionPhotos = async (country, city) => {
   const out = {}
   try {
@@ -174,6 +183,29 @@ export const setAttractionCoverPhoto = async (country, city, placeId, photoItem)
 }
 
 // ── 관광지 제외목록: 추천에서 영구 제외할 place_id (단일 문서에 배열 저장) ──
+// ── 작업 완료 도시: 소개글·음식문화·관광지 사진을 다 채운 도시 (라벨 빨간색 표시용) ──const completedRef = () => doc(db, 'config', 'completedCities')
+
+export const getCompletedCities = async () => {
+  try {
+    const snap = await getDoc(completedRef())
+    return (snap.exists() && Array.isArray(snap.data().cities)) ? snap.data().cities : []
+  } catch { return [] }
+}
+
+export const addCompletedCity = async (cityName) => {
+  try {
+    await setDoc(completedRef(), { cities: arrayUnion(cityName), updatedAt: Date.now() }, { merge: true })
+    return true
+  } catch (e) { console.error('[addCompletedCity] 실패:', e?.message || e); return false }
+}
+
+export const removeCompletedCity = async (cityName) => {
+  try {
+    await setDoc(completedRef(), { cities: arrayRemove(cityName), updatedAt: Date.now() }, { merge: true })
+    return true
+  } catch (e) { console.error('[removeCompletedCity] 실패:', e?.message || e); return false }
+}
+
 const excludedRef = () => doc(db, 'config', 'excludedAttractions')
 
 export const getExcludedAttractions = async () => {
