@@ -25,7 +25,7 @@ const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.n
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
-import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, getCityAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto, getExcludedAttractions, addExcludedAttraction } from './firebase'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, getCityAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto, getExcludedAttractions, addExcludedAttraction, getCompletedCities, addCompletedCity, removeCompletedCity, getCityDoc } from './firebase'
 
 
 // ── 에러 바운더리 (흰 화면 방지) ─────────────────────────────────────────
@@ -109,6 +109,7 @@ function App() {
   const [attrPhotoUploading, setAttrPhotoUploading] = useState('')  // 업로드중인 place_id
   const [galleryView, setGalleryView] = useState(null)  // { photos:[{url,path}], idx, placeId, country, city } 큰 갤러리 팝업
   const [excludedIds, setExcludedIds] = useState(new Set())  // 추천 제외 place_id
+  const [completedCities, setCompletedCities] = useState(new Set())  // 작업 완료 도시(라벨 빨간색)
   const [loadingPlaces, setLoadingPlaces] = useState(false)
   const [foodCulture, setFoodCulture] = useState(null) // AI 생성 음식문화 데이터
   const [loadingFoodCulture, setLoadingFoodCulture] = useState(false)
@@ -813,6 +814,7 @@ function App() {
   // 추천 제외 관광지 목록 로드 (1회)
   useEffect(() => {
     getExcludedAttractions().then(ids => setExcludedIds(new Set(ids))).catch(() => {})
+    getCompletedCities().then(cs => setCompletedCities(new Set(cs))).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -1899,8 +1901,9 @@ function App() {
             inner.textContent = d.name
             el.appendChild(inner)
           } else {
+            if (d.nameEn) el.dataset.countryen = d.nameEn   // 완료 색칠용 식별자
             el.style.cssText = 'pointer-events:none;'
-            el.innerHTML = `<div style="
+            el.innerHTML = `<div class="country-label-inner" style="
               transform:translate(-50%,-50%);
               font-family:Pretendard,Inter,sans-serif;
               font-size:${hasCities ? '13px' : '10px'};
@@ -1961,17 +1964,29 @@ function App() {
       })
   }, [countries, selectedCountry])
 
-  // 선택 도시 강조: 라벨 재생성 없이 색/크기만 갱신 (재생성하면 opacity:0 리셋되어 라벨이 사라지므로)
+  // 라벨 색 갱신: 선택=파랑, 작업완료=빨강. 라벨 재생성 없이 스타일만 바꿈(재생성하면 opacity:0 리셋되어 라벨이 사라지므로)
   useEffect(() => {
     const sel = selectedCity?._koName || selectedCity?.name
+    // 도시 라벨
     document.querySelectorAll('[data-cityname]').forEach(el => {
       const inner = el.querySelector('.city-label-inner')
       if (!inner) return
-      const on = el.dataset.cityname === sel
-      inner.style.color = on ? '#2563eb' : 'rgba(255,255,255,0.95)'
-      inner.style.fontSize = on ? '14px' : '12px'
+      const nm = el.dataset.cityname
+      const isSel = nm === sel
+      const isDone = completedCities.has(nm)
+      inner.style.color = isSel ? '#2563eb' : isDone ? '#ef4444' : 'rgba(255,255,255,0.95)'
+      inner.style.fontSize = isSel ? '14px' : '12px'
     })
-  }, [selectedCity])
+    // 국가 라벨: 그 국가의 등록 도시가 모두 완료면 빨강
+    document.querySelectorAll('[data-countryen]').forEach(el => {
+      const inner = el.querySelector('.country-label-inner')
+      if (!inner) return
+      const cities = COUNTRY_CITIES[el.dataset.countryen] || []
+      const allDone = cities.length > 0 && cities.every(c => completedCities.has(c.name))
+      if (allDone) inner.style.color = '#ef4444'
+      else inner.style.color = cities.length > 0 ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'
+    })
+  }, [selectedCity, completedCities, selectedCountry, countries, lang])
 
   // ── 지리 기준선 (적도, 날짜변경선) ───────────────────────────────
   useEffect(() => {
@@ -2631,7 +2646,12 @@ function App() {
       const cached = localStorage.getItem(cacheKey)
       if (cached) { const p = JSON.parse(cached); if (returnOnly) return p; setFoodCulture(p); return }
     } catch {}
-    // 2) Firestore 공용 캐시 (다른 사용자가 이미 생성한 것)
+    // 2) 추출 데이터 계층(countries/{국가}/cities/{도시})의 food — Firebase 콘솔에서 직접 수정한 내용 반영 (cityCache보다 우선)
+    try {
+      const cdoc = await getCityDoc(city.countryEn || 'Unknown', cityKey)
+      if (cdoc?.food) { if (returnOnly) return cdoc.food; setFoodCulture(cdoc.food); try { localStorage.setItem(cacheKey, JSON.stringify(cdoc.food)) } catch {}; return }
+    } catch {}
+    // 3) Firestore 공용 캐시 (다른 사용자가 이미 생성한 것)
     const fsKey = `${cityKey}_${lang}`
     try {
       const fc = await getCityCache(fsKey)
@@ -2776,7 +2796,12 @@ Write all text in ${langName}.`
     const cacheKey = `atlas_citydesc_${cityKey}_${lng}`
     // 1) localStorage (같은 기기 재방문)
     try { const c = localStorage.getItem(cacheKey); if (c) return c } catch {}
-    // 2) Firestore 공용 캐시 (다른 사용자가 이미 생성한 것)
+    // 2) 추출 데이터 계층(countries/{국가}/cities/{도시})의 desc — Firebase 콘솔에서 직접 수정한 내용 반영
+    try {
+      const cdoc = await getCityDoc(countryEn || 'Unknown', cityKey)
+      if (cdoc?.desc) { try { localStorage.setItem(cacheKey, cdoc.desc) } catch {}; return cdoc.desc }
+    } catch {}
+    // 3) Firestore 공용 캐시 (다른 사용자가 이미 생성한 것)
     const fsKey = `${cityKey}_${lng}`
     try {
       const cached = await getCityCache(fsKey)
@@ -3623,6 +3648,14 @@ Write all text in ${langName}.`
                 alert('업로드 실패: '+(err?.message||err))
               }
             }} style={{width:'100%',marginTop:6,padding:'8px 0',background:'#0d9488',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>이 도시만 업로드 ({cityName})</button>
+            <button onClick={async()=>{
+              const done = completedCities.has(cityName)
+              setCompletedCities(prev=>{ const s=new Set(prev); done ? s.delete(cityName) : s.add(cityName); return s })
+              const ok = done ? await removeCompletedCity(cityName) : await addCompletedCity(cityName)
+              if(!ok){ alert('완료 상태 저장 실패'); setCompletedCities(prev=>{ const s=new Set(prev); done ? s.add(cityName) : s.delete(cityName); return s }) }
+            }} style={{width:'100%',marginTop:6,padding:'8px 0',background:completedCities.has(cityName)?'#ef4444':'#334155',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>
+              {completedCities.has(cityName) ? `완료 취소 (${cityName})` : `작업 완료 (${cityName})`}
+            </button>
             <button onClick={async()=>{
               const cnt = Object.keys(ex).length
               if (!cnt) { alert('업로드할 데이터가 없습니다'); return }
