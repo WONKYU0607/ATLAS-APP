@@ -2602,6 +2602,30 @@ function App() {
         const hay = (p.name || '') + ' ' + addr
         return allow.some(k => hay.includes(k))
       }
+      // ── 지역명 자동학습: 등록 도시명이 Google 영문주소에 안 나오는 도시 구제 (마카오형: 주소 마지막 세그먼트가 실제 지역명) ──
+      // 이름매칭 통과율 30% 미만일 때만 발동 → 정상 도시(서울/도쿄/베이징 등)는 블록 자체가 실행 안 됨
+      const basePass = merged.filter(inCity).length
+      if (merged.length >= 10 && basePass < merged.length * 0.3) {
+        const countryEn = (city.countryEn || '').trim()
+        const normStr = (s) => s.toLowerCase().replace(/\s+/g, '')
+        const lastSegs = {}
+        for (const p of merged) {
+          const segs = (p.formatted_address || '').split(',').map(s => s.trim()).filter(Boolean)
+          if (!segs.length) continue
+          const last = segs[segs.length - 1].replace(/[0-9]+/g, '').trim()
+          if (last.length >= 2) (lastSegs[last] = lastSegs[last] || []).push(p)
+        }
+        const learnedRegion = Object.entries(lastSegs)
+          .filter(([, arr]) => arr.length >= merged.length * 0.5)      // 과반 이상 일관된 것만
+          .filter(([k]) => normStr(k) !== normStr(countryEn))          // 국가명이면 버림 (서울 → South Korea 통과 방지)
+          .map(([k]) => k)
+        if (learnedRegion.length) {
+          acceptNames.push(...learnedRegion)                           // inCity가 클로저로 참조 → 아래 ranked 필터에 즉시 반영
+          console.warn(`[지역명 자동학습] ${cityKey}: 이름매칭 ${basePass}/${merged.length} → 주소에서 [${learnedRegion.join(', ')}] 학습 (등록명: ${cityNames.join('/')}, 국가: ${countryEn})`)
+        } else {
+          console.warn(`[매칭실패·학습불가] ${cityKey}: ${basePass}/${merged.length} | 등록명: ${cityNames.join('/')} | 주소샘플: ${merged[0]?.formatted_address || '-'}`)
+        }
+      }
       const JUNK_TYPES = ['supermarket','grocery_or_supermarket','department_store','shopping_mall','convenience_store','store','clothing_store','electronics_store','home_goods_store','furniture_store','hardware_store','gas_station','lodging','car_dealer','restaurant','cafe','food','meal_takeaway','meal_delivery','bakery','bar','parking','travel_agency','school','university','primary_school','secondary_school','hair_care','beauty_salon','pharmacy','hospital','doctor','bank','atm','real_estate_agency','lawyer','insurance_agency','car_rental','car_repair','gym','spa']
       const ranked = merged
         .filter(p => p.user_ratings_total)                       // 리뷰 있는 곳만
