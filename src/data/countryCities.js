@@ -920,8 +920,7 @@ export const COUNTRY_CITIES = {
   "Laos": [
     { name:"루앙프라방", lat:19.89, lng:102.14 },
     { name:"비엔티안", lat:17.97, lng:102.63 },
-    { name:"방비엥", lat:18.92, lng:102.45 },
-    { name:"팍세", lat:15.12, lng:105.8 }
+    { name:"방비엥", lat:18.92, lng:102.45 }
   ],
   "Tunisia": [
     { name:"튀니스", lat:36.81, lng:10.17 },
