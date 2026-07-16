@@ -3926,7 +3926,7 @@ Write all text in ${langName}.`
                           </div>
                         ) : hotspots.length>0 ? (
                           <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                            {hotspots.filter(place=>!excludedIds.has(place.place_id)).map((place,idx)=>(
+                            {hotspots.filter(place=>{const ck=`${selectedCity._koName||selectedCity.name}_${lang}`; return !excludedIds.has(place.place_id) && !excludedIds.has(`${place.place_id}||${ck}`)}).map((place,idx)=>(
                               <a key={idx} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id||''}`}
                                 target="_blank" rel="noopener noreferrer"
                                 style={{textDecoration:'none',background:'white',border:'1px solid #ede8e0',borderRadius:12,overflow:'hidden',cursor:'pointer',transition:'all .2s'}}>
@@ -3986,9 +3986,10 @@ Write all text in ${langName}.`
                                     {place.place_id && (
                                       <button onClick={async(e)=>{e.preventDefault();e.stopPropagation()
                                         if(!confirm(`"${place.name}"을(를) 추천에서 영구 제외할까요?`)) return
-                                        setExcludedIds(prev=>new Set(prev).add(place.place_id))
-                                        const ok=await addExcludedAttraction(place.place_id)
-                                        if(!ok){ alert('제외 저장 실패'); setExcludedIds(prev=>{const s=new Set(prev); s.delete(place.place_id); return s}) }
+                                        const exKey=`${place.place_id}||${selectedCity._koName||selectedCity.name}_${lang}`   // 도시별 격리: 인접 도시에 영향 없음
+                                        setExcludedIds(prev=>new Set(prev).add(exKey))
+                                        const ok=await addExcludedAttraction(exKey)
+                                        if(!ok){ alert('제외 저장 실패'); setExcludedIds(prev=>{const s=new Set(prev); s.delete(exKey); return s}) }
                                       }} title="추천에서 영구 제외"
                                         style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#dc2626',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
                                     )}
