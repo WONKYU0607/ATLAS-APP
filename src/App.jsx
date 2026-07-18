@@ -2511,13 +2511,22 @@ function App() {
     const cityKey = city._koName || city.name
     const fsKey = `${cityKey}_${lang}`
     const lsKey = `hotspots_${fsKey}`
+    // 수동 추가분(manualHotspots)을 목록에 병합 — 캐시 소스 무관하게 항상 적용, place_id 중복제거 + 리뷰순
+    const mergeManual = (list, manual) => {
+      const man = manual || (() => { try { return JSON.parse(localStorage.getItem(`manualHotspots_${fsKey}`) || '[]') } catch { return [] } })()
+      if (!man.length) return list
+      const ids = new Set(list.map(p => p.place_id))
+      const add = man.filter(m => m.place_id && !ids.has(m.place_id))
+      if (!add.length) return list
+      return [...list, ...add].sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+    }
     // 1) localStorage 캐시 우선 (Firestore 실패해도 재클릭 시 API 재호출 방지)
-    try { const raw = localStorage.getItem(lsKey); if (raw) { const arr = JSON.parse(raw); if (arr && arr.length) { console.log('[Hotspots] localStorage 캐시 히트:', fsKey); return arr } } } catch {}
+    try { const raw = localStorage.getItem(lsKey); if (raw) { const arr = JSON.parse(raw); if (arr && arr.length) { console.log('[Hotspots] localStorage 캐시 히트:', fsKey); return mergeManual(arr) } } } catch {}
     // 2) Firestore 공용 캐시
     try {
       const cc = await getCityCache(fsKey)
       console.log('[Hotspots] Firestore 조회:', fsKey, '→', cc?.hotspots?.length ? `캐시 ${cc.hotspots.length}개 히트` : '캐시 없음/빈값', cc)
-      if (cc?.hotspots && cc.hotspots.length) { try { localStorage.setItem(lsKey, JSON.stringify(cc.hotspots)) } catch {}; return cc.hotspots }
+      if (cc?.hotspots && cc.hotspots.length) { const m = mergeManual(cc.hotspots, cc.manualHotspots); try { localStorage.setItem(lsKey, JSON.stringify(m)) } catch {}; return m }
     } catch (e) { console.error('[Hotspots] Firestore 조회 실패(→API 호출됨):', fsKey, e) }
     console.warn('[Hotspots] 캐시 미스 → API 18키워드 호출:', fsKey)
     const cityName = getCityName(cityKey)   // 현재 언어 도시명 (UI/필터용)
@@ -2602,30 +2611,6 @@ function App() {
         const hay = (p.name || '') + ' ' + addr
         return allow.some(k => hay.includes(k))
       }
-      // ── 지역명 자동학습: 등록 도시명이 Google 영문주소에 안 나오는 도시 구제 (마카오형: 주소 마지막 세그먼트가 실제 지역명) ──
-      // 이름매칭 통과율 30% 미만일 때만 발동 → 정상 도시(서울/도쿄/베이징 등)는 블록 자체가 실행 안 됨
-      const basePass = merged.filter(inCity).length
-      if (merged.length >= 10 && basePass < merged.length * 0.3) {
-        const countryEn = (city.countryEn || '').trim()
-        const normStr = (s) => s.toLowerCase().replace(/\s+/g, '')
-        const lastSegs = {}
-        for (const p of merged) {
-          const segs = (p.formatted_address || '').split(',').map(s => s.trim()).filter(Boolean)
-          if (!segs.length) continue
-          const last = segs[segs.length - 1].replace(/[0-9]+/g, '').trim()
-          if (last.length >= 2) (lastSegs[last] = lastSegs[last] || []).push(p)
-        }
-        const learnedRegion = Object.entries(lastSegs)
-          .filter(([, arr]) => arr.length >= merged.length * 0.5)      // 과반 이상 일관된 것만
-          .filter(([k]) => normStr(k) !== normStr(countryEn))          // 국가명이면 버림 (서울 → South Korea 통과 방지)
-          .map(([k]) => k)
-        if (learnedRegion.length) {
-          acceptNames.push(...learnedRegion)                           // inCity가 클로저로 참조 → 아래 ranked 필터에 즉시 반영
-          console.warn(`[지역명 자동학습] ${cityKey}: 이름매칭 ${basePass}/${merged.length} → 주소에서 [${learnedRegion.join(', ')}] 학습 (등록명: ${cityNames.join('/')}, 국가: ${countryEn})`)
-        } else {
-          console.warn(`[매칭실패·학습불가] ${cityKey}: ${basePass}/${merged.length} | 등록명: ${cityNames.join('/')} | 주소샘플: ${merged[0]?.formatted_address || '-'}`)
-        }
-      }
       const JUNK_TYPES = ['supermarket','grocery_or_supermarket','department_store','shopping_mall','convenience_store','store','clothing_store','electronics_store','home_goods_store','furniture_store','hardware_store','gas_station','lodging','car_dealer','restaurant','cafe','food','meal_takeaway','meal_delivery','bakery','bar','parking','travel_agency','school','university','primary_school','secondary_school','hair_care','beauty_salon','pharmacy','hospital','doctor','bank','atm','real_estate_agency','lawyer','insurance_agency','car_rental','car_repair','gym','spa']
       const ranked = merged
         .filter(p => p.user_ratings_total)                       // 리뷰 있는 곳만
@@ -2639,9 +2624,14 @@ function App() {
       const limit = isBigCity ? 25 : 15
       console.log(`[대도시판별] ${cityKey}: 리뷰1만+ ${famousCount}개 → ${isBigCity?'대도시':'소도시'}(${limit}개), 총후보 ${ranked.length}개`)
       const list = ranked.slice(0, limit)
-      try { localStorage.setItem(lsKey, JSON.stringify(list)) } catch {}   // 로컬 캐시 저장 (Firestore 실패 대비)
-      try { setCityCache(fsKey, { hotspots: list }) } catch {}
-      return list
+      // 캐시 전체 삭제 후 API 재수집 시나리오: Firestore에 남은 수동분(manualHotspots)을 다시 병합해 유실 방지
+      let manual = []
+      try { const cc2 = await getCityCache(fsKey); manual = (cc2 && cc2.manualHotspots) || [] } catch {}
+      const finalList = mergeManual(list, manual)
+      try { localStorage.setItem(lsKey, JSON.stringify(finalList)) } catch {}   // 로컬 캐시 저장 (Firestore 실패 대비)
+      if (manual.length) { try { localStorage.setItem(`manualHotspots_${fsKey}`, JSON.stringify(manual)) } catch {} }   // 수동분 로컬 복원
+      try { setCityCache(fsKey, { hotspots: list, manualHotspots: manual }) } catch {}   // hotspots는 자동수집분만 저장(manual은 병합 시 중복방지), manualHotspots 유지
+      return finalList
     } catch { return [] }
   }
 
@@ -2690,13 +2680,15 @@ function App() {
 
     if (!returnOnly) { setLoadingFoodCulture(true); setFoodCulture(null) }
     const cityName = getCityName(cityKey) || city.name
+    const countryName = city.countryEn || 'its country'
     const langName = lang === 'ko' ? '한국어' : lang === 'ja' ? '日本語' : lang === 'zh' ? '中文' : 'English'
-    const prompt = `You are a travel food culture curator. Introduce the food culture of "${cityName}" to travelers.
-Pick 3-4 representative dishes plus 1-2 famous local drinks or alcoholic beverages (include the drinks as items in the same list). For each item, provide: name, a 2-3 sentence description covering its origin/history, why it developed in this region, and its taste/characteristics. Do NOT include any prices.
+    const prompt = `You are a travel food culture curator. Introduce the authentic food culture of "${cityName}" in ${countryName}.
+CRITICAL: The dishes MUST be genuinely from ${countryName} / the "${cityName}" region. Do NOT invent or fabricate dishes, and do NOT substitute food from other countries — especially do NOT use ${langName}-speaking countries' cuisine unless "${cityName}" is actually located there. If you are unsure about "${cityName}" specifically, describe the broader authentic cuisine of ${countryName} rather than making something up.
+Pick 3-4 representative dishes. For each, provide: name, a 2-3 sentence description covering its origin/history, why it developed in this region, and its taste/characteristics. Do NOT include any prices.
 Exclude specific restaurant names or locations — focus on the food itself.
 Respond ONLY with valid JSON (no markdown, no code fences) in this exact format:
 {"intro":"1-2 sentence overview of the city's food culture","dishes":[{"name":"dish name","desc":"origin, history, why developed, taste"}]}
-Write all text in ${langName}.`
+Write all descriptive text in ${langName}, but keep the food authentic to ${countryName}.`
 
     try {
       const res = await fetch('/api/chat', {
@@ -2735,13 +2727,15 @@ Write all text in ${langName}.`
     const cacheKey = `foodCulture3_${cityKey}_${lang}`
     try { if (localStorage.getItem(cacheKey)) return } catch {}  // 이미 캐시 있으면 스킵
     const cityName = getCityName(cityKey) || city.name
+    const countryName = city.countryEn || 'its country'
     const langName = lang === 'ko' ? '한국어' : lang === 'ja' ? '日本語' : lang === 'zh' ? '中文' : 'English'
-    const prompt = `You are a travel food culture curator. Introduce the food culture of "${cityName}" to travelers.
-Pick 3-4 representative dishes plus 1-2 famous local drinks or alcoholic beverages (include the drinks as items in the same list). For each item, provide: name, a 2-3 sentence description covering its origin/history, why it developed in this region, and its taste/characteristics. Do NOT include any prices.
+    const prompt = `You are a travel food culture curator. Introduce the authentic food culture of "${cityName}" in ${countryName}.
+CRITICAL: The dishes MUST be genuinely from ${countryName} / the "${cityName}" region. Do NOT invent or fabricate dishes, and do NOT substitute food from other countries — especially do NOT use ${langName}-speaking countries' cuisine unless "${cityName}" is actually located there. If you are unsure about "${cityName}" specifically, describe the broader authentic cuisine of ${countryName} rather than making something up.
+Pick 3-4 representative dishes. For each, provide: name, a 2-3 sentence description covering its origin/history, why it developed in this region, and its taste/characteristics. Do NOT include any prices.
 Exclude specific restaurant names or locations — focus on the food itself.
 Respond ONLY with valid JSON (no markdown, no code fences) in this exact format:
 {"intro":"1-2 sentence overview of the city's food culture","dishes":[{"name":"dish name","desc":"origin, history, why developed, taste"}]}
-Write all text in ${langName}.`
+Write all descriptive text in ${langName}, but keep the food authentic to ${countryName}.`
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -2775,7 +2769,22 @@ Write all text in ${langName}.`
     finally { setSpotSearchLoading(false) }
   }
 
-  // 숙소 검색 (관광지 검색과 동일한 Google Places, 도시 컨텍스트 기준)
+  // 검색한 장소를 추천 관광지 목록에 영구 추가 (필터가 놓친 명소 수동 구제, 캐시 삭제에도 생존)
+  const addSpotToHotspots = async (r) => {
+    if (!r?.place_id || !selectedCity) return
+    if (hotspots.some(h => h.place_id === r.place_id)) return   // 중복 무시
+    const cityKey = selectedCity._koName || selectedCity.name
+    const fsKey = `${cityKey}_${lang}`
+    const spot = { ...r, _manual: true }
+    const merged = [...hotspots, spot].sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))   // 리뷰순 재정렬
+    setHotspots(merged)
+    // 수동분은 별도 필드(manualHotspots)에 누적 저장 → hotspots 캐시를 지워도 생존, 재수집 시 자동 병합
+    const prevManual = (() => { try { return JSON.parse(localStorage.getItem(`manualHotspots_${fsKey}`) || '[]') } catch { return [] } })()
+    const nextManual = [...prevManual.filter(m => m.place_id !== spot.place_id), spot]
+    try { localStorage.setItem(`manualHotspots_${fsKey}`, JSON.stringify(nextManual)) } catch {}
+    try { localStorage.setItem(`hotspots_${fsKey}`, JSON.stringify(merged)) } catch {}
+    try { await setCityCache(fsKey, { hotspots: merged, manualHotspots: nextManual }) } catch (e) { console.error('[수동추가] 저장 실패:', e?.message || e) }
+  }
   const searchHotelsForCourse = async () => {
     const q = hotelSearchQuery.trim()
     if (!q || !selectedCity) return
@@ -3911,6 +3920,9 @@ Write all text in ${langName}.`
                                       {r.rating && <div style={{fontSize:11,color:'#c8a870',fontWeight:600,marginTop:2}}>★ {r.rating}{r.user_ratings_total?` (${r.user_ratings_total.toLocaleString()})`:''}</div>}
                                       {(r.vicinity||r.formatted_address) && <div style={{fontSize:9.5,color:'#b0a89e',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:2}}>{r.vicinity||r.formatted_address}</div>}
                                     </div>
+                                    <button onClick={e=>{e.preventDefault();e.stopPropagation();addSpotToHotspots(r)}}
+                                      style={{background:hotspots.some(h=>h.place_id===r.place_id)?'#7a9a6a':'#f5f0ea',border:hotspots.some(h=>h.place_id===r.place_id)?'none':'1px solid #e0d9d0',color:hotspots.some(h=>h.place_id===r.place_id)?'white':'#9a8070',height:30,padding:'0 9px',borderRadius:7,cursor:'pointer',fontSize:11,fontWeight:600,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',whiteSpace:'nowrap'}}
+                                      title={lang==='ko'?'추천 목록에 추가':'Add to recommended list'}>{hotspots.some(h=>h.place_id===r.place_id)?'✓ 목록':'＋ 목록'}</button>
                                     <button onClick={e=>{e.preventDefault();e.stopPropagation();addToCourse({source:'hotspot',name:r.name,displayName:r.name,cityName:selectedCity?._koName||selectedCity?.name,cityDisplayName:getCityName(selectedCity?._koName||selectedCity?.name),rating:r.rating,place_id:r.place_id,vicinity:r.vicinity||r.formatted_address,lat:r.geometry?.location?.lat??selectedCity?.lat,lng:r.geometry?.location?.lng??selectedCity?.lng,emoji:'📍',photo_ref:r.photos?.[0]?.photo_reference||null})}}
                                       style={{background:isInCourse(r.name,'hotspot')?'#c8856a':'#f5f0ea',border:isInCourse(r.name,'hotspot')?'none':'1px solid #e0d9d0',color:isInCourse(r.name,'hotspot')?'white':'#c8b8a8',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:14,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}
                                       title={t("courseAddToTrip")}>{isInCourse(r.name,'hotspot')?'✓':'＋'}</button>
