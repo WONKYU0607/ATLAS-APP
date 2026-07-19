@@ -439,12 +439,7 @@ export const COUNTRY_CITIES = {
     { name:"티오만", lat:2.82, lng:104.16 },
   ],
   "Singapore": [
-    { name:"싱가포르", lat:1.36, lng:103.82 },
-    { name:"센토사", lat:1.25, lng:103.83 },
-    { name:"마리나베이", lat:1.28, lng:103.86 },
-    { name:"차이나타운", lat:1.28, lng:103.84 },
-    { name:"오차드로드", lat:1.3, lng:103.84 },
-    { name:"주롱", lat:1.34, lng:103.71 }
+    { name:"싱가포르", lat:1.36, lng:103.82 }
   ],
   "Cambodia": [
     { name:"시엠립", lat:13.37, lng:103.87 },
