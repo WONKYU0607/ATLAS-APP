@@ -445,8 +445,7 @@ export const COUNTRY_CITIES = {
     { name:"시엠립", lat:13.37, lng:103.87 },
     { name:"프놈펜", lat:11.56, lng:104.93 },
     { name:"시아누크빌", lat:10.63, lng:103.50 },
-    { name:"바탐방", lat:13.1, lng:103.2 },
-    { name:"캄폿", lat:10.61, lng:104.18 },
+    { name:"바탐방", lat:13.1, lng:103.2 }
   ],
   "Myanmar": [
     { name:"양곤", lat:16.87, lng:96.19 },
