@@ -448,8 +448,7 @@ export const COUNTRY_CITIES = {
   "Myanmar": [
     { name:"양곤", lat:16.87, lng:96.19 },
     { name:"바간", lat:21.17, lng:94.86 },
-    { name:"만달레이", lat:21.97, lng:96.08 },
-    { name:"냐웅쉐", lat:20.66, lng:96.93 },
+    { name:"만달레이", lat:21.97, lng:96.08 }
   ],
   "Nepal": [
     { name:"카트만두", lat:27.70, lng:85.32 },
@@ -640,8 +639,7 @@ export const COUNTRY_CITIES = {
     { name:"더반", lat:-29.86, lng:31.02 },
     { name:"넬스프루이트", lat:-25.47, lng:30.97 },
     { name:"스텔렌보스", lat:-33.93, lng:18.86 },
-    { name:"포트엘리자베스", lat:-33.96, lng:25.6 },
-    { name:"허마누스", lat:-34.42, lng:19.24 }
+    { name:"포트엘리자베스", lat:-33.96, lng:25.6 }
   ],
   "Kenya": [
     { name:"나이로비", lat:-1.29, lng:36.82 },
@@ -652,8 +650,7 @@ export const COUNTRY_CITIES = {
   "Tanzania": [
     { name:"잔지바르", lat:-6.16, lng:39.20 },
     { name:"아루샤", lat:-3.39, lng:36.68 },
-    { name:"모시", lat:-3.35, lng:37.34 },
-    { name:"응고롱고로", lat:-3.26, lng:35.52 }
+    { name:"모시", lat:-3.35, lng:37.34 }
   ],
   "Jordan": [
     { name:"와디무사", lat:30.32, lng:35.48 },
@@ -991,8 +988,7 @@ export const COUNTRY_CITIES = {
     { name:"키이우", lat:50.45, lng:30.52 },
     { name:"르비우", lat:49.84, lng:24.03 },
     { name:"오데사", lat:46.48, lng:30.74 },
-    { name:"체르니우치", lat:48.29, lng:25.94 },
-    { name:"카미야네츠포딜스키", lat:48.68, lng:26.58 }
+    { name:"체르니우치", lat:48.29, lng:25.94 }
   ],
   "Pakistan": [
     { name:"라호르", lat:31.52, lng:74.30 },
