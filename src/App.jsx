@@ -2127,6 +2127,7 @@ function App() {
     const AMBIGUITY_MARGIN_PX = 28
     const SEP_TARGET_PX = 160 // 모호 탭 줌인 후 클러스터 라벨들 분리될 목표 거리 (한 번에 분리되도록 공격적)
     const selectNearestCity = (countryName, event) => {
+      if (countryFlyingRef.current?.active) return   // 국가 줌인 비행 중 탭 무시 — 줌인을 건너뛰고 바로 도시 패널이 열리는 것 방지
       const list = COUNTRY_CITIES[countryName] || []
       const r = pickNearestByScreen(list, c => c.lat, c => c.lng, event, CITY_TAP_PX)
       if (!r) return
@@ -2450,6 +2451,7 @@ function App() {
   const handleCityClick = (city) => {
     try {
       if (!globeRef.current) return
+      if (countryFlyingRef.current?.active) return   // 국가 줌인 비행 중엔 도시 라벨 클릭도 무시 — 비행 중 pointOfView 중복 명령으로 인한 렉 방지
       setSelectedCity(city)
       setSelectedSpot(null)
       setCityData(null)
