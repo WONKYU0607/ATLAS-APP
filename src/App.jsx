@@ -1768,8 +1768,11 @@ function App() {
       _type: 'country',
       _hasCities: !!COUNTRY_CITIES[feat.properties.NAME],
     })).filter(d => (d.lat !== 0 || d.lng !== 0) && d.nameEn !== countryEn && !HIDDEN_COUNTRY_LABELS.has(d.nameEn) && !ISLAND_NAMES.has(d.nameEn) && !ISLAND_NAMES_NORM.has(normCountryName(d.nameEn)))
-    // 마이크로국가(산마리노·바티칸 등)는 국가단위라 국가뷰(도시 표시)에선 숨김 — 세계뷰에서만 표시/클릭
-    globe.htmlElementsData([...countryLabels, ...cities, ...OCEAN_LABELS, ...SEA_LABELS])
+    // 이웃 섬나라 라벨은 국가뷰에도 표시 (말레이시아 뷰에서 싱가포르 등) — 자기 나라 것만 제외
+    const islandLabelsCV = ISLAND_LABEL_DATA.filter(d => d.nameEn !== countryEn).map(d => ({
+      lat: d.lat, lng: d.lng, name: getCountryName(d.nameEn), nameEn: d.nameEn, _type: 'island', _hasCities: !!COUNTRY_CITIES[d.nameEn],
+    }))
+    globe.htmlElementsData([...countryLabels, ...cities, ...islandLabelsCV, ...OCEAN_LABELS, ...SEA_LABELS])
     lastPovKeyRef.current = ''; labelCacheRef.current = { t: 0, items: [] } // 라벨 새로 생성됨 → idle스킵 해제 + 캐시 무효화
     requestAnimationFrame(() => { forceGatingNow(); requestAnimationFrame(forceGatingNow) })  // DOM 생성 직후(~16ms) 즉시 게이팅 → 라벨 깜빡임 방지
     setTimeout(forceGatingNow, 180); setTimeout(forceGatingNow, 550)  // 첫 상호작용 전에도 게이팅 적용
@@ -3698,7 +3701,7 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
               const ok = done ? await removeCompletedCity(cityName) : await addCompletedCity(cityName)
               if(!ok){ alert('완료 상태 저장 실패'); setCompletedCities(prev=>{ const s=new Set(prev); done ? s.add(cityName) : s.delete(cityName); return s }) }
             }} style={{width:'100%',marginTop:6,padding:'8px 0',background:completedCities.has(cityName)?'#ef4444':'#334155',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>
-              {completedCities.has(cityName) ? `완료 취소 (${cityName})` : `작업 완료 (${cityName})`}
+              {completedCities.has(cityName) ? `완료 취소 (${cityName}) (${completedCities.size})` : `작업 완료 (${cityName}) (${completedCities.size})`}
             </button>
             <button onClick={async()=>{
               const cnt = Object.keys(ex).length
