@@ -1889,8 +1889,10 @@ function App() {
           const isIsland = ISLAND_NAMES.has(d.nameEn) || d._type === 'hawaii' || d._type === 'island'
           if (isIsland) {
             // 섬나라 라벨: 터치 투명(pointer-events:none) → 회전/줌 안 막힘. 선택은 폴리곤/추후 onGlobeClick
+            if (d.nameEn) el.dataset.countryen = d.nameEn   // 완료 색칠용 식별자 (paint()가 도시 전부 완료 시 빨강 적용)
             el.style.cssText = 'pointer-events:none;'
             const inner = document.createElement('div')
+            inner.className = 'country-label-inner'
             inner.style.cssText = `
               transform:translate(-50%,-50%);
               font-family:Pretendard,Inter,sans-serif;
