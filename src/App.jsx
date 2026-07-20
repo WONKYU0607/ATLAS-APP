@@ -1810,7 +1810,9 @@ function App() {
         el.dataset.lat = d.lat
         el.dataset.lng = d.lng
         // gated: 줌인 시에만 표시 (섬나라 + 작은 나라) / micro: 터치 핸들러 달린 섬나라(아래 pointer-events 토글 대상)
-        if (d._type === 'island') { el.dataset.micro = '1'; if (d.nameEn !== 'Guam' && d.nameEn !== 'Singapore') el.dataset.gated = '1' }
+        if (d._type === 'island') { el.dataset.micro = '1'; if (d.nameEn !== 'Guam' && d.nameEn !== 'Singapore') el.dataset.gated = '1'
+          // 자기 나라 국가뷰에선 국가 라벨 숨김 — 같은 좌표의 도시 라벨과 겹쳐 탭을 가로채고, 재클릭 판정(closeCountry)으로 줌아웃되는 버그 방지
+          if (selectedCountry?.properties?.NAME === d.nameEn) { el.style.display = 'none'; el.style.pointerEvents = 'none' } }
         else if (d._type === 'country' && SMALL_COUNTRY.has(d.nameEn)) { el.dataset.gated = '1' }
         else if (d._type === 'sea') { el.dataset.seaGate = '1' }
         else if (d._type === 'city' && d.cityGated) { el.dataset.cityGated = '1'; el.dataset.cityTier = String(d.cityTier || 1) }
@@ -2221,7 +2223,10 @@ function App() {
           }
         } else {
           // 세계뷰: 먼저 마이크로스테이트(폴리곤 없는 작은 국가, 큰 나라 영토 안에 위치) 체크
-          const microR = pickNearestByScreen(ISLAND_LABEL_DATA, d => d.lat, d => d.lng, ev, 30)
+          // 반경 줌 반비례: 줌인하면 섬이 화면상 커져 라벨 앵커에서 멀어지므로 판정 반경도 키움 (싱가포르 탭이 말레이시아 폴리곤에 뺏기는 오터치 방지)
+          const alt = globe.pointOfView().altitude
+          const microRadius = alt < 0.15 ? 110 : alt < 0.3 ? 70 : 30
+          const microR = pickNearestByScreen(ISLAND_LABEL_DATA, d => d.lat, d => d.lng, ev, microRadius)
           if (microR) {
             let mFeat = countries.find(f => f.properties && f.properties.NAME === microR.best.nameEn)
             if (!mFeat) mFeat = { type: 'Feature', properties: { NAME: microR.best.nameEn, LABEL_X: microR.best.lng, LABEL_Y: microR.best.lat }, geometry: null }
