@@ -1,6 +1,6 @@
 // ── Firebase 초기화 + Auth/Firestore/Storage 헬퍼 ──
 import { initializeApp } from 'firebase/app'
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from 'firebase/auth'
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile, signInAnonymously } from 'firebase/auth'
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, deleteDoc, query, orderBy, where, limit, startAfter, arrayUnion, arrayRemove, serverTimestamp, increment } from 'firebase/firestore'
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 
@@ -25,6 +25,12 @@ export const signupEmail = (email, pw) => createUserWithEmailAndPassword(auth, e
 export const loginGoogle = () => signInWithPopup(auth, new GoogleAuthProvider())
 export const logout = () => signOut(auth)
 export const onAuth = (cb) => onAuthStateChanged(auth, cb)
+
+// 자동 익명 로그인: 로그인하지 않은 방문자도 인증 토큰을 얻게 함 → Firestore/Storage 규칙을 auth!=null로 잠가도
+// 작업완료·사진업로드·관광지추가 등 앱 쓰기 기능이 그대로 동작. 이미 로그인(이메일/구글)한 사용자는 그 계정 유지.
+onAuthStateChanged(auth, (user) => {
+  if (!user) signInAnonymously(auth).catch((e) => console.error('[auth] 익명 로그인 실패:', e?.code || e))
+})
 
 // ── Firestore 유저 데이터 ──
 const userDocRef = (uid) => doc(db, 'users', uid)
