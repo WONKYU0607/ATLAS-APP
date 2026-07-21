@@ -450,9 +450,7 @@ export const COUNTRY_CITIES = {
   ],
   "Nepal": [
     { name:"카트만두", lat:27.70, lng:85.32 },
-    { name:"포카라", lat:28.21, lng:83.99 },
-    { name:"치트완", lat:27.52, lng:84.35 },
-    { name:"룸비니", lat:27.48, lng:83.28 },
+    { name:"포카라", lat:28.21, lng:83.99 }
   ],
   "Sri Lanka": [
     { name:"콜롬보", lat:6.93, lng:79.85 },
