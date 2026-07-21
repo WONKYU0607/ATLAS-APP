@@ -466,7 +466,6 @@ export const COUNTRY_CITIES = {
     { name:"세부", lat:10.32, lng:123.89 },
     { name:"시아르가오", lat:9.85, lng:126.05 },
     { name:"보홀", lat:9.85, lng:124.14 },
-    { name:"엘니도", lat:11.2, lng:119.4 },
     { name:"다바오", lat:7.07, lng:125.61 }
   ],
   "Portugal": [
