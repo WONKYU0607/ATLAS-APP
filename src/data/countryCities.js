@@ -420,10 +420,8 @@ export const COUNTRY_CITIES = {
     { name:"롬복", lat:-8.57, lng:116.36 },
     { name:"마겔랑", lat:-7.47, lng:110.22 },
     { name:"라자암팟", lat:-1.08, lng:130.87 },
-    { name:"우붓", lat:-8.52, lng:115.26 },
     { name:"수라바야", lat:-7.26, lng:112.75 },
-    { name:"반둥", lat:-6.92, lng:107.61 },
-    { name:"길리", lat:-8.35, lng:116.05 },
+    { name:"반둥", lat:-6.92, lng:107.61 }
   ],
   "Malaysia": [
     { name:"쿠알라룸푸르", lat:3.15, lng:101.70 },
