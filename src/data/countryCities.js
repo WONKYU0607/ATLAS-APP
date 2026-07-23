@@ -326,14 +326,7 @@ export const COUNTRY_CITIES = {
   ],
   "United Arab Emirates": [
     { name:"두바이", lat:25.20, lng:55.27 },
-    { name:"아부다비", lat:24.47, lng:54.37 },
-    { name:"샤르자", lat:25.36, lng:55.42 },
-    { name:"라스알카이마", lat:25.79, lng:55.94 },
-    { name:"푸자이라", lat:25.13, lng:56.34 },
-    { name:"아인", lat:24.21, lng:55.74 },
-    { name:"아지만", lat:25.41, lng:55.44 },
-    { name:"움알쿠와인", lat:25.56, lng:55.55 },
-    { name:"하타", lat:24.8, lng:56.12 },
+    { name:"아부다비", lat:24.47, lng:54.37 }
   ],
   "Turkey": [
     { name:"이스탄불", lat:41.01, lng:28.98 },
@@ -424,8 +417,7 @@ export const COUNTRY_CITIES = {
     { name:"말라카", lat:2.19, lng:102.25 },
     { name:"쿠칭", lat:1.55, lng:110.34 },
     { name:"조호바루", lat:1.49, lng:103.74 },
-    { name:"카메론하일랜드", lat:4.47, lng:101.38 },
-    { name:"티오만", lat:2.82, lng:104.16 },
+    { name:"카메론하일랜드", lat:4.47, lng:101.38 }
   ],
   "Singapore": [
     { name:"싱가포르", lat:1.36, lng:103.82 }
