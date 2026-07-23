@@ -318,18 +318,11 @@ export const COUNTRY_CITIES = {
     { name:"자이푸르", lat:26.91, lng:75.79 },
     { name:"우다이푸르", lat:24.57, lng:73.68 },
     { name:"콜카타", lat:22.57, lng:88.36 },
-    { name:"코치", lat:9.93, lng:76.27 },
-    { name:"암리차르", lat:31.63, lng:74.87 },
     { name:"벵갈루루", lat:12.97, lng:77.59 },
     { name:"첸나이", lat:13.08, lng:80.27 },
     { name:"하이데라바드", lat:17.39, lng:78.49 },
-    { name:"다르질링", lat:27.04, lng:88.26 },
     { name:"시믈라", lat:31.10, lng:77.17 },
-    { name:"리시케시", lat:30.09, lng:78.27 },
-    { name:"함피", lat:15.33, lng:76.46 },
-    { name:"조드푸르", lat:26.24, lng:73.02 },
-    { name:"푸시카르", lat:26.49, lng:74.55 },
-    { name:"다람살라", lat:32.22, lng:76.32 }
+    { name:"조드푸르", lat:26.24, lng:73.02 }
   ],
   "United Arab Emirates": [
     { name:"두바이", lat:25.20, lng:55.27 },
