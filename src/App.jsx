@@ -63,6 +63,7 @@ function App() {
   const [communitySearch, setCommunitySearch] = useState('')
   const [communityDayFilter, setCommunityDayFilter] = useState(0)
   const [extractTick, setExtractTick] = useState(0) // 임시 추출 도구 리렌더용 (추출 끝나면 삭제)
+  const [hotspotDiag, setHotspotDiag] = useState(null) // 관광지 지역명 매칭 진단(배지 표시용)
   const [communityCoursesData, setCommunityCoursesData] = useState([])
   const [communityLoading, setCommunityLoading] = useState(false)
   const [communityExpanded, setCommunityExpanded] = useState(null)
@@ -2533,7 +2534,7 @@ function App() {
       return [...list, ...add].sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
     }
     // 1) localStorage 캐시 우선 (Firestore 실패해도 재클릭 시 API 재호출 방지)
-    try { const raw = localStorage.getItem(lsKey); if (raw) { const arr = JSON.parse(raw); if (arr && arr.length) { console.log('[Hotspots] localStorage 캐시 히트:', fsKey); return mergeManual(arr) } } } catch {}
+    try { const raw = localStorage.getItem(lsKey); if (raw) { const arr = JSON.parse(raw); if (arr && arr.length) { console.log('[Hotspots] localStorage 캐시 히트:', fsKey); setHotspotDiag({ city: cityKey, state: 'cached' }); return mergeManual(arr) } } } catch {}
     // 2) Firestore 공용 캐시
     try {
       const cc = await getCityCache(fsKey)
@@ -2622,6 +2623,55 @@ function App() {
         if (acceptNames.some(n => addr.includes(n))) return true
         const hay = (p.name || '') + ' ' + addr
         return allow.some(k => hay.includes(k))
+      }
+      // ── 지역명 자동학습(전 세계 공통): 등록 도시명이 Google 영문주소에 안 나오는 도시 구제 ──
+      // 이름매칭 통과율 50% 미만일 때만 발동 → 정상 도시(서울/도쿄/파리 등은 90~100% 통과)는 블록 자체가 실행 안 됨
+      const basePass = merged.filter(inCity).length
+      if (merged.length >= 8 && basePass < merged.length * 0.5) {
+        const countryEn = (city?.countryEn || '').trim()
+        const normStr = (s) => s.toLowerCase().replace(/\s+/g, '')
+        // 행정 일반명사는 학습 금지 — City/District 등이 학습되면 인접 도시까지 통과해 오염됨
+        const STOP = new Set(['city','district','province','county','state','region','town','village','municipality','prefecture','area','division','ward','borough','township','metropolitan','capital','central','north','south','east','west','new','old','saint','st','de','la','el','du'])
+        const learned = []
+        // (1) 마지막 세그먼트가 국가명이 아니면 그 자체가 지역명 — 마카오형 "R. de São Paulo, Macao"
+        const lastCnt = {}
+        for (const p of merged) {
+          const segs = (p.formatted_address || '').split(',').map(s => s.trim()).filter(Boolean)
+          if (!segs.length) continue
+          const last = segs[segs.length - 1].replace(/[0-9]+/g, '').trim()
+          if (last.length >= 2) lastCnt[last] = (lastCnt[last] || 0) + 1
+        }
+        for (const [k, n] of Object.entries(lastCnt)) {
+          if (n >= merged.length * 0.5 && normStr(k) !== normStr(countryEn)) learned.push(k)
+        }
+        // (2) 마지막이 국가명이면 국가앞 세그먼트를 토큰 분해해 공통 토큰 학습
+        //     캔버라형 "Parkes ACT"/"Acton ACT"/"Canberra ACT" → 공통 "ACT" (호주 NT, 미국 TX/CA, 캐나다 ON 등 주 약어 전반)
+        if (!learned.length) {
+          const tokCnt = {}
+          for (const p of merged) {
+            const segs = (p.formatted_address || '').split(',').map(s => s.trim()).filter(Boolean)
+            if (segs.length < 2) continue
+            const g = segs[segs.length - 2].replace(/[0-9]+/g, '').trim()
+            const seen = new Set()
+            for (const t of g.split(/\s+/)) {
+              if (t.length < 2 || seen.has(t) || STOP.has(t.toLowerCase())) continue
+              seen.add(t); tokCnt[t] = (tokCnt[t] || 0) + 1
+            }
+          }
+          for (const [t, n] of Object.entries(tokCnt)) {
+            if (n >= merged.length * 0.5 && normStr(t) !== normStr(countryEn)) learned.push(t)
+          }
+        }
+        if (learned.length) {
+          acceptNames.push(...learned)   // inCity가 클로저로 참조 → 아래 ranked 필터에 즉시 반영
+          console.warn(`[지역명 자동학습] ${cityKey}: 이름매칭 ${basePass}/${merged.length} → [${learned.join(', ')}] 학습 (등록명: ${cityNames.join('/')}, 국가: ${countryEn})`)
+          setHotspotDiag({ city: cityKey, state: 'learned', learned, basePass, total: merged.length })
+        } else {
+          console.warn(`[매칭실패·학습불가] ${cityKey}: ${basePass}/${merged.length} | 등록명: ${cityNames.join('/')} | 주소샘플: ${merged[0]?.formatted_address || '-'}`)
+          setHotspotDiag({ city: cityKey, state: 'failed', learned: [], basePass, total: merged.length, sample: merged[0]?.formatted_address || '' })
+        }
+      } else {
+        setHotspotDiag({ city: cityKey, state: 'ok', learned: [], basePass, total: merged.length })
       }
       const JUNK_TYPES = ['supermarket','grocery_or_supermarket','department_store','shopping_mall','convenience_store','store','clothing_store','electronics_store','home_goods_store','furniture_store','hardware_store','gas_station','lodging','car_dealer','restaurant','cafe','food','meal_takeaway','meal_delivery','bakery','bar','parking','travel_agency','school','university','primary_school','secondary_school','hair_care','beauty_salon','pharmacy','hospital','doctor','bank','atm','real_estate_agency','lawyer','insurance_agency','car_rental','car_repair','gym','spa']
       const ranked = merged
@@ -3646,6 +3696,17 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
               <span style={{fontSize:12,fontWeight:700,color:done?'#4ade80':'#fbbf24'}}>{cityName} · {done?'추출됨':'미추출'}</span>
               <span style={{fontSize:11,color:'#cbd5e1'}}>누적 {count}</span>
             </div>
+            {hotspotDiag && hotspotDiag.city === cityName && hotspotDiag.state !== 'cached' && (
+              <div style={{fontSize:10,lineHeight:1.35,padding:'4px 6px',borderRadius:6,
+                background: hotspotDiag.state==='failed' ? 'rgba(239,68,68,.18)' : hotspotDiag.state==='learned' ? 'rgba(251,191,36,.16)' : 'rgba(74,222,128,.13)',
+                color: hotspotDiag.state==='failed' ? '#fca5a5' : hotspotDiag.state==='learned' ? '#fcd34d' : '#86efac'}}>
+                {hotspotDiag.state==='failed'
+                  ? `⚠ 매칭실패 ${hotspotDiag.basePass}/${hotspotDiag.total} · 주소에 도시명 없음\n${(hotspotDiag.sample||'').slice(0,60)}`
+                  : hotspotDiag.state==='learned'
+                  ? `자동학습 [${hotspotDiag.learned.join(', ')}] · ${hotspotDiag.basePass}/${hotspotDiag.total}`
+                  : `매칭 정상 ${hotspotDiag.basePass}/${hotspotDiag.total}`}
+              </div>
+            )}
             <div style={{display:'flex',gap:6}}>
               <button onClick={()=>{
                 ex[cityName] = {
