@@ -3689,7 +3689,24 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
         const cityName = selectedCity._koName || selectedCity.name
         const done = !!ex[cityName]
         const count = Object.keys(ex).length
-        const save = (obj) => { localStorage.setItem('atlas_extract', JSON.stringify(obj)); setExtractTick(t=>t+1) }
+        const save = (obj) => {
+          const str = JSON.stringify(obj)
+          try { localStorage.setItem('atlas_extract', str) }
+          catch {
+            // 용량 초과 → 재취득 가능한 hotspots_* 캐시만 정리 후 재시도.
+            // (Firestore cityCache에 원본이 있어 다음 진입 시 다시 읽어옴 = Google 재호출 없음. atlas_extract는 백업본이 없으므로 절대 건드리지 않음)
+            const del = []
+            for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('hotspots_')) del.push(k) }
+            del.forEach(k => localStorage.removeItem(k))
+            console.warn(`[추출] localStorage 용량 초과 → hotspots_ 캐시 ${del.length}개 자동 정리 후 재시도`)
+            try { localStorage.setItem('atlas_extract', str) }
+            catch {
+              alert('저장 공간이 부족합니다.\nJSON 저장으로 백업 → 전체 업로드 → 브라우저 사이트 데이터 삭제 순으로 정리하세요.')
+              return
+            }
+          }
+          setExtractTick(t=>t+1)
+        }
         return (
           <div style={{position:'fixed',top:10,left:10,zIndex:99999,display:'flex',flexDirection:'column',gap:6,alignItems:'stretch',background:'rgba(15,18,24,.82)',padding:'10px 12px',borderRadius:12,boxShadow:'0 4px 16px rgba(0,0,0,.4)',minWidth:200}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10}}>
