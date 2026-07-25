@@ -439,10 +439,7 @@ export const COUNTRY_CITIES = {
   ],
   "Sri Lanka": [
     { name:"콜롬보", lat:6.93, lng:79.85 },
-    { name:"캔디", lat:7.29, lng:80.63 },
-    { name:"갈레", lat:6.03, lng:80.22 },
-    { name:"시기리야", lat:7.96, lng:80.76 },
-    { name:"누와라엘리야", lat:6.97, lng:80.78 },
+    { name:"시기리야", lat:7.96, lng:80.76 }
   ],
   "Philippines": [
     { name:"마닐라", lat:14.60, lng:120.98 },
