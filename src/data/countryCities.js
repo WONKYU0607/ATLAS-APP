@@ -751,11 +751,8 @@ export const COUNTRY_CITIES = {
     { name:"오클랜드", lat:-36.85, lng:174.76 },
     { name:"로토루아", lat:-38.14, lng:176.25 },
     { name:"웰링턴", lat:-41.29, lng:174.78 },
-    { name:"테아나우", lat:-45.41, lng:167.72 },
     { name:"마타마타", lat:-37.81, lng:175.77 },
     { name:"크라이스트처치", lat:-43.53, lng:172.64 },
-    { name:"네이피어", lat:-39.49, lng:176.92 },
-    { name:"더니든", lat:-45.87, lng:170.5 },
     { name:"테카포", lat:-44.0, lng:170.48 }
   ],
   "Saudi Arabia": [
