@@ -606,9 +606,7 @@ export const COUNTRY_CITIES = {
     { name:"이르쿠츠크", lat:52.29, lng:104.3 },
     { name:"소치", lat:43.60, lng:39.73 },
     { name:"블라디보스토크", lat:43.12, lng:131.89 },
-    { name:"카잔", lat:55.79, lng:49.12 },
-    { name:"예카테린부르크", lat:56.84, lng:60.65 },
-    { name:"무르만스크", lat:68.97, lng:33.07 }
+    { name:"카잔", lat:55.79, lng:49.12 }
   ],
   "South Africa": [
     { name:"케이프타운", lat:-33.92, lng:18.42 },
@@ -632,7 +630,6 @@ export const COUNTRY_CITIES = {
   "Jordan": [
     { name:"와디무사", lat:30.32, lng:35.48 },
     { name:"암만", lat:31.95, lng:35.93 },
-    { name:"아카바", lat:29.53, lng:35.01 },
     { name:"제라시", lat:32.28, lng:35.89 },
   ],
   "Israel": [
@@ -758,24 +755,17 @@ export const COUNTRY_CITIES = {
   "Saudi Arabia": [
     { name:"리야드", lat:24.69, lng:46.72 },
     { name:"제다", lat:21.49, lng:39.19 },
-    { name:"알울라", lat:26.62, lng:37.92 },
     { name:"메카", lat:21.39, lng:39.86 },
-    { name:"메디나", lat:24.52, lng:39.57 },
-    { name:"아브하", lat:18.22, lng:42.51 }
+    { name:"메디나", lat:24.52, lng:39.57 }
   ],
   "Iran": [
     { name:"테헤란", lat:35.69, lng:51.39 },
     { name:"이스파한", lat:32.66, lng:51.68 },
-    { name:"시라즈", lat:29.59, lng:52.58 },
     { name:"야즈드", lat:31.9, lng:54.37 }
   ],
   "Uzbekistan": [
     { name:"사마르칸트", lat:39.65, lng:66.96 },
-    { name:"부하라", lat:39.77, lng:64.43 },
-    { name:"히바", lat:41.38, lng:60.36 },
-    { name:"타슈켄트", lat:41.30, lng:69.24 },
-    { name:"누쿠스", lat:42.46, lng:59.62 },
-    { name:"테르메즈", lat:37.22, lng:67.28 }
+    { name:"타슈켄트", lat:41.30, lng:69.24 }
   ],
   "Ethiopia": [
     { name:"아디스아바바", lat:9.03, lng:38.74 },
@@ -886,8 +876,7 @@ export const COUNTRY_CITIES = {
     { name:"살랄라", lat:17.02, lng:54.09 },
   ],
   "Qatar": [
-    { name:"도하", lat:25.30, lng:51.53 },
-    { name:"알주바라", lat:25.73, lng:50.72 },
+    { name:"도하", lat:25.30, lng:51.53 }
   ],
   "Bolivia": [
     { name:"라파스", lat:-16.50, lng:-68.15 },
@@ -954,9 +943,7 @@ export const COUNTRY_CITIES = {
     { name:"포트루이스", lat:-20.16, lng:57.50 },
   ],
   "Lebanon": [
-    { name:"베이루트", lat:33.89, lng:35.51 },
-    { name:"비블로스", lat:34.12, lng:35.65 },
-    { name:"바알베크", lat:34.01, lng:36.21 },
+    { name:"베이루트", lat:33.89, lng:35.51 }
   ],
   "Ukraine": [
     { name:"키이우", lat:50.45, lng:30.52 },
@@ -966,8 +953,7 @@ export const COUNTRY_CITIES = {
   ],
   "Pakistan": [
     { name:"라호르", lat:31.52, lng:74.30 },
-    { name:"이슬라마바드", lat:33.69, lng:73.04 },
-    { name:"훈자", lat:36.32, lng:74.65 },
+    { name:"이슬라마바드", lat:33.69, lng:73.04 }
   ],
   "Luxembourg": [
     { name:"룩셈부르크시티", lat:49.61, lng:6.13 },
@@ -995,24 +981,16 @@ export const COUNTRY_CITIES = {
   ],
   "Kazakhstan": [
     { name:"알마티", lat:43.24, lng:76.95 },
-    { name:"아스타나", lat:51.16, lng:71.43 },
-    { name:"시므켄트", lat:42.32, lng:69.59 },
-    { name:"투르키스탄", lat:43.3, lng:68.27 },
-    { name:"악타우", lat:43.64, lng:51.2 }
+    { name:"아스타나", lat:51.16, lng:71.43 }
   ],
   // ── 나머지 국가 (수도) ──
   "Afghanistan": [{ name:"카불", lat:34.53, lng:69.17 }],
   "Algeria": [{ name:"알제", lat:36.75, lng:3.04 }],
   "Angola": [{ name:"루안다", lat:-8.84, lng:13.23 }],
   "Armenia": [{ name:"예레반", lat:40.18, lng:44.51 },
-    { name:"딜리잔", lat:40.74, lng:44.86 },
-    { name:"가르니", lat:40.12, lng:44.73 },
-    { name:"규므리", lat:40.79, lng:43.85 }
+    { name:"가르니", lat:40.12, lng:44.73 }
   ],
-  "Azerbaijan": [{ name:"바쿠", lat:40.41, lng:49.87 },
-    { name:"간자", lat:40.68, lng:46.36 },
-    { name:"셰키", lat:41.19, lng:47.17 },
-    { name:"가발라", lat:40.98, lng:47.85 }
+  "Azerbaijan": [{ name:"바쿠", lat:40.41, lng:49.87 }
   ],
   "Bahrain": [{ name:"마나마", lat:26.23, lng:50.59 }],
   "Bangladesh": [{ name:"다카", lat:23.81, lng:90.41 }],
