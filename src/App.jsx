@@ -1814,7 +1814,7 @@ function App() {
         el.dataset.lat = d.lat
         el.dataset.lng = d.lng
         // gated: 줌인 시에만 표시 (섬나라 + 작은 나라) / micro: 터치 핸들러 달린 섬나라(아래 pointer-events 토글 대상)
-        if (d._type === 'island') { el.dataset.micro = '1'; if (d.nameEn !== 'Guam' && d.nameEn !== 'Singapore') el.dataset.gated = '1'
+        if (d._type === 'island' || d._type === 'hawaii') { el.dataset.micro = '1'; if (d.nameEn !== 'Guam' && d.nameEn !== 'Singapore' && d.nameEn !== 'Hawaii') el.dataset.gated = '1'
           // 자기 나라 국가뷰에선 국가 라벨 숨김 — 같은 좌표의 도시 라벨과 겹쳐 탭을 가로채고, 재클릭 판정(closeCountry)으로 줌아웃되는 버그 방지
           if (selectedCountry?.properties?.NAME === d.nameEn) { el.style.display = 'none'; el.style.pointerEvents = 'none' } }
         else if (d._type === 'country' && SMALL_COUNTRY.has(d.nameEn)) { el.dataset.gated = '1' }
@@ -2631,7 +2631,7 @@ function App() {
         const countryEn = (city?.countryEn || '').trim()
         const normStr = (s) => s.toLowerCase().replace(/\s+/g, '')
         // 행정 일반명사는 학습 금지 — City/District 등이 학습되면 인접 도시까지 통과해 오염됨
-        const STOP = new Set(['city','district','province','county','state','region','town','village','municipality','prefecture','area','division','ward','borough','township','metropolitan','capital','central','north','south','east','west','new','old','saint','st','de','la','el','du'])
+        const STOP = new Set(['city','district','province','county','state','region','town','village','municipality','prefecture','area','division','ward','borough','township','metropolitan','capital','central','central','north','south','east','west','new','old','saint','st','de','la','el','du','merkez','mahallesi','mah','cd','sk','sokak','caddesi','rd','ave','street','road','avenue','cres','crescent','blvd','ln','ct','pl','dr','hwy','pkwy','sq','tce','terrace'])
         const learned = []
         // (1) 마지막 세그먼트가 국가명이 아니면 그 자체가 지역명 — 마카오형 "R. de São Paulo, Macao"
         const lastCnt = {}
@@ -2644,23 +2644,25 @@ function App() {
         for (const [k, n] of Object.entries(lastCnt)) {
           if (n >= merged.length * 0.5 && normStr(k) !== normStr(countryEn)) learned.push(k)
         }
-        // (2) 마지막이 국가명이면 국가앞 세그먼트를 토큰 분해해 공통 토큰 학습
-        //     캔버라형 "Parkes ACT"/"Acton ACT"/"Canberra ACT" → 공통 "ACT" (호주 NT, 미국 TX/CA, 캐나다 ON 등 주 약어 전반)
+        // (2) 마지막이 국가명이면 주소 전체를 구분자(콤마·슬래시·공백) 무관하게 토큰 분해 → 50%+ 반복 토큰 학습
+        //     캔버라형 "Parkes ACT" → ACT / 카파도키아형 "Göreme/Nevşehir Merkez/Nevşehir" → Nevşehir (슬래시 광역)
+        //     발동 조건(이름매칭 50%미만)이 정상 도시를 막고, 학습 토큰은 대부분 도시 내부 지명이라 추가 통과만 시킴(오염 아님)
         if (!learned.length) {
           const tokCnt = {}
           for (const p of merged) {
-            const segs = (p.formatted_address || '').split(',').map(s => s.trim()).filter(Boolean)
-            if (segs.length < 2) continue
-            const g = segs[segs.length - 2].replace(/[0-9]+/g, '').trim()
             const seen = new Set()
-            for (const t of g.split(/\s+/)) {
-              if (t.length < 2 || seen.has(t) || STOP.has(t.toLowerCase())) continue
-              seen.add(t); tokCnt[t] = (tokCnt[t] || 0) + 1
+            for (const t of (p.formatted_address || '').split(/[,/\s]+/)) {
+              const tok = t.replace(/[0-9]+/g, '').replace(/[.\-'"]/g, '').trim()   // 숫자·구두점 제거 (Cd. → Cd)
+              if (tok.length < 2 || seen.has(tok) || STOP.has(tok.toLowerCase())) continue
+              seen.add(tok); tokCnt[tok] = (tokCnt[tok] || 0) + 1
             }
           }
-          for (const [t, n] of Object.entries(tokCnt)) {
-            if (n >= merged.length * 0.5 && normStr(t) !== normStr(countryEn)) learned.push(t)
-          }
+          const countryToks = new Set(countryEn.split(/[,/\s]+/).map(normStr).filter(Boolean))
+          const cityToks = new Set(cityNames.flatMap(n => n.split(/[,/\s]+/)).map(normStr).filter(Boolean))
+          // 50%+ 반복 토큰 중 빈도 최상위 2개만 학습 — 진짜 공통 지역명(Nevşehir/ACT)이 도로약어(Cd/Cres)보다 빈도 높음. 노이즈 억제
+          learned.push(...Object.entries(tokCnt)
+            .filter(([t, n]) => n >= merged.length * 0.5 && !countryToks.has(normStr(t)) && !cityToks.has(normStr(t)))
+            .sort((a, b) => b[1] - a[1]).slice(0, 2).map(([t]) => t))
         }
         if (learned.length) {
           acceptNames.push(...learned)   // inCity가 클로저로 참조 → 아래 ranked 필터에 즉시 반영
