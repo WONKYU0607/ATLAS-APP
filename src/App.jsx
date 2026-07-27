@@ -2625,9 +2625,9 @@ function App() {
         return allow.some(k => hay.includes(k))
       }
       // ── 지역명 자동학습(전 세계 공통): 등록 도시명이 Google 영문주소에 안 나오는 도시 구제 ──
-      // 이름매칭 통과율 50% 미만일 때만 발동 → 정상 도시(서울/도쿄/파리 등은 90~100% 통과)는 블록 자체가 실행 안 됨
+      // 이름매칭 통과율 58% 미만일 때만 발동 → 정상 도시(서울/도쿄 100%, 옥스퍼드 97%, 브리즈번 63%)는 미발동. 광역도시(카파도키아 50%)는 발동
       const basePass = merged.filter(inCity).length
-      if (merged.length >= 8 && basePass < merged.length * 0.5) {
+      if (merged.length >= 8 && basePass < merged.length * 0.58) {
         const countryEn = (city?.countryEn || '').trim()
         const normStr = (s) => s.toLowerCase().replace(/\s+/g, '')
         // 행정 일반명사는 학습 금지 — City/District 등이 학습되면 인접 도시까지 통과해 오염됨
