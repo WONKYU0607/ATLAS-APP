@@ -25,7 +25,7 @@ const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.n
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
-import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, getCityAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto, searchCommonsPhotos, uploadPhotosFromUrls, getExcludedAttractions, addExcludedAttraction, getCompletedCities, addCompletedCity, removeCompletedCity, getCityDoc } from './firebase'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, getCityAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto, searchCommonsPhotos, searchCommonsMore, uploadPhotosFromUrls, getExcludedAttractions, addExcludedAttraction, getCompletedCities, addCompletedCity, removeCompletedCity, getCityDoc } from './firebase'
 
 
 // ── 에러 바운더리 (흰 화면 방지) ─────────────────────────────────────────
@@ -3641,7 +3641,23 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
         const cm = commonsModal
         const country = selectedCity?.countryEn || 'Unknown'
         const city = selectedCity?._koName || selectedCity?.name
-        const toggle = (i) => setCommonsModal(m => { const s=new Set(m.picked); s.has(i)?s.delete(i):s.add(i); return {...m,picked:s} })
+        const PAGE = 4
+        const pageItems = cm.results.slice(cm.page*PAGE, cm.page*PAGE+PAGE)
+        const hasNextPage = (cm.page+1)*PAGE < cm.results.length
+        const toggle = (r) => setCommonsModal(m => { const s=new Set(m.picked); s.has(r.fullUrl)?s.delete(r.fullUrl):s.add(r.fullUrl); return {...m,picked:s} })
+        const loadMore = async () => {
+          setCommonsModal(m=>({...m,more:true}))
+          try {
+            const { items, nextOffset } = await searchCommonsMore(cm.place.name, cm.offset, 10, cm.cityEn)
+            setCommonsModal(m=>{
+              if(!m) return m
+              const seen=new Set(m.results.map(x=>x.fullUrl))
+              const add=items.filter(x=>!seen.has(x.fullUrl))
+              const results=[...m.results,...add]
+              return {...m, results, offset: nextOffset ?? (m.offset+10), page: add.length? Math.ceil(m.results.length/PAGE) : m.page, more:false}
+            })
+          } catch(err){ console.error('[Commons 더보기]',err); setCommonsModal(m=>m?{...m,more:false}:m) }
+        }
         return (
           <div onClick={()=>!cm.uploading&&setCommonsModal(null)} style={{position:'fixed',inset:0,zIndex:3100,background:'rgba(0,0,0,.85)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
             <div onClick={e=>e.stopPropagation()} style={{background:'#fff',borderRadius:14,maxWidth:520,width:'100%',maxHeight:'86vh',overflow:'auto',padding:18}}>
@@ -3649,7 +3665,7 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                 <div style={{fontSize:15,fontWeight:800,color:'#3a3a3a'}}>{cm.place.name}</div>
                 <button onClick={()=>!cm.uploading&&setCommonsModal(null)} style={{background:'none',border:'none',fontSize:20,cursor:'pointer',color:'#999'}}>✕</button>
               </div>
-              <div style={{fontSize:11,color:'#9a8070',marginBottom:12}}>Wikimedia Commons · 저장할 사진을 선택하세요 (여러 장 가능)</div>
+              <div style={{fontSize:11,color:'#9a8070',marginBottom:12}}>Wikimedia Commons · 저장할 사진을 선택하세요 (여러 장 가능){cm.results.length>PAGE?` · ${cm.page+1}/${Math.ceil(cm.results.length/PAGE)}`:''}</div>
               {cm.loading ? (
                 <div style={{padding:'40px 0',textAlign:'center',color:'#9a8070',fontSize:13}}>검색 중…</div>
               ) : !cm.results.length ? (
@@ -3657,10 +3673,10 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
               ) : (
                 <>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-                    {cm.results.map((r,i)=>{
-                      const on=cm.picked.has(i)
+                    {pageItems.map((r,i)=>{
+                      const on=cm.picked.has(r.fullUrl)
                       return (
-                        <div key={i} onClick={()=>!cm.uploading&&toggle(i)} style={{position:'relative',border:'2px solid '+(on?'#0d9488':'#eee'),borderRadius:10,overflow:'hidden',cursor:'pointer'}}>
+                        <div key={r.fullUrl||i} onClick={()=>!cm.uploading&&toggle(r)} style={{position:'relative',border:'2px solid '+(on?'#0d9488':'#eee'),borderRadius:10,overflow:'hidden',cursor:'pointer'}}>
                           <img src={r.thumbUrl} alt="" style={{width:'100%',height:120,objectFit:'cover',display:'block'}}/>
                           {on && <div style={{position:'absolute',top:6,right:6,background:'#0d9488',color:'#fff',width:22,height:22,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800}}>✓</div>}
                           <div style={{padding:'5px 7px',fontSize:9,lineHeight:1.3,color:'#777'}}>
@@ -3671,9 +3687,17 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                       )
                     })}
                   </div>
+                  <div style={{display:'flex',gap:8,marginTop:12}}>
+                    <button disabled={cm.uploading||cm.more}
+                      onClick={async()=>{ if(hasNextPage){ setCommonsModal(m=>({...m,page:m.page+1})) } else { await loadMore() } }}
+                      style={{flex:1,padding:'9px 0',background:'#f0ebe4',border:'1px solid #ddd3c8',borderRadius:8,fontSize:12,fontWeight:700,color:'#7a6a58',cursor:cm.uploading||cm.more?'wait':'pointer'}}>
+                      {cm.more?'불러오는 중…':(hasNextPage?'다른 후보 보기 ▸':'더 불러오기 ⟳')}
+                    </button>
+                    {cm.page>0 && <button disabled={cm.uploading} onClick={()=>setCommonsModal(m=>({...m,page:Math.max(0,m.page-1)}))} style={{padding:'9px 14px',background:'#f5f0ea',border:'1px solid #e0d9d0',borderRadius:8,fontSize:12,fontWeight:700,color:'#9a8070',cursor:'pointer'}}>◂ 이전</button>}
+                  </div>
                   <button disabled={!cm.picked.size||cm.uploading}
                     onClick={async()=>{
-                      const items=[...cm.picked].map(i=>cm.results[i])
+                      const items=cm.results.filter(r=>cm.picked.has(r.fullUrl))
                       setCommonsModal(m=>({...m,uploading:true}))
                       try {
                         const merged=await uploadPhotosFromUrls(country,city,cm.place.place_id,items)
@@ -3681,7 +3705,7 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                         setCommonsModal(null)
                       } catch(err){ console.error('[Commons 저장]',err); alert('저장 실패: '+(err?.message||err)); setCommonsModal(m=>m?{...m,uploading:false}:m) }
                     }}
-                    style={{width:'100%',marginTop:14,padding:'11px 0',background:(!cm.picked.size||cm.uploading)?'#ccc':'#0d9488',color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:800,cursor:(!cm.picked.size||cm.uploading)?'default':'pointer'}}>
+                    style={{width:'100%',marginTop:10,padding:'11px 0',background:(!cm.picked.size||cm.uploading)?'#ccc':'#0d9488',color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:800,cursor:(!cm.picked.size||cm.uploading)?'default':'pointer'}}>
                     {cm.uploading?'저장 중…':`선택한 ${cm.picked.size}장 저장`}
                   </button>
                 </>
@@ -4104,7 +4128,7 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                                 const cache={}
                                 for(let i=0;i<list.length;i++){
                                   const p=list[i]
-                                  try{ const cityEn=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||''; cache[p.place_id]=await searchCommonsPhotos(p.name, 5, cityEn) }
+                                  try{ const cityEn=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||''; cache[p.place_id]=await searchCommonsPhotos(p.name, 15, cityEn) }
                                   catch{ cache[p.place_id]=[] }
                                   setCommonsBatch(b=>b?{...b,done:i+1,cache:{...cache}}:b)
                                 }
@@ -4174,11 +4198,11 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                                     {place.place_id && selectedCity && (
                                       <button onClick={async(e)=>{e.preventDefault();e.stopPropagation()
                                         const cached=commonsBatch?.cache?.[place.place_id]
-                                        if(cached){ setCommonsModal({ place, results:cached, picked:new Set(), loading:false, uploading:false }); return }
-                                        setCommonsModal({ place, results:[], picked:new Set(), loading:true, uploading:false })
+                                        const cE=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||''
+                                        if(cached){ setCommonsModal({ place, results:cached, picked:new Set(), loading:false, uploading:false, page:0, offset:0, cityEn:cE, more:false }); return }
+                                        setCommonsModal({ place, results:[], picked:new Set(), loading:true, uploading:false, page:0, offset:0, cityEn:cE, more:false })
                                         try {
-                                          const cityEn=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||''
-                                          const res=await searchCommonsPhotos(place.name, 5, cityEn)
+                                          const res=await searchCommonsPhotos(place.name, 15, cE)
                                           setCommonsModal(m=>m&&m.place.place_id===place.place_id?{...m,results:res,loading:false}:m)
                                         } catch(err){ console.error('[Commons 검색]',err); setCommonsModal(m=>m?{...m,loading:false}:m) }
                                       }} title="Wikimedia Commons 사진 찾기"
