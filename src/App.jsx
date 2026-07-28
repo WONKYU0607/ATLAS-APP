@@ -25,7 +25,7 @@ const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.n
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
-import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, getCityAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto, getExcludedAttractions, addExcludedAttraction, getCompletedCities, addCompletedCity, removeCompletedCity, getCityDoc } from './firebase'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, getCityAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto, searchCommonsPhotos, uploadPhotosFromUrls, getExcludedAttractions, addExcludedAttraction, getCompletedCities, addCompletedCity, removeCompletedCity, getCityDoc } from './firebase'
 
 
 // ── 에러 바운더리 (흰 화면 방지) ─────────────────────────────────────────
@@ -109,6 +109,7 @@ function App() {
   const [attrPhotos, setAttrPhotos] = useState({})  // { place_id: [{url,path}] } 관광지별 사진 목록
   const [attrPhotoUploading, setAttrPhotoUploading] = useState('')  // 업로드중인 place_id
   const [galleryView, setGalleryView] = useState(null)  // { photos:[{url,path}], idx, placeId, country, city } 큰 갤러리 팝업
+  const [commonsModal, setCommonsModal] = useState(null)  // { place, results:[], picked:Set, loading, uploading } Commons 사진 후보 선택
   const [excludedIds, setExcludedIds] = useState(new Set())  // 추천 제외 place_id
   const [completedCities, setCompletedCities] = useState(new Set())  // 작업 완료 도시(라벨 빨간색)
   const [loadingPlaces, setLoadingPlaces] = useState(false)
@@ -3635,6 +3636,59 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
           </div>
         </div>
       )}
+      {commonsModal && (() => {
+        const cm = commonsModal
+        const country = selectedCity?.countryEn || 'Unknown'
+        const city = selectedCity?._koName || selectedCity?.name
+        const toggle = (i) => setCommonsModal(m => { const s=new Set(m.picked); s.has(i)?s.delete(i):s.add(i); return {...m,picked:s} })
+        return (
+          <div onClick={()=>!cm.uploading&&setCommonsModal(null)} style={{position:'fixed',inset:0,zIndex:3100,background:'rgba(0,0,0,.85)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
+            <div onClick={e=>e.stopPropagation()} style={{background:'#fff',borderRadius:14,maxWidth:520,width:'100%',maxHeight:'86vh',overflow:'auto',padding:18}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+                <div style={{fontSize:15,fontWeight:800,color:'#3a3a3a'}}>{cm.place.name}</div>
+                <button onClick={()=>!cm.uploading&&setCommonsModal(null)} style={{background:'none',border:'none',fontSize:20,cursor:'pointer',color:'#999'}}>✕</button>
+              </div>
+              <div style={{fontSize:11,color:'#9a8070',marginBottom:12}}>Wikimedia Commons · 저장할 사진을 선택하세요 (여러 장 가능)</div>
+              {cm.loading ? (
+                <div style={{padding:'40px 0',textAlign:'center',color:'#9a8070',fontSize:13}}>검색 중…</div>
+              ) : !cm.results.length ? (
+                <div style={{padding:'40px 0',textAlign:'center',color:'#c0392b',fontSize:13}}>Commons에 이 관광지 사진이 없습니다.<br/>직접 업로드(📷)를 이용하세요.</div>
+              ) : (
+                <>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                    {cm.results.map((r,i)=>{
+                      const on=cm.picked.has(i)
+                      return (
+                        <div key={i} onClick={()=>!cm.uploading&&toggle(i)} style={{position:'relative',border:'2px solid '+(on?'#0d9488':'#eee'),borderRadius:10,overflow:'hidden',cursor:'pointer'}}>
+                          <img src={r.thumbUrl} alt="" style={{width:'100%',height:120,objectFit:'cover',display:'block'}}/>
+                          {on && <div style={{position:'absolute',top:6,right:6,background:'#0d9488',color:'#fff',width:22,height:22,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800}}>✓</div>}
+                          <div style={{padding:'5px 7px',fontSize:9,lineHeight:1.3,color:'#777'}}>
+                            <div style={{fontWeight:700,color:'#0d9488'}}>{r.license}</div>
+                            <div style={{whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{r.author||'작가 미상'}</div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <button disabled={!cm.picked.size||cm.uploading}
+                    onClick={async()=>{
+                      const items=[...cm.picked].map(i=>cm.results[i])
+                      setCommonsModal(m=>({...m,uploading:true}))
+                      try {
+                        const merged=await uploadPhotosFromUrls(country,city,cm.place.place_id,items)
+                        setAttrPhotos(pc=>({...pc,[cm.place.place_id]:merged}))
+                        setCommonsModal(null)
+                      } catch(err){ console.error('[Commons 저장]',err); alert('저장 실패: '+(err?.message||err)); setCommonsModal(m=>m?{...m,uploading:false}:m) }
+                    }}
+                    style={{width:'100%',marginTop:14,padding:'11px 0',background:(!cm.picked.size||cm.uploading)?'#ccc':'#0d9488',color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:800,cursor:(!cm.picked.size||cm.uploading)?'default':'pointer'}}>
+                    {cm.uploading?'저장 중…':`선택한 ${cm.picked.size}장 저장`}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )
+      })()}
       {galleryView && (() => {
         const gv = galleryView
         const list = gv.photos || []
@@ -3646,6 +3700,12 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
             onTouchEnd={e=>{ const sx=parseFloat(e.currentTarget.dataset.sx||'0'); const dx=e.changedTouches[0].clientX-sx; if(Math.abs(dx)>50 && list.length>1) go(dx<0?1:-1) }}>
             <div onClick={e=>e.stopPropagation()} style={{position:'relative',maxWidth:'92vw',maxHeight:'80vh',display:'flex',alignItems:'center',justifyContent:'center'}}>
               <img src={cur.url||cur} alt="" style={{maxWidth:'92vw',maxHeight:'80vh',objectFit:'contain',borderRadius:8}}/>
+              {(cur.author||cur.license) && (
+                <a href={cur.sourceUrl||undefined} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()}
+                  style={{position:'absolute',bottom:6,right:6,background:'rgba(0,0,0,.55)',color:'rgba(255,255,255,.9)',fontSize:9,lineHeight:1.2,padding:'2px 6px',borderRadius:5,textDecoration:'none',maxWidth:'70%',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                  © {[cur.author,cur.license].filter(Boolean).join(' · ')}
+                </a>
+              )}
               {list.length>1 && (<>
                 <button onClick={()=>go(-1)} style={{position:'absolute',left:-6,top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,.9)',border:'none',width:44,height:44,borderRadius:'50%',fontSize:22,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 10px rgba(0,0,0,.3)'}}>‹</button>
                 <button onClick={()=>go(1)} style={{position:'absolute',right:-6,top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,.9)',border:'none',width:44,height:44,borderRadius:'50%',fontSize:22,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 10px rgba(0,0,0,.3)'}}>›</button>
@@ -4091,6 +4151,17 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                                             finally { setAttrPhotoUploading('') }
                                           }}/>
                                       </label>
+                                    )}
+                                    {place.place_id && selectedCity && (
+                                      <button onClick={async(e)=>{e.preventDefault();e.stopPropagation()
+                                        setCommonsModal({ place, results:[], picked:new Set(), loading:true, uploading:false })
+                                        try {
+                                          let res=await searchCommonsPhotos(place.name)
+                                          if(!res.length){ const cityEn=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||''; res=await searchCommonsPhotos(`${cityEn} ${place.name}`.trim()) }
+                                          setCommonsModal(m=>m&&m.place.place_id===place.place_id?{...m,results:res,loading:false}:m)
+                                        } catch(err){ console.error('[Commons 검색]',err); setCommonsModal(m=>m?{...m,loading:false}:m) }
+                                      }} title="Wikimedia Commons 사진 찾기"
+                                        style={{background:'#f5f0ea',border:'1px solid #e0d9d0',color:'#9a8070',minWidth:30,height:30,padding:'0 6px',borderRadius:7,cursor:'pointer',fontSize:11,fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>🔍</button>
                                     )}
                                     {place.place_id && (
                                       <button onClick={async(e)=>{e.preventDefault();e.stopPropagation()
