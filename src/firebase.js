@@ -1,6 +1,6 @@
 // ── Firebase 초기화 + Auth/Firestore/Storage 헬퍼 ──
 import { initializeApp } from 'firebase/app'
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile, signInAnonymously } from 'firebase/auth'
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from 'firebase/auth'
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, deleteDoc, query, orderBy, where, limit, startAfter, arrayUnion, arrayRemove, serverTimestamp, increment } from 'firebase/firestore'
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 
@@ -25,12 +25,6 @@ export const signupEmail = (email, pw) => createUserWithEmailAndPassword(auth, e
 export const loginGoogle = () => signInWithPopup(auth, new GoogleAuthProvider())
 export const logout = () => signOut(auth)
 export const onAuth = (cb) => onAuthStateChanged(auth, cb)
-
-// 자동 익명 로그인: 로그인하지 않은 방문자도 인증 토큰을 얻게 함 → Firestore/Storage 규칙을 auth!=null로 잠가도
-// 작업완료·사진업로드·관광지추가 등 앱 쓰기 기능이 그대로 동작. 이미 로그인(이메일/구글)한 사용자는 그 계정 유지.
-onAuthStateChanged(auth, (user) => {
-  if (!user) signInAnonymously(auth).catch((e) => console.error('[auth] 익명 로그인 실패:', e?.code || e))
-})
 
 // ── Firestore 유저 데이터 ──
 const userDocRef = (uid) => doc(db, 'users', uid)
@@ -126,6 +120,73 @@ export const uploadAttractionPhotos = async (country, city, placeId, files, onEa
     i++
     if (onEach) onEach(i, files.length)
   }
+  const merged = [...existing, ...newItems]
+  await setDoc(attrDoc, { photos: merged, updatedAt: Date.now() }, { merge: true })
+  return merged
+}
+
+// ── Wikimedia Commons 사진 검색 (키 불필요, CORS 허용) ──
+// 관광지명으로 Commons 이미지 파일 검색 → 후보 배열 반환. 작가 HTML 정리, 라이센스 메타 포함.
+export const searchCommonsPhotos = async (query, limit = 5) => {
+  const API = 'https://commons.wikimedia.org/w/api.php'
+  const cleanAuthor = (html) => {
+    if (!html) return ''
+    // HTML 태그 제거 + 공백/개행 정리
+    return html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').replace(/&amp;/g, '&').trim().slice(0, 80)
+  }
+  const runSearch = async (q) => {
+    const u = `${API}?origin=*&action=query&format=json&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(q)}&gsrlimit=${limit}&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=400`
+    const data = await fetch(u).then(r => r.json())
+    const pages = data?.query?.pages ? Object.values(data.query.pages) : []
+    // gsroffset이 없으면 검색 순위(index)로 정렬
+    pages.sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
+    return pages.map(p => {
+      const ii = p.imageinfo?.[0] || {}
+      const m = ii.extmetadata || {}
+      return {
+        title: (p.title || '').replace(/^File:/, ''),
+        thumbUrl: ii.thumburl || '',          // 400px 썸네일 (미리보기용)
+        fullUrl: ii.url || '',                // 원본 (저장용)
+        width: ii.width || 0,
+        height: ii.height || 0,
+        license: m.LicenseShortName?.value || 'Unknown',
+        author: cleanAuthor(m.Artist?.value),
+        sourceUrl: (p.title ? `https://commons.wikimedia.org/wiki/${encodeURIComponent(p.title)}` : ''),
+      }
+    }).filter(x => x.thumbUrl && x.fullUrl)
+  }
+  let results = await runSearch(query)
+  return results
+}
+
+// ── Commons(등 외부 URL) 사진을 Storage에 저장 + Firestore photos에 라이센스 포함 기록 ──
+// items: [{ fullUrl, thumbUrl, license, author, sourceUrl, title }]
+export const uploadPhotosFromUrls = async (country, city, placeId, items, onEach) => {
+  const attrDoc = doc(db, 'countries', country, 'cities', city, 'attractions', placeId)
+  const snap = await getDoc(attrDoc)
+  const existing = (snap.exists() && Array.isArray(snap.data().photos)) ? snap.data().photos : []
+  const newItems = []
+  let i = 0
+  for (const it of items) {
+    try {
+      // 원본이 너무 크면 실패할 수 있어 썸네일(400px 이상) 우선순위: 저장은 fullUrl 시도 → 실패 시 thumbUrl
+      let blob
+      try { blob = await fetch(it.fullUrl).then(r => { if (!r.ok) throw new Error(r.status); return r.blob() }) }
+      catch { blob = await fetch(it.thumbUrl).then(r => r.blob()) }
+      const compressed = await compressImage(blob)
+      const ts = Date.now() + '_' + Math.random().toString(36).slice(2, 6)
+      const path = `attractions/${country}/${city}/${placeId}/${ts}.jpg`
+      const sref = storageRef(storage, path)
+      await uploadBytes(sref, compressed, { contentType: 'image/jpeg' })
+      const url = await getDownloadURL(sref)
+      newItems.push({ url, path, license: it.license || '', author: it.author || '', sourceUrl: it.sourceUrl || '', source: 'wikimedia' })
+    } catch (e) {
+      console.error('[Commons 저장 실패]', it.title, e?.message || e)
+    }
+    i++
+    if (onEach) onEach(i, items.length)
+  }
+  if (!newItems.length) throw new Error('저장된 사진이 없습니다 (전부 실패)')
   const merged = [...existing, ...newItems]
   await setDoc(attrDoc, { photos: merged, updatedAt: Date.now() }, { merge: true })
   return merged
