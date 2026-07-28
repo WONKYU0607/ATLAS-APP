@@ -110,6 +110,7 @@ function App() {
   const [attrPhotoUploading, setAttrPhotoUploading] = useState('')  // 업로드중인 place_id
   const [galleryView, setGalleryView] = useState(null)  // { photos:[{url,path}], idx, placeId, country, city } 큰 갤러리 팝업
   const [commonsModal, setCommonsModal] = useState(null)  // { place, results:[], picked:Set, loading, uploading } Commons 사진 후보 선택
+  const [commonsBatch, setCommonsBatch] = useState(null)  // { total, done, cache:{place_id:results} } 도시 일괄 프리로드
   const [excludedIds, setExcludedIds] = useState(new Set())  // 추천 제외 place_id
   const [completedCities, setCompletedCities] = useState(new Set())  // 작업 완료 도시(라벨 빨간색)
   const [loadingPlaces, setLoadingPlaces] = useState(false)
@@ -4095,6 +4096,24 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                           </div>
                         ) : hotspots.length>0 ? (
                           <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                            {selectedCity && (
+                              <button onClick={async()=>{
+                                const list=hotspots.filter(p=>p.place_id)
+                                if(!list.length) return
+                                setCommonsBatch({total:list.length,done:0,cache:{}})
+                                const cache={}
+                                for(let i=0;i<list.length;i++){
+                                  const p=list[i]
+                                  try{ let r=await searchCommonsPhotos(p.name); if(!r.length){const cityEn=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||'';r=await searchCommonsPhotos(`${cityEn} ${p.name}`.trim())} cache[p.place_id]=r }
+                                  catch{ cache[p.place_id]=[] }
+                                  setCommonsBatch(b=>b?{...b,done:i+1,cache:{...cache}}:b)
+                                }
+                              }}
+                                disabled={!!commonsBatch && commonsBatch.done<commonsBatch.total}
+                                style={{padding:'8px 0',background:commonsBatch&&commonsBatch.done<commonsBatch.total?'#ccc':'#f0ebe4',border:'1px solid #ddd3c8',borderRadius:8,fontSize:12,fontWeight:700,color:'#7a6a58',cursor:commonsBatch&&commonsBatch.done<commonsBatch.total?'wait':'pointer'}}>
+                                {commonsBatch ? (commonsBatch.done<commonsBatch.total ? `Commons 후보 조회중 ${commonsBatch.done}/${commonsBatch.total}` : `조회 완료 (${Object.values(commonsBatch.cache).filter(r=>r.length).length}개 관광지에 후보 있음) · 🔍로 개별 선택`) : '🔍 이 도시 Commons 사진 일괄 조회'}
+                              </button>
+                            )}
                             {hotspots.filter(place=>{const ck=`${selectedCity._koName||selectedCity.name}_${lang}`; return !excludedIds.has(place.place_id) && !excludedIds.has(`${place.place_id}||${ck}`)}).map((place,idx)=>(
                               <a key={idx} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id||''}`}
                                 target="_blank" rel="noopener noreferrer"
@@ -4154,6 +4173,8 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                                     )}
                                     {place.place_id && selectedCity && (
                                       <button onClick={async(e)=>{e.preventDefault();e.stopPropagation()
+                                        const cached=commonsBatch?.cache?.[place.place_id]
+                                        if(cached){ setCommonsModal({ place, results:cached, picked:new Set(), loading:false, uploading:false }); return }
                                         setCommonsModal({ place, results:[], picked:new Set(), loading:true, uploading:false })
                                         try {
                                           let res=await searchCommonsPhotos(place.name)
@@ -4161,7 +4182,7 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                                           setCommonsModal(m=>m&&m.place.place_id===place.place_id?{...m,results:res,loading:false}:m)
                                         } catch(err){ console.error('[Commons 검색]',err); setCommonsModal(m=>m?{...m,loading:false}:m) }
                                       }} title="Wikimedia Commons 사진 찾기"
-                                        style={{background:'#f5f0ea',border:'1px solid #e0d9d0',color:'#9a8070',minWidth:30,height:30,padding:'0 6px',borderRadius:7,cursor:'pointer',fontSize:11,fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>🔍</button>
+                                        style={{background:commonsBatch?.cache?.[place.place_id]?.length?'#e0f2ef':'#f5f0ea',border:'1px solid '+(commonsBatch?.cache?.[place.place_id]?.length?'#0d9488':'#e0d9d0'),color:commonsBatch?.cache?.[place.place_id]?.length?'#0d9488':(commonsBatch?.cache&&place.place_id in commonsBatch.cache?'#ccc':'#9a8070'),minWidth:30,height:30,padding:'0 6px',borderRadius:7,cursor:'pointer',fontSize:11,fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>🔍{commonsBatch?.cache?.[place.place_id]?.length?commonsBatch.cache[place.place_id].length:''}</button>
                                     )}
                                     {place.place_id && (
                                       <button onClick={async(e)=>{e.preventDefault();e.stopPropagation()
