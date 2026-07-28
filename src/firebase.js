@@ -223,8 +223,29 @@ export const searchCommonsPhotos = async (query, limit = 5, cityHint = '') => {
   try { [lead, cat] = await Promise.all([tryWikipediaLead(), tryCategory()]) } catch {}
   push(lead)
   if (cat) cat.forEach(push)
-  if (out.length < 2) { try { const txt = await tryText(); txt.forEach(push) } catch {} }
+  if (out.length < 5) { try { const txt = await tryText(); txt.forEach(push) } catch {} }
   return out.slice(0, limit)
+}
+
+// ── Commons 텍스트 검색 추가 배치 (offset) — 모달 "더 불러오기"용. 페이지네이션 재료 소진 시 새 후보 로드 ──
+export const searchCommonsMore = async (query, offset = 0, limit = 10, cityHint = '') => {
+  const API = 'https://commons.wikimedia.org/w/api.php'
+  const cleanAuthor = (html) => html ? html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').replace(/&amp;/g, '&').trim().slice(0, 80) : ''
+  const isBadFile = (t) => { t = (t || '').toLowerCase(); return /\.svg$/.test(t) || /(logo|icon|map|diagram|plan|flag|seal|signature|annotated)/.test(t) || /\b(18|19)\d\d\b/.test(t) }
+  const q = cityHint ? `${query} ${cityHint}` : query
+  const u = `${API}?origin=*&action=query&format=json&list=search&srnamespace=6&srsearch=${encodeURIComponent(q)}&srlimit=${limit}&sroffset=${offset}&srprop=`
+  const sr = await fetch(u).then(r => r.json())
+  const titles = (sr?.query?.search || []).map(s => s.title)
+  const nextOffset = sr?.continue?.sroffset ?? null
+  if (!titles.length) return { items: [], nextOffset: null }
+  // 파일 상세(url/라이센스) 일괄 조회
+  const info = await fetch(`${API}?origin=*&action=query&format=json&titles=${encodeURIComponent(titles.join('|'))}&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=400`).then(r => r.json())
+  const pages = info?.query?.pages ? Object.values(info.query.pages) : []
+  const items = pages.map(p => {
+    const ii = p.imageinfo?.[0] || {}, m = ii.extmetadata || {}
+    return { title: (p.title || '').replace(/^File:/, ''), thumbUrl: ii.thumburl || '', fullUrl: ii.url || '', width: ii.width || 0, height: ii.height || 0, license: m.LicenseShortName?.value || 'Unknown', author: cleanAuthor(m.Artist?.value), sourceUrl: p.title ? `https://commons.wikimedia.org/wiki/${encodeURIComponent(p.title)}` : '' }
+  }).filter(x => x.thumbUrl && x.fullUrl && !isBadFile(x.title))
+  return { items, nextOffset }
 }
 
 // ── Commons(등 외부 URL) 사진을 Storage에 저장 + Firestore photos에 라이센스 포함 기록 ──
