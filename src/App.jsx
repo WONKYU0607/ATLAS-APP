@@ -1991,6 +1991,11 @@ function App() {
       document.querySelectorAll('[data-countryen]').forEach(el => {
         const inner = el.querySelector('.country-label-inner')
         if (!inner) return
+        // 하와이는 COUNTRY_CITIES에 국가 블록이 없는 특수 섬 라벨(도시 '하와이' 1개) → 별도 처리
+        if (el.dataset.countryen === 'Hawaii') {
+          inner.style.color = completedCities.has('하와이') ? '#ef4444' : 'rgba(255,255,255,0.95)'
+          return
+        }
         const cities = COUNTRY_CITIES[el.dataset.countryen] || []
         const allDone = cities.length > 0 && cities.every(c => completedCities.has(c.name))
         if (allDone) inner.style.color = '#ef4444'
