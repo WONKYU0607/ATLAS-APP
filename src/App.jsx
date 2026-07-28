@@ -4104,7 +4104,7 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                                 const cache={}
                                 for(let i=0;i<list.length;i++){
                                   const p=list[i]
-                                  try{ let r=await searchCommonsPhotos(p.name); if(!r.length){const cityEn=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||'';r=await searchCommonsPhotos(`${cityEn} ${p.name}`.trim())} cache[p.place_id]=r }
+                                  try{ const cityEn=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||''; cache[p.place_id]=await searchCommonsPhotos(p.name, 5, cityEn) }
                                   catch{ cache[p.place_id]=[] }
                                   setCommonsBatch(b=>b?{...b,done:i+1,cache:{...cache}}:b)
                                 }
@@ -4177,8 +4177,8 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                                         if(cached){ setCommonsModal({ place, results:cached, picked:new Set(), loading:false, uploading:false }); return }
                                         setCommonsModal({ place, results:[], picked:new Set(), loading:true, uploading:false })
                                         try {
-                                          let res=await searchCommonsPhotos(place.name)
-                                          if(!res.length){ const cityEn=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||''; res=await searchCommonsPhotos(`${cityEn} ${place.name}`.trim()) }
+                                          const cityEn=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||''
+                                          const res=await searchCommonsPhotos(place.name, 5, cityEn)
                                           setCommonsModal(m=>m&&m.place.place_id===place.place_id?{...m,results:res,loading:false}:m)
                                         } catch(err){ console.error('[Commons 검색]',err); setCommonsModal(m=>m?{...m,loading:false}:m) }
                                       }} title="Wikimedia Commons 사진 찾기"
