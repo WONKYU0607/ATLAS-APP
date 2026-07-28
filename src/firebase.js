@@ -131,32 +131,54 @@ export const searchCommonsPhotos = async (query, limit = 5) => {
   const API = 'https://commons.wikimedia.org/w/api.php'
   const cleanAuthor = (html) => {
     if (!html) return ''
-    // HTML 태그 제거 + 공백/개행 정리
     return html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').replace(/&amp;/g, '&').trim().slice(0, 80)
   }
-  const runSearch = async (q) => {
-    const u = `${API}?origin=*&action=query&format=json&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(q)}&gsrlimit=${limit}&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=400`
+  const norm = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '')
+  const mapPage = (p) => {
+    const ii = p.imageinfo?.[0] || {}
+    const m = ii.extmetadata || {}
+    return {
+      title: (p.title || '').replace(/^File:/, ''),
+      thumbUrl: ii.thumburl || '',
+      fullUrl: ii.url || '',
+      width: ii.width || 0,
+      height: ii.height || 0,
+      license: m.LicenseShortName?.value || 'Unknown',
+      author: cleanAuthor(m.Artist?.value),
+      sourceUrl: (p.title ? `https://commons.wikimedia.org/wiki/${encodeURIComponent(p.title)}` : ''),
+    }
+  }
+  // (1) 카테고리 검색 — 사람이 정리한 폴더라 오매칭 거의 없음. 관광지명과 가장 유사한 카테고리 선택
+  const tryCategory = async () => {
+    const cs = await fetch(`${API}?origin=*&action=query&format=json&list=search&srnamespace=14&srsearch=${encodeURIComponent(query)}&srlimit=5`).then(r => r.json())
+    const cats = (cs?.query?.search || []).map(s => s.title)
+    if (!cats.length) return null
+    const nq = norm(query)
+    // 관광지명을 포함하거나(정규화 기준) 가장 짧아 근접한 카테고리 우선
+    const scored = cats.map(c => {
+      const nc = norm(c.replace(/^Category:/, ''))
+      let score = 0
+      if (nc === nq) score = 100
+      else if (nc.includes(nq)) score = 80 - (nc.length - nq.length)   // 포함하되 군더더기 적을수록↑
+      else if (nq.includes(nc)) score = 60
+      return { cat: c, score }
+    }).sort((a, b) => b.score - a.score)
+    if (scored[0].score <= 0) return null   // 유사한 카테고리 없음 → 폴백
+    const cm = await fetch(`${API}?origin=*&action=query&format=json&generator=categorymembers&gcmtitle=${encodeURIComponent(scored[0].cat)}&gcmtype=file&gcmlimit=${limit}&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=400`).then(r => r.json())
+    const pages = cm?.query?.pages ? Object.values(cm.query.pages) : []
+    const items = pages.map(mapPage).filter(x => x.thumbUrl && x.fullUrl)
+    return items.length ? items : null
+  }
+  // (2) 텍스트 검색 폴백 — 카테고리 없는 마이너 관광지용
+  const tryText = async () => {
+    const u = `${API}?origin=*&action=query&format=json&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(query)}&gsrlimit=${limit}&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=400`
     const data = await fetch(u).then(r => r.json())
     const pages = data?.query?.pages ? Object.values(data.query.pages) : []
-    // gsroffset이 없으면 검색 순위(index)로 정렬
     pages.sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
-    return pages.map(p => {
-      const ii = p.imageinfo?.[0] || {}
-      const m = ii.extmetadata || {}
-      return {
-        title: (p.title || '').replace(/^File:/, ''),
-        thumbUrl: ii.thumburl || '',          // 400px 썸네일 (미리보기용)
-        fullUrl: ii.url || '',                // 원본 (저장용)
-        width: ii.width || 0,
-        height: ii.height || 0,
-        license: m.LicenseShortName?.value || 'Unknown',
-        author: cleanAuthor(m.Artist?.value),
-        sourceUrl: (p.title ? `https://commons.wikimedia.org/wiki/${encodeURIComponent(p.title)}` : ''),
-      }
-    }).filter(x => x.thumbUrl && x.fullUrl)
+    return pages.map(mapPage).filter(x => x.thumbUrl && x.fullUrl)
   }
-  let results = await runSearch(query)
-  return results
+  try { const cat = await tryCategory(); if (cat && cat.length) return cat } catch (e) { console.warn('[Commons 카테고리 검색 실패, 텍스트 폴백]', e?.message || e) }
+  return await tryText()
 }
 
 // ── Commons(등 외부 URL) 사진을 Storage에 저장 + Firestore photos에 라이센스 포함 기록 ──
