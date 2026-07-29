@@ -338,7 +338,6 @@ export const COUNTRY_CITIES = {
     { name:"트라브존", lat:41.00, lng:39.72 },
     { name:"이즈미르", lat:38.42, lng:27.14 },
     { name:"앙카라", lat:39.93, lng:32.87 },
-    { name:"페티예", lat:36.62, lng:29.12 },
     { name:"마르마리스", lat:36.85, lng:28.27 },
     { name:"부르사", lat:40.18, lng:29.07 },
     { name:"사프란볼루", lat:41.25, lng:32.69 }
@@ -361,22 +360,15 @@ export const COUNTRY_CITIES = {
   "Egypt": [
     { name:"카이로", lat:30.04, lng:31.24 },
     { name:"룩소르", lat:25.69, lng:32.64 },
-    { name:"아스완", lat:24.09, lng:32.90 },
     { name:"알렉산드리아", lat:31.20, lng:29.92 },
-    { name:"후르가다", lat:27.26, lng:33.81 },
     { name:"샤름엘셰이크", lat:27.91, lng:34.33 },
-    { name:"다합", lat:28.51, lng:34.51 },
     { name:"기자", lat:29.99, lng:31.13 }
   ],
   "Morocco": [
     { name:"마라케시", lat:31.63, lng:-7.99 },
     { name:"페스", lat:34.04, lng:-5.00 },
     { name:"카사블랑카", lat:33.59, lng:-7.62 },
-    { name:"셰프샤우엔", lat:35.17, lng:-5.27 },
-    { name:"에사우이라", lat:31.51, lng:-9.77 },
-    { name:"메르주가", lat:31.10, lng:-4.01 },
-    { name:"라바트", lat:34.02, lng:-6.83 },
-    { name:"탕헤르", lat:35.76, lng:-5.83 }
+    { name:"라바트", lat:34.02, lng:-6.83 }
   ],
   "Vietnam": [
     { name:"하노이", lat:21.03, lng:105.85 },
