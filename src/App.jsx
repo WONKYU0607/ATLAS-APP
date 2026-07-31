@@ -2627,7 +2627,22 @@ function App() {
         }
         if (farGroups.size) console.log(`[동명차단] ${cityKey}: 먼 지역 제거 [${[...farGroups].join(', ')}]`)
       }
+      // ── 유적 자체가 등록 도시인 11곳 한정 예외 ──
+      // 이 도시들은 최상위 결과의 주소가 국가명뿐이라(페트라/보물의전당 → 'Jordan') 주소 문자열 매칭이 전부 실패함.
+      // → 유적 좌표 반경(km) 안이면 주소와 무관하게 통과. 반경은 유적별 실제 크기 기준.
+      const LANDMARK_RADIUS = { '페트라':25, '마추픽추':25, '울루루':60, '블루라군':20, '옐로스톤':90, '치첸이트사':50, '에페소':25, '보로부두르':25, '메테오라':20, '크루거국립공원':150, '세렝게티':120 }
+      const landmarkR = LANDMARK_RADIUS[cityKey] || 0
+      const distKm = (la, ln) => {
+        const R = 6371, toR = Math.PI / 180
+        const dLat = (la - city.lat) * toR, dLng = (ln - city.lng) * toR
+        const a = Math.sin(dLat/2)**2 + Math.cos(city.lat*toR) * Math.cos(la*toR) * Math.sin(dLng/2)**2
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+      }
       const inCity = (p) => {
+        if (landmarkR && city?.lat != null) {
+          const l = p.geometry?.location
+          if (l && l.lat != null && distKm(l.lat, l.lng) <= landmarkR) return true   // 유적 11곳 한정
+        }
         const segs = (p.formatted_address || '').split(',').map(s => s.trim()).filter(Boolean)
         if (segs.length >= 2) {
           const loc = segs[segs.length - 2].replace(/[0-9]+/g, '').trim()
