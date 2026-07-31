@@ -1870,12 +1870,13 @@ function App() {
           el.style.cssText = d.cityGated ? 'pointer-events:none;opacity:0;' : 'pointer-events:none;'  // 게이팅 대상은 숨김으로 시작(깜빡임 방지), 터치 투명 → 회전/줌 안 막힘
           const inner = document.createElement('div')
           inner.className = 'city-label-inner'
+          const _cityDone = completedCities.has(d._koName || d.name)   // 생성 시 완료색 반영 (회전 재등장 시 흰색 잔류 방지)
           inner.style.cssText = `
             transform:translate(-50%,-50%);
             font-family:Pretendard,Inter,system-ui,sans-serif;
             font-size:12px;
             font-weight:700;
-            color:rgba(255,255,255,0.95);
+            color:${_cityDone ? '#ef4444' : 'rgba(255,255,255,0.95)'};
             text-shadow:0 1px 6px rgba(0,0,0,1),0 0 12px rgba(0,0,0,0.9);
             white-space:nowrap;
             user-select:none;
@@ -1896,12 +1897,14 @@ function App() {
             el.style.cssText = 'pointer-events:none;'
             const inner = document.createElement('div')
             inner.className = 'country-label-inner'
+            const _islCities = d.nameEn === 'Hawaii' ? [{name:'하와이'}] : (COUNTRY_CITIES[d.nameEn] || [])
+            const _islDone = _islCities.length > 0 && _islCities.every(c => completedCities.has(c.name))
             inner.style.cssText = `
               transform:translate(-50%,-50%);
               font-family:Pretendard,Inter,sans-serif;
               font-size:${hasCities ? '13px' : '11px'};
               font-weight:${hasCities ? '700' : '600'};
-              color:${hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.78)'};
+              color:${_islDone ? '#ef4444' : (hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.78)')};
               text-shadow:0 1px 4px rgba(0,0,0,1),0 0 10px rgba(0,0,0,0.85);
               white-space:nowrap;
               user-select:none;
@@ -1913,12 +1916,16 @@ function App() {
           } else {
             if (d.nameEn) el.dataset.countryen = d.nameEn   // 완료 색칠용 식별자
             el.style.cssText = 'pointer-events:none;'
+            // 생성 시점에 완료 색을 바로 반영 — 회전으로 뒷면 라벨이 앞으로 올 때 paint()가 이미 끝나 흰색으로 남던 버그 방지
+            const _cities = d.nameEn === 'Hawaii' ? [{name:'하와이'}] : (COUNTRY_CITIES[d.nameEn] || [])
+            const _allDone = _cities.length > 0 && _cities.every(c => completedCities.has(c.name))
+            const _initColor = _allDone ? '#ef4444' : (hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)')
             el.innerHTML = `<div class="country-label-inner" style="
               transform:translate(-50%,-50%);
               font-family:Pretendard,Inter,sans-serif;
               font-size:${hasCities ? '13px' : '10px'};
               font-weight:${hasCities ? '700' : '400'};
-              color:${hasCities ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'};
+              color:${_initColor};
               text-shadow:0 1px 4px rgba(0,0,0,1),0 0 10px rgba(0,0,0,0.8);
               white-space:nowrap;
               user-select:none;
@@ -2829,9 +2836,14 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
       const langParam = lang === 'zh' ? 'zh-CN' : lang
       const cityKey = selectedCity._koName || selectedCity.name
       const cityNameEn = (CITY_I18N[cityKey] && CITY_I18N[cityKey][0]) || getCityName(cityKey)   // 도시명 영어로 (검색 정확도)
-      const r = await fetch(`/api/places?query=${encodeURIComponent(cityNameEn + ' ' + q)}&lat=${selectedCity.lat}&lng=${selectedCity.lng}&language=${langParam}`)
-      const d = await r.json()
-      const sorted = (d.results || [])
+      const base = `&lat=${selectedCity.lat}&lng=${selectedCity.lng}&language=${langParam}`
+      // 합집합 검색: "도시명 관광지명"(도시 내 정확도↑) + "관광지명"(단독) — 페트라처럼 거점도시≠관광지 위치인 경우 후자로 잡힘
+      const queries = [`${cityNameEn} ${q}`.trim(), q]
+      const arrs = await Promise.all(queries.map(query =>
+        fetch(`/api/places?query=${encodeURIComponent(query)}${base}`).then(r => r.json()).then(d => d.results || []).catch(() => [])))
+      const seen = new Set(), merged = []
+      for (const a of arrs) for (const p of a) if (p.place_id && !seen.has(p.place_id)) { seen.add(p.place_id); merged.push(p) }
+      const sorted = merged
         .filter(p => p.user_ratings_total)
         .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))  // 리뷰순
         .slice(0, 8)
