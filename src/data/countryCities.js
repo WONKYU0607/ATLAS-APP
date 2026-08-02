@@ -761,9 +761,7 @@ export const COUNTRY_CITIES = {
   ],
   "Ethiopia": [
     { name:"아디스아바바", lat:9.03, lng:38.74 },
-    { name:"랄리벨라", lat:12.03, lng:39.04 },
-    { name:"악숨", lat:14.13, lng:38.73 },
-    { name:"메켈레", lat:13.49, lng:39.47 }
+    { name:"악숨", lat:14.13, lng:38.73 }
   ],
   "Ghana": [
     { name:"아크라", lat:5.56, lng:-0.20 },
@@ -857,10 +855,7 @@ export const COUNTRY_CITIES = {
   ],
   "Tunisia": [
     { name:"튀니스", lat:36.81, lng:10.17 },
-    { name:"카르타고", lat:36.85, lng:10.32 },
-    { name:"시디부사이드", lat:36.87, lng:10.35 },
-    { name:"수스", lat:35.83, lng:10.64 },
-    { name:"하마메트", lat:36.4, lng:10.62 }
+    { name:"카르타고", lat:36.85, lng:10.32 }
   ],
   "Oman": [
     { name:"무스카트", lat:23.59, lng:58.38 },
@@ -928,8 +923,7 @@ export const COUNTRY_CITIES = {
     { name:"마마누카", lat:-17.77, lng:177.10 },
   ],
   "Madagascar": [
-    { name:"안타나나리보", lat:-18.88, lng:47.51 },
-    { name:"노시베", lat:-13.33, lng:48.27 },
+    { name:"안타나나리보", lat:-18.88, lng:47.51 }
   ],
   "Mauritius": [
     { name:"포트루이스", lat:-20.16, lng:57.50 },
@@ -940,8 +934,7 @@ export const COUNTRY_CITIES = {
   "Ukraine": [
     { name:"키이우", lat:50.45, lng:30.52 },
     { name:"르비우", lat:49.84, lng:24.03 },
-    { name:"오데사", lat:46.48, lng:30.74 },
-    { name:"체르니우치", lat:48.29, lng:25.94 }
+    { name:"오데사", lat:46.48, lng:30.74 }
   ],
   "Pakistan": [
     { name:"라호르", lat:31.52, lng:74.30 },
