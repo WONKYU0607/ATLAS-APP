@@ -1184,14 +1184,16 @@ function App() {
       if (el.dataset.micro === '1') el.style.pointerEvents = sh ? 'auto' : 'none'
     }
   }
+  // 동명 도시 구분용 꼬리표 제거: 내부 키는 "빅토리아(세이셸)"로 유일하게 두고, 화면에는 "빅토리아"로만 표시
+  const stripCityTag = (s) => (s || '').replace(/\([^()]*\)$/, '')
   const getCityName = (koName) => {
-    if (lang === 'ko') return koName
+    if (lang === 'ko') return stripCityTag(koName)
     const tr = CITY_I18N[koName]
-    if (!tr) return koName
-    if (lang === 'en') return tr[0] || koName
-    if (lang === 'ja') return tr[1] || koName
-    if (lang === 'zh') return tr[2] || koName
-    return koName
+    if (!tr) return stripCityTag(koName)
+    if (lang === 'en') return tr[0] || stripCityTag(koName)
+    if (lang === 'ja') return tr[1] || stripCityTag(koName)
+    if (lang === 'zh') return tr[2] || stripCityTag(koName)
+    return stripCityTag(koName)
   }
   // 코스 아이템 동적 번역 (저장 시점 언어와 현재 언어가 다를 때)
   const getCourseItemName = (item) => {
@@ -2699,6 +2701,9 @@ function App() {
           setHotspotDiag({ city: cityKey, state: 'learned', learned, basePass, total: merged.length })
         } else {
           console.warn(`[매칭실패·학습불가] ${cityKey}: ${basePass}/${merged.length} | 등록명: ${cityNames.join('/')} | 주소샘플: ${merged[0]?.formatted_address || '-'}`)
+          // 원인 진단용: 어떤 지역명으로 뭉쳤는지 + 실제 주소 10개 (이 두 줄만 보면 별칭에 뭘 넣을지 결정 가능)
+          console.warn(`[주소분포] ${cityKey}:`, Object.entries(regionGroups).sort((x,y)=>y[1].length-x[1].length).map(([k,v])=>`${k}(${v.length})`).join(' | ') || '(그룹없음)')
+          console.warn(`[주소샘플] ${cityKey}:\n` + merged.slice(0,10).map(p=>`  ${p.name} → ${p.formatted_address || p.vicinity || '-'}`).join('\n'))
           setHotspotDiag({ city: cityKey, state: 'failed', learned: [], basePass, total: merged.length, sample: merged[0]?.formatted_address || '' })
         }
       } else {
