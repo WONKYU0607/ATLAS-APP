@@ -14,6 +14,8 @@ const ISLAND_LABEL_DATA = ((ISLAND_POLYGONS && ISLAND_POLYGONS.features) || [])
   }))
   .filter(d => d.nameEn && typeof d.lat === 'number' && typeof d.lng === 'number')
 const ISLAND_NAMES = new Set(ISLAND_LABEL_DATA.map(d => d.nameEn))
+// 1회성: 도시를 채우지 않고 라벨만 완료 처리할 36개국 수도 — 일괄 처리 후 이 상수와 버튼을 삭제할 것
+const BULK_DONE = ["아스마라","하르툼","은자메나","니아메","바마코","누악쇼트","평양","프라이아","반줄","비사우","코나크리","프리타운","몬로비아","아비장","와가두구","로메","코토누","말라보","야운데","상투메","방기","주바","지부티시","모가디슈","리브르빌","브라자빌","킨샤사","키갈리","기테가","루안다","루사카","릴롱궤","음바바네","마세루","모로니","빅토리아(세이셸)"]
 // 데이터 없고 클릭 불가한 폴리곤(속령·분쟁지·남극 등) — 라벨 숨김
 const HIDDEN_COUNTRY_LABELS = new Set(['W. Sahara', 'Falkland Is.', 'Greenland', 'Fr. S. Antarctic Lands', 'Puerto Rico', 'New Caledonia', 'Antarctica', 'N. Cyprus', 'Somaliland'])
 // 면적 작은 나라(섬나라 제외 하위 30%, 단 이스라엘·벨기에·대만·네덜란드·덴마크·스위스·크로아티아·아일랜드 제외)
@@ -25,7 +27,7 @@ const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.n
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
-import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, getCityAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto, searchCommonsPhotos, searchCommonsMore, uploadPhotosFromUrls, getExcludedAttractions, addExcludedAttraction, getCompletedCities, addCompletedCity, removeCompletedCity, getCityDoc } from './firebase'
+import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, getCityAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto, searchCommonsPhotos, uploadPhotosFromUrls, getExcludedAttractions, addExcludedAttraction, getCompletedCities, addCompletedCity, addCompletedCities, removeCompletedCity, getCityDoc } from './firebase'
 
 
 // ── 에러 바운더리 (흰 화면 방지) ─────────────────────────────────────────
@@ -3673,23 +3675,9 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
         const cm = commonsModal
         const country = selectedCity?.countryEn || 'Unknown'
         const city = selectedCity?._koName || selectedCity?.name
-        const PAGE = 4
-        const pageItems = cm.results.slice(cm.page*PAGE, cm.page*PAGE+PAGE)
-        const hasNextPage = (cm.page+1)*PAGE < cm.results.length
+        const PAGE = 5
+        const pageItems = cm.results.slice(0, PAGE)
         const toggle = (r) => setCommonsModal(m => { const s=new Set(m.picked); s.has(r.fullUrl)?s.delete(r.fullUrl):s.add(r.fullUrl); return {...m,picked:s} })
-        const loadMore = async () => {
-          setCommonsModal(m=>({...m,more:true}))
-          try {
-            const { items, nextOffset } = await searchCommonsMore(cm.place.name, cm.offset, 10, cm.cityEn)
-            setCommonsModal(m=>{
-              if(!m) return m
-              const seen=new Set(m.results.map(x=>x.fullUrl))
-              const add=items.filter(x=>!seen.has(x.fullUrl))
-              const results=[...m.results,...add]
-              return {...m, results, offset: nextOffset ?? (m.offset+10), page: add.length? Math.ceil(m.results.length/PAGE) : m.page, more:false}
-            })
-          } catch(err){ console.error('[Commons 더보기]',err); setCommonsModal(m=>m?{...m,more:false}:m) }
-        }
         return (
           <div onClick={()=>!cm.uploading&&setCommonsModal(null)} style={{position:'fixed',inset:0,zIndex:3100,background:'rgba(0,0,0,.85)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
             <div onClick={e=>e.stopPropagation()} style={{background:'#fff',borderRadius:14,maxWidth:520,width:'100%',maxHeight:'86vh',overflow:'auto',padding:18}}>
@@ -3697,11 +3685,11 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                 <div style={{fontSize:15,fontWeight:800,color:'#3a3a3a'}}>{cm.place.name}</div>
                 <button onClick={()=>!cm.uploading&&setCommonsModal(null)} style={{background:'none',border:'none',fontSize:20,cursor:'pointer',color:'#999'}}>✕</button>
               </div>
-              <div style={{fontSize:11,color:'#9a8070',marginBottom:12}}>Wikimedia Commons · 저장할 사진을 선택하세요 (여러 장 가능){cm.results.length>PAGE?` · ${cm.page+1}/${Math.ceil(cm.results.length/PAGE)}`:''}</div>
+              <div style={{fontSize:11,color:'#9a8070',marginBottom:12}}>위키피디아 문서 사진 · 저장할 사진을 선택하세요 (여러 장 가능)</div>
               {cm.loading ? (
                 <div style={{padding:'40px 0',textAlign:'center',color:'#9a8070',fontSize:13}}>검색 중…</div>
               ) : !cm.results.length ? (
-                <div style={{padding:'40px 0',textAlign:'center',color:'#c0392b',fontSize:13}}>Commons에 이 관광지 사진이 없습니다.<br/>직접 업로드(📷)를 이용하세요.</div>
+                <div style={{padding:'40px 0',textAlign:'center',color:'#c0392b',fontSize:13}}>위키피디아 문서에 사진이 없습니다.<br/>직접 업로드(📷)를 이용하세요.</div>
               ) : (
                 <>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
@@ -3718,14 +3706,6 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                         </div>
                       )
                     })}
-                  </div>
-                  <div style={{display:'flex',gap:8,marginTop:12}}>
-                    <button disabled={cm.uploading||cm.more}
-                      onClick={async()=>{ if(hasNextPage){ setCommonsModal(m=>({...m,page:m.page+1})) } else { await loadMore() } }}
-                      style={{flex:1,padding:'9px 0',background:'#f0ebe4',border:'1px solid #ddd3c8',borderRadius:8,fontSize:12,fontWeight:700,color:'#7a6a58',cursor:cm.uploading||cm.more?'wait':'pointer'}}>
-                      {cm.more?'불러오는 중…':(hasNextPage?'다른 후보 보기 ▸':'더 불러오기 ⟳')}
-                    </button>
-                    {cm.page>0 && <button disabled={cm.uploading} onClick={()=>setCommonsModal(m=>({...m,page:Math.max(0,m.page-1)}))} style={{padding:'9px 14px',background:'#f5f0ea',border:'1px solid #e0d9d0',borderRadius:8,fontSize:12,fontWeight:700,color:'#9a8070',cursor:'pointer'}}>◂ 이전</button>}
                   </div>
                   <button disabled={!cm.picked.size||cm.uploading}
                     onClick={async()=>{
@@ -3908,6 +3888,15 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
               if(!ok){ alert('완료 상태 저장 실패'); setCompletedCities(prev=>{ const s=new Set(prev); done ? s.add(cityName) : s.delete(cityName); return s }) }
             }} style={{width:'100%',marginTop:6,padding:'8px 0',background:completedCities.has(cityName)?'#ef4444':'#334155',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>
               {completedCities.has(cityName) ? `완료 취소 (${cityName}) (${completedCities.size})` : `작업 완료 (${cityName}) (${completedCities.size})`}
+            </button>
+            {/* 1회성 일괄 완료 처리 버튼 — 실행 후 이 블록과 BULK_DONE 상수를 삭제할 것 */}
+            <button onClick={async()=>{
+              if (!window.confirm(`${BULK_DONE.length}개 도시를 일괄 완료 처리합니다. 진행할까요?`)) return
+              const ok = await addCompletedCities(BULK_DONE)
+              if (ok) { setCompletedCities(new Set([...completedCities, ...BULK_DONE])); alert('완료') }
+              else alert('실패 — 콘솔 확인')
+            }} style={{width:'100%',marginTop:6,padding:'8px 0',background:'#7c3aed',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>
+              일괄 완료 처리 ({BULK_DONE.length}개)
             </button>
             <button onClick={async()=>{
               const cnt = Object.keys(ex).length
@@ -4160,14 +4149,14 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                                 const cache={}
                                 for(let i=0;i<list.length;i++){
                                   const p=list[i]
-                                  try{ const cityEn=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||''; cache[p.place_id]=await searchCommonsPhotos(p.name, 15, cityEn) }
+                                  try{ const cityEn=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||''; cache[p.place_id]=await searchCommonsPhotos(p.name, 5, cityEn) }
                                   catch{ cache[p.place_id]=[] }
                                   setCommonsBatch(b=>b?{...b,done:i+1,cache:{...cache}}:b)
                                 }
                               }}
                                 disabled={!!commonsBatch && commonsBatch.done<commonsBatch.total}
                                 style={{padding:'8px 0',background:commonsBatch&&commonsBatch.done<commonsBatch.total?'#ccc':'#f0ebe4',border:'1px solid #ddd3c8',borderRadius:8,fontSize:12,fontWeight:700,color:'#7a6a58',cursor:commonsBatch&&commonsBatch.done<commonsBatch.total?'wait':'pointer'}}>
-                                {commonsBatch ? (commonsBatch.done<commonsBatch.total ? `Commons 후보 조회중 ${commonsBatch.done}/${commonsBatch.total}` : `조회 완료 (${Object.values(commonsBatch.cache).filter(r=>r.length).length}개 관광지에 후보 있음) · 🔍로 개별 선택`) : '🔍 이 도시 Commons 사진 일괄 조회'}
+                                {commonsBatch ? (commonsBatch.done<commonsBatch.total ? `위키 사진 조회중 ${commonsBatch.done}/${commonsBatch.total}` : `조회 완료 (${Object.values(commonsBatch.cache).filter(r=>r.length).length}개 관광지에 후보 있음) · 🔍로 개별 선택`) : '🔍 이 도시 위키 사진 일괄 조회'}
                               </button>
                             )}
                             {hotspots.filter(place=>{const ck=`${selectedCity._koName||selectedCity.name}_${lang}`; return !excludedIds.has(place.place_id) && !excludedIds.has(`${place.place_id}||${ck}`)}).map((place,idx)=>(
@@ -4231,10 +4220,10 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                                       <button onClick={async(e)=>{e.preventDefault();e.stopPropagation()
                                         const cached=commonsBatch?.cache?.[place.place_id]
                                         const cE=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||''
-                                        if(cached){ setCommonsModal({ place, results:cached, picked:new Set(), loading:false, uploading:false, page:0, offset:0, cityEn:cE, more:false }); return }
-                                        setCommonsModal({ place, results:[], picked:new Set(), loading:true, uploading:false, page:0, offset:0, cityEn:cE, more:false })
+                                        if(cached){ setCommonsModal({ place, results:cached, picked:new Set(), loading:false, uploading:false, page:0, cityEn:cE }); return }
+                                        setCommonsModal({ place, results:[], picked:new Set(), loading:true, uploading:false, page:0, cityEn:cE })
                                         try {
-                                          const res=await searchCommonsPhotos(place.name, 15, cE)
+                                          const res=await searchCommonsPhotos(place.name, 5, cE)
                                           setCommonsModal(m=>m&&m.place.place_id===place.place_id?{...m,results:res,loading:false}:m)
                                         } catch(err){ console.error('[Commons 검색]',err); setCommonsModal(m=>m?{...m,loading:false}:m) }
                                       }} title="Wikimedia Commons 사진 찾기"
