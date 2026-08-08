@@ -112,7 +112,8 @@ function App() {
   const [attrPhotoUploading, setAttrPhotoUploading] = useState('')  // 업로드중인 place_id
   const [galleryView, setGalleryView] = useState(null)  // { photos:[{url,path}], idx, placeId, country, city } 큰 갤러리 팝업
   const [commonsModal, setCommonsModal] = useState(null)  // { place, results:[], picked:Set, loading, uploading } Commons 사진 후보 선택
-  const [commonsBatch, setCommonsBatch] = useState(null)  // { total, done, cache:{place_id:results} } 도시 일괄 프리로드
+  const [commonsBatch, setCommonsBatch] = useState(null)
+  const [copiedSpotId, setCopiedSpotId] = useState('')  // 검색어 복사 버튼 피드백용 place_id  // { total, done, cache:{place_id:results} } 도시 일괄 프리로드
   const [excludedIds, setExcludedIds] = useState(new Set())  // 추천 제외 place_id
   const [completedCities, setCompletedCities] = useState(new Set())  // 작업 완료 도시(라벨 빨간색)
   const [loadingPlaces, setLoadingPlaces] = useState(false)
@@ -4228,6 +4229,16 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                                         } catch(err){ console.error('[Commons 검색]',err); setCommonsModal(m=>m?{...m,loading:false}:m) }
                                       }} title="Wikimedia Commons 사진 찾기"
                                         style={{background:commonsBatch?.cache?.[place.place_id]?.length?'#e0f2ef':'#f5f0ea',border:'1px solid '+(commonsBatch?.cache?.[place.place_id]?.length?'#0d9488':'#e0d9d0'),color:commonsBatch?.cache?.[place.place_id]?.length?'#0d9488':(commonsBatch?.cache&&place.place_id in commonsBatch.cache?'#ccc':'#9a8070'),minWidth:30,height:30,padding:'0 6px',borderRadius:7,cursor:'pointer',fontSize:11,fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>🔍{commonsBatch?.cache?.[place.place_id]?.length?commonsBatch.cache[place.place_id].length:''}</button>
+                                    )}
+                                    {place.place_id && selectedCity && (
+                                      <button onClick={async(e)=>{e.preventDefault();e.stopPropagation()
+                                        const cE=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||getCityName(selectedCity._koName||selectedCity.name)
+                                        const q=`${cE} ${place.name}`.trim()
+                                        try { await navigator.clipboard.writeText(q) }
+                                        catch { const ta=document.createElement('textarea'); ta.value=q; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy')}catch{}; document.body.removeChild(ta) }
+                                        setCopiedSpotId(place.place_id); setTimeout(()=>setCopiedSpotId(id=>id===place.place_id?'':id),1200)
+                                      }} title="검색어 복사 (도시명 + 관광지명)"
+                                        style={{background:copiedSpotId===place.place_id?'#e0f2ef':'#f5f0ea',border:'1px solid '+(copiedSpotId===place.place_id?'#0d9488':'#e0d9d0'),color:copiedSpotId===place.place_id?'#0d9488':'#9a8070',width:30,height:30,borderRadius:7,cursor:'pointer',fontSize:12,fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>{copiedSpotId===place.place_id?'✓':'⧉'}</button>
                                     )}
                                     {place.place_id && (
                                       <button onClick={async(e)=>{e.preventDefault();e.stopPropagation()
