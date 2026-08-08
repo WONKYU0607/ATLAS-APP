@@ -125,15 +125,26 @@ export const uploadAttractionPhotos = async (country, city, placeId, files, onEa
   return merged
 }
 
-// ── Wikimedia Commons 사진 검색 (키 불필요, CORS 허용) ──
-// 관광지명으로 Commons 이미지 파일 검색 → 후보 배열 반환. 작가 HTML 정리, 라이센스 메타 포함.
+// ── 위키피디아 문서 이미지 검색 (키 불필요, CORS 허용) ──
+// 관광지명 → 위키피디아 문서를 찾고, 그 문서에 실린 이미지만 반환. Commons 검색은 쓰지 않음
+// (Commons 텍스트/카테고리 검색은 이름만 비슷하면 엉뚱한 사진이 섞여 신뢰도가 낮았음).
+// 라이센스는 CC/PD라 Storage 영구 저장 가능. 문서가 없으면 빈 배열 → 수동으로 채운다.
 export const searchCommonsPhotos = async (query, limit = 5, cityHint = '') => {
-  const API = 'https://commons.wikimedia.org/w/api.php'
+  const WIKI = 'https://en.wikipedia.org/w/api.php'
+  const COMMONS = 'https://commons.wikimedia.org/w/api.php'
   const cleanAuthor = (html) => {
     if (!html) return ''
     return html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').replace(/&amp;/g, '&').trim().slice(0, 80)
   }
   const norm = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '')
+  // 쓰레기 파일 필터: 로고(svg), 지도/다이어그램, 아이콘, 깃발/문장, 오래된 흑백(연도 파일명)
+  const isBadFile = (title) => {
+    const t = (title || '').toLowerCase()
+    if (/\.(svg|ogg|ogv|webm|oga|mid|pdf)$/.test(t)) return true
+    if (/(logo|icon|map|diagram|plan|coat.of.arms|flag|seal|signature|annotated|blank|placeholder|question.book|ambox|commons-logo|wiki(pedia|media)|edit-|increase|decrease|red.pog|location.dot)/.test(t)) return true
+    if (/\b(18|19)\d\d\b/.test(t)) return true
+    return false
+  }
   const mapPage = (p) => {
     const ii = p.imageinfo?.[0] || {}
     const m = ii.extmetadata || {}
@@ -149,103 +160,53 @@ export const searchCommonsPhotos = async (query, limit = 5, cityHint = '') => {
     }
   }
   const nq = norm(query)
-  // 쓰레기 파일 필터: 로고(svg), 지도/다이어그램, 아이콘, 오래된 흑백(연도 파일명)
-  const isBadFile = (title) => {
-    const t = (title || '').toLowerCase()
-    if (/\.svg$/.test(t)) return true                                   // 로고/벡터
-    if (/(logo|icon|map|diagram|plan|coat.of.arms|flag|seal|signature|panorama.*annotated|annotated)/.test(t)) return true
-    if (/\b(18|19)\d\d\b/.test(t)) return true                          // 1800~1999 = 오래된 흑백 가능성↑
-    return false
-  }
-  // 쓰레기 카테고리 필터: 삭제요청/사진작가별/기록물/관련 등 (관광지 자체 아님)
-  const isBadCat = (title) => {
-    const t = norm(title.replace(/^Category:/, ''))
-    const raw = title.toLowerCase()
-    return /deletion|deleted|requests?|photographsby|recordsof|related|views?from|maps?of|logos?|history|historical|old|blackandwhite/.test(raw.replace(/\s+/g, '')) || t.length < 2
-  }
-  // (1) 위키피디아 대표이미지 — 사람이 그 관광지 문서에 채택 = 정확도 최상. 있으면 맨 앞에.
-  const tryWikipediaLead = async () => {
-    try {
-      const titleTry = cityHint ? [query, `${query} (${cityHint})`] : [query]
-      for (const t of titleTry) {
-        const u = `https://en.wikipedia.org/w/api.php?origin=*&action=query&format=json&titles=${encodeURIComponent(t)}&prop=pageimages&piprop=original&redirects=1`
-        const d = await fetch(u).then(r => r.json())
-        const p = d?.query?.pages ? Object.values(d.query.pages)[0] : null
-        const src = p?.original?.source
-        if (src && !isBadFile(src) && !/\.svg$/i.test(src)) {
-          // Commons 파일명 추출 → 메타(라이센스/작가) 조회
-          const fname = decodeURIComponent(src.split('/').pop()).replace(/^\d+px-/, '')
-          const mi = await fetch(`${API}?origin=*&action=query&format=json&titles=${encodeURIComponent('File:' + fname)}&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=400`).then(r => r.json())
-          const mp = mi?.query?.pages ? Object.values(mi.query.pages)[0] : null
-          if (mp?.imageinfo) { const it = mapPage(mp); if (it.thumbUrl && it.fullUrl) return it }
-        }
-      }
-    } catch {}
-    return null
-  }
-  // (2) Commons 카테고리 — 도시명 붙여 검색, 쓰레기 카테고리 제외, 정확 일치 우선
-  const tryCategory = async () => {
+  // (1) 문서 제목 해결 — 정확 제목만 조회하면 구글 장소명과 표기가 다를 때 전부 실패하므로 검색으로 찾는다
+  const resolveTitle = async () => {
     const q = cityHint ? `${query} ${cityHint}` : query
-    const cs = await fetch(`${API}?origin=*&action=query&format=json&list=search&srnamespace=14&srsearch=${encodeURIComponent(q)}&srlimit=8`).then(r => r.json())
-    let cats = (cs?.query?.search || []).map(s => s.title).filter(c => !isBadCat(c))
-    if (!cats.length) return null
-    const scored = cats.map(c => {
-      const nc = norm(c.replace(/^Category:/, ''))
+    const u = `${WIKI}?origin=*&action=query&format=json&list=search&srsearch=${encodeURIComponent(q)}&srlimit=5&srnamespace=0`
+    const d = await fetch(u).then(r => r.json())
+    const hits = (d?.query?.search || []).map(s => s.title)
+    if (!hits.length) return null
+    const scored = hits.map(t => {
+      const nt = norm(t.replace(/\s*\([^)]*\)$/, ''))
       let score = 0
-      if (nc === nq) score = 100                                        // 정확 일치 최우선
-      else if (nc.startsWith(nq)) score = 90 - (nc.length - nq.length)  // 관광지명으로 시작 (Sky Tower (Auckland))
-      else if (nc.includes(nq)) score = 70 - (nc.length - nq.length)
-      else if (nq.includes(nc)) score = 40
-      return { cat: c, score }
+      if (nt === nq) score = 100                                      // 정확 일치
+      else if (nt.startsWith(nq)) score = 90 - (nt.length - nq.length) // 관광지명으로 시작
+      else if (nt.includes(nq)) score = 70 - (nt.length - nq.length)
+      else if (nq.includes(nt) && nt.length >= 4) score = 40
+      return { title: t, score }
     }).sort((a, b) => b.score - a.score)
-    if (scored[0].score <= 0) return null
-    const cm = await fetch(`${API}?origin=*&action=query&format=json&generator=categorymembers&gcmtitle=${encodeURIComponent(scored[0].cat)}&gcmtype=file&gcmlimit=20&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=400`).then(r => r.json())
-    const pages = cm?.query?.pages ? Object.values(cm.query.pages) : []
-    const items = pages.map(mapPage).filter(x => x.thumbUrl && x.fullUrl && !isBadFile(x.title))
-    // 고해상도 우선 정렬 (큰 사진 = 대체로 대표적·최신)
-    items.sort((a, b) => (b.width * b.height) - (a.width * a.height))
-    return items.length ? items.slice(0, limit) : null
+    return scored[0].score > 0 ? scored[0].title : null   // 억지 매칭 방지: 점수 0이면 포기
   }
-  // (3) 텍스트 검색 폴백 — 카테고리 없는 마이너 관광지용
-  const tryText = async () => {
-    const q = cityHint ? `${query} ${cityHint}` : query
-    const u = `${API}?origin=*&action=query&format=json&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(q)}&gsrlimit=${limit + 3}&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=400`
-    const data = await fetch(u).then(r => r.json())
-    const pages = data?.query?.pages ? Object.values(data.query.pages) : []
-    pages.sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
-    return pages.map(mapPage).filter(x => x.thumbUrl && x.fullUrl && !isBadFile(x.title)).slice(0, limit)
+  // (2) 그 문서에 실린 이미지 전부 — 사람이 문서에 넣은 사진이라 오매칭이 원천적으로 없음
+  const fetchArticleImages = async (title) => {
+    const u = `${WIKI}?origin=*&action=query&format=json&titles=${encodeURIComponent(title)}&redirects=1`
+      + `&generator=images&gimlimit=40&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=400`
+    const d = await fetch(u).then(r => r.json())
+    let pages = d?.query?.pages ? Object.values(d.query.pages) : []
+    pages.sort((a, b) => (a.index ?? 0) - (b.index ?? 0))   // 본문 등장 순서 = 중요도 순
+    let items = pages.map(mapPage).filter(x => x.thumbUrl && x.fullUrl && !isBadFile(x.title))
+    // 아이콘류 제거: 짧은 변이 200px 미만이면 사진이 아님
+    items = items.filter(x => Math.min(x.width || 0, x.height || 0) >= 200)
+    // 위키 API가 라이센스 메타를 안 실어줄 때가 있어 en.wikipedia 쪽 결과는 Commons에서 보강
+    const need = items.filter(x => x.license === 'Unknown').slice(0, limit)
+    if (need.length) {
+      try {
+        const t = need.map(x => 'File:' + x.title).join('|')
+        const md = await fetch(`${COMMONS}?origin=*&action=query&format=json&titles=${encodeURIComponent(t)}&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=400`).then(r => r.json())
+        const mp = md?.query?.pages ? Object.values(md.query.pages) : []
+        const byTitle = {}
+        mp.forEach(p => { const it = mapPage(p); if (it.title) byTitle[it.title] = it })
+        items = items.map(x => (x.license === 'Unknown' && byTitle[x.title]) ? { ...x, license: byTitle[x.title].license, author: byTitle[x.title].author } : x)
+      } catch {}
+    }
+    return items.slice(0, limit)
   }
-  // 조합: 위키 대표이미지(있으면 맨 앞) + 카테고리 결과. 중복 제거. 둘 다 비면 텍스트 폴백.
-  const out = []
-  const seen = new Set()
-  const push = (it) => { if (it && !seen.has(it.fullUrl)) { seen.add(it.fullUrl); out.push(it) } }
-  let lead = null, cat = null
-  try { [lead, cat] = await Promise.all([tryWikipediaLead(), tryCategory()]) } catch {}
-  push(lead)
-  if (cat) cat.forEach(push)
-  if (out.length < 5) { try { const txt = await tryText(); txt.forEach(push) } catch {} }
-  return out.slice(0, limit)
-}
-
-// ── Commons 텍스트 검색 추가 배치 (offset) — 모달 "더 불러오기"용. 페이지네이션 재료 소진 시 새 후보 로드 ──
-export const searchCommonsMore = async (query, offset = 0, limit = 10, cityHint = '') => {
-  const API = 'https://commons.wikimedia.org/w/api.php'
-  const cleanAuthor = (html) => html ? html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').replace(/&amp;/g, '&').trim().slice(0, 80) : ''
-  const isBadFile = (t) => { t = (t || '').toLowerCase(); return /\.svg$/.test(t) || /(logo|icon|map|diagram|plan|flag|seal|signature|annotated)/.test(t) || /\b(18|19)\d\d\b/.test(t) }
-  const q = cityHint ? `${query} ${cityHint}` : query
-  const u = `${API}?origin=*&action=query&format=json&list=search&srnamespace=6&srsearch=${encodeURIComponent(q)}&srlimit=${limit}&sroffset=${offset}&srprop=`
-  const sr = await fetch(u).then(r => r.json())
-  const titles = (sr?.query?.search || []).map(s => s.title)
-  const nextOffset = sr?.continue?.sroffset ?? null
-  if (!titles.length) return { items: [], nextOffset: null }
-  // 파일 상세(url/라이센스) 일괄 조회
-  const info = await fetch(`${API}?origin=*&action=query&format=json&titles=${encodeURIComponent(titles.join('|'))}&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=400`).then(r => r.json())
-  const pages = info?.query?.pages ? Object.values(info.query.pages) : []
-  const items = pages.map(p => {
-    const ii = p.imageinfo?.[0] || {}, m = ii.extmetadata || {}
-    return { title: (p.title || '').replace(/^File:/, ''), thumbUrl: ii.thumburl || '', fullUrl: ii.url || '', width: ii.width || 0, height: ii.height || 0, license: m.LicenseShortName?.value || 'Unknown', author: cleanAuthor(m.Artist?.value), sourceUrl: p.title ? `https://commons.wikimedia.org/wiki/${encodeURIComponent(p.title)}` : '' }
-  }).filter(x => x.thumbUrl && x.fullUrl && !isBadFile(x.title))
-  return { items, nextOffset }
+  try {
+    const title = await resolveTitle()
+    if (!title) return []
+    return await fetchArticleImages(title)
+  } catch (e) { console.error('[searchCommonsPhotos] 실패:', query, e?.message || e); return [] }
 }
 
 // ── Commons(등 외부 URL) 사진을 Storage에 저장 + Firestore photos에 라이센스 포함 기록 ──
@@ -354,6 +315,14 @@ export const addCompletedCity = async (cityName) => {
     await setDoc(completedRef(), { cities: arrayUnion(cityName), updatedAt: Date.now() }, { merge: true })
     return true
   } catch (e) { console.error('[addCompletedCity] 실패:', e?.message || e); return false }
+}
+
+// 일괄 추가 (1회성 작업용) — arrayUnion은 가변인자라 한 번의 쓰기로 처리됨
+export const addCompletedCities = async (cityNames) => {
+  try {
+    await setDoc(completedRef(), { cities: arrayUnion(...cityNames), updatedAt: Date.now() }, { merge: true })
+    return true
+  } catch (e) { console.error('[addCompletedCities] 실패:', e?.message || e); return false }
 }
 
 export const removeCompletedCity = async (cityName) => {
