@@ -757,9 +757,7 @@ export const COUNTRY_CITIES = {
   ],
   "Ethiopia": [
     { name:"아디스아바바", lat:9.03, lng:38.74 },
-    { name:"랄리벨라", lat:12.03, lng:39.04 },
-    { name:"악숨", lat:14.13, lng:38.73 },
-    { name:"메켈레", lat:13.49, lng:39.47 }
+    { name:"랄리벨라", lat:12.03, lng:39.04 }
   ],
   "Ghana": [
     { name:"아크라", lat:5.56, lng:-0.20 }
@@ -851,10 +849,7 @@ export const COUNTRY_CITIES = {
   ],
   "Tunisia": [
     { name:"튀니스", lat:36.81, lng:10.17 },
-    { name:"카르타고", lat:36.85, lng:10.32 },
-    { name:"시디부사이드", lat:36.87, lng:10.35 },
-    { name:"수스", lat:35.83, lng:10.64 },
-    { name:"하마메트", lat:36.4, lng:10.62 }
+    { name:"수스", lat:35.83, lng:10.64 }
   ],
   "Oman": [
     { name:"무스카트", lat:23.59, lng:58.38 },
