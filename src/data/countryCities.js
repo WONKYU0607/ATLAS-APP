@@ -917,8 +917,7 @@ export const COUNTRY_CITIES = {
     { name:"마마누카", lat:-17.77, lng:177.10 },
   ],
   "Madagascar": [
-    { name:"안타나나리보", lat:-18.88, lng:47.51 },
-    { name:"노시베", lat:-13.33, lng:48.27 },
+    { name:"안타나나리보", lat:-18.88, lng:47.51 }
   ],
   "Mauritius": [
     { name:"포트루이스", lat:-20.16, lng:57.50 },
