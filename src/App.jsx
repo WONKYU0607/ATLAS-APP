@@ -113,7 +113,9 @@ function App() {
   const [galleryView, setGalleryView] = useState(null)  // { photos:[{url,path}], idx, placeId, country, city } 큰 갤러리 팝업
   const [commonsModal, setCommonsModal] = useState(null)  // { place, results:[], picked:Set, loading, uploading } Commons 사진 후보 선택
   const [commonsBatch, setCommonsBatch] = useState(null)
-  const [copiedSpotId, setCopiedSpotId] = useState('')  // 검색어 복사 버튼 피드백용 place_id  // { total, done, cache:{place_id:results} } 도시 일괄 프리로드
+  const [copiedSpotId, setCopiedSpotId] = useState('')  // 검색어 복사 버튼 피드백용 place_id
+  // 누락 후보: inCity에서 탈락한 것들. 기존 필터는 그대로 두고, 버려지던 목록을 보여주기만 한다
+  const [missed, setMissed] = useState({ key:'', list:null, loading:false, open:false })  // { total, done, cache:{place_id:results} } 도시 일괄 프리로드
   const [excludedIds, setExcludedIds] = useState(new Set())  // 추천 제외 place_id
   const [completedCities, setCompletedCities] = useState(new Set())  // 작업 완료 도시(라벨 빨간색)
   const [loadingPlaces, setLoadingPlaces] = useState(false)
@@ -2725,13 +2727,23 @@ function App() {
       const limit = isBigCity ? 25 : 15
       console.log(`[대도시판별] ${cityKey}: 리뷰1만+ ${famousCount}개 → ${isBigCity?'대도시':'소도시'}(${limit}개), 총후보 ${ranked.length}개`)
       const list = ranked.slice(0, limit)
+      // ── 누락 후보: inCity에서 탈락한 것들(필터는 그대로, 버리지 않고 따로 담아 사용자가 판단) ──
+      // 이미 받아온 데이터를 재활용하므로 추가 API 호출 없음. 리뷰순 상위 30개만 캐시에 저장.
+      const passIds = new Set(ranked.map(p => p.place_id))
+      const missedList = merged
+        .filter(p => p.user_ratings_total && !passIds.has(p.place_id))
+        .filter(p => p.rating === undefined || p.rating >= 3.5)
+        .filter(p => (p.types || []).includes('tourist_attraction') || !(p.types || []).some(t => JUNK_TYPES.includes(t)))
+        .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+        .slice(0, 30)
+      if (missedList.length) console.log(`[누락후보] ${cityKey}: ${missedList.length}개 —`, missedList.slice(0,5).map(p=>`${p.name}(${p.user_ratings_total})`).join(', '))
       // 캐시 전체 삭제 후 API 재수집 시나리오: Firestore에 남은 수동분(manualHotspots)을 다시 병합해 유실 방지
       let manual = []
       try { const cc2 = await getCityCache(fsKey); manual = (cc2 && cc2.manualHotspots) || [] } catch {}
       const finalList = mergeManual(list, manual)
       try { localStorage.setItem(lsKey, JSON.stringify(finalList)) } catch {}   // 로컬 캐시 저장 (Firestore 실패 대비)
       if (manual.length) { try { localStorage.setItem(`manualHotspots_${fsKey}`, JSON.stringify(manual)) } catch {} }   // 수동분 로컬 복원
-      try { setCityCache(fsKey, { hotspots: list, manualHotspots: manual }) } catch {}   // hotspots는 자동수집분만 저장(manual은 병합 시 중복방지), manualHotspots 유지
+      try { setCityCache(fsKey, { hotspots: list, missedCandidates: missedList, manualHotspots: manual }) } catch {}   // hotspots는 자동수집분만 저장(manual은 병합 시 중복방지), manualHotspots 유지
       return finalList
     } catch { return [] }
   }
@@ -4159,6 +4171,47 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                                 style={{padding:'8px 0',background:commonsBatch&&commonsBatch.done<commonsBatch.total?'#ccc':'#f0ebe4',border:'1px solid #ddd3c8',borderRadius:8,fontSize:12,fontWeight:700,color:'#7a6a58',cursor:commonsBatch&&commonsBatch.done<commonsBatch.total?'wait':'pointer'}}>
                                 {commonsBatch ? (commonsBatch.done<commonsBatch.total ? `위키 사진 조회중 ${commonsBatch.done}/${commonsBatch.total}` : `조회 완료 (${Object.values(commonsBatch.cache).filter(r=>r.length).length}개 관광지에 후보 있음) · 🔍로 개별 선택`) : '🔍 이 도시 위키 사진 일괄 조회'}
                               </button>
+                            )}
+                            {/* ── 누락 후보: 주소 매칭에서 탈락한 것들을 리뷰순으로 보여주고 직접 판단해 추가 ── */}
+                            <button onClick={async()=>{
+                              const ck=`${selectedCity._koName||selectedCity.name}_${lang}`
+                              if(missed.open && missed.key===ck){ setMissed(m=>({...m,open:false})); return }
+                              if(missed.key===ck && missed.list){ setMissed(m=>({...m,open:true})); return }
+                              setMissed({key:ck,list:null,loading:true,open:true})
+                              try{ const cc=await getCityCache(ck); setMissed({key:ck,list:(cc&&cc.missedCandidates)||[],loading:false,open:true}) }
+                              catch{ setMissed({key:ck,list:[],loading:false,open:true}) }
+                            }}
+                              style={{padding:'8px 0',background:'#f0ebe4',border:'1px solid #ddd3c8',borderRadius:8,fontSize:12,fontWeight:600,color:'#9a8070',cursor:'pointer',width:'100%'}}>
+                              {missed.loading?'누락 후보 불러오는 중…':(missed.key===`${selectedCity._koName||selectedCity.name}_${lang}`&&missed.list)?`누락 후보 (${missed.list.length}) ${missed.open?'▲':'▼'}`:'누락 후보 보기'}
+                            </button>
+                            {missed.open && missed.key===`${selectedCity._koName||selectedCity.name}_${lang}` && missed.list && (
+                              missed.list.length===0 ? (
+                                <div style={{padding:'10px 12px',fontSize:11.5,color:'#9a8070',background:'#faf7f3',borderRadius:8,lineHeight:1.6}}>
+                                  누락 후보가 없다. 이 도시를 아직 재수집하지 않았으면 후보가 저장되지 않은 상태다.
+                                </div>
+                              ) : (
+                              <div style={{display:'flex',flexDirection:'column',gap:6,maxHeight:340,overflowY:'auto',padding:'2px 0'}}>
+                                {missed.list.filter(p=>!hotspots.some(h=>h.place_id===p.place_id) && !excludedIds.has(`${p.place_id}||${selectedCity._koName||selectedCity.name}_${lang}`)).map(p=>(
+                                  <div key={p.place_id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',background:'#faf7f3',border:'1px solid #ece5dc',borderRadius:8}}>
+                                    <div style={{flex:1,minWidth:0}}>
+                                      <div style={{fontSize:12.5,fontWeight:600,color:'#1a1714',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{p.name}</div>
+                                      <div style={{fontSize:10.5,color:'#9a8070',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>★ {p.rating||'-'} ({(p.user_ratings_total||0).toLocaleString()}) · {p.formatted_address||p.vicinity||''}</div>
+                                    </div>
+                                    <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}&query_place_id=${p.place_id||''}`} target="_blank" rel="noreferrer"
+                                      style={{textDecoration:'none',background:'#f5f0ea',border:'1px solid #e0d9d0',color:'#9a8070',width:28,height:28,borderRadius:7,fontSize:12,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}} title="지도에서 확인">↗</a>
+                                    <button onClick={()=>addSpotToHotspots(p)} title="내 리스트에 추가"
+                                      style={{background:'#e0f2ef',border:'1px solid #0d9488',color:'#0d9488',width:28,height:28,borderRadius:7,cursor:'pointer',fontSize:14,fontWeight:700,flexShrink:0}}>＋</button>
+                                    <button onClick={async()=>{
+                                      const exKey=`${p.place_id}||${selectedCity._koName||selectedCity.name}_${lang}`
+                                      setExcludedIds(prev=>new Set(prev).add(exKey))
+                                      const ok=await addExcludedAttraction(exKey)
+                                      if(!ok){ alert('제외 저장 실패'); setExcludedIds(prev=>{const st=new Set(prev); st.delete(exKey); return st}) }
+                                    }} title="다음부터 이 후보 숨기기"
+                                      style={{background:'#fef2f2',border:'1px solid #fecaca',color:'#dc2626',width:28,height:28,borderRadius:7,cursor:'pointer',fontSize:13,flexShrink:0}}>✕</button>
+                                  </div>
+                                ))}
+                              </div>
+                              )
                             )}
                             {hotspots.filter(place=>{const ck=`${selectedCity._koName||selectedCity.name}_${lang}`; return !excludedIds.has(place.place_id) && !excludedIds.has(`${place.place_id}||${ck}`)}).map((place,idx)=>(
                               <a key={idx} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id||''}`}
