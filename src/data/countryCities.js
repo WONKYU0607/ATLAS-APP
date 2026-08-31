@@ -513,11 +513,8 @@ export const COUNTRY_CITIES = {
   "Hungary": [
     { name:"부다페스트", lat:47.50, lng:19.04 },
     { name:"에게르", lat:47.90, lng:20.38 },
-    { name:"페치", lat:46.07, lng:18.23 },
     { name:"센텐드레", lat:47.67, lng:19.08 },
-    { name:"데브레첸", lat:47.53, lng:21.63 },
-    { name:"쇼프론", lat:47.68, lng:16.58 },
-    { name:"티하니", lat:46.91, lng:17.89 }
+    { name:"데브레첸", lat:47.53, lng:21.63 }
   ],
   "Slovenia": [
     { name:"류블랴나", lat:46.05, lng:14.51 },
@@ -819,7 +816,6 @@ export const COUNTRY_CITIES = {
     { name:"부쿠레슈티", lat:44.43, lng:26.10 },
     { name:"브라쇼프", lat:45.66, lng:25.61 },
     { name:"시비우", lat:45.80, lng:24.15 },
-    { name:"시기쇼아라", lat:46.22, lng:24.79 },
     { name:"클루지나포카", lat:46.77, lng:23.6 },
     { name:"콘스탄차", lat:44.18, lng:28.65 }
   ],
@@ -941,7 +937,6 @@ export const COUNTRY_CITIES = {
   "Slovakia": [
     { name:"브라티슬라바", lat:48.16, lng:17.12 },
     { name:"코시체", lat:48.72, lng:21.26 },
-    { name:"바르데요프", lat:49.29, lng:21.28 },
     { name:"질리나", lat:49.22, lng:18.74 }
   ],
   "Bulgaria": [
