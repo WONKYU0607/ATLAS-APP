@@ -351,9 +351,7 @@ export const COUNTRY_CITIES = {
     { name:"코르푸", lat:39.62, lng:19.92 },
     { name:"메테오라", lat:39.7217, lng:21.6306 },
     { name:"테살로니키", lat:40.64, lng:22.94 },
-    { name:"나프플리오", lat:37.57, lng:22.8 },
     { name:"자킨토스", lat:37.79, lng:20.9 },
-    { name:"파로스", lat:37.08, lng:25.15 },
     { name:"낙소스", lat:37.1, lng:25.38 },
     { name:"델포이", lat:38.48, lng:22.5 }
   ],
@@ -476,11 +474,8 @@ export const COUNTRY_CITIES = {
     { name:"쿠트나호라", lat:49.95, lng:15.27 },
     { name:"올로모우츠", lat:49.59, lng:17.25 },
     { name:"피세크", lat:49.31, lng:14.15 },
-    { name:"텔치", lat:49.18, lng:15.45 },
     { name:"리베레츠", lat:50.77, lng:15.06 },
-    { name:"플젠", lat:49.74, lng:13.38 },
-    { name:"체스케부데요비체", lat:48.97, lng:14.47 },
-    { name:"미쿨로프", lat:48.81, lng:16.64 }
+    { name:"플젠", lat:49.74, lng:13.38 }
   ],
   "Austria": [
     { name:"빈", lat:48.22, lng:16.35 },
@@ -494,7 +489,6 @@ export const COUNTRY_CITIES = {
     { name:"브레겐츠", lat:47.5, lng:9.75 },
     { name:"장크트볼프강", lat:47.74, lng:13.45 },
     { name:"멜크", lat:48.23, lng:15.33 },
-    { name:"빌라흐", lat:46.61, lng:13.85 }
   ],
   "Switzerland": [
     { name:"취리히", lat:47.38, lng:8.54 },
@@ -826,7 +820,6 @@ export const COUNTRY_CITIES = {
     { name:"코토르", lat:42.45, lng:18.77 },
     { name:"부드바", lat:42.29, lng:18.84 },
     { name:"스베티스테판", lat:42.25, lng:18.89 },
-    { name:"자블랴크", lat:43.15, lng:19.12 }
   ],
   "Mongolia": [
     { name:"울란바토르", lat:47.92, lng:106.91 },
