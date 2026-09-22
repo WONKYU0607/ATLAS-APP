@@ -115,7 +115,7 @@ function App() {
   const [commonsBatch, setCommonsBatch] = useState(null)
   const [galleryPick, setGalleryPick] = useState({})     // 펼쳐보기에서 고른 사진 {place_id: [fullUrl]}
   const [gallerySaving, setGallerySaving] = useState('')  // '' | 'ing' | 진행문구
-  const [galleryOpen, setGalleryOpen] = useState(true)
+  const [galleryOpen, setGalleryOpen] = useState(false)
   const [copiedSpotId, setCopiedSpotId] = useState('')  // 검색어 복사 버튼 피드백용 place_id
   // 누락 후보: inCity에서 탈락한 것들. 기존 필터는 그대로 두고, 버려지던 목록을 보여주기만 한다
   const [missed, setMissed] = useState({ key:'', list:null, loading:false, open:false })  // { total, done, cache:{place_id:results} } 도시 일괄 프리로드
@@ -3964,6 +3964,86 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
         <>
 
 
+        {/* ── 사진 후보 패널: 도시 패널 왼쪽 빈 공간에 넓게 펼친다 (관광지 목록은 그대로 두고 옆에서 고름) ── */}
+        {galleryOpen && commonsBatch && commonsBatch.done>=commonsBatch.total && (()=>{
+          const country=selectedCity.countryEn||'Unknown'
+          const cityK=selectedCity._koName||selectedCity.name
+          const rows=hotspots.filter(p=>p.place_id && (commonsBatch.cache[p.place_id]||[]).length)
+          const nPick=Object.values(galleryPick).reduce((n,a)=>n+(a?.length||0),0)
+          if(!rows.length) return null
+          const toggle=(pid,url)=>setGalleryPick(g=>{
+            const cur=g[pid]||[]
+            return {...g,[pid]: cur.includes(url)?cur.filter(u=>u!==url):[...cur,url]}
+          })
+          const saveAll=async()=>{
+            const jobs=Object.entries(galleryPick).filter(([,a])=>a&&a.length)
+            if(!jobs.length) return
+            setGallerySaving('ing')
+            let done=0
+            for(const [pid,urls] of jobs){
+              const pool=commonsBatch.cache[pid]||[]
+              const items=pool.filter(r=>urls.includes(r.fullUrl))
+              try{
+                const merged=await uploadPhotosFromUrls(country,cityK,pid,items)
+                setAttrPhotos(pc=>({...pc,[pid]:merged}))
+              }catch(err){ console.error('[사진 후보 패널 저장]',pid,err) }
+              done++; setGallerySaving(`저장 중 ${done}/${jobs.length}`)
+            }
+            setGalleryPick({}); setGallerySaving('')
+          }
+          const TH=isMobile?150:210, THH=isMobile?112:158
+          return (
+            <div style={{position:'absolute',top:0,bottom:0,right:isMobile?0:420,width:isMobile?'100%':'min(860px, calc(100vw - 440px))',zIndex:1001,background:'#fbf9f6',borderRight:isMobile?'none':'1px solid #e4dcd2',boxShadow:'-2px 0 14px rgba(0,0,0,.08)',display:'flex',flexDirection:'column'}}>
+              <div style={{flexShrink:0,display:'flex',alignItems:'center',gap:10,padding:'12px 16px',borderBottom:'1px solid #e4dcd2',background:'#f0ebe4'}}>
+                <div style={{fontSize:14,fontWeight:800,color:'#3a3a3a',flex:1}}>사진 후보 · 관광지 {rows.length}곳</div>
+                <button onClick={()=>setGalleryOpen(false)} style={{background:'none',border:'none',fontSize:20,cursor:'pointer',color:'#9a8070',padding:'0 4px'}}>✕</button>
+              </div>
+              <div style={{flex:1,overflowY:'auto',padding:'12px 16px'}}>
+                {rows.map(p=>{
+                  const cands=commonsBatch.cache[p.place_id]||[]
+                  const picked=galleryPick[p.place_id]||[]
+                  const saved=(attrPhotos[p.place_id]||[]).length
+                  return (
+                    <div key={p.place_id} style={{marginBottom:22}}>
+                      <div style={{fontSize:14,fontWeight:800,color:'#1a1714',marginBottom:8,display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                        <span>{p.name}</span>
+                        {saved>0 && <span style={{fontSize:11,fontWeight:700,color:'#0d9488',background:'#e0f2ef',padding:'2px 7px',borderRadius:5}}>저장됨 {saved}</span>}
+                        {picked.length>0 && <span style={{fontSize:11,fontWeight:700,color:'#b45309',background:'#fef3c7',padding:'2px 7px',borderRadius:5}}>선택 {picked.length}</span>}
+                      </div>
+                      <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
+                        {cands.map(r=>{
+                          const on=picked.includes(r.fullUrl)
+                          const info=[r.distM!=null?(r.distM<1000?`${r.distM}m`:`${(r.distM/1000).toFixed(1)}km`):null, r.category||null].filter(Boolean).join(' · ')
+                          const cap=r.caption||r.desc||r.title
+                          return (
+                            <div key={r.fullUrl} style={{width:TH}}>
+                              <div onClick={()=>toggle(p.place_id,r.fullUrl)}
+                                style={{position:'relative',width:TH,height:THH,borderRadius:9,overflow:'hidden',cursor:'pointer',border:on?'4px solid #0d9488':'1px solid #e4dcd2',background:'#eee',boxSizing:'border-box'}}>
+                                <img src={r.thumbUrl} alt="" loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
+                                {r.src==='geo' && <span style={{position:'absolute',left:4,top:4,background:'rgba(13,148,136,.92)',color:'#fff',fontSize:9.5,fontWeight:700,padding:'2px 5px',borderRadius:4}}>좌표</span>}
+                                {on && <span style={{position:'absolute',right:4,top:4,background:'#0d9488',color:'#fff',fontSize:12,width:20,height:20,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center'}}>✓</span>}
+                                <a href={r.sourceUrl||undefined} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()}
+                                  style={{position:'absolute',right:4,bottom:4,background:'rgba(0,0,0,.5)',color:'#fff',fontSize:10,padding:'2px 5px',borderRadius:4,textDecoration:'none'}}>원본</a>
+                              </div>
+                              <div style={{fontSize:10.5,lineHeight:1.4,marginTop:3}}>
+                                {info && <div style={{color:'#0d9488',fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{info}</div>}
+                                <div title={cap} style={{color:'#7a6a58',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{cap}</div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              <button disabled={!nPick||!!gallerySaving} onClick={saveAll}
+                style={{flexShrink:0,padding:'13px 0',background:(!nPick||gallerySaving)?'#ccc':'#0d9488',color:'#fff',border:'none',fontSize:14,fontWeight:800,cursor:(!nPick||gallerySaving)?'default':'pointer'}}>
+                {gallerySaving?(gallerySaving==='ing'?'저장 중…':gallerySaving):`선택한 ${nPick}장 한 번에 저장`}
+              </button>
+            </div>
+          )
+        })()}
         <div ref={cityPanelRef} className="panel"
           onTouchStart={onPeekDismissStart} onTouchMove={onPeekDismissMove} onTouchEnd={onPeekDismissEnd}
           style={{position:'absolute',top:0,right:0,bottom:0,width:isMobile?'100%':420,zIndex:(isMobile&&showCoursePlanner)?1200:1000,pointerEvents:(isMobile&&showCoursePlanner&&!cityPeek)?'none':'auto',transform:(isMobile&&showCoursePlanner)?(cityPeek?'translateX(0)':'translateX(100%)'):'translateX(0)',transition:'transform .32s cubic-bezier(.16,1,.3,1)',background:'white',borderLeft:isMobile?'none':'1.5px solid #e2e8f0',overflowY:'auto',WebkitOverflowScrolling:'touch',touchAction:'pan-y',boxShadow:isMobile?'none':'-12px 0 40px rgba(0,0,0,.15)'}}>
@@ -4165,7 +4245,8 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                                 const cache={}
                                 for(let i=0;i<list.length;i++){
                                   const p=list[i]
-                                  try{ const cityEn=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||''; const co=p.geometry?.location?{lat:p.geometry.location.lat,lng:p.geometry.location.lng}:null; cache[p.place_id]=await searchCommonsPhotos(p.name, 12, cityEn, co) }
+                                  try{ const cityEn=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||''; const co=p.geometry?.location?{lat:p.geometry.location.lat,lng:p.geometry.location.lng}:null; const sibs=list.filter(x=>x.place_id!==p.place_id&&x.geometry?.location).map(x=>({name:x.name,lat:x.geometry.location.lat,lng:x.geometry.location.lng}))
+                                  cache[p.place_id]=await searchCommonsPhotos(p.name, 12, cityEn, co, selectedCity.countryEn||'', sibs) }
                                   catch{ cache[p.place_id]=[] }
                                   setCommonsBatch(b=>b?{...b,done:i+1,cache:{...cache}}:b)
                                 }
@@ -4175,86 +4256,12 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                                 {commonsBatch ? (commonsBatch.done<commonsBatch.total ? `위키 사진 조회중 ${commonsBatch.done}/${commonsBatch.total}` : `조회 완료 (${Object.values(commonsBatch.cache).filter(r=>r.length).length}개 관광지에 후보 있음) · 🔍로 개별 선택`) : '🔍 이 도시 위키 사진 일괄 조회'}
                               </button>
                             )}
-                            {/* ── 사진 후보 펼쳐보기: 일괄 조회 결과를 관광지별로 한 화면에 깔아놓고 고른다 ── */}
-                            {commonsBatch && commonsBatch.done>=commonsBatch.total && selectedCity && (()=>{
-                              const country=selectedCity.countryEn||'Unknown'
-                              const cityK=selectedCity._koName||selectedCity.name
-                              const rows=hotspots.filter(p=>p.place_id && (commonsBatch.cache[p.place_id]||[]).length)
-                              const nPick=Object.values(galleryPick).reduce((n,a)=>n+(a?.length||0),0)
-                              if(!rows.length) return null
-                              const toggle=(pid,url)=>setGalleryPick(g=>{
-                                const cur=g[pid]||[]
-                                return {...g,[pid]: cur.includes(url)?cur.filter(u=>u!==url):[...cur,url]}
-                              })
-                              const saveAll=async()=>{
-                                const jobs=Object.entries(galleryPick).filter(([,a])=>a&&a.length)
-                                if(!jobs.length) return
-                                setGallerySaving('ing')
-                                let done=0
-                                for(const [pid,urls] of jobs){
-                                  const pool=commonsBatch.cache[pid]||[]
-                                  const items=pool.filter(r=>urls.includes(r.fullUrl))
-                                  try{
-                                    const merged=await uploadPhotosFromUrls(country,cityK,pid,items)
-                                    setAttrPhotos(pc=>({...pc,[pid]:merged}))
-                                  }catch(err){ console.error('[펼쳐보기 저장]',pid,err) }
-                                  done++; setGallerySaving(`저장 중 ${done}/${jobs.length}`)
-                                }
-                                setGalleryPick({}); setGallerySaving('')
-                              }
-                              return (
-                                <div style={{border:'1px solid #ddd3c8',borderRadius:10,background:'#fbf9f6',overflow:'hidden'}}>
-                                  <button onClick={()=>setGalleryOpen(o=>!o)}
-                                    style={{width:'100%',padding:'9px 12px',background:'#f0ebe4',border:'none',borderBottom:galleryOpen?'1px solid #e4dcd2':'none',fontSize:12,fontWeight:700,color:'#7a6a58',cursor:'pointer',textAlign:'left'}}>
-                                    사진 후보 펼쳐보기 · 관광지 {rows.length}곳 {galleryOpen?'▲':'▼'}
-                                  </button>
-                                  {galleryOpen && (
-                                    <div style={{maxHeight:520,overflowY:'auto',padding:'8px 8px 4px'}}>
-                                      {rows.map(p=>{
-                                        const cands=commonsBatch.cache[p.place_id]||[]
-                                        const picked=galleryPick[p.place_id]||[]
-                                        return (
-                                          <div key={p.place_id} style={{marginBottom:12}}>
-                                            <div style={{fontSize:12,fontWeight:700,color:'#1a1714',marginBottom:5,display:'flex',alignItems:'center',gap:6}}>
-                                              <span style={{whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{p.name}</span>
-                                              {(attrPhotos[p.place_id]||[]).length>0 && <span style={{fontSize:10,color:'#0d9488',flexShrink:0}}>저장됨 {(attrPhotos[p.place_id]||[]).length}</span>}
-                                              {picked.length>0 && <span style={{fontSize:10,color:'#b45309',flexShrink:0}}>선택 {picked.length}</span>}
-                                            </div>
-                                            <div style={{display:'flex',gap:6,overflowX:'auto',paddingBottom:4}}>
-                                              {cands.map(r=>{
-                                                const on=picked.includes(r.fullUrl)
-                                                const info=[r.distM!=null?(r.distM<1000?`${r.distM}m`:`${(r.distM/1000).toFixed(1)}km`):null, r.category||null].filter(Boolean).join(' · ')
-                                                const cap=r.caption||r.desc||''
-                                                return (
-                                                  <div key={r.fullUrl} style={{width:108,flexShrink:0}}>
-                                                    <div onClick={()=>toggle(p.place_id,r.fullUrl)}
-                                                      style={{position:'relative',width:108,height:80,borderRadius:7,overflow:'hidden',cursor:'pointer',border:on?'3px solid #0d9488':'1px solid #e4dcd2',background:'#eee'}}>
-                                                      <img src={r.thumbUrl} alt="" loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
-                                                      {r.src==='geo' && <span style={{position:'absolute',left:3,top:3,background:'rgba(13,148,136,.9)',color:'#fff',fontSize:8.5,padding:'1px 4px',borderRadius:4}}>좌표</span>}
-                                                      {on && <span style={{position:'absolute',right:3,top:3,background:'#0d9488',color:'#fff',fontSize:10,width:16,height:16,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center'}}>✓</span>}
-                                                    </div>
-                                                    <div title={`${r.title}\n${info}\n${cap}`} style={{fontSize:9,lineHeight:1.35,color:'#9a8070',marginTop:2,maxHeight:26,overflow:'hidden'}}>
-                                                      {info && <div style={{color:'#0d9488',fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{info}</div>}
-                                                      <div style={{whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{cap||r.title}</div>
-                                                    </div>
-                                                  </div>
-                                                )
-                                              })}
-                                            </div>
-                                          </div>
-                                        )
-                                      })}
-                                    </div>
-                                  )}
-                                  {galleryOpen && (
-                                    <button disabled={!nPick||!!gallerySaving} onClick={saveAll}
-                                      style={{width:'100%',padding:'11px 0',background:(!nPick||gallerySaving)?'#ccc':'#0d9488',color:'#fff',border:'none',fontSize:13,fontWeight:800,cursor:(!nPick||gallerySaving)?'default':'pointer'}}>
-                                      {gallerySaving?(gallerySaving==='ing'?'저장 중…':gallerySaving):`선택한 ${nPick}장 한 번에 저장`}
-                                    </button>
-                                  )}
-                                </div>
-                              )
-                            })()}
+                            {commonsBatch && commonsBatch.done>=commonsBatch.total && selectedCity && hotspots.some(p=>p.place_id&&(commonsBatch.cache[p.place_id]||[]).length) && (
+                              <button onClick={()=>setGalleryOpen(o=>!o)}
+                                style={{padding:'9px 0',background:galleryOpen?'#0d9488':'#f0ebe4',color:galleryOpen?'#fff':'#7a6a58',border:'1px solid '+(galleryOpen?'#0d9488':'#ddd3c8'),borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                                {galleryOpen?'사진 후보 패널 닫기':'사진 후보 패널 열기'}
+                              </button>
+                            )}
                             {/* ── 누락 후보: 주소 매칭에서 탈락한 것들을 리뷰순으로 보여주고 직접 판단해 추가 ── */}
                             <button onClick={async()=>{
                               const ck=`${selectedCity._koName||selectedCity.name}_${lang}`
@@ -4361,7 +4368,8 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                                         setCommonsModal({ place, results:[], picked:new Set(), loading:true, uploading:false, page:0, cityEn:cE })
                                         try {
                                           const co=place.geometry?.location?{lat:place.geometry.location.lat,lng:place.geometry.location.lng}:null
-                                        const res=await searchCommonsPhotos(place.name, 12, cE, co)
+                                        const sibs=hotspots.filter(x=>x.place_id&&x.place_id!==place.place_id&&x.geometry?.location).map(x=>({name:x.name,lat:x.geometry.location.lat,lng:x.geometry.location.lng}))
+                                        const res=await searchCommonsPhotos(place.name, 12, cE, co, selectedCity?.countryEn||'', sibs)
                                           setCommonsModal(m=>m&&m.place.place_id===place.place_id?{...m,results:res,loading:false}:m)
                                         } catch(err){ console.error('[Commons 검색]',err); setCommonsModal(m=>m?{...m,loading:false}:m) }
                                       }} title="Wikimedia Commons 사진 찾기"

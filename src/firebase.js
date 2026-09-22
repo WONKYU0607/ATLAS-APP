@@ -131,9 +131,27 @@ export const uploadAttractionPhotos = async (country, city, placeId, files, onEa
 //  (B) Commons 좌표 검색(geosearch) — 그 자리에서 찍힌 사진. 문서가 없는 곳도 잡히고 위치가 보장된다
 // 각 후보에 판단 근거를 붙여 반환: distM(관광지 좌표와의 거리) / caption(문서 캡션) / category(Commons 분류)
 // 라이센스는 CC/PD라 Storage 영구 저장 가능. 아무것도 못 찾으면 빈 배열.
-export const searchCommonsPhotos = async (query, limit = 12, cityHint = '', coord = null) => {
-  const WIKI = 'https://en.wikipedia.org/w/api.php'
+// siblings: 같은 도시의 다른 관광지 좌표 [{name,lat,lng}] — 이웃 관광지에 더 가까운 사진은 제외하는 데 쓴다
+export const searchCommonsPhotos = async (query, limit = 12, cityHint = '', coord = null, countryEn = '', siblings = []) => {
+  const wikiApi = (lang) => `https://${lang}.wikipedia.org/w/api.php`
   const COMMONS = 'https://commons.wikimedia.org/w/api.php'
+  // 영어 위키에 문서가 없는 관광지가 많다(지방 교회·소도시 박물관 등) → 그 나라 언어 위키로 한 번 더 시도
+  const LOCAL_WIKI = {
+    'Greece':'el','Italy':'it','Spain':'es','France':'fr','Germany':'de','Austria':'de','Switzerland':'de',
+    'Portugal':'pt','Brazil':'pt','Netherlands':'nl','Belgium':'nl','Poland':'pl','Czechia':'cs','Czech Republic':'cs',
+    'Hungary':'hu','Romania':'ro','Bulgaria':'bg','Croatia':'hr','Serbia':'sr','Slovakia':'sk','Slovenia':'sl',
+    'Sweden':'sv','Norway':'no','Denmark':'da','Finland':'fi','Iceland':'is','Estonia':'et','Latvia':'lv','Lithuania':'lt',
+    'Russia':'ru','Ukraine':'uk','Turkey':'tr','Israel':'he','Iran':'fa','Egypt':'ar','Morocco':'ar','Tunisia':'ar',
+    'Jordan':'ar','Saudi Arabia':'ar','United Arab Emirates':'ar','Qatar':'ar','Oman':'ar','Lebanon':'ar','Algeria':'ar',
+    'Japan':'ja','South Korea':'ko','China':'zh','Taiwan':'zh','Hong Kong':'zh','Vietnam':'vi','Thailand':'th',
+    'Indonesia':'id','Malaysia':'ms','Philippines':'tl','India':'hi','Nepal':'ne','Sri Lanka':'si',
+    'Mexico':'es','Argentina':'es','Chile':'es','Peru':'es','Colombia':'es','Cuba':'es','Bolivia':'es','Ecuador':'es',
+    'Uruguay':'es','Paraguay':'es','Venezuela':'es','Guatemala':'es','Costa Rica':'es','Panama':'es',
+    'Georgia':'ka','Armenia':'hy','Azerbaijan':'az','Kazakhstan':'kk','Uzbekistan':'uz','Mongolia':'mn',
+    'Ethiopia':'am','Kenya':'sw','Tanzania':'sw','Greenland':'da','Luxembourg':'fr','Monaco':'fr','Albania':'sq',
+    'North Macedonia':'mk','Bosnia and Herzegovina':'bs','Montenegro':'sr','Moldova':'ro','Belarus':'be','Cambodia':'km','Myanmar':'my','Laos':'lo','Bangladesh':'bn','Pakistan':'ur',
+  }
+  const localLang = LOCAL_WIKI[countryEn] || ''
   const strip = (html) => (html || '').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim()
   // 제목 매칭은 단어 단위로 — 글자 순서/전치사 차이로 놓치던 문제 방지
   // ("Delphi Archaeological Museum" vs "Archaeological Museum of Delphi")
@@ -158,7 +176,8 @@ export const searchCommonsPhotos = async (query, limit = 12, cityHint = '', coor
   const isBadFile = (title) => {
     const t = (title || '').toLowerCase()
     if (/\.(svg|ogg|ogv|webm|oga|mid|pdf|tif|tiff)$/.test(t)) return true
-    if (/(logo|icon|map[_\s-]|diagram|floorplan|coat.of.arms|flag|seal|signature|annotated|blank|placeholder|question.book|ambox|commons-logo|wiki(pedia|media)|edit-|increase|decrease|red.pog|location.dot|disambig|nuvola|crystal.clear)/.test(t)) return true
+    if (/\b(logo|icon|maps?|diagram|floorplan|flag|seal|crest|emblem|signature|blank|placeholder|disambig|ambox)\b/.test(t)) return true
+    if (/(coat.of.arms|question.book|commons-logo|wiki(pedia|media)|edit-|increase|decrease|red.pog|location.dot|nuvola|crystal.clear|annotated)/.test(t)) return true
     return false
   }
   const mapPage = (p, src) => {
@@ -179,35 +198,57 @@ export const searchCommonsPhotos = async (query, limit = 12, cityHint = '', coor
       caption: '',                                    // (A)에서 문서 캡션으로 채움
       desc: strip(m.ImageDescription?.value).slice(0, 140),
       category: cats[0] || '',
+      cats,
       distM: c ? distM(coord, { lat: c.lat, lng: c.lon }) : null,
+      _coord: c ? { lat: c.lat, lng: c.lon } : null,
       src,
     }
   }
   const IIPROPS = 'url|extmetadata|size'
-  const EXTRA = '&prop=imageinfo|categories|coordinates&iiprop=' + IIPROPS + '&iiurlwidth=320&cllimit=20&clshow=!hidden&colimit=1'
+  const EXTRA = '&prop=imageinfo|categories|coordinates&iiprop=' + IIPROPS + '&iiurlwidth=520&cllimit=20&clshow=!hidden&colimit=1'
 
   // (A) 위키피디아 문서 → 실린 이미지 + 캡션
-  const fromArticle = async () => {
+  const fromArticle = async (lang) => {
+    const WIKI = wikiApi(lang)
     const q = cityHint ? `${query} ${cityHint}` : query
     const sd = await fetch(`${WIKI}?origin=*&action=query&format=json&list=search&srsearch=${encodeURIComponent(q)}&srlimit=6&srnamespace=0`).then(r => r.json())
     const hits = (sd?.query?.search || []).map(x => x.title)
     if (!hits.length) return []
     const best = hits.map(t => ({ t, s: titleScore(query, t) })).sort((a, b) => b.s - a.s)[0]
-    if (!best || best.s < 40) return []              // 억지 매칭 방지
-    const title = best.t
+    // 현지어 위키는 제목이 현지 문자(Ρωμαϊκή Αγορά…)라 라틴 기준 채점이 0점이 된다.
+    // → 그때는 검색 1순위를 잠정 채택하고, 문서 좌표가 관광지 근처인지로 검증한다.
+    let title, needGeoCheck = false
+    if (best && best.s >= 25) { title = best.t }
+    else if (coord && coord.lat != null) { title = hits[0]; needGeoCheck = true }
+    else return []
     // 캡션: REST media-list가 문서 안 그림설명을 그대로 준다
     const capByFile = {}
-    try {
-      const ml = await fetch(`https://en.wikipedia.org/api/rest_v1/page/media-list/${encodeURIComponent(title)}`).then(r => r.json())
-      ;(ml?.items || []).forEach(it => {
-        if (it.type === 'image' && it.title) capByFile[it.title.replace(/^File:/, '')] = strip(it.caption?.text || '')
-      })
-    } catch {}
+    let leadName = ''
+    const [mlR, piR] = await Promise.all([
+      fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/media-list/${encodeURIComponent(title)}`).then(r => r.json()).catch(() => null),
+      // 인포박스 대표 이미지 — generator=images 의 반환 순서를 믿을 수 없어 따로 받아 맨 앞에 고정한다
+      fetch(`${WIKI}?origin=*&action=query&format=json&titles=${encodeURIComponent(title)}&redirects=1&prop=pageimages|coordinates&piprop=name&colimit=1`).then(r => r.json()).catch(() => null),
+    ])
+    ;(mlR?.items || []).forEach(it => {
+      if (it.type === 'image' && it.title) capByFile[it.title.replace(/^File:/, '')] = strip(it.caption?.text || '')
+    })
+    const pg = Object.values(piR?.query?.pages || {})[0] || {}
+    leadName = pg.pageimage || ''
+    if (needGeoCheck) {                                // 제목으로 못 재는 경우의 검증: 문서 좌표가 5km 밖이면 다른 곳이다
+      const ac = pg.coordinates?.[0]
+      const d = ac ? distM(coord, { lat: ac.lat, lng: ac.lon ?? ac.lng }) : null
+      if (!Number.isFinite(d) || d > 5000) return []   // 좌표가 없거나 계산 불능이면 채택하지 않는다
+    }
     const d = await fetch(`${WIKI}?origin=*&action=query&format=json&titles=${encodeURIComponent(title)}&redirects=1&generator=images&gimlimit=40${EXTRA}`).then(r => r.json())
     const pages = d?.query?.pages ? Object.values(d.query.pages) : []
     pages.sort((a, b) => (a.index ?? 0) - (b.index ?? 0))        // 본문 등장 순서 = 중요도 순
     let out = pages.map(p => mapPage(p, 'wiki')).map(x => ({ ...x, caption: capByFile[x.title] || '' }))
     out = out.filter(x => x.thumbUrl && x.fullUrl && !isBadFile(x.title))
+    if (leadName) {                                    // 대표 이미지는 무조건 1번
+      const ln = leadName.replace(/_/g, ' ')
+      const k = out.findIndex(x => x.title.replace(/_/g, ' ') === ln)
+      if (k > 0) out = [out[k], ...out.slice(0, k), ...out.slice(k + 1)]
+    }
     // 파일은 Commons에 있고 en.wikipedia에는 로컬 페이지가 없어서 categories/coordinates가 비어 온다.
     // → Commons에 파일명으로 한 번 더 물어 분류·촬영좌표·라이센스를 채운다 (요청 1회, 50개까지 한 번에)
     if (out.length) {
@@ -232,14 +273,15 @@ export const searchCommonsPhotos = async (query, limit = 12, cityHint = '', coor
   const fromGeo = async () => {
     if (!coord || coord.lat == null) return []
     const u = `${COMMONS}?origin=*&action=query&format=json&generator=geosearch`
-      + `&ggscoord=${coord.lat}|${coord.lng}&ggsradius=500&ggslimit=40&ggsnamespace=6${EXTRA}`
+      + `&ggscoord=${coord.lat}|${coord.lng}&ggsradius=150&ggslimit=40&ggsnamespace=6${EXTRA}`
     const d = await fetch(u).then(r => r.json())
     const pages = d?.query?.pages ? Object.values(d.query.pages) : []
     return pages.map(p => mapPage(p, 'geo'))
   }
 
   try {
-    const [A, B] = await Promise.all([fromArticle().catch(() => []), fromGeo().catch(() => [])])
+    let [A, B] = await Promise.all([fromArticle('en').catch(() => []), fromGeo().catch(() => [])])
+    if (!A.length && localLang && localLang !== 'en') A = await fromArticle(localLang).catch(() => [])
     const seen = new Set()
     const all = [...A, ...B].filter(x => {
       if (!x.thumbUrl || !x.fullUrl || isBadFile(x.title)) return false
@@ -247,10 +289,22 @@ export const searchCommonsPhotos = async (query, limit = 12, cityHint = '', coor
       if (seen.has(x.fullUrl)) return false
       seen.add(x.fullUrl); return true
     })
-    // 정렬: 문서 이미지 우선(본문 순서 유지) → 좌표 사진은 가까운 순
+    // ① 이웃 관광지에 더 가까운 좌표 사진은 뺀다 — 아테네처럼 유적이 몰린 곳에서 같은 사진이 여러 관광지에 겹쳐 올라오는 문제
+    const nearerSibling = (x) => {
+      if (x.src !== 'geo' || x.distM == null || !siblings.length) return false
+      return siblings.some(sb => {
+        if (sb.lat == null) return false
+        const d = distM(x._coord, { lat: sb.lat, lng: sb.lng })
+        return Number.isFinite(d) && d < x.distM
+      })
+    }
+    // ② 분류가 관광지명과 겹치는 사진을 위로 — 이름이 걸리면 그 관광지 사진일 확률이 높다
+    const qt = new Set(toks(query))
+    const catHit = (x) => (x.cats || []).some(c => { const ct = toks(c); return ct.length && ct.some(t => qt.has(t)) })
     const wiki = all.filter(x => x.src === 'wiki')
-    const geo = all.filter(x => x.src === 'geo').sort((a, b) => (a.distM ?? 1e9) - (b.distM ?? 1e9))
-    return [...wiki, ...geo].slice(0, limit)
+    const geo = all.filter(x => x.src === 'geo' && !nearerSibling(x))
+      .sort((a, b) => (catHit(b) - catHit(a)) || ((a.distM ?? 1e9) - (b.distM ?? 1e9)))
+    return [...wiki, ...geo].slice(0, limit).map(({ _coord, cats, ...r }) => r)
   } catch (e) { console.error('[searchCommonsPhotos] 실패:', query, e?.message || e); return [] }
 }
 
