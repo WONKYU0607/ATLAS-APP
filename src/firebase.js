@@ -184,7 +184,9 @@ export const searchCommonsPhotos = async (query, limit = 12, cityHint = '', coor
     const ii = p.imageinfo?.[0] || {}
     const m = ii.extmetadata || {}
     const cats = (p.categories || []).map(c => (c.title || '').replace(/^Category:/, ''))
-      .filter(c => !/^(CC-|PD-|Files |Media |Self-published|Images |Photographs by|Uploaded|License|GFDL|Taken with|Pages |Items )/i.test(c))
+      // 라이센스·관리용 분류는 내용과 무관하다 (Featured pictures, Wikipedia images using..., Media needing... 등)
+      .filter(c => !/^(CC-|PD-|Files |Media |Self-published|Images |Photographs by|Uploaded|License|GFDL|Taken with|Pages |Items |Featured |Quality |Valued |Wikipedia |Wikimedia |Supported by|Scans |Retouched|Panorama|Photos by|Works by)/i.test(c))
+      .filter(c => !/(freedom of panorama|needing|requiring|for cleanup|without |unidentified|unknown |check|review|deletion)/i.test(c))
     const c = p.coordinates?.[0]
     return {
       title: (p.title || '').replace(/^File:/, ''),
@@ -201,10 +203,27 @@ export const searchCommonsPhotos = async (query, limit = 12, cityHint = '', coor
       cats,
       distM: c ? distM(coord, { lat: c.lat, lng: c.lon }) : null,
       _coord: c ? { lat: c.lat, lng: c.lon } : null,
+      _mediatype: ii.mediatype || '',
+      _year: (() => {                                   // 촬영/제작 연도 — 오래된 것은 흑백·판화일 확률이 높다
+        const raw = strip(m.DateTimeOriginal?.value) || strip(m.DateTime?.value) || ''
+        const y = raw.match(/\b(1[5-9]\d\d|20\d\d)\b/)
+        return y ? parseInt(y[1], 10) : null
+      })(),
       src,
     }
   }
-  const IIPROPS = 'url|extmetadata|size'
+  // 도면·판화·흑백·옛 사진 걸러내기 (파일명 / Commons 분류 / MediaWiki 미디어타입 / 촬영연도)
+  const DRAW_NAME = /\b(plan|plans|planta|grundriss|drawing|drawings|sketch|blueprint|elevation|cross.section|engraving|lithograph|etching|woodcut|illustration|diagram|postcard|stamp|coin|banknote|manuscript|poster|print|scan|bw|b&w|monochrome)\b/
+  const DRAW_CAT = /(black.and.white|b&w|monochrome|grayscale|engravings?|lithographs?|etchings?|woodcuts?|drawings?|architectural plans?|floor plans?|blueprints?|sketches|postcards|stamps|coins|maps of|\d{1,2}th-century (photographs|prints|drawings)|photographs from the \d{4}s|historical (images|photographs)|old photographs|antique)/i
+  const isDrawingOrOld = (x) => {
+    const t = (x.title || '').toLowerCase()
+    if (DRAW_NAME.test(t)) return true
+    if ((x._mediatype || '').toUpperCase() === 'DRAWING') return true
+    if ((x.cats || []).some(c => DRAW_CAT.test(c))) return true
+    if (x._year != null && x._year < 1970) return true      // 1970년 이전은 대부분 흑백
+    return false
+  }
+  const IIPROPS = 'url|extmetadata|size|mediatype'
   const EXTRA = '&prop=imageinfo|categories|coordinates&iiprop=' + IIPROPS + '&iiurlwidth=520&cllimit=20&clshow=!hidden&colimit=1'
 
   // (A) 위키피디아 문서 → 실린 이미지 + 캡션
@@ -286,6 +305,7 @@ export const searchCommonsPhotos = async (query, limit = 12, cityHint = '', coor
     const all = [...A, ...B].filter(x => {
       if (!x.thumbUrl || !x.fullUrl || isBadFile(x.title)) return false
       if (Math.min(x.width || 0, x.height || 0) < 200) return false   // 아이콘류 제외
+      if (isDrawingOrOld(x)) return false                             // 도면·판화·흑백·옛 사진 제외
       if (seen.has(x.fullUrl)) return false
       seen.add(x.fullUrl); return true
     })
@@ -299,12 +319,22 @@ export const searchCommonsPhotos = async (query, limit = 12, cityHint = '', coor
       })
     }
     // ② 분류가 관광지명과 겹치는 사진을 위로 — 이름이 걸리면 그 관광지 사진일 확률이 높다
-    const qt = new Set(toks(query))
-    const catHit = (x) => (x.cats || []).some(c => { const ct = toks(c); return ct.length && ct.some(t => qt.has(t)) })
-    const wiki = all.filter(x => x.src === 'wiki')
+    // 건물 종류를 나타내는 흔한 단어는 분류 일치 판정에서 뺀다.
+    // (Church of Saint Sava → church/saint 로 세상 모든 정교회 사진이 최상위로 올라오던 문제)
+    const GENERIC = new Set(['church','saint','temple','cathedral','basilica','chapel','monastery','mosque','shrine',
+      'museum','gallery','castle','palace','fortress','tower','bridge','gate','square','park','garden','beach','market',
+      'street','avenue','house','hall','statue','monument','memorial','fountain','ruins','site','archaeological',
+      'orthodox','catholic','national','city','town','old','new','great','grand','central','centre','center','view','building'])
+    const qt = new Set(toks(query).filter(t => !GENERIC.has(t) && t.length >= 4))
+    const catHit = (x) => qt.size > 0 && (x.cats || []).some(c => toks(c).some(t => qt.has(t)))
+    // 위키 문서에는 "비슷한 양식의 다른 건물" 사진이 같이 실린다(세르비아 성당 문서에 몬테네그로·루마니아 성당 등).
+    // → 촬영좌표가 2km 밖이면 다른 건물로 보고 제외. 좌표가 없는 사진은 버리지 않고 맨 뒤로 보낸다.
+    const FAR = 2000
+    const wikiNear = all.filter(x => x.src === 'wiki' && x.distM != null && x.distM <= FAR)
+    const wikiNoGeo = all.filter(x => x.src === 'wiki' && x.distM == null)
     const geo = all.filter(x => x.src === 'geo' && !nearerSibling(x))
       .sort((a, b) => (catHit(b) - catHit(a)) || ((a.distM ?? 1e9) - (b.distM ?? 1e9)))
-    return [...wiki, ...geo].slice(0, limit).map(({ _coord, cats, ...r }) => r)
+    return [...wikiNear, ...geo, ...wikiNoGeo].slice(0, limit).map(({ _coord, cats, _mediatype, _year, ...r }) => r)
   } catch (e) { console.error('[searchCommonsPhotos] 실패:', query, e?.message || e); return [] }
 }
 

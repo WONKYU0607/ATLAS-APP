@@ -4022,7 +4022,8 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                       <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
                         {cands.map(r=>{
                           const on=picked.includes(r.fullUrl)
-                          const info=[r.distM!=null?(r.distM<1000?`${r.distM}m`:`${(r.distM/1000).toFixed(1)}km`):null, r.category||null].filter(Boolean).join(' · ')
+                          const dTxt=r.distM!=null?(r.distM<1000?`${r.distM}m`:`${(r.distM/1000).toFixed(1)}km`):'거리 미상'
+                          const info=[dTxt, r.category||null].filter(Boolean).join(' · ')
                           const cap=r.caption||r.desc||r.title
                           return (
                             <div key={r.fullUrl} style={{width:TH}}>
@@ -4035,7 +4036,7 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                                   style={{position:'absolute',right:4,bottom:4,background:'rgba(0,0,0,.5)',color:'#fff',fontSize:10,padding:'2px 5px',borderRadius:4,textDecoration:'none'}}>원본</a>
                               </div>
                               <div style={{fontSize:10.5,lineHeight:1.4,marginTop:3}}>
-                                {info && <div style={{color:'#0d9488',fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{info}</div>}
+                                {info && <div style={{color:r.distM!=null?'#0d9488':'#b45309',fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{info}</div>}
                                 <div title={cap} style={{color:'#7a6a58',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{cap}</div>
                               </div>
                             </div>
