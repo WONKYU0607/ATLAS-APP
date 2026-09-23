@@ -4004,7 +4004,7 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
           return (
             <div style={{position:'absolute',top:0,bottom:0,right:isMobile?0:420,width:isMobile?'100%':'min(860px, calc(100vw - 440px))',zIndex:1001,background:'#fbf9f6',borderRight:isMobile?'none':'1px solid #e4dcd2',boxShadow:'-2px 0 14px rgba(0,0,0,.08)',display:'flex',flexDirection:'column'}}>
               <div style={{flexShrink:0,display:'flex',alignItems:'center',gap:10,padding:'12px 16px',borderBottom:'1px solid #e4dcd2',background:'#f0ebe4'}}>
-                <div style={{fontSize:14,fontWeight:800,color:'#3a3a3a',flex:1}}>사진 후보 · 관광지 {rows.length}곳</div>
+                <div style={{fontSize:14,fontWeight:800,color:'#3a3a3a',flex:1}}>사진 후보 · 관광지 {rows.length}곳{(commonsBatch.auto||[]).length?` · 자동선택 ${commonsBatch.auto.length}곳`:''}</div>
                 <button onClick={()=>setGalleryOpen(false)} style={{background:'none',border:'none',fontSize:20,cursor:'pointer',color:'#9a8070',padding:'0 4px'}}>✕</button>
               </div>
               <div style={{flex:1,overflowY:'auto',padding:'12px 16px'}}>
@@ -4017,6 +4017,7 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                       <div style={{fontSize:14,fontWeight:800,color:'#1a1714',marginBottom:8,display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
                         <span>{p.name}</span>
                         {saved>0 && <span style={{fontSize:11,fontWeight:700,color:'#0d9488',background:'#e0f2ef',padding:'2px 7px',borderRadius:5}}>저장됨 {saved}</span>}
+                        {(commonsBatch.auto||[]).includes(p.name) && <span style={{fontSize:11,fontWeight:700,color:'#7c3aed',background:'#ede9fe',padding:'2px 7px',borderRadius:5}}>자동</span>}
                         {picked.length>0 && <span style={{fontSize:11,fontWeight:700,color:'#b45309',background:'#fef3c7',padding:'2px 7px',borderRadius:5}}>선택 {picked.length}</span>}
                       </div>
                       <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
@@ -4251,19 +4252,29 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                               <button onClick={async()=>{
                                 const list=hotspots.filter(p=>p.place_id)
                                 if(!list.length) return
-                                setCommonsBatch({total:list.length,done:0,cache:{}})
+                                setCommonsBatch({total:list.length,done:0,cache:{},auto:[]})
                                 const cache={}
+                                const auto=[]
                                 for(let i=0;i<list.length;i++){
                                   const p=list[i]
                                   try{ const cityEn=(CITY_I18N[selectedCity._koName||selectedCity.name]?.[0])||''; const co=p.geometry?.location?{lat:p.geometry.location.lat,lng:p.geometry.location.lng}:null; const sibs=list.filter(x=>x.place_id!==p.place_id&&x.geometry?.location).map(x=>({name:x.name,lat:x.geometry.location.lat,lng:x.geometry.location.lng}))
                                   cache[p.place_id]=await searchCommonsPhotos(p.name, 12, cityEn, co, selectedCity.countryEn||'', sibs) }
                                   catch{ cache[p.place_id]=[] }
-                                  setCommonsBatch(b=>b?{...b,done:i+1,cache:{...cache}}:b)
+                                  // ── 자동 선택: 구글 리뷰 3만 이상 + 위키 대표이미지(인포박스) + 촬영좌표 100m 이내 ──
+                                  // 셋 다 맞으면 패널에 '미리 체크된 상태'로 올린다. 저장은 사용자가 확인 후 한 번에 — 잘못 올라가는 일이 없게.
+                                  const top=(cache[p.place_id]||[])[0]
+                                  const already=(attrPhotos[p.place_id]||[]).length>0
+                                  if(!already && (p.user_ratings_total||0)>=30000 && top?.isLead && top.distM!=null && top.distM<=100){
+                                    auto.push(p.name)
+                                    setGalleryPick(g=>g[p.place_id]?g:{...g,[p.place_id]:[top.fullUrl]})
+                                    console.log(`[자동선택] ${p.name} · 리뷰 ${p.user_ratings_total} · ${top.distM}m · ${top.title}`)
+                                  }
+                                  setCommonsBatch(b=>b?{...b,done:i+1,cache:{...cache},auto:[...auto]}:b)
                                 }
                               }}
                                 disabled={!!commonsBatch && commonsBatch.done<commonsBatch.total}
                                 style={{padding:'8px 0',background:commonsBatch&&commonsBatch.done<commonsBatch.total?'#ccc':'#f0ebe4',border:'1px solid #ddd3c8',borderRadius:8,fontSize:12,fontWeight:700,color:'#7a6a58',cursor:commonsBatch&&commonsBatch.done<commonsBatch.total?'wait':'pointer'}}>
-                                {commonsBatch ? (commonsBatch.done<commonsBatch.total ? `위키 사진 조회중 ${commonsBatch.done}/${commonsBatch.total}` : `조회 완료 (${Object.values(commonsBatch.cache).filter(r=>r.length).length}개 관광지에 후보 있음) · 🔍로 개별 선택`) : '🔍 이 도시 위키 사진 일괄 조회'}
+                                {commonsBatch ? (commonsBatch.done<commonsBatch.total ? `위키 사진 조회중 ${commonsBatch.done}/${commonsBatch.total}` : `조회 완료 (후보 ${Object.values(commonsBatch.cache).filter(r=>r.length).length}곳${(commonsBatch.auto||[]).length?` · 자동선택 ${commonsBatch.auto.length}곳`:''})`) : '🔍 이 도시 위키 사진 일괄 조회'}
                               </button>
                             )}
                             {commonsBatch && commonsBatch.done>=commonsBatch.total && selectedCity && hotspots.some(p=>p.place_id&&(commonsBatch.cache[p.place_id]||[]).length) && (

@@ -263,10 +263,10 @@ export const searchCommonsPhotos = async (query, limit = 12, cityHint = '', coor
     pages.sort((a, b) => (a.index ?? 0) - (b.index ?? 0))        // 본문 등장 순서 = 중요도 순
     let out = pages.map(p => mapPage(p, 'wiki')).map(x => ({ ...x, caption: capByFile[x.title] || '' }))
     out = out.filter(x => x.thumbUrl && x.fullUrl && !isBadFile(x.title))
-    if (leadName) {                                    // 대표 이미지는 무조건 1번
+    if (leadName) {                                    // 대표 이미지(인포박스)는 무조건 1번 + 표시
       const ln = leadName.replace(/_/g, ' ')
       const k = out.findIndex(x => x.title.replace(/_/g, ' ') === ln)
-      if (k > 0) out = [out[k], ...out.slice(0, k), ...out.slice(k + 1)]
+      if (k >= 0) { out[k] = { ...out[k], isLead: true }; if (k > 0) out = [out[k], ...out.slice(0, k), ...out.slice(k + 1)] }
     }
     // 파일은 Commons에 있고 en.wikipedia에는 로컬 페이지가 없어서 categories/coordinates가 비어 온다.
     // → Commons에 파일명으로 한 번 더 물어 분류·촬영좌표·라이센스를 채운다 (요청 1회, 50개까지 한 번에)
