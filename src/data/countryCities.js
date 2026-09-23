@@ -880,9 +880,7 @@ export const COUNTRY_CITIES = {
   ],
   "Albania": [
     { name:"티라나", lat:41.33, lng:19.82 },
-    { name:"베라트", lat:40.71, lng:19.95 },
-    { name:"사란다", lat:39.87, lng:20.01 },
-    { name:"기로카스트라", lat:40.08, lng:20.14 }
+    { name:"베라트", lat:40.71, lng:19.95 }
   ],
   "Serbia": [
     { name:"베오그라드", lat:44.80, lng:20.47 },
