@@ -292,10 +292,31 @@ export const searchCommonsPhotos = async (query, limit = 12, cityHint = '', coor
   const fromGeo = async () => {
     if (!coord || coord.lat == null) return []
     const u = `${COMMONS}?origin=*&action=query&format=json&generator=geosearch`
-      + `&ggscoord=${coord.lat}|${coord.lng}&ggsradius=150&ggslimit=40&ggsnamespace=6${EXTRA}`
+      + `&ggscoord=${coord.lat}|${coord.lng}&ggsradius=300&ggslimit=40&ggsnamespace=6${EXTRA}`
     const d = await fetch(u).then(r => r.json())
     const pages = d?.query?.pages ? Object.values(d.query.pages) : []
-    return pages.map(p => mapPage(p, 'geo'))
+    let out = pages.map(p => mapPage(p, 'geo'))
+    // generator=geosearch 응답에는 개별 파일의 coordinates 가 안 실려 오는 경우가 있다.
+    // 거리가 없으면 이웃 제외·정렬이 전부 무력화되므로 파일명으로 한 번 더 물어 채운다.
+    const need = out.filter(x => x.distM == null && x.title).slice(0, 50)
+    if (need.length) {
+      try {
+        const titles = need.map(x => 'File:' + x.title).join('|')
+        const cd = await fetch(`${COMMONS}?origin=*&action=query&format=json&titles=${encodeURIComponent(titles)}${EXTRA}`).then(r => r.json())
+        const by = {}
+        Object.values(cd?.query?.pages || {}).forEach(p => { const it = mapPage(p, 'geo'); if (it.title) by[it.title] = it })
+        out = out.map(x => {
+          const e = by[x.title]
+          if (!e) return x
+          return { ...x, distM: x.distM ?? e.distM, _coord: x._coord || e._coord,
+                   category: x.category || e.category, cats: (x.cats && x.cats.length) ? x.cats : e.cats,
+                   license: (x.license && x.license !== 'Unknown') ? x.license : e.license,
+                   author: x.author || e.author, desc: x.desc || e.desc,
+                   _mediatype: x._mediatype || e._mediatype, _year: x._year ?? e._year }
+        })
+      } catch {}
+    }
+    return out
   }
 
   try {
@@ -331,10 +352,11 @@ export const searchCommonsPhotos = async (query, limit = 12, cityHint = '', coor
     // → 촬영좌표가 2km 밖이면 다른 건물로 보고 제외. 좌표가 없는 사진은 버리지 않고 맨 뒤로 보낸다.
     const FAR = 2000
     const wikiNear = all.filter(x => x.src === 'wiki' && x.distM != null && x.distM <= FAR)
-    const wikiNoGeo = all.filter(x => x.src === 'wiki' && x.distM == null)
-    const geo = all.filter(x => x.src === 'geo' && !nearerSibling(x))
-      .sort((a, b) => (catHit(b) - catHit(a)) || ((a.distM ?? 1e9) - (b.distM ?? 1e9)))
-    return [...wikiNear, ...geo, ...wikiNoGeo].slice(0, limit).map(({ _coord, cats, _mediatype, _year, ...r }) => r)
+    const geo = all.filter(x => x.src === 'geo' && x.distM != null && !nearerSibling(x))
+      .sort((a, b) => (catHit(b) - catHit(a)) || (a.distM - b.distM))
+    // 거리를 알 수 없는 것은 출처와 무관하게 맨 뒤로 (확실한 것부터 보이게)
+    const noGeo = all.filter(x => x.distM == null)
+    return [...wikiNear, ...geo, ...noGeo].slice(0, limit).map(({ _coord, cats, _mediatype, _year, ...r }) => r)
   } catch (e) { console.error('[searchCommonsPhotos] 실패:', query, e?.message || e); return [] }
 }
 
