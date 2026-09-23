@@ -112,7 +112,8 @@ function App() {
   const [attrPhotoUploading, setAttrPhotoUploading] = useState('')  // 업로드중인 place_id
   const [galleryView, setGalleryView] = useState(null)  // { photos:[{url,path}], idx, placeId, country, city } 큰 갤러리 팝업
   const [commonsModal, setCommonsModal] = useState(null)  // { place, results:[], picked:Set, loading, uploading } Commons 사진 후보 선택
-  const [commonsBatch, setCommonsBatch] = useState(null)
+  // 위키 사진 조회 결과는 도시별로 보관한다 — 다른 도시 다녀와도 그대로 남게 (세션 한정, 새로고침하면 사라짐)
+  const [commonsStore, setCommonsStore] = useState({})
   const [galleryPick, setGalleryPick] = useState({})     // 펼쳐보기에서 고른 사진 {place_id: [fullUrl]}
   const [gallerySaving, setGallerySaving] = useState('')  // '' | 'ing' | 진행문구
   const [galleryOpen, setGalleryOpen] = useState(false)
@@ -147,6 +148,14 @@ function App() {
   const [showCountryInfo, setShowCountryInfo] = useState(false)
   const [infoExpanded, setInfoExpanded] = useState(false) // A안: 컴팩트(헤더만) ↔ 전체 펼침
   const [lang, setLang] = useState(() => { try { return localStorage.getItem('atlas_lang') || 'ko' } catch { return 'ko' } })
+  const commonsKey = selectedCity ? `${selectedCity._koName || selectedCity.name}_${lang}` : ''
+  const commonsBatch = commonsStore[commonsKey] || null
+  const setCommonsBatch = (v) => setCommonsStore(st => {
+    const cur = st[commonsKey] || null
+    const next = typeof v === 'function' ? v(cur) : v
+    return next ? { ...st, [commonsKey]: next } : st
+  })
+
   const [showLangMenu, setShowLangMenu] = useState(false)
   const [sidePanel, setSidePanel] = useState(null) // 'hotspots' | 'restaurants' | null
   const [showHamburger, setShowHamburger] = useState(false)
