@@ -2156,6 +2156,15 @@ function App() {
       return { best, bestD, secondD }
     }
 
+    // 현재 줌에서 라벨이 보이는 도시만 — computeLabelVis의 게이팅(idx>=12는 enterAlt*0.7 미만에서 등장)과 같은 규칙
+    // 안 보이는 라벨(예: 독일 뷰의 트리어)이 탭을 가로채 이웃 나라(룩셈부르크) 클릭이 그 도시로 진입하는 것 방지
+    const visibleCitiesOf = (countryName) => {
+      const list = COUNTRY_CITIES[countryName] || []
+      const fly = countryFlyingRef.current
+      const alt = fly?.active ? fly.targetAlt : globe.pointOfView().altitude
+      const enterAlt = cityEnterAltRef.current || 0.5
+      return list.filter((c, idx) => idx < 12 || alt < enterAlt * 0.7)
+    }
     // 국가뷰: 화면상 가장 가까운 도시 선택
     const CITY_TAP_PX = 70    // 체감 튜닝: 줄이면 정확히 눌러야, 키우면 넉넉하게
     // 의도 판정: 비율(1등이 2등보다 2배+ 가까움) 또는 절대차(>=28px). 어느 하나만 만족해도 패널.
@@ -2165,7 +2174,7 @@ function App() {
     const selectNearestCity = (countryName, event) => {
       if (countryFlyingRef.current?.active) return   // 국가 줌인 비행 중 탭 무시 — 줌인을 건너뛰고 바로 도시 패널이 열리는 것 방지
       const list = COUNTRY_CITIES[countryName] || []
-      const r = pickNearestByScreen(list, c => c.lat, c => c.lng, event, CITY_TAP_PX)
+      const r = pickNearestByScreen(visibleCitiesOf(countryName), c => c.lat, c => c.lng, event, CITY_TAP_PX)
       if (!r) return
       const { best, bestD, secondD } = r
       // 명확 판정: 비율(bestD * 2 <= secondD) 또는 절대차(>=28) 또는 직전이 줌-only(다음 탭은 무조건 패널)
@@ -2251,7 +2260,7 @@ function App() {
         if (hasSelection) {
           // 현재 국가의 도시가 클릭 지점 근처면 우선 선택 — 폴리곤 클릭이 다른 나라로 빠져나가지 않게
           // 마이크로스테이트(폴리곤 없음)는 넉넉히 70px, 일반 국가는 국경 도시(제네바·바젤 등) 보정용 45px
-          const cl = COUNTRY_CITIES[selectedCountry.properties.NAME] || []
+          const cl = visibleCitiesOf(selectedCountry.properties.NAME)
           const nearThreshold = !selectedCountry.geometry ? 70 : 45
           const cityR = pickNearestByScreen(cl, c => c.lat, c => c.lng, ev, nearThreshold)
           if (cityR) { selectNearestCity(selectedCountry.properties.NAME, ev); return }
