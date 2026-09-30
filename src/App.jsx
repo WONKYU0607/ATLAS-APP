@@ -1198,7 +1198,6 @@ function App() {
     const vis = computeLabelVis(g, c.querySelectorAll('[data-lat]'), g.pointOfView())
     for (const [el, sh] of vis) {
       el.style.opacity = sh ? '1' : '0'
-      if (el.dataset.micro === '1') el.style.pointerEvents = sh ? 'auto' : 'none'
     }
   }
   // 동명 도시 구분용 꼬리표 제거: 내부 키는 "빅토리아(세이셸)"로 유일하게 두고, 화면에는 "빅토리아"로만 표시
@@ -1567,6 +1566,33 @@ function App() {
     globe.controls().rotateSpeed = 1.0
     globeRef.current = globe
 
+    // ── 마이크로 라벨 탭 (바티칸·모나코·섬나라) ──
+    // 라벨이 pointer-events:auto면 라벨 위에서 시작한 드래그가 캔버스에 안 가서 회전이 막힘 → 라벨은 터치 투명으로 두고
+    // 여기서 캡처 단계로 '움직임 8px 이하 탭'만 골라 라벨 영역에 맞으면 라벨 탭 처리. 글로브 클릭은 justClickedCityRef로 무시시킴
+    {
+      const cont = globeContainerRef.current
+      let downXY = null
+      cont.addEventListener('pointerdown', (ev) => { downXY = ev.isPrimary ? [ev.clientX, ev.clientY] : null }, true)
+      cont.addEventListener('pointerup', (ev) => {
+        if (!downXY || !ev.isPrimary) return
+        const moved = Math.hypot(ev.clientX - downXY[0], ev.clientY - downXY[1])
+        downXY = null
+        if (moved > 8) return
+        const SLOP = 6
+        for (const el of cont.querySelectorAll('[data-micro="1"]')) {
+          if (!el._microTap || el.style.opacity === '0' || el.style.display === 'none') continue
+          const r = (el.firstElementChild || el).getBoundingClientRect()
+          if (!r.width) continue
+          if (ev.clientX >= r.left - SLOP && ev.clientX <= r.right + SLOP && ev.clientY >= r.top - SLOP && ev.clientY <= r.bottom + SLOP) {
+            justClickedCityRef.current = true
+            setTimeout(() => { justClickedCityRef.current = false }, 150)
+            el._microTap()
+            return
+          }
+        }
+      }, true)
+    }
+
     // ── 모바일 더블탭 줌인 ──
     if (window.innerWidth <= 768) {
       let lastTap = 0
@@ -1644,10 +1670,6 @@ function App() {
         if (!el.dataset.tInit) { el.style.transition = 'opacity 0.3s'; el.dataset.tInit = '1' }
         const next = show ? '1' : '0'
         if (el.style.opacity !== next) el.style.opacity = next
-        if (el.dataset.micro === '1') {
-          const pe = show ? 'auto' : 'none'
-          if (el.style.pointerEvents !== pe) el.style.pointerEvents = pe
-        }
       }
       cache.settled = true
     }
@@ -1952,16 +1974,10 @@ function App() {
           }
           // 라벨 탭 진입은 마이크로국가(섬/점만 한 나라)에만 — 큰 나라는 폴리곤 클릭으로 진입 가능하므로
           // 라벨 pointer-events:auto가 회전 드래그를 가로채는 문제 방지 (큰 나라 라벨 위 드래그=회전 정상)
+          // 라벨은 터치 투명(pointer-events:none) 유지 — 라벨 위에서 시작한 드래그도 캔버스로 가서 회전됨.
+          // 탭 판정은 컨테이너 캡처 리스너(위 '마이크로 라벨 탭')가 라벨 영역 히트테스트로 _microTap 호출
           if (d._type === 'island' || d._type === 'hawaii') {
-          el.style.pointerEvents = 'auto'
-          el.style.cursor = 'pointer'
-          let _downXY = null
-          el.addEventListener('pointerdown', (ev) => { _downXY = [ev.clientX, ev.clientY] })
-          el.addEventListener('pointerup', (ev) => {
-            if (!_downXY) return
-            const moved = Math.hypot(ev.clientX - _downXY[0], ev.clientY - _downXY[1])
-            _downXY = null
-            if (moved > 8) return  // 드래그(회전)면 무시
+          el._microTap = () => {
             // 겹침 체크: 화면상 가까운 다른 라벨이 있으면 먼저 분리 줌, 단독이면 진입
             const cont = globeContainerRef.current
             const myR = el.getBoundingClientRect()
@@ -1993,7 +2009,7 @@ function App() {
             let feat = countries.find(f => f.properties && f.properties.NAME === d.nameEn)
             if (!feat) feat = { type: 'Feature', properties: { NAME: d.nameEn, LABEL_X: d.lng, LABEL_Y: d.lat }, geometry: null }
             handleCountryClickRef.current?.(feat)
-          })
+          }
           }
         }
         return el
