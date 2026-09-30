@@ -483,11 +483,9 @@ export const COUNTRY_CITIES = {
     { name:"인스브루크", lat:47.27, lng:11.39 },
     { name:"할슈타트", lat:47.56, lng:13.65 },
     { name:"그라츠", lat:47.08, lng:15.43 },
-    { name:"바트이슐", lat:47.71, lng:13.62 },
     { name:"클라겐푸르트", lat:46.62, lng:14.31 },
     { name:"린츠", lat:48.31, lng:14.29 },
     { name:"브레겐츠", lat:47.5, lng:9.75 },
-    { name:"장크트볼프강", lat:47.74, lng:13.45 },
     { name:"멜크", lat:48.23, lng:15.33 },
   ],
   "Switzerland": [
