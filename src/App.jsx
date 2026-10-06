@@ -2116,7 +2116,26 @@ function App() {
       .polygonsTransitionDuration(0)
   }, [countries])
 
-  // A-2: 국경선 pathsData(50m 선 고정) — 무거운 데이터라 1회만 세팅 (색/굵기는 effect B)
+  // A-1: 국경선 색·굵기 — 데이터(50m)보다 먼저 세팅해야 함. countries(110m)를 기다리면 50m이 먼저 도착했을 때
+  // three-globe 기본색(#ffffaa 노랑)으로 그려졌다가 110m 도착/클릭 후에야 흰색으로 바뀜. 그래서 countries와 무관하게 마운트 즉시 + 선택 변경 시 세팅
+  useEffect(() => {
+    if (!globeRef.current) return
+    const hasSelection = !!selectedCountry
+    globeRef.current
+      .pathColor(d => {
+        if (hasSelection) {
+          if (selectedCountry?.properties.NAME === d.name) return 'rgba(59,130,246,0.95)'
+          return 'rgba(255,255,255,0.45)'
+        }
+        return 'rgba(255,255,255,0.5)'
+      })
+      .pathStroke(d => {
+        if (hasSelection && selectedCountry?.properties.NAME === d.name) return 1.6
+        return 0.5
+      })
+  }, [selectedCountry])
+
+  // A-2: 국경선 pathsData(50m 선 고정) — 무거운 데이터라 1회만 세팅 (색/굵기는 effect A-1)
   useEffect(() => {
     if (!globeRef.current || borderPaths.length === 0) return
     globeRef.current
@@ -2248,18 +2267,7 @@ function App() {
       .polygonSideColor(() => 'rgba(0,0,0,0)')
       .polygonStrokeColor(() => 'rgba(0,0,0,0)')
       .polygonAltitude(() => 0.0008)
-      // 보이는 국경선 = 50m pathsData(선). 선택/호버 시 색·굵기만 변경
-      .pathColor(d => {
-        if (hasSelection) {
-          if (selectedCountry?.properties.NAME === d.name) return 'rgba(59,130,246,0.95)'
-          return 'rgba(255,255,255,0.45)'
-        }
-        return 'rgba(255,255,255,0.5)'
-      })
-      .pathStroke(d => {
-        if (hasSelection && selectedCountry?.properties.NAME === d.name) return 1.6
-        return 0.5
-      })
+      // 보이는 국경선 = 50m pathsData(선). 색·굵기는 effect A-1에서 (데이터보다 먼저 세팅되도록 분리)
       .polygonLabel(() => '')
       .onPolygonHover(feat => {
         // 마우스 따라다니는 three-globe 호버 툴팁(빈 검은 박스) 영구 숨김
