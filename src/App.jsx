@@ -2116,36 +2116,51 @@ function App() {
       .polygonsTransitionDuration(0)
   }, [countries])
 
-  // A-1: 국경선 색·굵기 — 데이터(50m)보다 먼저 세팅해야 함. countries(110m)를 기다리면 50m이 먼저 도착했을 때
-  // three-globe 기본색(#ffffaa 노랑)으로 그려졌다가 110m 도착/클릭 후에야 흰색으로 바뀜. 그래서 countries와 무관하게 마운트 즉시 + 선택 변경 시 세팅
+  // A-1: 국경선 — 전체 50m 국경선은 LineSegments 하나로 합쳐 1 draw call (기존: 선 1,631개 = 1,631 draw call)
+  // 선택된 나라 테두리만 pathsData(파란 굵은 선)로 따로 그림. 합친 선은 클릭 판정에서 제외(raycast 무시)
+  const borderObjRef = useRef(null)
   useEffect(() => {
-    if (!globeRef.current) return
-    const hasSelection = !!selectedCountry
-    globeRef.current
-      .pathColor(d => {
-        if (hasSelection) {
-          if (selectedCountry?.properties.NAME === d.name) return 'rgba(59,130,246,0.95)'
-          return 'rgba(255,255,255,0.45)'
-        }
-        return 'rgba(255,255,255,0.5)'
-      })
-      .pathStroke(d => {
-        if (hasSelection && selectedCountry?.properties.NAME === d.name) return 1.6
-        return 0.5
-      })
-  }, [selectedCountry])
+    const globe = globeRef.current
+    if (!globe || borderPaths.length === 0) return
+    const pos = []
+    for (const p of borderPaths) {
+      const c = p.coords
+      for (let i = 0; i < c.length - 1; i++) {
+        const a = globe.getCoords(c[i][0], c[i][1], 0.002), b = globe.getCoords(c[i + 1][0], c[i + 1][1], 0.002)
+        pos.push(a.x, a.y, a.z, b.x, b.y, b.z)
+      }
+    }
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+    // WebGL 선은 굵기가 항상 기기 픽셀 1칸 → 기존 굵은 선(0.5 CSS px, 투명도 0.5)과 밝기를 맞추려면 화면 배율(DPR)에 따라 투명도 조정
+    // 실측(같은 시점 선 밝기 합 비교): PC(DPR 1) 0.24, 폰(DPR 3 이상) 0.9~1이 기존과 비슷
+    const baseOpacity = Math.min(1, Math.max(0.24, 0.24 + 0.34 * ((window.devicePixelRatio || 1) - 1)))
+    const mat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: baseOpacity, depthWrite: false })
+    mat.userData.baseOpacity = baseOpacity
+    const lines = new THREE.LineSegments(geo, mat)
+    lines.raycast = () => {}   // 클릭이 선에 막히지 않게
+    globe.scene().add(lines)
+    borderObjRef.current = lines
+    return () => { globe.scene().remove(lines); geo.dispose(); mat.dispose(); borderObjRef.current = null }
+  }, [borderPaths])
 
-  // A-2: 국경선 pathsData(50m 선 고정) — 무거운 데이터라 1회만 세팅 (색/굵기는 effect A-1)
+  // 선택된 나라 테두리(파란 굵은 선) — 해당 나라 선만 pathsData로. 색·굵기는 데이터보다 먼저 세팅
   useEffect(() => {
-    if (!globeRef.current || borderPaths.length === 0) return
-    globeRef.current
-      .pathsData(borderPaths)
+    const globe = globeRef.current
+    if (!globe) return
+    const sel = selectedCountry?.properties?.NAME
+    // 기존과 같은 비율: 선택 있을 때 0.45/0.5 = 0.9배
+    if (borderObjRef.current) { const m = borderObjRef.current.material; m.opacity = m.userData.baseOpacity * (sel ? 0.9 : 1) }
+    globe
+      .pathColor(() => 'rgba(59,130,246,0.95)')
+      .pathStroke(() => 1.6)
       .pathPoints(d => d.coords)
       .pathPointLat(p => p[0])
       .pathPointLng(p => p[1])
       .pathPointAlt(0.002)
       .pathTransitionDuration(0)
-  }, [borderPaths])
+      .pathsData(sel ? borderPaths.filter(d => d.name === sel) : [])
+  }, [selectedCountry, borderPaths])
 
   // B: hover/select 변경 시 accessor만 재설정 (가벼움)
   useEffect(() => {
@@ -2264,10 +2279,10 @@ function App() {
     globe
       // 면·테두리 모두 투명 — 각진 110m 폴리곤은 안 보이게(클릭 판정용으로만 유지)
       .polygonCapColor(() => 'rgba(0,0,0,0)')
-      .polygonSideColor(() => 'rgba(0,0,0,0)')
-      .polygonStrokeColor(() => 'rgba(0,0,0,0)')
+      .polygonSideColor(() => false)    // 옆면 안 그림 (투명이어도 draw call 발생) — 클릭은 윗면(cap)으로 판정
+      .polygonStrokeColor(() => false)  // 테두리 안 그림 (보이는 국경선은 50m 선이 담당)
       .polygonAltitude(() => 0.0008)
-      // 보이는 국경선 = 50m pathsData(선). 색·굵기는 effect A-1에서 (데이터보다 먼저 세팅되도록 분리)
+      // 보이는 국경선 = 50m 선을 합친 LineSegments(effect A-1). 선택된 나라 파란 테두리만 pathsData
       .polygonLabel(() => '')
       .onPolygonHover(feat => {
         // 마우스 따라다니는 three-globe 호버 툴팁(빈 검은 박스) 영구 숨김
