@@ -103,7 +103,7 @@ function App() {
   const labelCacheRef = useRef({ t: 0, items: [] }) // 라벨 DOM+좌표 캐시 (querySelectorAll 매틱 방지)
   const hasTouchedRef = useRef(false) // 페이지에 첫 터치 발생하면 true → 호버 영구 비활성 (모바일 확정)
   const [countries, setCountries] = useState([])
-  const [borderPaths, setBorderPaths] = useState([])  // 50m 국경선(선) — pathsData용
+  const [borderData, setBorderData] = useState(null)  // 10m 국경선 { names, rings:[[이름번호, 점개수]], starts, latlng(Float32 [lat,lng,...]) }
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [selectedCity, setSelectedCity] = useState(null)
     const [activeTab, setActiveTab] = useState('hotspots')
@@ -1497,32 +1497,31 @@ function App() {
     load110m().then(processGeo).catch(err => console.error('[ATLAS] Polygon load failed:', err))
   }, [])
 
-  // 50m 국경선 로드 → pathsData용 선 좌표로 변환 (정밀 국경선, 면 아님 / 클릭 판정은 110m 폴리곤이 담당)
+  // 10m 국경선 로드 — public/borders10m.* (Natural Earth 10m을 좌표만 남겨 가공한 파일, 1e-4도 격자·차분 압축)
+  // 원본 10m geojson(전송 4.8MB, 메모리 +125MB) 대신 1.7MB 이진 파일 + 40KB 목록. 클릭 판정은 그대로 110m 폴리곤
   useEffect(() => {
-    const validRing = (ring) => {
-      if (!ring || ring.length < 4) return false
-      const lngs = ring.map(c => c[0])
-      return (Math.max(...lngs) - Math.min(...lngs)) <= 180
-    }
-    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson')
-      .then(r => r.json())
-      .then(data => {
-        const paths = []
-        data.features.forEach(feat => {
-          const name = feat.properties?.NAME
-          const geom = feat.geometry
-          if (!geom) return
-          const polys = geom.type === 'Polygon' ? [geom.coordinates]
-            : geom.type === 'MultiPolygon' ? geom.coordinates : []
-          polys.forEach(poly => poly.forEach(ring => {
-            if (!validRing(ring)) return
-            paths.push({ name, coords: ring.map(c => [c[1], c[0]]) })  // [lat,lng]
-          }))
-        })
-        console.log('[ATLAS] Loaded', paths.length, 'border paths (50m)')
-        setBorderPaths(paths)
-      })
-      .catch(err => console.error('[ATLAS] Border load failed:', err))
+    Promise.all([
+      fetch('/borders10m.json').then(r => r.json()),
+      fetch('/borders10m.bin').then(r => r.arrayBuffer()),
+    ]).then(([meta, buf]) => {
+      const bytes = new Uint8Array(buf), Q = meta.q
+      let total = 0
+      const starts = new Uint32Array(meta.rings.length)
+      meta.rings.forEach((r, i) => { starts[i] = total; total += r[1] })
+      const latlng = new Float32Array(total * 2)
+      let pos = 0, k = 0
+      const next = () => {   // 지그재그 가변길이 정수 1개 읽기
+        let v = 0, mul = 1, b
+        do { b = bytes[pos++]; v += (b & 0x7f) * mul; mul *= 128 } while (b & 0x80)
+        return v % 2 ? -(v + 1) / 2 : v / 2
+      }
+      for (const [, n] of meta.rings) {
+        let la = 0, ln = 0
+        for (let i = 0; i < n; i++) { la += next(); ln += next(); latlng[k++] = la / Q; latlng[k++] = ln / Q }
+      }
+      console.log('[ATLAS] Loaded', meta.rings.length, 'border rings (10m),', total, 'points')
+      setBorderData({ names: meta.names, rings: meta.rings, starts, latlng })
+    }).catch(err => console.error('[ATLAS] Border load failed:', err))
   }, [])
 
   // Init Globe with ESRI satellite tile engine (Google Earth급 해상도)
@@ -2119,19 +2118,56 @@ function App() {
   // A-1: 국경선 — 전체 50m 국경선은 LineSegments 하나로 합쳐 1 draw call (기존: 선 1,631개 = 1,631 draw call)
   // 선택된 나라 테두리만 pathsData(파란 굵은 선)로 따로 그림. 합친 선은 클릭 판정에서 제외(raycast 무시)
   const borderObjRef = useRef(null)
+  // 파란 테두리용 단순화(더글러스-포커, 허용오차 도 단위) — 굵은 선(Line2)은 점이 많으면 만들 때 무거움
+  const simplifyRing = (pts, eps) => {
+    if (pts.length < 4) return pts
+    const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length - 1] = 1
+    const stack = [[0, pts.length - 1]]
+    while (stack.length) {
+      const [a, b] = stack.pop(), [y1, x1] = pts[a], [y2, x2] = pts[b]
+      const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy)
+      let best = -1, bi = -1
+      for (let i = a + 1; i < b; i++) {
+        const [y, x] = pts[i]
+        const d = L ? Math.abs(dy * (x - x1) - dx * (y - y1)) / L : Math.hypot(x - x1, y - y1)
+        if (d > best) { best = d; bi = i }
+      }
+      if (best > eps) { keep[bi] = 1; stack.push([a, bi], [bi, b]) }
+    }
+    return pts.filter((_, i) => keep[i])
+  }
+  // 선택된 나라의 링만 pathsData 형식([{ name, coords:[[lat,lng],...] }])으로 꺼냄
+  const selectedBorderPaths = (bd, name) => {
+    const ni = bd.names.indexOf(name)
+    if (ni < 0) return []
+    const out = []
+    bd.rings.forEach(([n_i, n], ri) => {
+      if (n_i !== ni) return
+      const s0 = bd.starts[ri], coords = new Array(n)
+      for (let i = 0; i < n; i++) coords[i] = [bd.latlng[(s0 + i) * 2], bd.latlng[(s0 + i) * 2 + 1]]
+      out.push({ name, coords: simplifyRing(coords, 0.01) })
+    })
+    return out
+  }
   useEffect(() => {
     const globe = globeRef.current
-    if (!globe || borderPaths.length === 0) return
-    const pos = []
-    for (const p of borderPaths) {
-      const c = p.coords
-      for (let i = 0; i < c.length - 1; i++) {
-        const a = globe.getCoords(c[i][0], c[i][1], 0.002), b = globe.getCoords(c[i + 1][0], c[i + 1][1], 0.002)
-        pos.push(a.x, a.y, a.z, b.x, b.y, b.z)
-      }
+    if (!globe || !borderData) return
+    const { rings, starts, latlng } = borderData
+    const total = latlng.length / 2
+    // 좌표 → 3D (three-globe polar2Cartesian과 같은 식). 점마다 getCoords를 부르면 53만 번이라 직접 계산
+    const R = globe.getGlobeRadius() * (1 + 0.002), D = Math.PI / 180
+    const posArr = new Float32Array(total * 3)
+    for (let i = 0; i < total; i++) {
+      const phi = (90 - latlng[i * 2]) * D, theta = (90 - latlng[i * 2 + 1]) * D, sp = Math.sin(phi)
+      posArr[i * 3] = R * sp * Math.cos(theta); posArr[i * 3 + 1] = R * Math.cos(phi); posArr[i * 3 + 2] = R * sp * Math.sin(theta)
     }
+    // 링마다 이웃한 점끼리 선분 — 링 사이는 잇지 않음
+    const idx = new Uint32Array((total - rings.length) * 2)
+    let w = 0
+    rings.forEach(([, n], ri) => { const s0 = starts[ri]; for (let i = 0; i < n - 1; i++) { idx[w++] = s0 + i; idx[w++] = s0 + i + 1 } })
     const geo = new THREE.BufferGeometry()
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+    geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3))
+    geo.setIndex(new THREE.BufferAttribute(idx.subarray(0, w), 1))
     // WebGL 선은 굵기가 항상 기기 픽셀 1칸 → 기존 굵은 선(0.5 CSS px, 투명도 0.5)과 밝기를 맞추려면 화면 배율(DPR)에 따라 투명도 조정
     // 실측(같은 시점, 선 픽셀 진하기 상위 10%·1% 비교): PC(DPR 1) 0.24, 폰 DPR 3 약 0.6, DPR 4.5 약 0.85가 기존과 비슷
     // (밝기 '합'으로 맞추면 폰에서 선이 더 진해짐 — 2026-10-10 사용자 지적으로 재조정)
@@ -2143,7 +2179,7 @@ function App() {
     globe.scene().add(lines)
     borderObjRef.current = lines
     return () => { globe.scene().remove(lines); geo.dispose(); mat.dispose(); borderObjRef.current = null }
-  }, [borderPaths])
+  }, [borderData])
 
   // 선택된 나라 테두리(파란 굵은 선) — 해당 나라 선만 pathsData로. 색·굵기는 데이터보다 먼저 세팅
   useEffect(() => {
@@ -2160,8 +2196,8 @@ function App() {
       .pathPointLng(p => p[1])
       .pathPointAlt(0.002)
       .pathTransitionDuration(0)
-      .pathsData(sel ? borderPaths.filter(d => d.name === sel) : [])
-  }, [selectedCountry, borderPaths])
+      .pathsData(sel && borderData ? selectedBorderPaths(borderData, sel) : [])
+  }, [selectedCountry, borderData])
 
   // B: hover/select 변경 시 accessor만 재설정 (가벼움)
   useEffect(() => {
