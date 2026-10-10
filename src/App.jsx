@@ -2133,8 +2133,9 @@ function App() {
     const geo = new THREE.BufferGeometry()
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
     // WebGL 선은 굵기가 항상 기기 픽셀 1칸 → 기존 굵은 선(0.5 CSS px, 투명도 0.5)과 밝기를 맞추려면 화면 배율(DPR)에 따라 투명도 조정
-    // 실측(같은 시점 선 밝기 합 비교): PC(DPR 1) 0.24, 폰(DPR 3 이상) 0.9~1이 기존과 비슷
-    const baseOpacity = Math.min(1, Math.max(0.24, 0.24 + 0.34 * ((window.devicePixelRatio || 1) - 1)))
+    // 실측(같은 시점, 선 픽셀 진하기 상위 10%·1% 비교): PC(DPR 1) 0.24, 폰 DPR 3 약 0.6, DPR 4.5 약 0.85가 기존과 비슷
+    // (밝기 '합'으로 맞추면 폰에서 선이 더 진해짐 — 2026-10-10 사용자 지적으로 재조정)
+    const baseOpacity = Math.min(0.9, Math.max(0.24, 0.24 + 0.18 * ((window.devicePixelRatio || 1) - 1)))
     const mat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: baseOpacity, depthWrite: false })
     mat.userData.baseOpacity = baseOpacity
     const lines = new THREE.LineSegments(geo, mat)
