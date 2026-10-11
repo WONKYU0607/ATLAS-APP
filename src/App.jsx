@@ -32,6 +32,24 @@ import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeome
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 // 클릭 판정용 110m 폴리곤 윗면 — 화면엔 아무것도 안 그림(색·깊이 모두 끔). 레이캐스트 판정은 그대로 됨
 const POLY_CAP_MAT = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, colorWrite: false })
+// 시작 화면 나라: 홈 국가(사용자가 고른 것) → 없으면 폰·브라우저 언어의 지역(en-US→미국, ja→일본) → 그래도 없으면 한국
+// COUNTRY_INFO의 emoji(국기)에서 ISO 2글자 코드를 뽑아 지역 코드와 맞춤
+const flagToIso = (e) => {
+  const cps = [...(e || '')].map(c => c.codePointAt(0))
+  return cps.length === 2 && cps.every(c => c >= 0x1F1E6 && c <= 0x1F1FF) ? String.fromCharCode(...cps.map(c => c - 0x1F1E6 + 65)) : null
+}
+const guessCountryFromLocale = () => {
+  try {
+    const langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language]
+    for (const l of langs) {
+      const region = new Intl.Locale(l).maximize().region
+      if (!region) continue
+      const name = Object.keys(COUNTRY_INFO).find(k => flagToIso(COUNTRY_INFO[k].emoji) === region)
+      if (name) return name
+    }
+  } catch {}
+  return 'South Korea'
+}
 import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, getCityAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto, searchCommonsPhotos, uploadPhotosFromUrls, getExcludedAttractions, addExcludedAttraction, getCompletedCities, addCompletedCity, addCompletedCities, removeCompletedCity, getCityDoc } from './firebase'
 
 
@@ -1540,7 +1558,8 @@ function App() {
       stl.textContent = '.float-tooltip-kap{display:none !important;}'
       document.head.appendChild(stl)
     }
-    const globe = Globe()(globeContainerRef.current)
+    // animateIn 끔: 켜질 때 지구가 작게 시작해 한 바퀴 도는 연출 제거 (그 동안 국경선만 제자리에 남아 어긋나 보였음)
+    const globe = Globe({ animateIn: false })(globeContainerRef.current)
       .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
       .showAtmosphere(true)
       .atmosphereColor('#3a7bd5')
@@ -1646,8 +1665,22 @@ function App() {
     }
     animateMoon()
 
-    // 초기 화면: 대한민국 중심
-    setTimeout(() => globe.pointOfView({ lat: 36, lng: 127.8, altitude: window.innerWidth <= 768 ? 3.0 : 2.2 }), 300)
+    // 초기 화면: 시작 나라 중심 — 처음부터 바로(지연 없이) 맞춰서 기본 방향(위도0·경도0, 아프리카 앞바다)이 안 보이게
+    {
+      const name = homeCountry || guessCountryFromLocale()
+      let c = COUNTRY_ZOOM[name] ? { lat: COUNTRY_ZOOM[name].lat, lng: COUNTRY_ZOOM[name].lng } : null
+      if (!c) {
+        const cs = COUNTRY_CITIES[name] || []
+        if (cs.length) {
+          // 경도는 원형 평균(날짜변경선 걸친 나라 대비)
+          const lat = cs.reduce((s, x) => s + x.lat, 0) / cs.length
+          const sx = cs.reduce((s, x) => s + Math.cos(x.lng * Math.PI / 180), 0), sy = cs.reduce((s, x) => s + Math.sin(x.lng * Math.PI / 180), 0)
+          c = { lat, lng: Math.atan2(sy, sx) * 180 / Math.PI }
+        }
+      }
+      if (!c) c = { lat: 36, lng: 127.8 }
+      globe.pointOfView({ lat: c.lat, lng: c.lng, altitude: window.innerWidth <= 768 ? 3.0 : 2.2 })
+    }
 
     // ── 뒷면 라벨 숨기기 (지구 뒤쪽 라벨 안 보이게) ──
     const hideBackLabels = () => {
@@ -3527,7 +3560,7 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                         {lang==='ko'?'로그아웃':'Logout'}
                       </button>
                     </div>
-                  ) : (
+                  ) : (<>
                     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:'#f5f0ea',border:'1px solid #ede8e0',transition:'all .15s'}}
                       onClick={()=>{setShowLoginModal(true);setShowHamburger(false)}}
                       onMouseEnter={e=>e.currentTarget.style.background='#ede8e0'}
@@ -3539,9 +3572,18 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                           <div style={{fontSize:10,color:'#9a8070',marginTop:2}}>{lang==='ko'?'데이터 클라우드 동기화':'Sync your data'}</div>
                         </div>
                       </div>
-                      
+
                     </div>
-                  )}
+                    {/* 홈 국가 설정 — 로그인 안 해도 고를 수 있게 (앱 시작 화면 나라로 쓰임) */}
+                    <div style={{display:'flex',alignItems:'center',gap:6,marginTop:8,padding:'0 2px'}}>
+                      <span style={{fontSize:10,color:'#9a8070',whiteSpace:'nowrap'}}>{lang==='ko'?'홈 국가':'Home'}</span>
+                      <select value={homeCountry} onChange={e=>{setHomeCountry(e.target.value);localStorage.setItem('atlas_home_country',e.target.value);const code=extractCurrencyCode(COUNTRY_INFO[e.target.value]?.currency);if(code)setCurrFrom(code)}}
+                        style={{flex:1,padding:'4px 6px',borderRadius:6,border:'1px solid #e0d9d0',background:'#ede8e0',color:'#1a1714',fontSize:11,cursor:'pointer'}}>
+                        <option value="" style={{background:'#f5f0ea'}}>—</option>
+                        {Object.keys(COUNTRY_INFO).sort().map(c=><option key={c} value={c} style={{background:'#f5f0ea'}}>{COUNTRY_INFO[c].emoji} {lang==='ko'?c:c}</option>)}
+                      </select>
+                    </div>
+                  </>)}
                 </div>
               </div>
             )}
