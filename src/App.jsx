@@ -30,6 +30,8 @@ import * as THREE from 'three'
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
+// 클릭 판정용 110m 폴리곤 윗면 — 화면엔 아무것도 안 그림(색·깊이 모두 끔). 레이캐스트 판정은 그대로 됨
+const POLY_CAP_MAT = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, colorWrite: false })
 import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, getCityAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto, searchCommonsPhotos, uploadPhotosFromUrls, getExcludedAttractions, addExcludedAttraction, getCompletedCities, addCompletedCity, addCompletedCities, removeCompletedCity, getCityDoc } from './firebase'
 
 
@@ -2335,7 +2337,8 @@ function App() {
 
     globe
       // 면·테두리 모두 투명 — 각진 110m 폴리곤은 안 보이게(클릭 판정용으로만 유지)
-      .polygonCapColor(() => 'rgba(0,0,0,0)')
+      // 윗면: 색도 깊이도 안 씀 — 깊이를 쓰면 땅에 붙인 국경선(0.0008보다 낮게 내려감)을 가려 확대 시 선이 사라짐
+      .polygonCapMaterial(POLY_CAP_MAT)
       .polygonSideColor(() => false)    // 옆면 안 그림 (투명이어도 draw call 발생) — 클릭은 윗면(cap)으로 판정
       .polygonStrokeColor(() => false)  // 테두리 안 그림 (보이는 국경선은 50m 선이 담당)
       .polygonAltitude(() => 0.0008)
