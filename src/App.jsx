@@ -27,6 +27,9 @@ const ISLAND_NAMES_NORM = new Set(ISLAND_LABEL_DATA.map(d => normCountryName(d.n
 import { useState, useEffect, useRef, Component } from 'react'
 import Globe from 'globe.gl'
 import * as THREE from 'three'
+import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
+import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { onAuth, loginEmail, signupEmail, loginGoogle, logout, loadUserData, saveUserData, updateUserProfile, shareCourse, loadSharedCourses, deleteSharedCourse, uploadPhoto, addComment, deleteComment, createJournal, loadJournals, updateJournal, deleteJournal, toggleJournalLike, addJournalComment, deleteJournalComment, uploadJournalPhoto, getCityCache, setCityCache, uploadAttractionsArchive, uploadAttractionPhotos, getAttractionPhotos, getCityAttractionPhotos, deleteAttractionPhoto, setAttractionCoverPhoto, searchCommonsPhotos, uploadPhotosFromUrls, getExcludedAttractions, addExcludedAttraction, getCompletedCities, addCompletedCity, addCompletedCities, removeCompletedCity, getCityDoc } from './firebase'
 
 
@@ -2115,52 +2118,49 @@ function App() {
       .polygonsTransitionDuration(0)
   }, [countries])
 
-  // A-1: 국경선 — 전체 50m 국경선은 LineSegments 하나로 합쳐 1 draw call (기존: 선 1,631개 = 1,631 draw call)
-  // 선택된 나라 테두리만 pathsData(파란 굵은 선)로 따로 그림. 합친 선은 클릭 판정에서 제외(raycast 무시)
-  const borderObjRef = useRef(null)
-  // 파란 테두리용 단순화(더글러스-포커, 허용오차 도 단위) — 굵은 선(Line2)은 점이 많으면 만들 때 무거움
-  const simplifyRing = (pts, eps) => {
-    if (pts.length < 4) return pts
-    const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length - 1] = 1
-    const stack = [[0, pts.length - 1]]
-    while (stack.length) {
-      const [a, b] = stack.pop(), [y1, x1] = pts[a], [y2, x2] = pts[b]
-      const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy)
-      let best = -1, bi = -1
-      for (let i = a + 1; i < b; i++) {
-        const [y, x] = pts[i]
-        const d = L ? Math.abs(dy * (x - x1) - dx * (y - y1)) / L : Math.hypot(x - x1, y - y1)
-        if (d > best) { best = d; bi = i }
-      }
-      if (best > eps) { keep[bi] = 1; stack.push([a, bi], [bi, b]) }
+  // ── 국경선 ── 전체 10m 국경을 LineSegments 하나로(1 draw call), 클릭 판정에서는 제외(raycast 무시)
+  // 흰 선(전체 10m 국경)과 파란 선(선택국)을 반지름 R(높이 0)로 만들어 두고, 카메라 높이에 따라 object.scale만 (1+높이)로 바꿈.
+  // 멀리서는 0.2%(약 13km) 띄워 위성 타일에 파묻히지 않게 하고, 확대할수록 낮춰 땅에 붙임 → 확대 시 선이 떠 보이던 시차 해소.
+  // 점을 다시 만들지 않으므로 줌 중 비용은 사실상 0
+  const BORDER_ALT_MAX = 0.002, BORDER_ALT_MIN = 0.00002, BORDER_ALT_K = 0.01
+  const borderAltFor = (camAlt) => Math.min(BORDER_ALT_MAX, Math.max(BORDER_ALT_MIN, camAlt * BORDER_ALT_K))
+  const borderObjRef = useRef(null)     // 흰 선
+  const selBorderObjRef = useRef(null)  // 파란 선
+  const applyBorderAlt = () => {
+    const g = globeRef.current
+    if (!g) return
+    const sc = 1 + borderAltFor(g.pointOfView().altitude)
+    if (borderObjRef.current) borderObjRef.current.scale.setScalar(sc)
+    if (selBorderObjRef.current) {
+      selBorderObjRef.current.scale.setScalar(sc)
+      g.renderer().getSize(selBorderObjRef.current.material.resolution)   // 굵은 선 두께 계산용 화면 크기
     }
-    return pts.filter((_, i) => keep[i])
   }
-  // 선택된 나라의 링만 pathsData 형식([{ name, coords:[[lat,lng],...] }])으로 꺼냄
-  const selectedBorderPaths = (bd, name) => {
-    const ni = bd.names.indexOf(name)
-    if (ni < 0) return []
-    const out = []
-    bd.rings.forEach(([n_i, n], ri) => {
-      if (n_i !== ni) return
-      const s0 = bd.starts[ri], coords = new Array(n)
-      for (let i = 0; i < n; i++) coords[i] = [bd.latlng[(s0 + i) * 2], bd.latlng[(s0 + i) * 2 + 1]]
-      out.push({ name, coords: simplifyRing(coords, 0.01) })
-    })
-    return out
+  // 위경도 배열 → 반지름 R 위의 3D 좌표 (three-globe polar2Cartesian과 같은 식)
+  const latlngToXYZ = (latlng, from, count, R, out, outOffset) => {
+    const D = Math.PI / 180
+    for (let i = 0; i < count; i++) {
+      const la = latlng[(from + i) * 2], ln = latlng[(from + i) * 2 + 1]
+      const phi = (90 - la) * D, theta = (90 - ln) * D, sp = Math.sin(phi)
+      const o = (outOffset + i) * 3
+      out[o] = R * sp * Math.cos(theta); out[o + 1] = R * Math.cos(phi); out[o + 2] = R * sp * Math.sin(theta)
+    }
   }
+  // 카메라가 움직일 때마다 높이 갱신
+  useEffect(() => {
+    const g = globeRef.current
+    if (!g) return
+    const c = g.controls()
+    c.addEventListener('change', applyBorderAlt)
+    return () => c.removeEventListener('change', applyBorderAlt)
+  }, [])
   useEffect(() => {
     const globe = globeRef.current
     if (!globe || !borderData) return
     const { rings, starts, latlng } = borderData
     const total = latlng.length / 2
-    // 좌표 → 3D (three-globe polar2Cartesian과 같은 식). 점마다 getCoords를 부르면 53만 번이라 직접 계산
-    const R = globe.getGlobeRadius() * (1 + 0.002), D = Math.PI / 180
     const posArr = new Float32Array(total * 3)
-    for (let i = 0; i < total; i++) {
-      const phi = (90 - latlng[i * 2]) * D, theta = (90 - latlng[i * 2 + 1]) * D, sp = Math.sin(phi)
-      posArr[i * 3] = R * sp * Math.cos(theta); posArr[i * 3 + 1] = R * Math.cos(phi); posArr[i * 3 + 2] = R * sp * Math.sin(theta)
-    }
+    latlngToXYZ(latlng, 0, total, globe.getGlobeRadius(), posArr, 0)
     // 링마다 이웃한 점끼리 선분 — 링 사이는 잇지 않음
     const idx = new Uint32Array((total - rings.length) * 2)
     let w = 0
@@ -2176,27 +2176,47 @@ function App() {
     mat.userData.baseOpacity = baseOpacity
     const lines = new THREE.LineSegments(geo, mat)
     lines.raycast = () => {}   // 클릭이 선에 막히지 않게
+    lines.renderOrder = 1
     globe.scene().add(lines)
     borderObjRef.current = lines
+    applyBorderAlt()
     return () => { globe.scene().remove(lines); geo.dispose(); mat.dispose(); borderObjRef.current = null }
   }, [borderData])
 
-  // 선택된 나라 테두리(파란 굵은 선) — 해당 나라 선만 pathsData로. 색·굵기는 데이터보다 먼저 세팅
+  // 선택된 나라 파란 테두리 — 흰 선과 같은 10m 좌표 그대로(단순화 없음), 굵은 선(LineSegments2) 한 덩어리
   useEffect(() => {
     const globe = globeRef.current
     if (!globe) return
     const sel = selectedCountry?.properties?.NAME
     // 기존과 같은 비율: 선택 있을 때 0.45/0.5 = 0.9배
     if (borderObjRef.current) { const m = borderObjRef.current.material; m.opacity = m.userData.baseOpacity * (sel ? 0.9 : 1) }
-    globe
-      .pathColor(() => 'rgba(59,130,246,0.95)')
-      .pathStroke(() => 1.6)
-      .pathPoints(d => d.coords)
-      .pathPointLat(p => p[0])
-      .pathPointLng(p => p[1])
-      .pathPointAlt(0.002)
-      .pathTransitionDuration(0)
-      .pathsData(sel && borderData ? selectedBorderPaths(borderData, sel) : [])
+    if (!sel || !borderData) return
+    const ni = borderData.names.indexOf(sel)
+    if (ni < 0) return
+    const { rings, starts, latlng } = borderData
+    let segs = 0
+    rings.forEach(([n_i, n]) => { if (n_i === ni) segs += n - 1 })
+    const seg = new Float32Array(segs * 6)
+    const R = globe.getGlobeRadius()
+    const tmp = new Float32Array(3 * 2)
+    let w = 0
+    rings.forEach(([n_i, n], ri) => {
+      if (n_i !== ni) return
+      for (let i = 0; i < n - 1; i++) {
+        latlngToXYZ(latlng, starts[ri] + i, 2, R, tmp, 0)
+        seg.set(tmp, w); w += 6
+      }
+    })
+    const geo = new LineSegmentsGeometry()
+    geo.setPositions(seg)
+    const mat = new LineMaterial({ color: 0x3b82f6, linewidth: 1.6, transparent: true, opacity: 0.95, depthWrite: false })
+    const obj = new LineSegments2(geo, mat)
+    obj.raycast = () => {}
+    obj.renderOrder = 2
+    globe.scene().add(obj)
+    selBorderObjRef.current = obj
+    applyBorderAlt()
+    return () => { globe.scene().remove(obj); geo.dispose(); mat.dispose(); selBorderObjRef.current = null }
   }, [selectedCountry, borderData])
 
   // B: hover/select 변경 시 accessor만 재설정 (가벼움)
@@ -2319,7 +2339,7 @@ function App() {
       .polygonSideColor(() => false)    // 옆면 안 그림 (투명이어도 draw call 발생) — 클릭은 윗면(cap)으로 판정
       .polygonStrokeColor(() => false)  // 테두리 안 그림 (보이는 국경선은 50m 선이 담당)
       .polygonAltitude(() => 0.0008)
-      // 보이는 국경선 = 50m 선을 합친 LineSegments(effect A-1). 선택된 나라 파란 테두리만 pathsData
+      // 보이는 국경선 = 10m 선을 합친 LineSegments, 선택국 파란 테두리는 LineSegments2 (위 '국경선' effect들)
       .polygonLabel(() => '')
       .onPolygonHover(feat => {
         // 마우스 따라다니는 three-globe 호버 툴팁(빈 검은 박스) 영구 숨김
