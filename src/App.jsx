@@ -2760,16 +2760,21 @@ function App() {
       const cityNames = [cityKey, ...(CITY_I18N[cityKey] || [])].filter(Boolean)
       const allow = extra?.allow || []
       // 시/도(광역) 단위로 관광지 그룹화 — 구 단위로 안 나뉘게(도쿄 신주쿠·시부야는 다 '도쿄도' 한 그룹)
+      // 그룹 키 = '시/도|국가' — 같은 이름의 다른 나라 도시(스페인 쿠엥카 vs 에콰도르 쿠엔카)가 한 그룹으로 섞여
+      // 평균좌표가 대서양 한가운데가 되고, 그 그룹 전체가 '먼 동명도시'로 차단되던 문제 방지
+      const groupKey = (p) => {
+        const segs = (p.formatted_address || '').split(',').map(s => s.trim()).filter(Boolean)
+        if (segs.length < 2) return null
+        const loc = segs[segs.length - 2].replace(/[0-9]+/g, '').trim()  // 국가 앞 세그먼트(시/도), 우편번호 제거
+        return loc.length >= 2 ? loc + '|' + segs[segs.length - 1] : null
+      }
       const regionGroups = {}
       for (const p of merged) {
-        const segs = (p.formatted_address || '').split(',').map(s => s.trim()).filter(Boolean)
-        if (segs.length >= 2) {
-          const loc = segs[segs.length - 2].replace(/[0-9]+/g, '').trim()  // 국가 앞 세그먼트(시/도), 우편번호 제거
-          if (loc.length >= 2) (regionGroups[loc] = regionGroups[loc] || []).push(p)
-        }
+        const k = groupKey(p)
+        if (k) (regionGroups[k] = regionGroups[k] || []).push(p)
       }
       const learnThreshold = Math.max(3, merged.length * 0.25)
-      const learnedLocalities = Object.entries(regionGroups).filter(([, arr]) => arr.length >= learnThreshold).map(([k]) => k)
+      const learnedLocalities = [...new Set(Object.entries(regionGroups).filter(([, arr]) => arr.length >= learnThreshold).map(([k]) => k.split('|')[0]))]
       const acceptNames = [...cityNames, ...learnedLocalities]
       // 등록 안 된 동명 도시 차단: 시/도 그룹이 2개 이상일 때, 그룹 평균좌표가 도시에서 확연히 먼(150km 초과) 그룹만 제거
       // 그룹 평균 기준이라 넓은 도시(한 그룹, 평균=도심)·구 단위는 안전. 다른 지역 동명도시(별개 그룹, 수백km)만 걸림
@@ -2803,11 +2808,8 @@ function App() {
           const l = p.geometry?.location
           if (l && l.lat != null && distKm(l.lat, l.lng) <= landmarkR) return true   // 유적 11곳 한정
         }
-        const segs = (p.formatted_address || '').split(',').map(s => s.trim()).filter(Boolean)
-        if (segs.length >= 2) {
-          const loc = segs[segs.length - 2].replace(/[0-9]+/g, '').trim()
-          if (farGroups.has(loc)) return false   // 등록 안 된 동명 도시(먼 시/도 그룹) 차단
-        }
+        const gk = groupKey(p)
+        if (gk && farGroups.has(gk)) return false   // 등록 안 된 동명 도시(먼 시/도 그룹) 차단
         const addr = (p.vicinity || '') + ' ' + (p.formatted_address || '')
         if (acceptNames.some(n => addr.includes(n))) return true
         const hay = (p.name || '') + ' ' + addr
@@ -2815,8 +2817,10 @@ function App() {
       }
       // ── 지역명 자동학습(전 세계 공통): 등록 도시명이 Google 영문주소에 안 나오는 도시 구제 ──
       // 이름매칭 통과율 58% 미만일 때만 발동 → 정상 도시(서울/도쿄 100%, 옥스퍼드 97%, 브리즈번 63%)는 미발동. 광역도시(카파도키아 50%)는 발동
-      const basePass = merged.filter(inCity).length
-      if (merged.length >= 8 && basePass < merged.length * 0.58) {
+      // 자동학습 판단은 '먼 동명도시'로 차단된 결과를 뺀 나머지로만 — 에콰도르 쿠엔카 결과 때문에 통과율이 낮아져 'Ecuador'를 학습하던 문제 방지
+      const pool = merged.filter(p => { const gk = groupKey(p); return !(gk && farGroups.has(gk)) })
+      const basePass = pool.filter(inCity).length
+      if (pool.length >= 8 && basePass < pool.length * 0.58) {
         const countryEn = (city?.countryEn || '').trim()
         const normStr = (s) => s.toLowerCase().replace(/\s+/g, '')
         // 행정 일반명사는 학습 금지 — City/District 등이 학습되면 인접 도시까지 통과해 오염됨
@@ -2824,21 +2828,21 @@ function App() {
         const learned = []
         // (1) 마지막 세그먼트가 국가명이 아니면 그 자체가 지역명 — 마카오형 "R. de São Paulo, Macao"
         const lastCnt = {}
-        for (const p of merged) {
+        for (const p of pool) {
           const segs = (p.formatted_address || '').split(',').map(s => s.trim()).filter(Boolean)
           if (!segs.length) continue
           const last = segs[segs.length - 1].replace(/[0-9]+/g, '').trim()
           if (last.length >= 2) lastCnt[last] = (lastCnt[last] || 0) + 1
         }
         for (const [k, n] of Object.entries(lastCnt)) {
-          if (n >= merged.length * 0.5 && normStr(k) !== normStr(countryEn)) learned.push(k)
+          if (n >= pool.length * 0.5 && normStr(k) !== normStr(countryEn)) learned.push(k)
         }
         // (2) 마지막이 국가명이면 주소 전체를 구분자(콤마·슬래시·공백) 무관하게 토큰 분해 → 50%+ 반복 토큰 학습
         //     캔버라형 "Parkes ACT" → ACT / 카파도키아형 "Göreme/Nevşehir Merkez/Nevşehir" → Nevşehir (슬래시 광역)
         //     발동 조건(이름매칭 50%미만)이 정상 도시를 막고, 학습 토큰은 대부분 도시 내부 지명이라 추가 통과만 시킴(오염 아님)
         if (!learned.length) {
           const tokCnt = {}
-          for (const p of merged) {
+          for (const p of pool) {
             const seen = new Set()
             for (const t of (p.formatted_address || '').split(/[,/\s]+/)) {
               const tok = t.replace(/[0-9]+/g, '').replace(/[.\-'"]/g, '').trim()   // 숫자·구두점 제거 (Cd. → Cd)
@@ -2850,22 +2854,22 @@ function App() {
           const cityToks = new Set(cityNames.flatMap(n => n.split(/[,/\s]+/)).map(normStr).filter(Boolean))
           // 50%+ 반복 토큰 중 빈도 최상위 2개만 학습 — 진짜 공통 지역명(Nevşehir/ACT)이 도로약어(Cd/Cres)보다 빈도 높음. 노이즈 억제
           learned.push(...Object.entries(tokCnt)
-            .filter(([t, n]) => n >= merged.length * 0.5 && !countryToks.has(normStr(t)) && !cityToks.has(normStr(t)))
+            .filter(([t, n]) => n >= pool.length * 0.5 && !countryToks.has(normStr(t)) && !cityToks.has(normStr(t)))
             .sort((a, b) => b[1] - a[1]).slice(0, 2).map(([t]) => t))
         }
         if (learned.length) {
           acceptNames.push(...learned)   // inCity가 클로저로 참조 → 아래 ranked 필터에 즉시 반영
-          console.warn(`[지역명 자동학습] ${cityKey}: 이름매칭 ${basePass}/${merged.length} → [${learned.join(', ')}] 학습 (등록명: ${cityNames.join('/')}, 국가: ${countryEn})`)
-          setHotspotDiag({ city: cityKey, state: 'learned', learned, basePass, total: merged.length })
+          console.warn(`[지역명 자동학습] ${cityKey}: 이름매칭 ${basePass}/${pool.length} → [${learned.join(', ')}] 학습 (등록명: ${cityNames.join('/')}, 국가: ${countryEn})`)
+          setHotspotDiag({ city: cityKey, state: 'learned', learned, basePass, total: pool.length })
         } else {
-          console.warn(`[매칭실패·학습불가] ${cityKey}: ${basePass}/${merged.length} | 등록명: ${cityNames.join('/')} | 주소샘플: ${merged[0]?.formatted_address || '-'}`)
+          console.warn(`[매칭실패·학습불가] ${cityKey}: ${basePass}/${pool.length} | 등록명: ${cityNames.join('/')} | 주소샘플: ${pool[0]?.formatted_address || '-'}`)
           // 원인 진단용: 어떤 지역명으로 뭉쳤는지 + 실제 주소 10개 (이 두 줄만 보면 별칭에 뭘 넣을지 결정 가능)
           console.warn(`[주소분포] ${cityKey}:`, Object.entries(regionGroups).sort((x,y)=>y[1].length-x[1].length).map(([k,v])=>`${k}(${v.length})`).join(' | ') || '(그룹없음)')
-          console.warn(`[주소샘플] ${cityKey}:\n` + merged.slice(0,10).map(p=>`  ${p.name} → ${p.formatted_address || p.vicinity || '-'}`).join('\n'))
-          setHotspotDiag({ city: cityKey, state: 'failed', learned: [], basePass, total: merged.length, sample: merged[0]?.formatted_address || '' })
+          console.warn(`[주소샘플] ${cityKey}:\n` + pool.slice(0,10).map(p=>`  ${p.name} → ${p.formatted_address || p.vicinity || '-'}`).join('\n'))
+          setHotspotDiag({ city: cityKey, state: 'failed', learned: [], basePass, total: pool.length, sample: pool[0]?.formatted_address || '' })
         }
       } else {
-        setHotspotDiag({ city: cityKey, state: 'ok', learned: [], basePass, total: merged.length })
+        setHotspotDiag({ city: cityKey, state: 'ok', learned: [], basePass, total: pool.length })
       }
       const JUNK_TYPES = ['supermarket','grocery_or_supermarket','department_store','shopping_mall','convenience_store','store','clothing_store','electronics_store','home_goods_store','furniture_store','hardware_store','gas_station','lodging','car_dealer','restaurant','cafe','food','meal_takeaway','meal_delivery','bakery','bar','parking','travel_agency','school','university','primary_school','secondary_school','hair_care','beauty_salon','pharmacy','hospital','doctor','bank','atm','real_estate_agency','lawyer','insurance_agency','car_rental','car_repair','gym','spa']
       const ranked = merged
