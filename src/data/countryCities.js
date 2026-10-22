@@ -425,7 +425,6 @@ export const COUNTRY_CITIES = {
   "Portugal": [
     { name:"리스본", lat:38.72, lng:-9.14 },
     { name:"포르투", lat:41.15, lng:-8.61 },
-    { name:"알가르브", lat:37.09, lng:-8.23 },
     { name:"코임브라", lat:40.20, lng:-8.41 },
     { name:"마데이라", lat:32.6669, lng:-16.9241 },
     { name:"브라가", lat:41.55, lng:-8.43 },
