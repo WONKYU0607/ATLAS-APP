@@ -147,7 +147,6 @@ export const COUNTRY_CITIES = {
     { name:"세고비아", lat:40.95, lng:-4.12 },
     { name:"팔마", lat:39.57, lng:2.65 },
     { name:"이비자", lat:38.91, lng:1.44 },
-    { name:"테네리페", lat:28.4636, lng:-16.2518 },
     { name:"오비에도", lat:43.36, lng:-5.84 },
     { name:"부르고스", lat:42.34, lng:-3.7 },
     { name:"레온", lat:42.6, lng:-5.57 },
@@ -155,7 +154,6 @@ export const COUNTRY_CITIES = {
     { name:"알리칸테", lat:38.35, lng:-0.48 },
     { name:"무르시아", lat:37.99, lng:-1.13 },
     { name:"산탄데르", lat:43.46, lng:-3.81 },
-    { name:"라스팔마스", lat:28.12, lng:-15.43 }
   ],
   "Germany": [
     { name:"베를린", lat:52.52, lng:13.40 },
