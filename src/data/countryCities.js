@@ -503,18 +503,14 @@ export const COUNTRY_CITIES = {
     { name:"스톡홀름", lat:59.33, lng:18.07 },
     { name:"예테보리", lat:57.71, lng:11.97 },
     { name:"말뫼", lat:55.60, lng:13.00 },
-    { name:"아비스코", lat:68.35, lng:18.83 },
     { name:"웁살라", lat:59.86, lng:17.64 },
-    { name:"키루나", lat:67.86, lng:20.23 },
     { name:"비스뷔", lat:57.64, lng:18.3 }
   ],
   "Denmark": [
     { name:"코펜하겐", lat:55.68, lng:12.57 },
     { name:"오르후스", lat:56.15, lng:10.21 },
     { name:"오덴세", lat:55.40, lng:10.38 },
-    { name:"빌룬드", lat:55.73, lng:9.13 },
-    { name:"올보르", lat:57.05, lng:9.92 },
-    { name:"스카겐", lat:57.72, lng:10.58 }
+    { name:"빌룬드", lat:55.73, lng:9.13 }
   ],
   "Finland": [
     { name:"헬싱키", lat:60.17, lng:24.94 },
@@ -528,7 +524,6 @@ export const COUNTRY_CITIES = {
     { name:"레이캬비크", lat:64.13, lng:-21.82 },
     { name:"아퀴레이리", lat:65.68, lng:-18.10 },
     { name:"블루라군", lat:63.8804, lng:-22.4495 },
-    { name:"회픈", lat:64.25, lng:-15.21 },
     { name:"셀포스", lat:63.93, lng:-21.0 },
     { name:"비크", lat:63.42, lng:-19.01 },
     { name:"후사비크", lat:66.04, lng:-17.34 }
@@ -718,9 +713,7 @@ export const COUNTRY_CITIES = {
     { name:"갈웨이", lat:53.27, lng:-9.06 },
     { name:"코크", lat:51.90, lng:-8.47 },
     { name:"킬라니", lat:52.06, lng:-9.51 },
-    { name:"딩글", lat:52.14, lng:-10.27 },
     { name:"킬케니", lat:52.65, lng:-7.25 },
-    { name:"코노마라", lat:53.49, lng:-9.83 }
   ],
   "Belgium": [
     { name:"브뤼셀", lat:50.85, lng:4.35 },
