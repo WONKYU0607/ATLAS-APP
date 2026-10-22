@@ -149,7 +149,6 @@ export const COUNTRY_CITIES = {
     { name:"이비자", lat:38.91, lng:1.44 },
     { name:"테네리페", lat:28.4636, lng:-16.2518 },
     { name:"오비에도", lat:43.36, lng:-5.84 },
-    { name:"카세레스", lat:39.48, lng:-6.37 },
     { name:"부르고스", lat:42.34, lng:-3.7 },
     { name:"레온", lat:42.6, lng:-5.57 },
     { name:"팜플로나", lat:42.81, lng:-1.64 },
