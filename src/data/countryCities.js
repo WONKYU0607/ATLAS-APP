@@ -428,7 +428,6 @@ export const COUNTRY_CITIES = {
     { name:"알가르브", lat:37.09, lng:-8.23 },
     { name:"코임브라", lat:40.20, lng:-8.41 },
     { name:"마데이라", lat:32.6669, lng:-16.9241 },
-    { name:"파루", lat:37.02, lng:-7.93 },
     { name:"브라가", lat:41.55, lng:-8.43 },
     { name:"에보라", lat:38.57, lng:-7.91 },
     { name:"아베이루", lat:40.64, lng:-8.65 },
