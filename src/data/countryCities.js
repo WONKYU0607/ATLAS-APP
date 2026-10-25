@@ -516,9 +516,7 @@ export const COUNTRY_CITIES = {
     { name:"헬싱키", lat:60.17, lng:24.94 },
     { name:"로바니에미", lat:66.50, lng:25.72 },
     { name:"탐페레", lat:61.50, lng:23.77 },
-    { name:"투르쿠", lat:60.45, lng:22.27 },
-    { name:"포르보", lat:60.39, lng:25.66 },
-    { name:"사본린나", lat:61.87, lng:28.88 }
+    { name:"투르쿠", lat:60.45, lng:22.27 }
   ],
   "Iceland": [
     { name:"레이캬비크", lat:64.13, lng:-21.82 },
