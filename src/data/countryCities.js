@@ -522,7 +522,6 @@ export const COUNTRY_CITIES = {
     { name:"아퀴레이리", lat:65.68, lng:-18.10 },
     { name:"블루라군", lat:63.8804, lng:-22.4495 },
     { name:"셀포스", lat:63.93, lng:-21.0 },
-    { name:"비크", lat:63.42, lng:-19.01 },
     { name:"후사비크", lat:66.04, lng:-17.34 }
   ],
   "Poland": [
