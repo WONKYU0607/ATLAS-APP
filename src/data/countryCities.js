@@ -494,7 +494,6 @@ export const COUNTRY_CITIES = {
     { name:"베르겐", lat:60.39, lng:5.32 },
     { name:"플롬", lat:60.86, lng:7.11 },
     { name:"트롬쇠", lat:69.65, lng:18.96 },
-    { name:"로포텐", lat:68.23, lng:13.99 },
     { name:"게이랑에르", lat:62.10, lng:7.21 },
     { name:"스타방에르", lat:58.97, lng:5.73 },
     { name:"트론헤임", lat:63.43, lng:10.39 }
