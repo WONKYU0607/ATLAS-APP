@@ -521,8 +521,7 @@ export const COUNTRY_CITIES = {
     { name:"레이캬비크", lat:64.13, lng:-21.82 },
     { name:"아퀴레이리", lat:65.68, lng:-18.10 },
     { name:"블루라군", lat:63.8804, lng:-22.4495 },
-    { name:"셀포스", lat:63.93, lng:-21.0 },
-    { name:"후사비크", lat:66.04, lng:-17.34 }
+    { name:"셀포스", lat:63.93, lng:-21.0 }
   ],
   "Poland": [
     { name:"크라쿠프", lat:50.06, lng:19.94 },
