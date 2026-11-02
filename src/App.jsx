@@ -18,6 +18,9 @@ const ISLAND_NAMES = new Set(ISLAND_LABEL_DATA.map(d => d.nameEn))
 // 1회성: 도시를 채우지 않고 라벨만 완료 처리할 36개국 수도 — 일괄 처리 후 이 상수와 버튼을 삭제할 것
 const BULK_DONE = ["아스마라","하르툼","은자메나","니아메","바마코","누악쇼트","평양","프라이아","반줄","비사우","코나크리","프리타운","몬로비아","아비장","와가두구","로메","코토누","말라보","야운데","상투메","방기","주바","지부티시","모가디슈","리브르빌","브라자빌","킨샤사","키갈리","기테가","루안다","루사카","릴롱궤","음바바네","마세루","모로니","빅토리아(세이셸)"]
 // 데이터 없고 클릭 불가한 폴리곤(속령·분쟁지·남극 등) — 라벨 숨김
+// 별도 폴리곤으로 들어 있는 자치령·해외영토 → 누르면 본국 이름·정보로 선택(테두리는 영토+본국 같이), 카메라는 영토에 (Natural Earth NAME 기준)
+// 프랑스령 기아나처럼 본국 폴리곤에 포함된 곳은 원래 본국으로 잡히므로 여기 없음
+const TERRITORY_OF = { 'Puerto Rico': 'United States of America', 'Greenland': 'Denmark', 'Falkland Is.': 'United Kingdom', 'New Caledonia': 'France', 'Fr. S. Antarctic Lands': 'France' }
 const HIDDEN_COUNTRY_LABELS = new Set(['W. Sahara', 'Falkland Is.', 'Greenland', 'Fr. S. Antarctic Lands', 'Puerto Rico', 'New Caledonia', 'Antarctica', 'N. Cyprus', 'Somaliland'])
 // 면적 작은 나라(섬나라 제외 하위 30%, 단 이스라엘·벨기에·대만·네덜란드·덴마크·스위스·크로아티아·아일랜드 제외)
 // → 섬나라처럼 줌인(alt<0.7) 했을 때만 라벨 표시. 유럽 등 작은 나라 밀집 정리용
@@ -2229,17 +2232,18 @@ function App() {
     // 기존과 같은 비율: 선택 있을 때 0.45/0.5 = 0.9배
     if (borderObjRef.current) { const m = borderObjRef.current.material; m.opacity = m.userData.baseOpacity * (sel ? 0.9 : 1) }
     if (!sel || !borderData) return
-    const ni = borderData.names.indexOf(sel)
-    if (ni < 0) return
+    // 자치령을 눌러 들어왔으면 영토 테두리도 같이
+    const nis = new Set([sel, selectedCountry?._territory?.properties?.NAME].filter(Boolean).map(n => borderData.names.indexOf(n)).filter(i => i >= 0))
+    if (!nis.size) return
     const { rings, starts, latlng } = borderData
     let segs = 0
-    rings.forEach(([n_i, n]) => { if (n_i === ni) segs += n - 1 })
+    rings.forEach(([n_i, n]) => { if (nis.has(n_i)) segs += n - 1 })
     const seg = new Float32Array(segs * 6)
     const R = globe.getGlobeRadius()
     const tmp = new Float32Array(3 * 2)
     let w = 0
     rings.forEach(([n_i, n], ri) => {
-      if (n_i !== ni) return
+      if (!nis.has(n_i)) return
       for (let i = 0; i < n - 1; i++) {
         latlngToXYZ(latlng, starts[ri] + i, 2, R, tmp, 0)
         seg.set(tmp, w); w += 6
@@ -2360,9 +2364,31 @@ function App() {
     }
     // 세계뷰 바다 탭: 화면상 가장 가까운 섬나라 선택 (폴리곤 없는 작은 섬용)
     const ISLAND_TAP_PX = 60
-    const selectNearestIsland = (event) => {
+    // 바다로 판정된 탭이 실제로는 어느 나라 땅 안인지 (110m 폴리곤 윗면 삼각분할에 구멍이 나는 곳 보정 — 그린란드 내부 등)
+    const countryAt = (lat, lng) => {
+      const inRing = (ring) => {
+        let inside = false
+        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+          const [xi, yi] = ring[i], [xj, yj] = ring[j]
+          if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside
+        }
+        return inside
+      }
+      const inPoly = (poly) => poly.length && inRing(poly[0]) && !poly.slice(1).some(inRing)
+      return countries.find(f => {
+        const g = f.geometry
+        if (!g || !g.coordinates?.length || f.properties?.NAME === 'Antarctica') return false
+        return g.type === 'Polygon' ? inPoly(g.coordinates) : g.type === 'MultiPolygon' ? g.coordinates.some(inPoly) : false
+      })
+    }
+
+    const selectNearestIsland = (event, coords) => {
       const r = pickNearestByScreen(ISLAND_LABEL_DATA, d => d.lat, d => d.lng, event, ISLAND_TAP_PX)
-      if (!r) return
+      if (!r) {
+        const land = coords && countryAt(coords.lat, coords.lng)
+        if (land) openCountryFeat(land)
+        return
+      }
       const best = r.best
       justClickedCityRef.current = true
       setTimeout(() => { justClickedCityRef.current = false }, 150)
@@ -2399,11 +2425,13 @@ function App() {
           const nearThreshold = !selectedCountry.geometry ? 70 : 45
           const cityR = pickNearestByScreen(cl, c => c.lat, c => c.lng, ev, nearThreshold)
           if (cityR) { selectNearestCity(selectedCountry.properties.NAME, ev); return }
+          // 자치령으로 들어와 있는 상태에서 그 영토를 다시 누르면 그대로 둠 (본국 도시로 튀거나 닫히지 않게)
+          if (feat.properties.NAME === selectedCountry._territory?.properties?.NAME) return
           // 근처에 자기 나라 도시 없음 → 같은 나라 땅이면 가까운 도시 / 다른 나라면 전환
           if (feat.properties.NAME === selectedCountry.properties.NAME) {
             selectNearestCity(selectedCountry.properties.NAME, ev)
           } else {
-            handleCountryClick(feat)
+            openCountryFeat(feat)
           }
         } else {
           // 세계뷰: 먼저 마이크로스테이트(폴리곤 없는 작은 국가, 큰 나라 영토 안에 위치) 체크
@@ -2418,7 +2446,7 @@ function App() {
             return
           }
           // 세계뷰: 즉시 국가 진입 (지연 피드백 제거 → 짧은 탭도 안정적)
-          handleCountryClick(feat)
+          openCountryFeat(feat)
         }
       })
       .onGlobeClick((coords, ev) => {
@@ -2428,7 +2456,7 @@ function App() {
           selectNearestCity(selectedCountry.properties.NAME, ev)
         } else {
           // 세계뷰 바다 탭 → 화면상 가장 가까운 작은 섬 (폴리곤 없는 섬)
-          selectNearestIsland(ev)
+          selectNearestIsland(ev, coords)
         }
       })
   }, [selectedCountry, lang, countries])
@@ -2588,6 +2616,13 @@ function App() {
   }
 
 
+  // 자치령 폴리곤이면 본국 feature에 영토를 달아서 연다 (_territory: 카메라 위치·파란 테두리에 사용)
+  const openCountryFeat = (feat) => {
+    const sov = TERRITORY_OF[feat?.properties?.NAME]
+    const sf = sov && countries.find(f => f.properties && f.properties.NAME === sov)
+    handleCountryClick(sf ? { ...sf, _territory: feat } : feat)
+  }
+
   const handleCountryClick = (feat) => {
     if (!feat || !globeRef.current) return
     const globe = globeRef.current
@@ -2604,8 +2639,9 @@ function App() {
 
     const clickedName = feat.properties.NAME
 
-    // 같은 나라 다시 클릭하면 원상복구
-    if (selectedCountry?.properties.NAME === clickedName) {
+    // 같은 나라 다시 클릭하면 원상복구 (본국 선택 중 그 나라 자치령을 누른 경우는 영토로 이동만)
+    const sameTerritory = (selectedCountry?._territory?.properties?.NAME || null) === (feat._territory?.properties?.NAME || null)
+    if (selectedCountry?.properties.NAME === clickedName && sameTerritory) {
       closeCountry()
       return
     }
@@ -2617,8 +2653,9 @@ function App() {
     setShowCountryInfo(false)  // 다른 국가 선택 시 정보 패널 닫힘
     setInfoExpanded(false)  // 항상 접힌(헤더만) 상태로 시작 — 사용자가 헤더 탭하면 펼쳐짐
 
-    const center = getCountryCenter(feat)
-    const altitude = getCountryAltitude(feat)
+    const viewFeat = feat._territory || feat   // 자치령을 눌렀으면 카메라는 그 영토로
+    const center = getCountryCenter(viewFeat)
+    const altitude = getCountryAltitude(viewFeat)
     const mobileAlt = window.innerWidth <= 768 ? altitude * 1.5 : altitude
     cityEnterAltRef.current = mobileAlt   // 도시 소도시 라벨 게이팅 기준 (이 나라의 진입 줌)
 
