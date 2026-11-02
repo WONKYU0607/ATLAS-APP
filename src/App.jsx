@@ -21,6 +21,7 @@ const BULK_DONE = ["아스마라","하르툼","은자메나","니아메","바마
 // 별도 폴리곤으로 들어 있는 자치령·해외영토 → 누르면 본국 이름·정보로 선택(테두리는 영토+본국 같이), 카메라는 영토에 (Natural Earth NAME 기준)
 // 프랑스령 기아나처럼 본국 폴리곤에 포함된 곳은 원래 본국으로 잡히므로 여기 없음
 const TERRITORY_OF = { 'Puerto Rico': 'United States of America', 'Greenland': 'Denmark', 'Falkland Is.': 'United Kingdom', 'New Caledonia': 'France', 'Fr. S. Antarctic Lands': 'France' }
+const TERRITORY_ISO = { 'Puerto Rico': 'PR', 'Greenland': 'GL', 'Falkland Is.': 'FK', 'New Caledonia': 'NC', 'Fr. S. Antarctic Lands': 'TF' }
 const HIDDEN_COUNTRY_LABELS = new Set(['W. Sahara', 'Falkland Is.', 'Greenland', 'Fr. S. Antarctic Lands', 'Puerto Rico', 'New Caledonia', 'Antarctica', 'N. Cyprus', 'Somaliland'])
 // 면적 작은 나라(섬나라 제외 하위 30%, 단 이스라엘·벨기에·대만·네덜란드·덴마크·스위스·크로아티아·아일랜드 제외)
 // → 섬나라처럼 줌인(alt<0.7) 했을 때만 라벨 표시. 유럽 등 작은 나라 밀집 정리용
@@ -3712,6 +3713,12 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
       {/* Country selected badge + info panel */}
       {selectedCountry && !selectedCity && (() => {
         const cName = selectedCountry.properties.NAME
+        // 자치령으로 들어왔으면 제목은 영토 이름(그린란드), 아랫줄에 본국(덴마크령)
+        const terrEn = selectedCountry._territory?.properties?.NAME
+        let terrName = terrEn
+        try { if (terrEn) terrName = new Intl.DisplayNames([lang === 'zh' ? 'zh-Hans' : lang], { type: 'region' }).of(TERRITORY_ISO[terrEn]) } catch {}
+        const sovName = getCountryName(cName)
+        const terrSub = terrEn ? (lang === 'ko' ? sovName + '령' : lang === 'ja' ? sovName + '領' : lang === 'zh' ? '属' + sovName : sovName) : ''
         const rawInfo = COUNTRY_INFO[cName]
         const info = translateCountryInfo(rawInfo, cName, lang)
         const cities = COUNTRY_CITIES[cName]
@@ -3737,8 +3744,8 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                 }}>
                   <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
                     <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:15,fontWeight:800,color:'#e8d9b8',letterSpacing:'-.3px'}}>{countryKo}</div>
-                      <div style={{fontSize:9.5,color:'#9a8f7a',fontWeight:500}}>{cName} · {info.continent}</div>
+                      <div style={{fontSize:15,fontWeight:800,color:'#e8d9b8',letterSpacing:'-.3px'}}>{terrEn ? terrName : countryKo}</div>
+                      <div style={{fontSize:9.5,color:'#9a8f7a',fontWeight:500}}>{terrEn ? terrSub : cName} · {info.continent}</div>
                     </div>
                     <span style={{fontSize:11,color:'#8a7f6a',flexShrink:0}}>{infoExpanded ? '▼' : '▲'}</span>
                     <button onClick={(e) => { e.stopPropagation(); closeCountry() }} style={{background:'rgba(255,255,255,.08)',border:'none',borderRadius:10,width:22,height:22,padding:0,cursor:'pointer',fontSize:11,color:'#b5a98e',fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}} aria-label="close">✕</button>
