@@ -2,6 +2,7 @@ import { translateCountryInfo } from './data/countryI18n'
 import { T, CITY_I18N, CONTINENT_I18N } from './data/translations'
 import { getCountryDisplayName, LANG_OPTIONS, getFlagImg, COUNTRY_INFO, EMERGENCY_CONTACTS, extractCurrencyCode } from './data/countryInfo'
 import { COUNTRY_CITIES } from './data/countryCities'
+import MyTravels from './MyTravels'
 import ISLAND_POLYGONS from './data/islandPolygons.json'
 
 // 작은 섬나라 라벨 데이터 (폴리곤 없이 라벨 좌표만 사용 — 클릭 시 진입)
@@ -87,6 +88,8 @@ function App() {
   const [showCommunity, setShowCommunity] = useState(false)
   const [communitySearch, setCommunitySearch] = useState('')
   const [communityDayFilter, setCommunityDayFilter] = useState(0)
+  // 추출 도구 상자 접기/펴기 — 접으면 제목 줄만 남아 아래 햄버거 메뉴 등을 가리지 않음(브라우저에 기억)
+  const [extractOpen, setExtractOpen] = useState(() => { try { return localStorage.getItem('atlas_extract_open') !== '0' } catch { return true } })
   const [extractTick, setExtractTick] = useState(0) // 임시 추출 도구 리렌더용 (추출 끝나면 삭제)
   const [hotspotDiag, setHotspotDiag] = useState(null) // 관광지 지역명 매칭 진단(배지 표시용)
   const [communityCoursesData, setCommunityCoursesData] = useState([])
@@ -3991,11 +3994,12 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
           setExtractTick(t=>t+1)
         }
         return (
-          <div style={{position:'fixed',top:10,left:10,zIndex:99999,display:'flex',flexDirection:'column',gap:6,alignItems:'stretch',background:'rgba(15,18,24,.82)',padding:'10px 12px',borderRadius:12,boxShadow:'0 4px 16px rgba(0,0,0,.4)',minWidth:200}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10}}>
+          <div style={{position:'fixed',top:isMobile?52:64,left:10,zIndex:1350,display:showHamburger?'none':'flex',flexDirection:'column',gap:6,alignItems:'stretch',background:'rgba(15,18,24,.82)',padding:extractOpen?'10px 12px':'6px 12px',borderRadius:12,boxShadow:'0 4px 16px rgba(0,0,0,.4)',minWidth:200}}>
+            <div onClick={()=>setExtractOpen(o=>{const n=!o;try{localStorage.setItem('atlas_extract_open',n?'1':'0')}catch{};return n})} title={extractOpen?'접기':'펼치기'} style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10,cursor:'pointer',userSelect:'none'}}>
               <span style={{fontSize:12,fontWeight:700,color:done?'#4ade80':'#fbbf24'}}>{cityName} · {done?'추출됨':'미추출'}</span>
-              <span style={{fontSize:11,color:'#cbd5e1'}}>누적 {count}</span>
+              <span style={{fontSize:11,color:'#cbd5e1'}}>누적 {count} <span style={{marginLeft:6,color:'#94a3b8'}}>{extractOpen?'▲':'▼'}</span></span>
             </div>
+            {extractOpen && (<>
             {hotspotDiag && hotspotDiag.city === cityName && hotspotDiag.state !== 'cached' && (
               <div style={{fontSize:10,lineHeight:1.35,padding:'4px 6px',borderRadius:6,
                 background: hotspotDiag.state==='failed' ? 'rgba(239,68,68,.18)' : hotspotDiag.state==='learned' ? 'rgba(251,191,36,.16)' : 'rgba(74,222,128,.13)',
@@ -4091,6 +4095,7 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
                 alert('업로드 실패: '+(err?.message||err))
               }
             }} style={{width:'100%',marginTop:6,padding:'8px 0',background:'#475569',color:'white',border:'none',borderRadius:8,fontSize:11,fontWeight:700,cursor:'pointer'}}>전체 업로드 ({Object.keys(ex).length})</button>
+            </>)}
           </div>
         )
       })()}
@@ -5158,203 +5163,10 @@ Write all descriptive text in ${langName}, but keep the food authentic to ${coun
         </div>
       )}
 
-      {/* ── 내 여행 기록 (전체 패널) ── */}
+      {/* ── 내 여행 기록 (전체 패널) — src/MyTravels.jsx ── */}
       {showMyTravels && (
-        <>
-          <div onClick={()=>setShowMyTravels(false)} style={{position:'absolute',inset:0,background:'rgba(0,0,0,.5)',zIndex:1400,backdropFilter:'blur(4px)'}}/>
-          <div style={{
-            position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',
-            width:isMobile?'96vw':Math.min(900,typeof window!=='undefined'?window.innerWidth-60:840),
-            maxHeight:isMobile?'90vh':'85vh',
-            background:'#0f172a',borderRadius:20,border:'1px solid rgba(255,255,255,.15)',
-            boxShadow:'0 24px 80px rgba(0,0,0,.5)',zIndex:1401,overflow:'hidden',
-            display:'flex',flexDirection:'column',
-            animation:'aiModalIn .3s cubic-bezier(.16,1,.3,1)'
-          }}>
-            {/* 헤더 */}
-            <div style={{padding:'20px 24px 16px',borderBottom:'1px solid rgba(255,255,255,.1)',flexShrink:0}}>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                <div style={{display:'flex',alignItems:'center',gap:10}}>
-                  <span style={{fontSize:24}}>🌍</span>
-                  <div>
-                    <div style={{fontSize:20,fontWeight:700,color:'white'}}>{t('visitedTitle')}</div>
-                    <div style={{fontSize:11,color:'#94a3b8',marginTop:2}}>
-                      {(()=>{const vc=new Set();(visited.cities||[]).forEach(c=>{const entry=Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===c));if(entry)vc.add(entry[0])});return vc.size})()}{lang==='ko'?'개국':' countries'} · {visitedCityCount}{t('visitedCityCount')}
-                    </div>
-                  </div>
-                </div>
-                <button onClick={()=>setShowMyTravels(false)}
-                  style={{width:32,height:32,borderRadius:8,border:'1px solid rgba(255,255,255,.2)',background:'none',color:'#94a3b8',cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
-              </div>
-            </div>
-
-            {/* 컨텐츠 */}
-            <div style={{flex:1,overflowY:'auto',padding:isMobile?'16px':'24px'}}>
-
-              {/* 퍼센트 + 통계 카드 */}
-              {(()=>{
-                const _vcSet=new Set();(visited.cities||[]).forEach(c=>{const entry=Object.entries(COUNTRY_CITIES).find(([_,cs])=>cs.some(x=>x.name===c));if(entry)_vcSet.add(entry[0])});
-                const _vcc=_vcSet.size, _tcc=Object.keys(COUNTRY_CITIES).length
-                const _cpct=_tcc>0?Math.round(_vcc/_tcc*100):0
-                const _cipct=totalCities>0?Math.round(visitedCityCount/totalCities*100):0
-                const _combo=Math.round((_cpct+_cipct)/2)
-                return (<>
-              <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:16}}>
-                <div style={{flex:1}}>
-                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
-                    <span style={{fontSize:13,fontWeight:600,color:'white'}}>{t('visitedProgress')}</span>
-                    <span style={{fontSize:22,fontWeight:800,color:'#c8856a'}}>{_combo}%</span>
-                  </div>
-                  <div style={{height:10,background:'rgba(255,255,255,.08)',borderRadius:5,overflow:'hidden'}}>
-                    <div style={{height:'100%',width:`${_combo}%`,background:'linear-gradient(90deg,#c8856a,#f59e0b)',borderRadius:5,transition:'width .8s cubic-bezier(.16,1,.3,1)'}}/>
-                  </div>
-                </div>
-              </div>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8,marginBottom:20}}>
-                {[
-                  {label:lang==='ko'?'방문 국가':'Countries',value:_vcc,total:_tcc,pct:_cpct,color:'#3b82f6'},
-                  {label:lang==='ko'?'방문 도시':'Cities',value:visitedCityCount,total:totalCities,pct:_cipct,color:'#c8856a'},
-                ].map((s,i)=>(
-                  <div key={i} style={{background:'rgba(255,255,255,.05)',borderRadius:12,padding:'14px 16px',border:'1px solid rgba(255,255,255,.08)'}}>
-                    <div style={{display:'flex',alignItems:'baseline',gap:6}}>
-                      <span style={{fontSize:28,fontWeight:800,color:s.color}}>{s.value}</span>
-                      <span style={{fontSize:14,fontWeight:700,color:s.color,opacity:.7}}>{s.pct}%</span>
-                    </div>
-                    <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{s.label} ({t('visitedOf')} {s.total})</div>
-                  </div>
-                ))}
-              </div>
-              </>)})()}
-
-              {/* 초기화 버튼 */}
-              <div style={{display:'flex',justifyContent:'flex-end',marginBottom:8}}>
-                <button onClick={()=>{if(window.confirm(lang==='ko'?'모든 방문 기록을 초기화할까요?':'Reset all travel records?')){saveVisited({});setVisitedExpandContinent(null);setVisitedExpandCity(null)}}}
-                  style={{padding:'5px 14px',borderRadius:8,border:'1px solid rgba(239,68,68,.4)',background:'rgba(239,68,68,.1)',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',transition:'all .15s'}}
-                  onMouseEnter={e=>{e.currentTarget.style.background='rgba(239,68,68,.25)'}}
-                  onMouseLeave={e=>{e.currentTarget.style.background='rgba(239,68,68,.1)'}}
-                >{lang==='ko'?'🗑 초기화':'🗑 Reset'}</button>
-              </div>
-
-              {/* 세계지도 (실제 국가 모양) */}
-              <div style={{background:'rgba(6,12,30,.8)',borderRadius:14,border:'1px solid rgba(255,255,255,.08)',padding:'8px 4px',overflow:'hidden',marginBottom:24}}>
-                <svg viewBox="-180 -90 360 180" preserveAspectRatio="xMidYMid meet" style={{width:'100%',height:'auto',display:'block'}} xmlns="http://www.w3.org/2000/svg">
-                  {/* 바다 배경 */}
-                  <rect x="-180" y="-90" width="360" height="180" fill="#0a1628"/>
-                  {/* 그리드 */}
-                  {[-60,-30,0,30,60].map(lat=>(
-                    <line key={`lat${lat}`} x1="-180" y1={-lat} x2="180" y2={-lat} stroke="rgba(255,255,255,.04)" strokeWidth="0.2"/>
-                  ))}
-                  {/* 국가 폴리곤 */}
-                  {countries.map((feat, fi) => {
-                    const name = feat.properties?.NAME
-                    if (!name) return null
-                    const cities = COUNTRY_CITIES[name] || []
-                    const isVisited = cities.some(c => (visited.cities||[]).includes(c.name))
-                    const vCount = cities.filter(c => (visited.cities||[]).includes(c.name)).length
-                    const geom = feat.geometry
-                    const toPath = (ring) => ring.map((c,i) => `${i===0?'M':'L'}${c[0]},${-c[1]}`).join('') + 'Z'
-                    let paths = []
-                    if (geom.type === 'Polygon') {
-                      paths = [toPath(geom.coordinates[0])]
-                    } else if (geom.type === 'MultiPolygon') {
-                      paths = geom.coordinates.map(poly => toPath(poly[0]))
-                    }
-                    return paths.map((d, pi) => (
-                      <path key={`${fi}-${pi}`} d={d}
-                        fill={isVisited ? (vCount === cities.length ? '#22c55e' : '#4ade80') : 'rgba(255,255,255,.08)'}
-                        stroke={isVisited ? '#16a34a' : 'rgba(255,255,255,.12)'}
-                        strokeWidth={isVisited ? '0.4' : '0.15'}
-                        opacity={isVisited ? 0.85 : 0.6}
-                      />
-                    ))
-                  })}
-
-                </svg>
-              </div>
-
-              {/* 대륙별 목록 */}
-              {(() => {
-                const continents = {}
-                Object.entries(COUNTRY_CITIES).forEach(([country, cities]) => {
-                  const _rawCont = COUNTRY_INFO[country]?.continent || ''
-                  const cont = _rawCont ? _rawCont.replace(/\(.*?\)/g,'').split('/')[0].trim() : (lang==='ko'?'기타':'Other')
-                  if (!continents[cont]) continents[cont] = []
-                  const vc = cities.filter(c => (visited.cities||[]).includes(c.name))
-                  if (vc.length > 0) continents[cont].push({ country, cities, visitedCities: vc })
-                })
-                const contNameMap = {'아시아':{en:'Asia',ja:'アジア',zh:'亚洲'},'유럽':{en:'Europe',ja:'ヨーロッパ',zh:'欧洲'},'북아메리카':{en:'North America',ja:'北米',zh:'北美'},'남아메리카':{en:'South America',ja:'南米',zh:'南美'},'아프리카':{en:'Africa',ja:'アフリカ',zh:'非洲'},'오세아니아':{en:'Oceania',ja:'オセアニア',zh:'大洋洲'}}
-                const getContName = (k) => lang==='ko' ? k : (contNameMap[k]?.[lang] || k)
-                const order = ['아시아','유럽','북아메리카','남아메리카','아프리카','오세아니아','기타']
-                const active = order.filter(c => continents[c]?.length > 0)
-
-                if (active.length === 0) return (
-                  <div style={{textAlign:'center',padding:'40px 0',color:'#64748b'}}>
-                    <div style={{fontSize:32,marginBottom:12}}>✈️</div>
-                    <div style={{fontSize:14,fontWeight:600}}>{t('visitedEmpty')}</div>
-                    <div style={{fontSize:12,marginTop:6,color:'#475569'}}>{lang==='ko'?'도시 패널에서 방문 체크를 해보세요!':'Mark visited cities in the city panel!'}</div>
-                  </div>
-                )
-                return active.map(cont => {
-                  const items = continents[cont]
-                  const isExp = visitedExpandContinent === cont
-                  const tc = items.reduce((a,x)=>a+x.visitedCities.length,0)
-                  return (
-                    <div key={cont} style={{marginBottom:8}}>
-                      <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:10,cursor:'pointer',background:isExp?'rgba(200,133,106,.1)':'rgba(255,255,255,.03)',border:`1px solid ${isExp?'rgba(200,133,106,.2)':'rgba(255,255,255,.06)'}`,transition:'all .15s'}}
-                        onClick={()=>setVisitedExpandContinent(isExp?null:cont)}>
-                        <span style={{fontSize:12,fontWeight:700,color:'#c8856a',width:20}}>{isExp?'▾':'▸'}</span>
-                        <span style={{fontSize:14,fontWeight:700,color:'white',flex:1}}>{getContName(cont)}</span>
-                        <span style={{fontSize:11,color:'#64748b'}}>{items.length}{lang==='ko'?'개국':' countries'} · {tc}{lang==='ko'?'개 도시':' cities'}</span>
-                      </div>
-                      {isExp && (
-                        <div style={{padding:'8px 0 4px 32px'}}>
-                          {items.map(({country, visitedCities}) => (
-                            <div key={country} style={{marginBottom:6}}>
-                              <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
-                                {getFlagImg(COUNTRY_INFO[country]?.emoji) ? (
-                                  <img src={getFlagImg(COUNTRY_INFO[country]?.emoji)} alt="" style={{width:18,height:13,objectFit:'cover',borderRadius:2,border:'1px solid rgba(255,255,255,.15)'}}/>
-                                ) : <span style={{fontSize:14}}>{COUNTRY_INFO[country]?.emoji||'🏳️'}</span>}
-                                <span style={{fontSize:13,fontWeight:600,color:'#e2e8f0'}}>{getCountryName(country)}</span>
-                                <span style={{fontSize:10,color:'#64748b'}}>({visitedCities.length})</span>
-                              </div>
-                              {visitedCities.map(city => {
-                                const cs = visited.spots?.[city.name] || []
-                                const isO = visitedExpandCity === city.name
-                                return (
-                                  <div key={city.name} style={{paddingLeft:24,marginBottom:2}}>
-                                    <div style={{display:'flex',alignItems:'center',gap:6,padding:'4px 8px',borderRadius:6,cursor:'pointer',transition:'background .1s'}}
-                                      onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.05)'}
-                                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-                                      onClick={()=>setVisitedExpandCity(isO?null:city.name)}>
-                                      <span style={{fontSize:10,color:'#22c55e'}}>✓</span>
-                                      <span style={{fontSize:12,fontWeight:500,color:'#cbd5e1'}}>{getCityName(city.name)}</span>
-                                      {cs.length > 0 && <span style={{fontSize:9,color:'#64748b'}}>· {cs.length}{lang==='ko'?'곳':''}</span>}
-                                      {cs.length > 0 && <span style={{fontSize:8,color:'#475569'}}>{isO?'▾':'▸'}</span>}
-                                    </div>
-                                    {isO && cs.length > 0 && (
-                                      <div style={{paddingLeft:26,paddingBottom:4}}>
-                                        {cs.map((sp,j)=>(
-                                          <div key={j} style={{fontSize:11,color:'#94a3b8',padding:'2px 0',display:'flex',alignItems:'center',gap:5}}>
-                                            <span style={{color:'#22c55e',fontSize:8}}>●</span>
-                                            {sp}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })
-              })()}
-            </div>
-          </div>
-        </>
+        <MyTravels visited={visited} saveVisited={saveVisited} countries={countries} lang={lang} isMobile={isMobile}
+          onClose={()=>setShowMyTravels(false)} getCountryName={getCountryName} getCityName={getCityName} t={t} />
       )}
 
       {/* Travel Feed Modal (Phase 1.5 - Fullscreen Modern Light) */}
