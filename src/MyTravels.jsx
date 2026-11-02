@@ -1,6 +1,6 @@
 // ── 내 여행 기록 (전체 패널) ──
 // 탭 1 '국가': 다녀온 나라를 대륙 색으로 칠한 세계지도 + 대륙별 진행 카드 + 국기 모음 + 도시 기록(펼침)
-// 탭 2 '비행': 출발·도착 도시와 날짜로 비행 기록 → 지도에 대권 경로, 총 거리·예상 비행시간 합계
+// 탭 2 '비행': 출발·도착 도시와 날짜로 비행 기록 → 지도에 대권 경로, 총 거리 합계
 // 비행 기록은 visited.flights 에 저장 → 기존 visited 동기화(로컬·로그인 Firestore)를 그대로 탄다
 import { useState, useMemo } from 'react'
 import { COUNTRY_CITIES } from './data/countryCities'
@@ -39,9 +39,6 @@ const distKm = (a, b) => {
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * toR) * Math.cos(b.lat * toR) * Math.sin(dLng / 2) ** 2
   return 2 * R * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h))
 }
-// 예상 비행시간(분): 순항 850km/h + 이착륙 30분
-const flightMin = (km) => Math.round(km / 850 * 60 + 30)
-const fmtMin = (m, ko) => ko ? `${Math.floor(m / 60)}시간 ${m % 60}분` : `${Math.floor(m / 60)}h ${m % 60}m`
 // 대권(최단) 경로를 점으로 — 날짜변경선을 넘으면 선을 끊어 지도를 가로지르지 않게
 const arcPaths = (a, b, n = 48) => {
   const v = (p) => [Math.cos(p.lat * toR) * Math.cos(p.lng * toR), Math.cos(p.lat * toR) * Math.sin(p.lng * toR), Math.sin(p.lat * toR)]
@@ -143,10 +140,9 @@ export default function MyTravels({ visited, saveVisited, countries, lang, isMob
   const fl = flights.map(f => {
     const a = CITY_INDEX[f.from], b = CITY_INDEX[f.to]
     const km = a && b ? distKm(a, b) : 0
-    return { ...f, a, b, km, min: km ? flightMin(km) : 0 }
+    return { ...f, a, b, km }
   }).filter(f => f.a && f.b)
   const totalKm = fl.reduce((s, f) => s + f.km, 0)
-  const totalMin = fl.reduce((s, f) => s + f.min, 0)
   const flCities = new Set(fl.flatMap(f => [f.from, f.to]))
   const longest = fl.reduce((m, f) => Math.max(m, f.km), 0)
   const fmtKm = (km) => `${Math.round(km).toLocaleString()} km`
@@ -284,11 +280,10 @@ export default function MyTravels({ visited, saveVisited, countries, lang, isMob
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: isMobile ? 8 : 12, marginBottom: 16 }}>
               {[
                 [fmtKm(totalKm), ko ? '총 거리' : 'Total Distance', '#0ea5e9'],
-                [fmtMin(totalMin, ko), ko ? '총 비행시간 (예상)' : 'Total Duration (est.)', '#a855f7'],
                 [`${flCities.size}`, ko ? '들른 도시' : 'Cities', '#f59e0b'],
                 [longest ? fmtKm(longest) : '-', ko ? '가장 긴 비행' : 'Longest Flight', '#22c55e'],
-              ].map(([v, label, color]) => (
-                <div key={label} style={{ ...card, padding: isMobile ? '12px' : '16px 18px', borderLeft: `4px solid ${color}` }}>
+              ].map(([v, label, color], i) => (
+                <div key={label} style={{ ...card, padding: isMobile ? '12px' : '16px 18px', borderLeft: `4px solid ${color}`, gridColumn: i === 0 ? '1 / -1' : 'auto' }}>
                   <div style={{ fontSize: isMobile ? 18 : 24, fontWeight: 900 }}>{v}</div>
                   <div style={{ fontSize: 11, color: C.sub, fontWeight: 600, marginTop: 2 }}>{label}</div>
                 </div>
@@ -309,7 +304,7 @@ export default function MyTravels({ visited, saveVisited, countries, lang, isMob
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
                 <div style={{ flex: 1, fontSize: 12, color: C.sub }}>
-                  {preview ? `${Math.round(preview).toLocaleString()} km · ${ko ? '약 ' : '~'}${fmtMin(flightMin(preview), ko)}` : (ko ? '목록에서 도시를 고르세요' : 'Pick cities from the list')}
+                  {preview ? `${Math.round(preview).toLocaleString()} km` : (ko ? '목록에서 도시를 고르세요' : 'Pick cities from the list')}
                 </div>
                 <button onClick={addFlight} disabled={!preview}
                   style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: preview ? C.accent : '#cbd5e1', color: 'white', fontWeight: 800, fontSize: 13, cursor: preview ? 'pointer' : 'default' }}>{ko ? '추가' : 'Add'}</button>
@@ -325,7 +320,7 @@ export default function MyTravels({ visited, saveVisited, countries, lang, isMob
                   <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderTop: i ? `1px solid ${C.line}` : 'none' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getCityName(f.from)} → {getCityName(f.to)}</div>
-                      <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>{f.date ? f.date.replace(/-/g, '.') + ' · ' : ''}{Math.round(f.km).toLocaleString()} km · {fmtMin(f.min, ko)}</div>
+                      <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>{f.date ? f.date.replace(/-/g, '.') + ' · ' : ''}{Math.round(f.km).toLocaleString()} km</div>
                     </div>
                     <button onClick={() => { if (window.confirm(ko ? '이 비행 기록을 지울까요?' : 'Delete this flight?')) delFlight(f.id) }}
                       style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${C.line}`, background: 'white', color: '#dc2626', cursor: 'pointer', fontSize: 13 }}>✕</button>
@@ -333,7 +328,7 @@ export default function MyTravels({ visited, saveVisited, countries, lang, isMob
                 ))}
               </div>
             )}
-            <div style={{ fontSize: 10, color: C.sub, marginTop: 8, textAlign: 'right' }}>{ko ? '거리는 도시 간 최단 직선거리, 비행시간은 시속 850km + 이착륙 30분으로 계산한 예상값이에요' : 'Great-circle distance; duration estimated at 850 km/h + 30 min'}</div>
+            <div style={{ fontSize: 10, color: C.sub, marginTop: 8, textAlign: 'right' }}>{ko ? '거리는 도시 간 최단 직선거리예요' : 'Great-circle distance between cities'}</div>
           </>)}
         </div>
       </div>
