@@ -590,7 +590,6 @@ export const COUNTRY_CITIES = {
   "Cuba": [
     { name:"하바나", lat:23.11, lng:-82.37 },
     { name:"트리니다드", lat:21.80, lng:-79.98 },
-    { name:"바라데로", lat:23.15, lng:-81.24 },
     { name:"비냘레스", lat:22.62, lng:-83.71 },
     { name:"시엔푸에고스", lat:22.15, lng:-80.44 }
   ],
@@ -620,13 +619,9 @@ export const COUNTRY_CITIES = {
     { name:"칸쿤", lat:21.16, lng:-86.85 },
     { name:"과달라하라", lat:20.66, lng:-103.35 },
     { name:"오악사카", lat:17.07, lng:-96.72 },
-    { name:"툴룸", lat:20.21, lng:-87.46 },
     { name:"과나후아토", lat:21.02, lng:-101.26 },
     { name:"치첸이트사", lat:20.6843, lng:-88.5678 },
-    { name:"플라야델카르멘", lat:20.63, lng:-87.07 },
-    { name:"메리다", lat:20.97, lng:-89.59 },
     { name:"푸에르토바야르타", lat:20.65, lng:-105.22 },
-    { name:"산크리스토발", lat:16.74, lng:-92.64 },
     { name:"몬테레이", lat:25.69, lng:-100.32 },
     { name:"푸에블라", lat:19.04, lng:-98.21 }
   ],
@@ -634,8 +629,6 @@ export const COUNTRY_CITIES = {
     { name:"보고타", lat:4.71, lng:-74.07 },
     { name:"카르타헤나", lat:10.40, lng:-75.51 },
     { name:"메데인", lat:6.25, lng:-75.56 },
-    { name:"살렌토", lat:4.63, lng:-75.57 },
-    { name:"칼리", lat:3.45, lng:-76.53 },
     { name:"산타마르타", lat:11.24, lng:-74.2 }
   ],
   "Peru": [
@@ -731,11 +724,7 @@ export const COUNTRY_CITIES = {
     { name:"보카스델토로", lat:9.34, lng:-82.24 },
   ],
   "Ecuador": [
-    { name:"키토", lat:-0.18, lng:-78.47 },
-    { name:"푸에르토아요라", lat:-0.74, lng:-90.31 },
-    { name:"바뇨스", lat:-1.40, lng:-78.42 },
-    { name:"오타발로", lat:0.23, lng:-78.26 },
-    { name:"쿠엔카", lat:-2.9, lng:-79.01 }
+    { name:"키토", lat:-0.18, lng:-78.47 }
   ],
   "Romania": [
     { name:"부쿠레슈티", lat:44.43, lng:26.10 },
@@ -793,9 +782,7 @@ export const COUNTRY_CITIES = {
     { name:"안티구아", lat:14.56, lng:-90.73 },
   ],
   "Jamaica": [
-    { name:"킹스턴", lat:18.00, lng:-76.79 },
-    { name:"몬테고베이", lat:18.47, lng:-77.92 },
-    { name:"네그릴", lat:18.27, lng:-78.35 },
+    { name:"킹스턴", lat:18.00, lng:-76.79 }
   ],
   "Latvia": [
     { name:"리가", lat:56.95, lng:24.12 },
