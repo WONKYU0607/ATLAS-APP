@@ -579,7 +579,6 @@ export const COUNTRY_CITIES = {
     { name:"핼리팩스", lat:44.65, lng:-63.58 },
     { name:"재스퍼", lat:52.87, lng:-118.08 },
     { name:"프린스에드워드섬", lat:46.25, lng:-63.13 },
-    { name:"루이스호수", lat:51.42, lng:-116.22 },
     { name:"런던(캐나다)", lat:42.98, lng:-81.25 },
     { name:"해밀턴", lat:43.26, lng:-79.87 },
     { name:"키치너", lat:43.45, lng:-80.49 },
