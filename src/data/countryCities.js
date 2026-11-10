@@ -583,8 +583,7 @@ export const COUNTRY_CITIES = {
     { name:"해밀턴", lat:43.26, lng:-79.87 },
     { name:"키치너", lat:43.45, lng:-80.49 },
     { name:"세인트존스", lat:47.56, lng:-52.71 },
-    { name:"옐로나이프", lat:62.45, lng:-114.37 },
-    { name:"나나이모", lat:49.16, lng:-123.94 }
+    { name:"옐로나이프", lat:62.45, lng:-114.37 }
   ],
   "Cuba": [
     { name:"하바나", lat:23.11, lng:-82.37 },
