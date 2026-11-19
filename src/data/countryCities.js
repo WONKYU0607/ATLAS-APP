@@ -608,7 +608,6 @@ export const COUNTRY_CITIES = {
     { name:"브라질리아", lat:-15.78, lng:-47.93 },
     { name:"포르탈레자", lat:-3.72, lng:-38.54 },
     { name:"플로리아노폴리스", lat:-27.59, lng:-48.55 },
-    { name:"헤시피", lat:-8.05, lng:-34.88 }
   ],
   "Mexico": [
     { name:"멕시코시티", lat:19.43, lng:-99.13 },
@@ -631,7 +630,6 @@ export const COUNTRY_CITIES = {
     { name:"마추픽추", lat:-13.1631, lng:-72.545 },
     { name:"쿠스코", lat:-13.53, lng:-71.97 },
     { name:"리마", lat:-12.05, lng:-77.04 },
-    { name:"나스카", lat:-14.74, lng:-75.13 },
     { name:"아레키파", lat:-16.41, lng:-71.54 },
     { name:"푸노", lat:-15.84, lng:-70.02 },
     { name:"이키토스", lat:-3.74, lng:-73.25 }
@@ -642,7 +640,6 @@ export const COUNTRY_CITIES = {
     { name:"산페드로데아타카마", lat:-22.91, lng:-68.2 },
     { name:"푸에르토나탈레스", lat:-51.73, lng:-72.51 },
     { name:"이스터섬", lat:-27.11, lng:-109.35 },
-    { name:"푸에르토바라스", lat:-41.32, lng:-72.99 },
     { name:"푼타아레나스", lat:-53.16, lng:-70.91 }
   ],
   "New Zealand": [
@@ -712,12 +709,10 @@ export const COUNTRY_CITIES = {
   "Costa Rica": [
     { name:"산호세", lat:9.93, lng:-84.08 },
     { name:"라포르투나", lat:10.47, lng:-84.64 },
-    { name:"몬테베르데", lat:10.31, lng:-84.82 },
-    { name:"타마린도", lat:10.3, lng:-85.84 }
+    { name:"몬테베르데", lat:10.31, lng:-84.82 }
   ],
   "Panama": [
-    { name:"파나마시티", lat:8.98, lng:-79.52 },
-    { name:"보카스델토로", lat:9.34, lng:-82.24 },
+    { name:"파나마시티", lat:8.98, lng:-79.52 }
   ],
   "Ecuador": [
     { name:"키토", lat:-0.18, lng:-78.47 }
@@ -767,9 +762,7 @@ export const COUNTRY_CITIES = {
   "Bolivia": [
     { name:"라파스", lat:-16.50, lng:-68.15 },
     { name:"우유니", lat:-20.46, lng:-66.83 },
-    { name:"수크레", lat:-19.04, lng:-65.26 },
-    { name:"포토시", lat:-19.58, lng:-65.75 },
-    { name:"코파카바나", lat:-16.16, lng:-69.09 }
+    { name:"수크레", lat:-19.04, lng:-65.26 }
   ],
   "Dominican Republic": [
     { name:"푼타카나", lat:18.58, lng:-68.40 },
